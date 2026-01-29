@@ -95,7 +95,7 @@ export default function RecipeDetailPage({ params }: { params: { id: string } })
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-fuchsia-950 to-gray-900">
       {/* Header Image */}
       <div className="relative h-64 md:h-80 lg:h-96">
         <Image
@@ -204,7 +204,7 @@ export default function RecipeDetailPage({ params }: { params: { id: string } })
 
           {/* Uploaded By */}
           <div className="mt-4 flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-[#FF8A1E] to-[#CC6A0F] rounded-full flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-br from-fuchsia-600 to-pink-600 rounded-full flex items-center justify-center">
               <ChefHat className="w-6 h-6 text-white" />
             </div>
             <div>
@@ -223,8 +223,8 @@ export default function RecipeDetailPage({ params }: { params: { id: string } })
         >
           <Link href={`/kitchen/ai-assistant?recipe=${recipe.id}`}>
             <motion.button
-              className="w-full bg-gradient-to-br from-[#FF8A1E] to-[#CC6A0F] text-white rounded-2xl p-4 md:p-6 font-semibold text-base md:text-lg flex items-center justify-center gap-2 md:gap-3 shadow-xl"
-              whileHover={{ scale: 1.02, boxShadow: '0 25px 50px -12px rgba(255, 138, 30, 0.5)' }}
+              className="w-full bg-gradient-to-br from-fuchsia-600 to-pink-600 text-white rounded-2xl p-4 md:p-6 font-semibold text-base md:text-lg flex items-center justify-center gap-2 md:gap-3 shadow-xl"
+              whileHover={{ scale: 1.02, boxShadow: '0 25px 50px -12px rgba(217, 70, 239, 0.5)' }}
               whileTap={{ scale: 0.98 }}
             >
               <MessageCircle className="w-5 h-5 md:w-6 md:h-6" />
@@ -254,7 +254,7 @@ export default function RecipeDetailPage({ params }: { params: { id: string } })
                     key={index}
                     className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-all ${
                       checkedIngredients.includes(index)
-                        ? 'bg-[#FF8A1E]/20 border border-[#FF8A1E]'
+                        ? 'bg-fuchsia-600/20 border border-fuchsia-500'
                         : 'bg-gray-900/50 border border-gray-700 hover:bg-gray-900'
                     }`}
                     onClick={() => toggleIngredient(index)}
@@ -264,7 +264,7 @@ export default function RecipeDetailPage({ params }: { params: { id: string } })
                     <div
                       className={`mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all ${
                         checkedIngredients.includes(index)
-                          ? 'bg-[#FF8A1E] border-[#FF8A1E]'
+                          ? 'bg-fuchsia-500 border-fuchsia-500'
                           : 'border-gray-600'
                       }`}
                     >
@@ -308,7 +308,7 @@ export default function RecipeDetailPage({ params }: { params: { id: string } })
                     key={index}
                     className={`flex gap-4 p-4 rounded-lg cursor-pointer transition-all ${
                       checkedSteps.includes(index)
-                        ? 'bg-[#FF8A1E]/20 border border-[#FF8A1E]'
+                        ? 'bg-fuchsia-600/20 border border-fuchsia-500'
                         : 'bg-gray-900/50 border border-gray-700 hover:bg-gray-900'
                     }`}
                     onClick={() => toggleStep(index)}
@@ -318,7 +318,7 @@ export default function RecipeDetailPage({ params }: { params: { id: string } })
                     <div
                       className={`w-8 h-8 rounded-full flex items-center justify-center font-bold flex-shrink-0 ${
                         checkedSteps.includes(index)
-                          ? 'bg-[#FF8A1E] text-white'
+                          ? 'bg-fuchsia-500 text-white'
                           : 'bg-gray-700 text-gray-300'
                       }`}
                     >

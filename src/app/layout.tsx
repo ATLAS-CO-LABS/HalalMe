@@ -30,7 +30,6 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>
-          <Header />
           <LayoutContent>{children}</LayoutContent>
         </AuthProvider>
       </body>
@@ -49,12 +48,20 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     '/forgot-password',
     '/dashboard',
     '/profile',
+    '/hub',
+  ];
+
+  // Pages where header should be hidden
+  const hideHeaderPaths = [
+    '/hub',
   ];
 
   const shouldHideFooter = hideFooterPaths.some(path => pathname?.startsWith(path));
+  const shouldHideHeader = hideHeaderPaths.some(path => pathname?.startsWith(path));
 
   return (
     <>
+      {!shouldHideHeader && <Header />}
       <main>{children}</main>
       {!shouldHideFooter && <Footer />}
     </>

@@ -1,14 +1,21 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { motion, useInView } from 'framer-motion';
 import Image from 'next/image';
 import FlowingMenu from '@/components/navigation/FlowingMenu';
 import GradientCarousel from '@/components/ecosystem/GradientCarousel';
+import LoadingScreen from '@/components/loading/LoadingScreen';
 
 export default function Home() {
+  const [isLoading, setIsLoading] = useState(true);
+
   return (
-    <div className="min-h-screen bg-gray-100 font-sans antialiased">
+    <>
+      {isLoading && (
+        <LoadingScreen onLoadingComplete={() => setIsLoading(false)} />
+      )}
+      <div className={`min-h-screen bg-gray-100 font-sans antialiased ${isLoading ? 'overflow-hidden h-screen' : ''}`}>
       {/* Hero Section - Warm gradient with emerald and amber */}
       <HeroSection />
 
@@ -39,32 +46,32 @@ export default function Home() {
             {
               link: '#delivery',
               text: 'HalalMe Delivery',
-              image: '/images/services/delivery.jpg'
+              image: '/images/services/halal01.jpg'
             },
             {
               link: '#kitchen',
               text: 'HalalMe Kitchen',
-              image: '/images/services/kitchen.jpg'
+              image: '/images/services/halal05.jpg'
             },
             {
               link: '#fresh',
               text: 'HalalMe Fresh',
-              image: '/images/services/fresh.jpg'
+              image: '/images/services/halal02.jpg'
             },
             {
               link: '#hub',
               text: 'HalalMe Hub',
-              image: '/images/services/hub.jpg'
+              image: '/images/services/halal03.jpg'
             },
             {
               link: '#travel',
               text: 'HalalMe Travel',
-              image: '/images/services/travel.jpg'
+              image: '/images/services/halal04.jpg'
             },
             {
               link: '#rewards',
               text: 'HalalMe Rewards',
-              image: '/images/services/rewards.jpg'
+              image: '/images/services/halal02.jpg'
             }
           ]}
           speed={15}
@@ -146,6 +153,7 @@ export default function Home() {
         </div>
       </section>
     </div>
+    </>
   );
 }
 

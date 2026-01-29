@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Send, Loader2, ChefHat, Sparkles, ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
+import { useState, useRef, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Send, Loader2, ChefHat, Sparkles, ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
 type Message = {
   id: string;
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   content: string;
   timestamp: Date;
 };
@@ -15,18 +15,19 @@ type Message = {
 export default function AIAssistantPage() {
   const [messages, setMessages] = useState<Message[]>([
     {
-      id: '1',
-      role: 'assistant',
-      content: 'Hello! I\'m your HalalMe Kitchen AI assistant. How can I help you today?\n\nYou can:\n• Tell me what ingredients you have\n• Ask for recipe suggestions\n• Get cooking tips and substitutions\n• Ask questions about halal cooking',
+      id: "1",
+      role: "assistant",
+      content:
+        "Hello! I'm your HalalMe Kitchen AI assistant. How can I help you today?\n\nYou can:\n• Tell me what ingredients you have\n• Ask for recipe suggestions\n• Get cooking tips and substitutions\n• Ask questions about halal cooking",
       timestamp: new Date(),
     },
   ]);
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
@@ -39,20 +40,20 @@ export default function AIAssistantPage() {
 
     const userMessage: Message = {
       id: Date.now().toString(),
-      role: 'user',
+      role: "user",
       content: input,
       timestamp: new Date(),
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    setInput('');
+    setInput("");
     setIsLoading(true);
 
     // Simulate AI response (replace with actual API call later)
     setTimeout(() => {
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
-        role: 'assistant',
+        role: "assistant",
         content: generateMockResponse(input),
         timestamp: new Date(),
       };
@@ -65,11 +66,11 @@ export default function AIAssistantPage() {
   const generateMockResponse = (userInput: string): string => {
     const lowerInput = userInput.toLowerCase();
 
-    if (lowerInput.includes('chicken') || lowerInput.includes('ingredients')) {
+    if (lowerInput.includes("chicken") || lowerInput.includes("ingredients")) {
       return `Great! With chicken, you can make several delicious halal dishes:\n\n🍗 **Chicken Biryani**\n- Cook time: 45 minutes\n- Perfect for: Dinner parties\n\n🥘 **Butter Chicken**\n- Cook time: 40 minutes\n- Perfect for: Family dinners\n\n🍛 **Chicken Curry**\n- Cook time: 35 minutes\n- Perfect for: Quick weeknight meals\n\nWould you like the detailed recipe for any of these?`;
-    } else if (lowerInput.includes('pasta')) {
+    } else if (lowerInput.includes("pasta")) {
       return `For halal pasta dishes, I recommend:\n\n🍝 **Halal Chicken Alfredo**\nIngredients needed:\n- Pasta (any type)\n- Chicken breast\n- Heavy cream\n- Garlic\n- Parmesan cheese\n- Butter\n\nCook time: 25 minutes\nDifficulty: Easy\n\nWould you like step-by-step instructions?`;
-    } else if (lowerInput.includes('dry') || lowerInput.includes('help')) {
+    } else if (lowerInput.includes("dry") || lowerInput.includes("help")) {
       return `If your chicken is too dry, here are some fixes:\n\n💡 **Immediate Fixes:**\n1. Make a quick sauce (gravy, yogurt-based)\n2. Shred the chicken and mix with sauce\n3. Add chicken broth or cream\n\n🔧 **Prevention Tips:**\n- Don't overcook (use meat thermometer: 165°F)\n- Marinate before cooking\n- Cover while cooking to retain moisture\n- Let it rest 5 minutes before cutting\n\nNeed more specific help?`;
     } else {
       return `I'd be happy to help you with that! Could you provide more details? For example:\n\n- What ingredients do you have?\n- What type of dish are you looking to make?\n- Any dietary restrictions or preferences?\n- Cooking skill level?\n\nThe more information you share, the better I can assist you!`;
@@ -77,14 +78,14 @@ export default function AIAssistantPage() {
   };
 
   const quickPrompts = [
-    'I have chicken, rice, and spices',
-    'Show me easy breakfast recipes',
-    'What can I cook in 30 minutes?',
-    'Suggest vegetarian halal dishes',
+    "I have chicken, rice, and spices",
+    "Show me easy breakfast recipes",
+    "What can I cook in 30 minutes?",
+    "Suggest vegetarian halal dishes",
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-fuchsia-950 to-gray-900">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-gray-900/95 backdrop-blur-lg border-b border-gray-700">
         <div className="mx-auto max-w-4xl px-4 md:px-6 py-3 md:py-4">
@@ -100,24 +101,27 @@ export default function AIAssistantPage() {
                 </motion.button>
               </Link>
               <div className="flex items-center gap-2 md:gap-3">
-                <div className="bg-gradient-to-br from-[#FF8A1E] to-[#CC6A0F] rounded-full p-1.5 md:p-2">
+                <div className="bg-gradient-to-br from-fuchsia-600 to-pink-600 rounded-full p-1.5 md:p-2">
                   <ChefHat className="w-5 h-5 md:w-6 md:h-6 text-white" />
                 </div>
                 <div>
                   <h1
                     className="text-base md:text-xl font-bold text-white"
-                    style={{ fontFamily: 'var(--font-headline)' }}
+                    style={{ fontFamily: "var(--font-headline)" }}
                   >
                     AI Recipe Assistant
                   </h1>
-                  <p className="text-xs md:text-sm text-gray-400 hidden sm:block" style={{ fontFamily: 'var(--font-body)' }}>
+                  <p
+                    className="text-xs md:text-sm text-gray-400 hidden sm:block"
+                    style={{ fontFamily: "var(--font-body)" }}
+                  >
                     Your personal halal cooking helper
                   </p>
                 </div>
               </div>
             </div>
             <div className="hidden md:flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-[#FF8A1E]" />
+              <Sparkles className="w-5 h-5 text-fuchsia-400" />
               <span className="text-sm text-gray-400">Powered by AI</span>
             </div>
           </div>
@@ -133,32 +137,34 @@ export default function AIAssistantPage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
-              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              className={`flex ${
+                message.role === "user" ? "justify-end" : "justify-start"
+              }`}
             >
               <div
                 className={`max-w-[85%] md:max-w-[80%] rounded-2xl px-4 md:px-6 py-3 md:py-4 ${
-                  message.role === 'user'
-                    ? 'bg-gradient-to-br from-[#FF8A1E] to-[#CC6A0F] text-white'
-                    : 'bg-gray-800 text-gray-100 border border-gray-700'
+                  message.role === "user"
+                    ? "bg-gradient-to-br from-fuchsia-600 to-pink-600 text-white"
+                    : "bg-gray-800 text-gray-100 border border-gray-700"
                 }`}
               >
                 <div className="flex items-start gap-3">
-                  {message.role === 'assistant' && (
-                    <div className="mt-1 bg-gradient-to-br from-[#FF8A1E] to-[#CC6A0F] rounded-full p-1.5">
+                  {message.role === "assistant" && (
+                    <div className="mt-1 bg-gradient-to-br from-fuchsia-600 to-pink-600 rounded-full p-1.5">
                       <ChefHat className="w-4 h-4 text-white" />
                     </div>
                   )}
                   <div className="flex-1">
                     <p
                       className="whitespace-pre-wrap leading-relaxed font-normal"
-                      style={{ fontFamily: 'var(--font-body)' }}
+                      style={{ fontFamily: "var(--font-body)" }}
                     >
                       {message.content}
                     </p>
                     <p className="text-xs mt-2 opacity-60">
                       {message.timestamp.toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit',
+                        hour: "2-digit",
+                        minute: "2-digit",
                       })}
                     </p>
                   </div>
@@ -175,7 +181,7 @@ export default function AIAssistantPage() {
             >
               <div className="bg-gray-800 border border-gray-700 rounded-2xl px-6 py-4">
                 <div className="flex items-center gap-3">
-                  <Loader2 className="w-5 h-5 text-[#FF8A1E] animate-spin" />
+                  <Loader2 className="w-5 h-5 text-fuchsia-400 animate-spin" />
                   <span className="text-gray-400">AI is thinking...</span>
                 </div>
               </div>
@@ -196,7 +202,10 @@ export default function AIAssistantPage() {
               animate={{ opacity: 1, y: 0 }}
               className="mb-4"
             >
-              <p className="text-xs md:text-sm text-gray-400 mb-2 md:mb-3 font-normal" style={{ fontFamily: 'var(--font-body)' }}>
+              <p
+                className="text-xs md:text-sm text-gray-400 mb-2 md:mb-3 font-normal"
+                style={{ fontFamily: "var(--font-body)" }}
+              >
                 Quick suggestions:
               </p>
               <div className="flex flex-wrap gap-2">
@@ -204,7 +213,7 @@ export default function AIAssistantPage() {
                   <motion.button
                     key={index}
                     onClick={() => setInput(prompt)}
-                    className="px-3 md:px-4 py-1.5 md:py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs md:text-sm rounded-full border border-gray-700 transition-colors"
+                    className="px-3 md:px-4 py-1.5 md:py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs md:text-sm rounded-full border border-gray-700 hover:border-fuchsia-500 transition-colors"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
@@ -222,8 +231,8 @@ export default function AIAssistantPage() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask me about cooking..."
-              className="flex-1 bg-gray-800 text-white text-sm md:text-base rounded-full px-4 md:px-6 py-3 md:py-4 border border-gray-700 focus:outline-none focus:border-[#FF8A1E] transition-colors font-normal"
-              style={{ fontFamily: 'var(--font-body)' }}
+              className="flex-1 bg-gray-800 text-white text-sm md:text-base rounded-full px-4 md:px-6 py-3 md:py-4 border border-gray-700 focus:outline-none focus:border-fuchsia-500 transition-colors font-normal"
+              style={{ fontFamily: "var(--font-body)" }}
               disabled={isLoading}
             />
             <motion.button
@@ -231,8 +240,8 @@ export default function AIAssistantPage() {
               disabled={!input.trim() || isLoading}
               className={`rounded-full px-4 md:px-6 py-3 md:py-4 font-semibold transition-all ${
                 input.trim() && !isLoading
-                  ? 'bg-gradient-to-br from-[#FF8A1E] to-[#CC6A0F] text-white shadow-lg'
-                  : 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                  ? "bg-gradient-to-br from-fuchsia-600 to-pink-600 text-white shadow-lg"
+                  : "bg-gray-800 text-gray-500 cursor-not-allowed"
               }`}
               whileHover={input.trim() && !isLoading ? { scale: 1.05 } : {}}
               whileTap={input.trim() && !isLoading ? { scale: 0.95 } : {}}
@@ -241,8 +250,12 @@ export default function AIAssistantPage() {
             </motion.button>
           </form>
 
-          <p className="text-xs text-gray-500 mt-3 text-center font-normal" style={{ fontFamily: 'var(--font-body)' }}>
-            AI responses are suggestions. Always verify ingredient compatibility with your dietary needs.
+          <p
+            className="text-xs text-gray-500 mt-3 text-center font-normal"
+            style={{ fontFamily: "var(--font-body)" }}
+          >
+            AI responses are suggestions. Always verify ingredient compatibility
+            with your dietary needs.
           </p>
         </div>
       </div>

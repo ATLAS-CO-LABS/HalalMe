@@ -145,7 +145,7 @@ export default function RecipesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-gray-900 via-gray-800 to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-fuchsia-950 to-gray-900">
       {/* Header */}
       <div className="bg-gray-900/95 backdrop-blur-lg border-b border-gray-700">
         <div className="mx-auto max-w-7xl px-4 md:px-6 py-4 md:py-6">
@@ -177,7 +177,7 @@ export default function RecipesPage() {
             </div>
             <Link href="/kitchen/recipes/upload" className="w-full sm:w-auto">
               <motion.button
-                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-linear-to-br from-[#FF8A1E] to-[#CC6A0F] text-white px-4 md:px-6 py-2.5 md:py-3 rounded-full font-semibold shadow-lg text-sm md:text-base"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-br from-fuchsia-600 to-pink-600 text-white px-4 md:px-6 py-2.5 md:py-3 rounded-full font-semibold shadow-lg text-sm md:text-base"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -196,7 +196,7 @@ export default function RecipesPage() {
                 placeholder="Search recipes..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-gray-800 text-white text-sm md:text-base rounded-full pl-10 md:pl-12 pr-4 md:pr-6 py-2.5 md:py-3 border border-gray-700 focus:outline-none focus:border-[#FF8A1E] transition-colors font-normal"
+                className="w-full bg-gray-800 text-white text-sm md:text-base rounded-full pl-10 md:pl-12 pr-4 md:pr-6 py-2.5 md:py-3 border border-gray-700 focus:outline-none focus:border-fuchsia-500 transition-colors font-normal"
                 style={{ fontFamily: "var(--font-body)" }}
               />
             </div>
@@ -208,7 +208,7 @@ export default function RecipesPage() {
                   onClick={() => setSelectedDifficulty(difficulty)}
                   className={`px-4 md:px-6 py-2 md:py-3 rounded-full font-semibold transition-all whitespace-nowrap text-sm md:text-base ${
                     selectedDifficulty === difficulty
-                      ? "bg-linear-to-br from-[#FF8A1E] to-[#CC6A0F] text-white"
+                      ? "bg-gradient-to-br from-fuchsia-600 to-pink-600 text-white"
                       : "bg-gray-800 text-gray-400 border border-gray-700"
                   }`}
                   whileHover={{ scale: 1.05 }}
@@ -255,10 +255,10 @@ export default function RecipesPage() {
               >
                 <Link href={`/kitchen/recipes/${recipe.id}`}>
                   <motion.div
-                    className="group bg-gray-800 rounded-2xl overflow-hidden border border-gray-700 hover:border-[#FF8A1E] transition-all cursor-pointer"
+                    className="group bg-gray-800 rounded-2xl overflow-hidden border border-gray-700 hover:border-fuchsia-500 transition-all cursor-pointer"
                     whileHover={{
                       y: -8,
-                      boxShadow: "0 20px 40px -12px rgba(255, 138, 30, 0.3)",
+                      boxShadow: "0 20px 40px -12px rgba(217, 70, 239, 0.3)",
                     }}
                   >
                     {/* Recipe Image */}
@@ -280,7 +280,7 @@ export default function RecipesPage() {
                     {/* Recipe Info */}
                     <div className="p-5">
                       <h3
-                        className="text-lg font-bold text-white mb-2 line-clamp-1 group-hover:text-[#FF8A1E] transition-colors"
+                        className="text-lg font-bold text-white mb-2 line-clamp-1 group-hover:text-fuchsia-400 transition-colors"
                         style={{ fontFamily: "var(--font-headline)" }}
                       >
                         {recipe.title}

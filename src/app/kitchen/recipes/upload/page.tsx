@@ -117,7 +117,7 @@ export default function UploadRecipePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 py-6 md:py-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-fuchsia-950 to-gray-900 py-6 md:py-8">
       <div className="mx-auto max-w-4xl px-4 md:px-6">
         {/* Header */}
         <motion.div
@@ -177,7 +177,7 @@ export default function UploadRecipePage() {
                   value={formData.title}
                   onChange={(e) => handleInputChange('title', e.target.value)}
                   placeholder="e.g., Chicken Biryani"
-                  className="w-full bg-gray-900 text-white rounded-xl px-4 py-3 border border-gray-700 focus:outline-none focus:border-[#FF8A1E] transition-colors font-normal"
+                  className="w-full bg-gray-900 text-white rounded-xl px-4 py-3 border border-gray-700 focus:outline-none focus:border-fuchsia-500 transition-colors font-normal"
                   style={{ fontFamily: 'var(--font-body)' }}
                   required
                 />
@@ -192,7 +192,7 @@ export default function UploadRecipePage() {
                   onChange={(e) => handleInputChange('description', e.target.value)}
                   placeholder="Brief description of your recipe..."
                   rows={3}
-                  className="w-full bg-gray-900 text-white rounded-xl px-4 py-3 border border-gray-700 focus:outline-none focus:border-[#FF8A1E] transition-colors resize-none font-normal"
+                  className="w-full bg-gray-900 text-white rounded-xl px-4 py-3 border border-gray-700 focus:outline-none focus:border-fuchsia-500 transition-colors resize-none font-normal"
                   style={{ fontFamily: 'var(--font-body)' }}
                   required
                 />
@@ -208,7 +208,7 @@ export default function UploadRecipePage() {
                     value={formData.cookTime}
                     onChange={(e) => handleInputChange('cookTime', e.target.value)}
                     placeholder="e.g., 45 min"
-                    className="w-full bg-gray-900 text-white rounded-xl px-4 py-3 border border-gray-700 focus:outline-none focus:border-[#FF8A1E] transition-colors font-normal"
+                    className="w-full bg-gray-900 text-white rounded-xl px-4 py-3 border border-gray-700 focus:outline-none focus:border-fuchsia-500 transition-colors font-normal"
                     style={{ fontFamily: 'var(--font-body)' }}
                     required
                   />
@@ -224,7 +224,7 @@ export default function UploadRecipePage() {
                     onChange={(e) => handleInputChange('servings', e.target.value)}
                     placeholder="e.g., 4"
                     min="1"
-                    className="w-full bg-gray-900 text-white rounded-xl px-4 py-3 border border-gray-700 focus:outline-none focus:border-[#FF8A1E] transition-colors font-normal"
+                    className="w-full bg-gray-900 text-white rounded-xl px-4 py-3 border border-gray-700 focus:outline-none focus:border-fuchsia-500 transition-colors font-normal"
                     style={{ fontFamily: 'var(--font-body)' }}
                     required
                   />
@@ -242,7 +242,7 @@ export default function UploadRecipePage() {
                         e.target.value as 'Easy' | 'Medium' | 'Hard'
                       )
                     }
-                    className="w-full bg-gray-900 text-white rounded-xl px-4 py-3 border border-gray-700 focus:outline-none focus:border-[#FF8A1E] transition-colors font-normal"
+                    className="w-full bg-gray-900 text-white rounded-xl px-4 py-3 border border-gray-700 focus:outline-none focus:border-fuchsia-500 transition-colors font-normal"
                     style={{ fontFamily: 'var(--font-body)' }}
                     required
                   >
@@ -275,7 +275,7 @@ export default function UploadRecipePage() {
               />
               <label
                 htmlFor="image-upload"
-                className="flex flex-col items-center justify-center w-full h-48 bg-gray-900 border-2 border-dashed border-gray-700 rounded-xl cursor-pointer hover:border-[#FF8A1E] transition-colors"
+                className="flex flex-col items-center justify-center w-full h-48 bg-gray-900 border-2 border-dashed border-gray-700 rounded-xl cursor-pointer hover:border-fuchsia-500 transition-colors"
               >
                 {formData.image ? (
                   <div className="text-center">
@@ -313,13 +313,13 @@ export default function UploadRecipePage() {
                   onChange={(e) => setCurrentIngredient(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addIngredient())}
                   placeholder="e.g., 2 cups rice"
-                  className="flex-1 bg-gray-900 text-white rounded-xl px-4 py-3 border border-gray-700 focus:outline-none focus:border-[#FF8A1E] transition-colors font-normal"
+                  className="flex-1 bg-gray-900 text-white rounded-xl px-4 py-3 border border-gray-700 focus:outline-none focus:border-fuchsia-500 transition-colors font-normal"
                   style={{ fontFamily: 'var(--font-body)' }}
                 />
                 <motion.button
                   type="button"
                   onClick={addIngredient}
-                  className="bg-gradient-to-br from-[#FF8A1E] to-[#CC6A0F] text-white rounded-xl px-6 py-3 font-semibold"
+                  className="bg-gradient-to-br from-fuchsia-600 to-pink-600 text-white rounded-xl px-6 py-3 font-semibold"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -377,13 +377,13 @@ export default function UploadRecipePage() {
                   }}
                   placeholder="Describe the cooking step... (Press Ctrl+Enter to add)"
                   rows={2}
-                  className="flex-1 bg-gray-900 text-white rounded-xl px-4 py-3 border border-gray-700 focus:outline-none focus:border-[#FF8A1E] transition-colors resize-none font-normal"
+                  className="flex-1 bg-gray-900 text-white rounded-xl px-4 py-3 border border-gray-700 focus:outline-none focus:border-fuchsia-500 transition-colors resize-none font-normal"
                   style={{ fontFamily: 'var(--font-body)' }}
                 />
                 <motion.button
                   type="button"
                   onClick={addInstruction}
-                  className="bg-gradient-to-br from-[#FF8A1E] to-[#CC6A0F] text-white rounded-xl px-6 py-3 font-semibold self-start"
+                  className="bg-gradient-to-br from-fuchsia-600 to-pink-600 text-white rounded-xl px-6 py-3 font-semibold self-start"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -400,7 +400,7 @@ export default function UploadRecipePage() {
                       animate={{ opacity: 1, x: 0 }}
                       className="flex gap-3 bg-gray-900 rounded-lg p-4 border border-gray-700"
                     >
-                      <div className="w-8 h-8 bg-[#FF8A1E] rounded-full flex items-center justify-center font-bold text-white flex-shrink-0">
+                      <div className="w-8 h-8 bg-fuchsia-500 rounded-full flex items-center justify-center font-bold text-white flex-shrink-0">
                         {index + 1}
                       </div>
                       <p className="flex-1 text-gray-300 font-normal" style={{ fontFamily: 'var(--font-body)' }}>
@@ -429,7 +429,7 @@ export default function UploadRecipePage() {
             className={`w-full rounded-2xl px-8 py-4 font-bold text-lg flex items-center justify-center gap-3 shadow-xl ${
               isSubmitting
                 ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                : 'bg-gradient-to-br from-[#FF8A1E] to-[#CC6A0F] text-white'
+                : 'bg-gradient-to-br from-fuchsia-600 to-pink-600 text-white'
             }`}
             whileHover={!isSubmitting ? { scale: 1.02 } : {}}
             whileTap={!isSubmitting ? { scale: 0.98 } : {}}

@@ -1,4 +1,17 @@
+import { Suspense } from "react";
 import SignupForm from "@/components/auth/SignupForm";
+
+function SignupFormFallback() {
+  return (
+    <div className="space-y-6 animate-pulse">
+      <div className="h-10 bg-gray-200 rounded" />
+      <div className="h-10 bg-gray-200 rounded" />
+      <div className="h-10 bg-gray-200 rounded" />
+      <div className="h-10 bg-gray-200 rounded" />
+      <div className="h-10 bg-gray-200 rounded" />
+    </div>
+  );
+}
 
 export default function SignupPage() {
   return (
@@ -10,7 +23,9 @@ export default function SignupPage() {
         </p>
       </div>
 
-      <SignupForm />
+      <Suspense fallback={<SignupFormFallback />}>
+        <SignupForm />
+      </Suspense>
     </div>
   );
 }

@@ -40,7 +40,7 @@
 
 @font-face {
   font-family: 'Unbounded';
-  src: url('/fonts/Unbounded/static/Unbounded-ExtraBold.tff') format('truetype');
+  src: url('/fonts/Unbounded/static/Unbounded-ExtraBold.ttf') format('truetype');
   font-weight: 800;
   font-style: normal;
 }
@@ -397,5 +397,164 @@ a, button {
 
   .safe-area-padding-bottom {
     padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* =============================================
+   LOADING SCREEN ANIMATION (Osmo-inspired)
+   ============================================= */
+
+/* Disable Scroll on Loading */
+main:has(.loading-header) {
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.loading-header {
+  color: #f4f4f4;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100dvh;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+
+.loading-loader {
+  color: #201d1d;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  background: #f4f4f4;
+}
+
+.loading-h1 {
+  white-space: nowrap;
+  justify-content: center;
+  font-size: 12.5em;
+  font-weight: 700;
+  line-height: 0.75;
+  display: flex;
+  position: relative;
+  font-family: var(--font-headline);
+}
+
+.h1-start {
+  justify-content: flex-end;
+  width: 1.8em;
+  display: flex;
+  overflow: hidden;
+}
+
+.h1-end {
+  justify-content: flex-start;
+  width: 2.5em;
+  display: flex;
+  overflow: hidden;
+}
+
+.loading-letter {
+  display: block;
+  position: relative;
+}
+
+.letter-white.is-space {
+  margin-left: 0.25em;
+}
+
+.loader-box {
+  flex-flow: column;
+  justify-content: center;
+  align-items: center;
+  width: 0;
+  display: flex;
+  position: relative;
+}
+
+.loader-box-inner {
+  justify-content: center;
+  align-items: center;
+  min-width: 1em;
+  height: 95%;
+  display: flex;
+  position: relative;
+}
+
+.growing-image {
+  justify-content: center;
+  align-items: center;
+  width: 0%;
+  height: 100%;
+  display: flex;
+  position: absolute;
+  overflow: hidden;
+}
+
+.growing-image-wrap {
+  width: 100%;
+  min-width: 1em;
+  height: 100%;
+  position: absolute;
+}
+
+.cover-image {
+  pointer-events: none;
+  object-fit: cover;
+  -webkit-user-select: none;
+  user-select: none;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.cover-image-extra {
+  pointer-events: none;
+  object-fit: cover;
+  -webkit-user-select: none;
+  user-select: none;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.cover-image-extra.is-1 {
+  z-index: 3;
+}
+
+.cover-image-extra.is-2 {
+  z-index: 2;
+}
+
+.cover-image-extra.is-3 {
+  z-index: 1;
+}
+
+@media screen and (max-width: 991px) {
+  .loading-h1 {
+    font-size: 9em;
+  }
+}
+
+@media screen and (max-width: 767px) {
+  .loading-h1 {
+    font-size: 5.5em;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .loading-h1 {
+    font-size: 3.5em;
   }
 }
