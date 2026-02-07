@@ -1,217 +1,373 @@
 "use client";
 
 import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import {
+  Truck,
+  ChefHat,
+  ShoppingBag,
+  Users,
+  Plane,
+  Gift,
+  ArrowRight,
+  ShieldCheck,
+  Star,
+  Settings,
+  HelpCircle,
+  LogOut,
+  TrendingUp,
+  Heart,
+  Clock,
+} from "lucide-react";
+
+const services = [
+  {
+    name: "Delivery",
+    description:
+      "Order fresh halal meals from certified restaurants and vendors delivered straight to your door.",
+    icon: Truck,
+    gradient: "from-orange-500 to-amber-600",
+    bgHover: "group-hover:bg-orange-500/5",
+    href: "https://www.halalme.co.uk/en/home",
+    external: true,
+    tag: "Live",
+    tagColor: "bg-emerald-400/20 text-emerald-300 border-emerald-400/30",
+  },
+  {
+    name: "Kitchen",
+    description:
+      "Discover halal recipes, AI-powered meal planning, and step-by-step cooking guides for every skill level.",
+    icon: ChefHat,
+    gradient: "from-pink-500 to-rose-600",
+    bgHover: "group-hover:bg-pink-500/5",
+    href: "/kitchen",
+    external: false,
+    tag: "Beta",
+    tagColor: "bg-pink-400/20 text-pink-300 border-pink-400/30",
+  },
+  {
+    name: "Fresh",
+    description:
+      "Shop pre-made halal meals and fresh ingredients. Quality assured, ready to heat or cook at home.",
+    icon: ShoppingBag,
+    gradient: "from-lime-500 to-green-600",
+    bgHover: "group-hover:bg-lime-500/5",
+    href: "/fresh",
+    external: false,
+    tag: "Live",
+    tagColor: "bg-emerald-400/20 text-emerald-300 border-emerald-400/30",
+  },
+  {
+    name: "Hub",
+    description:
+      "Connect with your local halal community. Share recipes, attend food events, and discover new favourites.",
+    icon: Users,
+    gradient: "from-amber-500 to-yellow-600",
+    bgHover: "group-hover:bg-amber-500/5",
+    href: "/hub",
+    external: false,
+    tag: "Beta",
+    tagColor: "bg-amber-400/20 text-amber-300 border-amber-400/30",
+  },
+  {
+    name: "Travel",
+    description:
+      "Find halal-friendly hotels, flights, and city guides. Travel the world without compromising your values.",
+    icon: Plane,
+    gradient: "from-sky-500 to-blue-600",
+    bgHover: "group-hover:bg-sky-500/5",
+    href: "/travel",
+    external: false,
+    tag: "Live",
+    tagColor: "bg-emerald-400/20 text-emerald-300 border-emerald-400/30",
+  },
+  {
+    name: "Rewards",
+    description:
+      "Earn points across all HalalMe services. Redeem for discounts, donate to charity, or unlock exclusive perks.",
+    icon: Gift,
+    gradient: "from-teal-500 to-emerald-600",
+    bgHover: "group-hover:bg-teal-500/5",
+    href: "/rewards",
+    external: false,
+    tag: "Live",
+    tagColor: "bg-emerald-400/20 text-emerald-300 border-emerald-400/30",
+  },
+];
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-amber-50 pt-20 md:pt-24">
-      <div className="container mx-auto px-4 py-8 sm:py-12">
-        <div className="mx-auto max-w-5xl">
-          {/* Welcome Section */}
-          <div className="mb-8 rounded-xl border bg-white p-6 sm:p-8 shadow-md">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-              Welcome back, {user?.name}! 👋
-            </h1>
-            <p className="mt-2 text-sm sm:text-base text-gray-600">
-              Here's your HalalMe Ecosystem overview
-            </p>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-emerald-950 via-emerald-900 to-teal-900 relative overflow-hidden">
+      {/* Lightweight ambient background - radial gradients instead of blur orbs */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse 60% 40% at 70% 5%, rgba(16,185,129,0.10) 0%, transparent 70%), radial-gradient(ellipse 40% 40% at 5% 70%, rgba(245,158,11,0.06) 0%, transparent 70%), radial-gradient(ellipse 40% 30% at 90% 90%, rgba(20,184,166,0.06) 0%, transparent 70%)",
+        }}
+      />
+      <div
+        className="absolute inset-0 pointer-events-none opacity-[0.02]"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle at 2px 2px, white 1px, transparent 0)",
+          backgroundSize: "40px 40px",
+        }}
+      />
 
-          {/* Stats Grid */}
-          <div className="mb-8 grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-3">
-            <div className="rounded-xl border bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
-              <h3 className="text-sm font-medium text-gray-600">Orders</h3>
-              <p className="mt-2 text-3xl font-bold text-purple-600">0</p>
-              <p className="mt-1 text-xs text-gray-500">No orders yet</p>
-            </div>
-
-            <div className="rounded-xl border bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
-              <h3 className="text-sm font-medium text-gray-600">Rewards</h3>
-              <p className="mt-2 text-3xl font-bold text-amber-600">0 pts</p>
-              <p className="mt-1 text-xs text-gray-500">Start earning today</p>
-            </div>
-
-            <div className="rounded-xl border bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
-              <h3 className="text-sm font-medium text-gray-600">Saved Items</h3>
-              <p className="mt-2 text-3xl font-bold text-green-600">0</p>
-              <p className="mt-1 text-xs text-gray-500">Save your favorites</p>
-            </div>
-          </div>
-
-          {/* HalalMe Services - Coming Soon */}
-          <div className="mb-8 rounded-xl border bg-gradient-to-br from-purple-50 to-pink-50 p-6 sm:p-8 shadow-sm">
-            <h2 className="mb-6 text-xl sm:text-2xl font-bold text-gray-900">
-              HalalMe Ecosystem Services
-            </h2>
-            <div className="grid gap-6 sm:grid-cols-2">
-              {/* Kitchen - Coming Soon */}
-              <div className="relative rounded-xl border-2 border-pink-200 bg-white p-6 shadow-sm overflow-hidden">
-                <div className="absolute top-3 right-3">
-                  <span className="inline-flex items-center rounded-full bg-pink-100 px-3 py-1 text-xs font-semibold text-pink-700">
-                    Coming Soon
-                  </span>
-                </div>
-                <div className="mb-4 inline-flex rounded-full bg-pink-100 p-3">
-                  <svg
-                    className="h-8 w-8 text-pink-600"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                    />
-                  </svg>
-                </div>
-                <h3 className="mb-2 text-lg font-bold text-gray-900">HalalMe Kitchen</h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  Discover recipes, meal planning, and cooking tips
-                </p>
-                <div className="space-y-2">
-                  <div className="flex items-center text-xs text-gray-500">
-                    <svg className="mr-2 h-4 w-4 text-pink-500" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    Recipe database
-                  </div>
-                  <div className="flex items-center text-xs text-gray-500">
-                    <svg className="mr-2 h-4 w-4 text-pink-500" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    Meal planning tools
-                  </div>
-                  <div className="flex items-center text-xs text-gray-500">
-                    <svg className="mr-2 h-4 w-4 text-pink-500" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    Cooking guides
-                  </div>
-                </div>
-                <Button disabled className="w-full mt-4 opacity-60 cursor-not-allowed">
-                  In Development
-                </Button>
-              </div>
-
-              {/* Hub - Coming Soon */}
-              <div className="relative rounded-xl border-2 border-amber-200 bg-white p-6 shadow-sm overflow-hidden">
-                <div className="absolute top-3 right-3">
-                  <span className="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
-                    Coming Soon
-                  </span>
-                </div>
-                <div className="mb-4 inline-flex rounded-full bg-amber-100 p-3">
-                  <svg
-                    className="h-8 w-8 text-amber-600"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                    />
-                  </svg>
-                </div>
-                <h3 className="mb-2 text-lg font-bold text-gray-900">HalalMe Hub</h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  Community sharing, events, and food connections
-                </p>
-                <div className="space-y-2">
-                  <div className="flex items-center text-xs text-gray-500">
-                    <svg className="mr-2 h-4 w-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    Food sharing
-                  </div>
-                  <div className="flex items-center text-xs text-gray-500">
-                    <svg className="mr-2 h-4 w-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    Community events
-                  </div>
-                  <div className="flex items-center text-xs text-gray-500">
-                    <svg className="mr-2 h-4 w-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    Social connections
-                  </div>
-                </div>
-                <Button disabled className="w-full mt-4 opacity-60 cursor-not-allowed">
-                  In Development
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="mb-8 rounded-xl border bg-white p-6 sm:p-8 shadow-sm">
-            <h2 className="mb-4 text-xl font-semibold text-gray-900">
-              Available Now
-            </h2>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <a
-                href="https://www.halalme.co.uk/en/home"
-                target="_blank"
-                rel="noopener noreferrer"
+      <div className="relative z-10">
+        {/* Top Navigation Bar */}
+        <nav className="border-b border-white/10 bg-white/[0.03]">
+          <div className="container mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+            <Link href="/" className="flex items-center gap-2">
+              <span
+                className="text-xl font-bold text-white"
+                style={{ fontFamily: "var(--font-headline)" }}
               >
-                <Button variant="outline" className="w-full">
-                  🚀 Order Delivery
-                </Button>
-              </a>
-              <Link href="/#fresh">
-                <Button variant="outline" className="w-full">
-                  🌿 Shop Fresh
-                </Button>
+                Halal<span className="text-amber-400">Me</span>
+              </span>
+            </Link>
+            <div className="flex items-center gap-1 sm:gap-3">
+              <Link
+                href="/profile"
+                className="p-2.5 sm:p-2 rounded-lg text-white/50 hover:text-white/80 hover:bg-white/10 transition-colors"
+              >
+                <Settings className="w-5 h-5" />
               </Link>
-              <Link href="/#travel">
-                <Button variant="outline" className="w-full">
-                  ✈️ Explore Travel
-                </Button>
+              <Link
+                href="/help"
+                className="p-2.5 sm:p-2 rounded-lg text-white/50 hover:text-white/80 hover:bg-white/10 transition-colors"
+              >
+                <HelpCircle className="w-5 h-5" />
               </Link>
-              <Link href="/#rewards">
-                <Button variant="outline" className="w-full">
-                  🎁 View Rewards
-                </Button>
-              </Link>
-              <Link href="/profile">
-                <Button variant="outline" className="w-full">
-                  ⚙️ Edit Profile
-                </Button>
-              </Link>
-              <Link href="/help">
-                <Button variant="outline" className="w-full">
-                  ❓ Get Help
-                </Button>
-              </Link>
+              <button
+                onClick={() => logout()}
+                className="p-2.5 sm:p-2 rounded-lg text-white/50 hover:text-red-400 hover:bg-white/10 transition-colors"
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
             </div>
           </div>
+        </nav>
 
-          {/* Account Info */}
-          <div className="rounded-xl border bg-white p-6 sm:p-8 shadow-sm">
-            <h2 className="mb-4 text-xl font-semibold text-gray-900">
-              Account Information
-            </h2>
-            <div className="space-y-3">
-              <div>
-                <p className="text-sm text-gray-600">Email</p>
-                <p className="font-medium text-gray-900">{user?.email}</p>
+        <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
+          <div className="mx-auto max-w-6xl">
+            {/* Welcome Section */}
+            <div className="mb-10 animate-fade-in-up">
+              <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-4">
+                <div>
+                  <div className="flex items-center gap-3 mb-1">
+                    <p className="text-emerald-400 text-sm font-medium">
+                      Welcome back
+                    </p>
+                    <span className="inline-flex sm:hidden items-center gap-1 rounded-full bg-emerald-400/15 border border-emerald-400/20 px-2 py-0.5 text-[10px] font-medium text-emerald-300">
+                      <ShieldCheck className="w-3 h-3" />
+                      Verified
+                    </span>
+                  </div>
+                  <h1
+                    className="text-2xl sm:text-4xl font-extrabold text-white"
+                    style={{ fontFamily: "var(--font-headline)" }}
+                  >
+                    {user?.name || "there"}
+                  </h1>
+                  <p className="mt-1.5 sm:mt-2 text-emerald-200/50 text-xs sm:text-sm">
+                    Your halal ecosystem dashboard
+                  </p>
+                </div>
+                <div className="hidden sm:flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-400/15 border border-emerald-400/20 px-3 py-1.5 text-xs font-medium text-emerald-300">
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    Verified Member
+                  </span>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-gray-600">Member Since</p>
-                <p className="font-medium text-gray-900">
-                  {user?.createdAt
-                    ? new Date(user.createdAt).toLocaleDateString()
-                    : "Today"}
-                </p>
+            </div>
+
+            {/* Stats Row */}
+            <div className="mb-10 grid gap-4 grid-cols-1 sm:grid-cols-3 animate-fade-in-up animation-delay-200">
+              {[
+                {
+                  label: "Total Orders",
+                  value: "0",
+                  sub: "Place your first order",
+                  icon: TrendingUp,
+                  color: "text-amber-400",
+                  bg: "bg-amber-400/10",
+                },
+                {
+                  label: "Reward Points",
+                  value: "0",
+                  sub: "Start earning today",
+                  icon: Star,
+                  color: "text-emerald-400",
+                  bg: "bg-emerald-400/10",
+                },
+                {
+                  label: "Saved Items",
+                  value: "0",
+                  sub: "Save your favourites",
+                  icon: Heart,
+                  color: "text-pink-400",
+                  bg: "bg-pink-400/10",
+                },
+              ].map((stat, i) => (
+                <div
+                  key={i}
+                  className="rounded-2xl bg-white/[0.05] border border-white/8 p-5 hover:bg-white/[0.08] transition-colors duration-300"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm text-emerald-200/50">
+                      {stat.label}
+                    </span>
+                    <div
+                      className={`w-8 h-8 rounded-lg ${stat.bg} flex items-center justify-center`}
+                    >
+                      <stat.icon className={`w-4 h-4 ${stat.color}`} />
+                    </div>
+                  </div>
+                  <p className="text-2xl font-bold text-white">{stat.value}</p>
+                  <p className="text-xs text-emerald-200/40 mt-1">{stat.sub}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Ecosystem Services */}
+            <div className="mb-4 animate-fade-in-up animation-delay-300">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2
+                    className="text-xl sm:text-2xl font-bold text-white"
+                    style={{ fontFamily: "var(--font-headline)" }}
+                  >
+                    Explore the{" "}
+                    <span className="bg-gradient-to-r from-amber-300 to-amber-400 bg-clip-text text-transparent">
+                      Ecosystem
+                    </span>
+                  </h2>
+                  <p className="text-sm text-emerald-200/40 mt-1">
+                    Six services, one unified account
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mb-10 animate-fade-in-up animation-delay-400">
+              {services.map((service, i) => {
+                const Icon = service.icon;
+                const CardContent = (
+                  <div
+                    key={i}
+                    className={`group relative rounded-2xl bg-white/[0.05] border border-white/8 p-5 sm:p-6 hover:bg-white/[0.08] hover:border-white/15 transition-colors duration-300 cursor-pointer overflow-hidden h-full`}
+                  >
+                    {/* Subtle hover glow */}
+                    <div
+                      className={`absolute inset-0 ${service.bgHover} opacity-0 transition-opacity duration-500 rounded-2xl`}
+                    />
+
+                    <div className="relative z-10">
+                      {/* Top row: icon + tag */}
+                      <div className="flex items-start justify-between mb-4">
+                        <div
+                          className={`w-12 h-12 rounded-xl bg-gradient-to-br ${service.gradient} flex items-center justify-center`}
+                        >
+                          <Icon className="w-6 h-6 text-white" />
+                        </div>
+                        <span
+                          className={`inline-flex items-center rounded-full ${service.tagColor} border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider`}
+                        >
+                          {service.tag}
+                        </span>
+                      </div>
+
+                      {/* Title */}
+                      <h3 className="text-lg font-bold text-white mb-2">
+                        HalalMe {service.name}
+                      </h3>
+
+                      {/* Description */}
+                      <p className="text-sm text-emerald-200/50 leading-relaxed mb-4">
+                        {service.description}
+                      </p>
+
+                      {/* Link indicator */}
+                      <div className="flex items-center text-sm font-medium text-emerald-400/70 group-hover:text-emerald-400 transition-colors">
+                        <span>
+                          {service.external ? "Visit platform" : "Explore"}
+                        </span>
+                        <ArrowRight className="w-4 h-4 ml-1.5 group-hover:translate-x-1 transition-transform duration-300" />
+                      </div>
+                    </div>
+                  </div>
+                );
+
+                if (service.external) {
+                  return (
+                    <a
+                      key={i}
+                      href={service.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block"
+                    >
+                      {CardContent}
+                    </a>
+                  );
+                }
+
+                return (
+                  <Link key={i} href={service.href} className="block">
+                    {CardContent}
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Account Info Footer */}
+            <div className="rounded-2xl bg-white/[0.04] border border-white/6 p-6 animate-fade-in-up animation-delay-500">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                  {/* Avatar */}
+                  <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-bold text-base sm:text-lg flex-shrink-0">
+                    {user?.name?.charAt(0)?.toUpperCase() || "U"}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-white truncate">
+                      {user?.email}
+                    </p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <Clock className="w-3 h-3 text-emerald-200/40 flex-shrink-0" />
+                      <p className="text-xs text-emerald-200/40">
+                        Member since{" "}
+                        {user?.createdAt
+                          ? new Date(user.createdAt).toLocaleDateString(
+                              "en-GB",
+                              {
+                                month: "short",
+                                year: "numeric",
+                              }
+                            )
+                          : "Today"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-2 sm:gap-3">
+                  <Link
+                    href="/profile"
+                    className="px-3 sm:px-4 py-2 rounded-xl bg-white/8 border border-white/10 text-xs sm:text-sm text-white/70 hover:text-white hover:bg-white/12 transition-colors whitespace-nowrap"
+                  >
+                    Edit Profile
+                  </Link>
+                  <Link
+                    href="/help"
+                    className="px-3 sm:px-4 py-2 rounded-xl bg-white/8 border border-white/10 text-xs sm:text-sm text-white/70 hover:text-white hover:bg-white/12 transition-colors whitespace-nowrap"
+                  >
+                    Get Help
+                  </Link>
+                </div>
               </div>
             </div>
           </div>

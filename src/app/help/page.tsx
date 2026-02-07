@@ -4,7 +4,6 @@ import { motion, useInView } from 'framer-motion';
 import { useRef, useState } from 'react';
 import Link from 'next/link';
 import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
 
 export default function HelpPage() {
   return (
@@ -45,8 +44,6 @@ export default function HelpPage() {
       {/* Contact CTA */}
       <ContactCTASection />
 
-      {/* Footer */}
-      <Footer />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
@@ -8,6 +8,7 @@ import { usePathname } from "next/navigation";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { AuthProvider } from "@/context/AuthContext";
+import { CartProvider } from "@/context/CartContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,7 +31,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>
-          <LayoutContent>{children}</LayoutContent>
+          <CartProvider>
+            <LayoutContent>{children}</LayoutContent>
+          </CartProvider>
         </AuthProvider>
       </body>
     </html>
@@ -42,22 +45,33 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
   // Pages where footer should be hidden
   const hideFooterPaths = [
-    '/kitchen',
-    '/login',
-    '/signup',
-    '/forgot-password',
-    '/dashboard',
-    '/profile',
-    '/hub',
+    "/kitchen",
+    "/login",
+    "/signup",
+    "/forgot-password",
+    "/dashboard",
+    "/profile",
+    "/hub",
+    "/select-role",
   ];
 
   // Pages where header should be hidden
   const hideHeaderPaths = [
-    '/hub',
+    "/hub",
+    "/login",
+    "/signup",
+    "/forgot-password",
+    "/dashboard",
+    "/profile",
+    "/select-role",
   ];
 
-  const shouldHideFooter = hideFooterPaths.some(path => pathname?.startsWith(path));
-  const shouldHideHeader = hideHeaderPaths.some(path => pathname?.startsWith(path));
+  const shouldHideFooter = hideFooterPaths.some((path) =>
+    pathname?.startsWith(path),
+  );
+  const shouldHideHeader = hideHeaderPaths.some((path) =>
+    pathname?.startsWith(path),
+  );
 
   return (
     <>

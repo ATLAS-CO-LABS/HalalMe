@@ -5,8 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Eye, EyeOff, Check, X } from "lucide-react";
 
 export default function SignupForm() {
   const router = useRouter();
@@ -17,20 +16,23 @@ export default function SignupForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  const passwordChecks = [
+    { label: "8+ characters", met: password.length >= 8 },
+    { label: "1 uppercase", met: /[A-Z]/.test(password) },
+    { label: "1 number", met: /[0-9]/.test(password) },
+  ];
+
   const validatePassword = (pwd: string): string | null => {
-    if (pwd.length < 8) {
-      return "Password must be at least 8 characters";
-    }
-    if (!/[A-Z]/.test(pwd)) {
+    if (pwd.length < 8) return "Password must be at least 8 characters";
+    if (!/[A-Z]/.test(pwd))
       return "Password must contain at least one uppercase letter";
-    }
-    if (!/[0-9]/.test(pwd)) {
+    if (!/[0-9]/.test(pwd))
       return "Password must contain at least one number";
-    }
     return null;
   };
 
@@ -38,7 +40,6 @@ export default function SignupForm() {
     e.preventDefault();
     setError("");
 
-    // Validation
     if (password !== confirmPassword) {
       setError("Passwords do not match");
       return;
@@ -59,7 +60,6 @@ export default function SignupForm() {
 
     try {
       await signup(name, email, password);
-      // If user came from role selection, go directly to dashboard
       if (role === "ecosystem") {
         router.push("/dashboard");
       } else {
@@ -73,23 +73,28 @@ export default function SignupForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-2">
-        <Label htmlFor="name">Full Name</Label>
-        <Input
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <div className="space-y-1.5">
+        <label htmlFor="name" className="text-sm font-medium text-emerald-100/80">
+          Full Name
+        </label>
+        <input
           id="name"
           type="text"
-          placeholder="John Doe"
+          placeholder="Your full name"
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
           disabled={isLoading}
+          className="w-full h-11 px-4 rounded-xl bg-white/[0.08] border border-white/15 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400/50 transition-all disabled:opacity-50"
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input
+      <div className="space-y-1.5">
+        <label htmlFor="email" className="text-sm font-medium text-emerald-100/80">
+          Email
+        </label>
+        <input
           id="email"
           type="email"
           placeholder="you@example.com"
@@ -97,56 +102,104 @@ export default function SignupForm() {
           onChange={(e) => setEmail(e.target.value)}
           required
           disabled={isLoading}
+          className="w-full h-11 px-4 rounded-xl bg-white/[0.08] border border-white/15 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400/50 transition-all disabled:opacity-50"
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
-        <Input
-          id="password"
-          type="password"
-          placeholder="••••••••"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          disabled={isLoading}
-        />
-        <p className="text-xs text-gray-500">
-          At least 8 characters, 1 uppercase, 1 number
-        </p>
+      <div className="space-y-1.5">
+        <label htmlFor="password" className="text-sm font-medium text-emerald-100/80">
+          Password
+        </label>
+        <div className="relative">
+          <input
+            id="password"
+            type={showPassword ? "text" : "password"}
+            placeholder="Create a strong password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            disabled={isLoading}
+            className="w-full h-11 px-4 pr-11 rounded-xl bg-white/[0.08] border border-white/15 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400/50 transition-all disabled:opacity-50"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors"
+          >
+            {showPassword ? (
+              <EyeOff className="w-4 h-4" />
+            ) : (
+              <Eye className="w-4 h-4" />
+            )}
+          </button>
+        </div>
+        {password.length > 0 && (
+          <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
+            {passwordChecks.map((check, i) => (
+              <div key={i} className="flex items-center gap-1">
+                {check.met ? (
+                  <Check className="w-3 h-3 text-emerald-400 flex-shrink-0" />
+                ) : (
+                  <X className="w-3 h-3 text-white/30 flex-shrink-0" />
+                )}
+                <span
+                  className={`text-xs whitespace-nowrap ${check.met ? "text-emerald-400" : "text-white/30"}`}
+                >
+                  {check.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="confirmPassword">Confirm Password</Label>
-        <Input
+      <div className="space-y-1.5">
+        <label
+          htmlFor="confirmPassword"
+          className="text-sm font-medium text-emerald-100/80"
+        >
+          Confirm Password
+        </label>
+        <input
           id="confirmPassword"
           type="password"
-          placeholder="••••••••"
+          placeholder="Confirm your password"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           required
           disabled={isLoading}
+          className={`w-full h-11 px-4 rounded-xl bg-white/[0.08] border text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-emerald-400/50 transition-all disabled:opacity-50 ${
+            confirmPassword.length > 0 && password !== confirmPassword
+              ? "border-red-400/50"
+              : "border-white/15 focus:border-emerald-400/50"
+          }`}
         />
+        {confirmPassword.length > 0 && password !== confirmPassword && (
+          <p className="text-xs text-red-400 mt-1">Passwords don&apos;t match</p>
+        )}
       </div>
 
-      <div className="flex items-start space-x-2">
+      <div className="flex items-start space-x-3">
         <input
           id="terms"
           type="checkbox"
           checked={agreeToTerms}
           onChange={(e) => setAgreeToTerms(e.target.checked)}
-          className="mt-1 h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+          className="mt-1 h-4 w-4 rounded border-white/30 bg-white/10 text-emerald-500 focus:ring-emerald-400/50 accent-emerald-500"
           disabled={isLoading}
         />
-        <label htmlFor="terms" className="text-sm text-gray-600">
+        <label htmlFor="terms" className="text-sm text-emerald-200/60">
           I agree to the{" "}
-          <Link href="/terms" className="text-purple-600 hover:text-purple-700">
+          <Link
+            href="/terms"
+            className="text-amber-400 hover:text-amber-300 transition-colors"
+          >
             Terms and Conditions
           </Link>{" "}
           and{" "}
           <Link
             href="/privacy"
-            className="text-purple-600 hover:text-purple-700"
+            className="text-amber-400 hover:text-amber-300 transition-colors"
           >
             Privacy Policy
           </Link>
@@ -154,18 +207,33 @@ export default function SignupForm() {
       </div>
 
       {error && (
-        <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">
+        <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-3 text-sm text-red-300 flex items-center gap-2">
+          <X className="w-4 h-4 flex-shrink-0" />
           {error}
         </div>
       )}
 
-      <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? "Creating account..." : "Create account"}
+      <Button
+        type="submit"
+        className="w-full bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-white font-bold rounded-xl h-12 shadow-lg shadow-emerald-500/20 text-base"
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <span className="flex items-center gap-2">
+            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            Creating account...
+          </span>
+        ) : (
+          "Create account"
+        )}
       </Button>
 
-      <p className="text-center text-sm text-gray-600">
+      <p className="text-center text-sm text-emerald-200/50">
         Already have an account?{" "}
-        <Link href="/login" className="text-purple-600 hover:text-purple-700">
+        <Link
+          href="/login"
+          className="text-amber-400 hover:text-amber-300 font-medium transition-colors"
+        >
           Sign in
         </Link>
       </p>

@@ -4,51 +4,51 @@
 
 /* Custom Font Faces */
 @font-face {
-  font-family: 'Poppins';
-  src: url('/fonts/Poppins/Poppins-Black.ttf') format('truetype');
-  font-weight: 700;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Work Sans';
-  src: url('/fonts/Work_Sans/static/WorkSans-Bold.ttf') format('truetype');
-  font-weight: 700;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Work Sans';
-  src: url('/fonts/Work_Sans/static/WorkSans-ExtraBold.ttf') format('truetype');
-  font-weight: 800;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Nunito';
-  src: url('/fonts/Nunito/static/Nunito-Regular.ttf') format('truetype');
-  font-weight: 400;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Nunito';
-  src: url('/fonts/Nunito/static/Nunito-SemiBold.ttf') format('truetype');
+  font-family: "Poppins";
+  src: url("/fonts/Poppins/Poppins-Black.ttf") format("truetype");
   font-weight: 600;
   font-style: normal;
 }
 
 @font-face {
-  font-family: 'Unbounded';
-  src: url('/fonts/Unbounded/static/Unbounded-ExtraBold.ttf') format('truetype');
+  font-family: "Work Sans";
+  src: url("/fonts/Work_Sans/static/WorkSans-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Work Sans";
+  src: url("/fonts/Work_Sans/static/WorkSans-ExtraBold.ttf") format("truetype");
   font-weight: 800;
   font-style: normal;
 }
 
+@font-face {
+  font-family: "Nunito";
+  src: url("/fonts/Nunito/static/Nunito-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Nunito";
+  src: url("/fonts/Nunito/static/Nunito-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Unbounded";
+  src: url("/fonts/Unbounded/static/Unbounded-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+}
+
 :root {
-  --font-logo: 'Poppins', sans-serif;
-  --font-headline: 'Poppins', sans-serif;
-  --font-body: 'Nunito', sans-serif;
+  --font-logo: "poppins", sans-serif;
+  --font-headline: "poppins", sans-serif;
+  --font-body: "Nunito", sans-serif;
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -208,13 +208,17 @@ body {
 .section-slide-in .feature-content {
   opacity: 0;
   transform: translateX(-30px);
-  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+  transition:
+    opacity 0.8s ease-out,
+    transform 0.8s ease-out;
 }
 
 .section-slide-in .feature-icon {
   opacity: 0;
   transform: translateX(30px);
-  transition: opacity 0.8s ease-out 0.2s, transform 0.8s ease-out 0.2s;
+  transition:
+    opacity 0.8s ease-out 0.2s,
+    transform 0.8s ease-out 0.2s;
 }
 
 .section-slide-in.section-visible {
@@ -233,43 +237,52 @@ body {
 
 /* Premium glow effects for each section */
 .glow-orange {
-  box-shadow: 0 20px 60px -15px rgba(249, 115, 22, 0.15),
-              0 0 40px -10px rgba(249, 115, 22, 0.08);
-}
-
-.glow-purple {
-  box-shadow: 0 20px 60px -15px rgba(147, 51, 234, 0.15),
-              0 0 40px -10px rgba(147, 51, 234, 0.08);
-}
-
-.glow-pink {
-  box-shadow: 0 20px 60px -15px rgba(236, 72, 153, 0.15),
-              0 0 40px -10px rgba(236, 72, 153, 0.08);
-}
-
-.glow-emerald {
-  box-shadow: 0 20px 60px -15px rgba(16, 185, 129, 0.15),
-              0 0 40px -10px rgba(16, 185, 129, 0.08);
-}
-
-.glow-amber {
-  box-shadow: 0 20px 60px -15px rgba(245, 158, 11, 0.15),
-              0 0 40px -10px rgba(245, 158, 11, 0.08);
-}
-
-.glow-sky {
-  box-shadow: 0 20px 60px -15px rgba(14, 165, 233, 0.15),
-              0 0 40px -10px rgba(14, 165, 233, 0.08);
+  box-shadow:
+    0 20px 60px -15px rgba(249, 115, 22, 0.15),
+    0 0 40px -10px rgba(249, 115, 22, 0.08);
 }
 
 .glow-teal {
-  box-shadow: 0 20px 60px -15px rgba(20, 184, 166, 0.15),
-              0 0 40px -10px rgba(20, 184, 166, 0.08);
+  box-shadow:
+    0 20px 60px -15px rgba(20, 184, 166, 0.15),
+    0 0 40px -10px rgba(20, 184, 166, 0.08);
+}
+
+.glow-pink {
+  box-shadow:
+    0 20px 60px -15px rgba(236, 72, 153, 0.15),
+    0 0 40px -10px rgba(236, 72, 153, 0.08);
+}
+
+.glow-emerald {
+  box-shadow:
+    0 20px 60px -15px rgba(16, 185, 129, 0.15),
+    0 0 40px -10px rgba(16, 185, 129, 0.08);
+}
+
+.glow-amber {
+  box-shadow:
+    0 20px 60px -15px rgba(245, 158, 11, 0.15),
+    0 0 40px -10px rgba(245, 158, 11, 0.08);
+}
+
+.glow-sky {
+  box-shadow:
+    0 20px 60px -15px rgba(14, 165, 233, 0.15),
+    0 0 40px -10px rgba(14, 165, 233, 0.08);
+}
+
+.glow-teal {
+  box-shadow:
+    0 20px 60px -15px rgba(20, 184, 166, 0.15),
+    0 0 40px -10px rgba(20, 184, 166, 0.08);
 }
 
 /* Feature icon hover effect */
 .feature-icon {
-  transition: transform 0.4s ease, box-shadow 0.4s ease;
+  transition:
+    transform 0.4s ease,
+    box-shadow 0.4s ease;
 }
 
 .feature-icon:hover {
@@ -278,7 +291,8 @@ body {
 }
 
 /* Smooth transitions for all interactive elements */
-a, button {
+a,
+button {
   transition: all 0.3s ease;
 }
 
@@ -320,7 +334,8 @@ a, button {
 
 /* Float animation for icons */
 @keyframes float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0px);
   }
   50% {
@@ -334,11 +349,12 @@ a, button {
 
 /* Pulse glow animation */
 @keyframes pulse-glow {
-  0%, 100% {
-    box-shadow: 0 0 20px rgba(147, 51, 234, 0.3);
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
   }
   50% {
-    box-shadow: 0 0 30px rgba(147, 51, 234, 0.6);
+    box-shadow: 0 0 30px rgba(16, 185, 129, 0.6);
   }
 }
 
@@ -420,7 +436,6 @@ main:has(.loading-header) {
   z-index: 9999;
   overflow: hidden;
 }
-
 
 .loading-loader {
   color: #201d1d;

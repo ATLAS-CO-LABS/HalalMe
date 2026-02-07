@@ -1,71 +1,121 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, useScroll, useTransform, AnimatePresence, useMotionValueEvent } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function Header() {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [hidden, setHidden] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   const { scrollY } = useScroll();
 
-  // Track scroll direction
+  const headerShadow = useTransform(
+    scrollY,
+    [0, 100],
+    ["0 1px 2px 0 rgba(0, 0, 0, 0.03)", "0 4px 12px -2px rgba(0, 0, 0, 0.08)"]
+  );
+
   useMotionValueEvent(scrollY, "change", (latest) => {
     const previous = scrollY.getPrevious() ?? 0;
-    if (latest > previous && latest > 150) {
+    const isScrollingDown = latest > previous;
+
+    if (latest < 40) {
+      setHidden(false);
+      return;
+    }
+
+    if (isScrollingDown && latest > 120) {
       setHidden(true);
     } else {
       setHidden(false);
     }
   });
 
-  const headerBg = useTransform(
-    scrollY,
-    [0, 100],
-    ["rgba(17, 24, 39, 0.95)", "rgba(17, 24, 39, 0.98)"]
-  );
-  const headerShadow = useTransform(
-    scrollY,
-    [0, 100],
-    ["0 1px 3px 0 rgba(0, 0, 0, 0.3)", "0 4px 12px -2px rgba(0, 0, 0, 0.5)"]
-  );
+  const navLinks = [
+    { href: '/about', label: 'About' },
+    { href: '/contact', label: 'Contact' },
+    { href: '/help', label: 'Help' },
+  ];
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+    setUserMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!userMenuOpen) return;
+
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [userMenuOpen]);
+
+  // Stagger animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.08,
+        delayChildren: 0.1,
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: -8 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.3, ease: "easeOut" as const }
+    }
+  };
 
   return (
     <motion.header
       variants={{
-        visible: { y: 0 },
-        hidden: { y: "-100%" }
+        visible: { y: 0, opacity: 1 },
+        hidden: { y: "-120%", opacity: 0.98 }
       }}
       animate={hidden ? "hidden" : "visible"}
-      transition={{ duration: 0.35, ease: "easeInOut" }}
-      className="fixed top-0 left-0 right-0 z-50 backdrop-blur-lg border-b border-gray-800/50"
-      style={{ backgroundColor: headerBg, boxShadow: headerShadow }}
+      transition={{ duration: 0.28, ease: "easeInOut" }}
+      className="fixed top-0 left-0 right-0 z-50 px-3 pt-3 sm:px-6"
     >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
+      <motion.div
+        className="mx-auto max-w-7xl rounded-2xl border border-emerald-200/70 bg-white/90 backdrop-blur-xl"
+        style={{ boxShadow: headerShadow }}
+      >
+        <div className="flex items-center justify-between h-16 px-3 sm:px-6">
+          {/* Logo - Left */}
           <Link href="/">
             <motion.div
-              className="flex items-center gap-2 cursor-pointer"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              className="flex items-center gap-2.5 cursor-pointer"
+              whileHover={{ opacity: 0.9 }}
+              transition={{ duration: 0.2 }}
             >
               <Image
                 src="/logo/logo.png"
                 alt="HalalMe Logo"
-                width={40}
-                height={40}
+                width={36}
+                height={36}
                 className="object-contain"
               />
               <span
-                className="text-lg sm:text-xl font-black bg-gradient-to-r from-purple-400 via-pink-400 to-teal-400 bg-clip-text text-transparent"
+                className="text-xl font-black text-emerald-900 tracking-tight"
                 style={{ fontFamily: 'var(--font-logo)' }}
               >
                 HalalMe
@@ -73,179 +123,142 @@ export default function Header() {
             </motion.div>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-6 xl:gap-8 text-sm font-medium text-gray-300">
-            <motion.a
-              href="/#delivery"
-              whileHover={{ scale: 1.05, color: "#c084fc" }}
-              className="transition-colors hover:text-purple-400"
+          {/* Desktop Navigation + Auth */}
+          <div className="hidden md:flex items-center gap-3">
+            <motion.nav
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              className="flex items-center gap-4 bg-emerald-50/80 ring-1 ring-emerald-200 rounded-full px-3 py-2"
             >
-              Delivery
-            </motion.a>
-            <Link href="/kitchen">
-              <motion.span
-                whileHover={{ scale: 1.05, color: "#f9a8d4" }}
-                className="transition-colors cursor-pointer hover:text-pink-400"
-              >
-                Kitchen
-              </motion.span>
-            </Link>
-            <motion.a
-              href="/#fresh"
-              whileHover={{ scale: 1.05, color: "#6ee7b7" }}
-              className="transition-colors hover:text-emerald-400"
-            >
-              Fresh
-            </motion.a>
-            <Link href="/hub">
-              <motion.span
-                whileHover={{ scale: 1.05, color: "#c084fc" }}
-                className="transition-colors cursor-pointer hover:text-purple-400"
-              >
-                Hub
-              </motion.span>
-            </Link>
-            <Link href="/travel">
-              <motion.span
-                whileHover={{ scale: 1.05, color: "#7dd3fc" }}
-                className="transition-colors cursor-pointer hover:text-sky-400"
-              >
-                Travel
-              </motion.span>
-            </Link>
-            <Link href="/rewards">
-              <motion.span
-                whileHover={{ scale: 1.05, color: "#5eead4" }}
-                className="transition-colors cursor-pointer hover:text-teal-400"
-              >
-                Rewards
-              </motion.span>
-            </Link>
-          </nav>
-
-          {/* Desktop Auth Buttons */}
-          <div className="hidden lg:flex items-center gap-3">
-            {user ? (
-              <>
-                {/* User Menu Dropdown */}
-                <div className="relative">
-                  <motion.button
-                    onClick={() => setUserMenuOpen(!userMenuOpen)}
-                    className="flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-600 via-pink-500 to-pink-600 px-4 py-2 text-sm font-medium text-white shadow-lg"
-                    whileHover={{
-                      scale: 1.05,
-                      boxShadow: "0 10px 25px -5px rgba(168, 85, 247, 0.6)"
-                    }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <div className="h-6 w-6 rounded-full bg-white/30 flex items-center justify-center backdrop-blur-sm">
-                      <span className="text-xs font-bold">{user.name.charAt(0).toUpperCase()}</span>
-                    </div>
-                    <span className="max-w-25 truncate">{user.name}</span>
-                    <motion.svg
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      animate={{ rotate: userMenuOpen ? 180 : 0 }}
-                      transition={{ duration: 0.2 }}
+              {navLinks.map((link, index) => (
+                <motion.div
+                  key={link.label}
+                  variants={itemVariants}
+                  style={{ transform: `translateY(${index % 2 === 0 ? '-2px' : '2px'})` }}
+                  whileHover={{ y: -2 }}
+                >
+                  <Link href={link.href}>
+                    <span
+                      className={`px-3 py-2 rounded-full text-sm font-bold transition-all duration-200 cursor-pointer ${
+                        pathname?.startsWith(link.href)
+                          ? 'text-emerald-950 bg-white ring-1 ring-emerald-300 shadow-sm'
+                          : 'text-emerald-700 hover:text-emerald-900 bg-white/70 hover:bg-white'
+                      }`}
                     >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </motion.svg>
-                  </motion.button>
+                      {link.label}
+                    </span>
+                  </Link>
+                </motion.div>
+              ))}
+            </motion.nav>
 
-                  <AnimatePresence>
-                    {userMenuOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                        transition={{ duration: 0.2 }}
-                        className="absolute right-0 mt-2 w-56 rounded-xl bg-gray-800 shadow-2xl ring-1 ring-gray-700 overflow-hidden"
-                      >
-                        <div className="bg-gradient-to-r from-purple-600 to-pink-600 px-4 py-3 text-white">
-                          <p className="text-xs opacity-90">Signed in as</p>
-                          <p className="text-sm font-semibold truncate">{user.email}</p>
-                        </div>
-                        <div className="py-1">
-                          <Link href="/profile">
-                            <div className="flex items-center px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 cursor-pointer transition-colors">
-                              <svg className="mr-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                              </svg>
-                              Profile Settings
-                            </div>
-                          </Link>
-                          <Link href="/dashboard">
-                            <div className="flex items-center px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 cursor-pointer transition-colors">
-                              <svg className="mr-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                              </svg>
-                              Dashboard
-                            </div>
-                          </Link>
-                          <hr className="my-1 border-gray-700" />
-                          <button
-                            onClick={() => {
-                              logout();
-                              setUserMenuOpen(false);
-                              router.push('/');
-                            }}
-                            className="flex w-full items-center px-4 py-2.5 text-sm text-red-400 hover:bg-red-900/20 transition-colors"
-                          >
-                            <svg className="mr-3 h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                            </svg>
-                            Logout
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </>
+            {user ? (
+              <motion.div variants={itemVariants} className="relative" ref={userMenuRef}>
+                <button
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="flex items-center gap-2 text-emerald-800 font-bold text-sm hover:text-emerald-900 transition-colors bg-emerald-50/70 border border-emerald-200 rounded-full pl-1.5 pr-3 py-1.5"
+                >
+                  <div className="h-7 w-7 rounded-full bg-emerald-600 flex items-center justify-center">
+                    <span className="text-xs font-bold text-white">{user.name.charAt(0).toUpperCase()}</span>
+                  </div>
+                  <span className="max-w-20 truncate">{user.name}</span>
+                  <svg
+                    className={`h-4 w-4 transition-transform duration-200 ${userMenuOpen ? 'rotate-180' : ''}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                <AnimatePresence>
+                  {userMenuOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
+                      className="absolute right-0 mt-3 w-56 rounded-xl bg-white shadow-xl ring-1 ring-emerald-100 overflow-hidden"
+                    >
+                      <div className="bg-emerald-50 px-4 py-3 border-b border-emerald-100">
+                        <p className="text-xs text-emerald-600">Signed in as</p>
+                        <p className="text-sm font-semibold text-emerald-800 truncate">{user.email}</p>
+                      </div>
+                      <div className="py-1">
+                        <Link href="/profile">
+                          <div className="flex items-center px-4 py-2.5 text-sm text-emerald-700 hover:bg-emerald-50 cursor-pointer transition-colors">
+                            Profile Settings
+                          </div>
+                        </Link>
+                        <Link href="/dashboard">
+                          <div className="flex items-center px-4 py-2.5 text-sm text-emerald-700 hover:bg-emerald-50 cursor-pointer transition-colors">
+                            Dashboard
+                          </div>
+                        </Link>
+                        <hr className="my-1 border-emerald-100" />
+                        <button
+                          onClick={() => {
+                            logout();
+                            setUserMenuOpen(false);
+                            router.push('/');
+                          }}
+                          className="flex w-full items-center px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                        >
+                          Logout
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
             ) : (
-              <>
-                <motion.button
+              <div className="flex items-center gap-2">
+                <button
                   onClick={() => router.push('/login')}
-                  className="text-sm font-medium text-gray-300 hover:text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  className="text-emerald-800 font-bold text-sm hover:text-emerald-950 transition-colors px-3 py-2 rounded-lg border border-emerald-200 bg-white/80"
                 >
                   Login
-                </motion.button>
-                <motion.button
+                </button>
+                <button
                   onClick={() => router.push('/select-role')}
-                  className="rounded-full bg-gradient-to-r from-purple-600 via-pink-500 to-pink-600 px-6 py-2.5 text-sm font-medium text-white shadow-lg"
-                  whileHover={{
-                    scale: 1.05,
-                    boxShadow: "0 10px 25px -5px rgba(168, 85, 247, 0.6)"
-                  }}
-                  whileTap={{ scale: 0.95 }}
+                  className="bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-800 hover:to-teal-800 text-white px-5 py-2.5 rounded-full font-bold text-sm transition-all duration-200 shadow-lg shadow-emerald-800/20"
                 >
                   Sign Up
-                </motion.button>
-              </>
+                </button>
+              </div>
             )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <div className="flex lg:hidden items-center gap-3">
+          {/* Mobile Actions */}
+          <div className="flex md:hidden items-center gap-2">
+            {!user && (
+              <>
+                <button
+                  onClick={() => router.push('/login')}
+                  className="px-3 py-2 text-sm font-bold text-emerald-800 rounded-lg border border-emerald-200 bg-emerald-50/70"
+                >
+                  Login
+                </button>
+                <button
+                  onClick={() => router.push('/select-role')}
+                  className="px-3 py-2 text-sm font-bold text-white rounded-lg bg-gradient-to-r from-emerald-700 to-teal-700"
+                >
+                  Sign Up
+                </button>
+              </>
+            )}
             {user && (
               <Link href="/dashboard">
-                <motion.div
-                  className="h-9 w-9 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center shadow-lg"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <span className="text-xs font-bold text-white">{user.name.charAt(0).toUpperCase()}</span>
-                </motion.div>
+                <div className="h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center">
+                  <span className="text-xs font-bold text-emerald-700">{user.name.charAt(0).toUpperCase()}</span>
+                </div>
               </Link>
             )}
-            <motion.button
+            <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg text-gray-300 hover:text-white hover:bg-gray-800 transition-colors"
-              whileTap={{ scale: 0.95 }}
+              className="p-2 rounded-lg text-emerald-700 hover:bg-emerald-50 transition-colors border border-transparent hover:border-emerald-200"
             >
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 {mobileMenuOpen ? (
@@ -254,7 +267,7 @@ export default function Header() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 )}
               </svg>
-            </motion.button>
+            </button>
           </div>
         </div>
 
@@ -265,41 +278,38 @@ export default function Header() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
-              className="lg:hidden overflow-hidden border-t border-gray-800"
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="md:hidden overflow-hidden border-t border-emerald-100 bg-white/95 backdrop-blur-sm"
             >
-              <div className="px-2 pt-2 pb-4 space-y-1">
-                {/* Mobile Navigation Links */}
-                <a href="/#delivery" className="block px-3 py-2.5 rounded-lg text-base font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-colors">
-                  Delivery
-                </a>
-                <Link href="/kitchen" className="block px-3 py-2.5 rounded-lg text-base font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-colors">
-                  Kitchen
-                </Link>
-                <a href="/#fresh" className="block px-3 py-2.5 rounded-lg text-base font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-colors">
-                  Fresh
-                </a>
-                <Link href="/hub" className="block px-3 py-2.5 rounded-lg text-base font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-colors">
-                  Hub
-                </Link>
-                <Link href="/travel" className="block px-3 py-2.5 rounded-lg text-base font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-colors">
-                  Travel
-                </Link>
-                <Link href="/rewards" className="block px-3 py-2.5 rounded-lg text-base font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-colors">
-                  Rewards
-                </Link>
+              <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                className="px-2 pt-3 pb-4 space-y-1"
+              >
+                {navLinks.map((link) => (
+                  <motion.div key={link.label} variants={itemVariants}>
+                    <Link
+                      href={link.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block px-3 py-2.5 rounded-lg text-base font-bold text-emerald-700 hover:bg-emerald-50 transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  </motion.div>
+                ))}
 
                 {/* Mobile Auth Section */}
-                <div className="pt-4 border-t border-gray-800 mt-2">
+                <motion.div variants={itemVariants} className="pt-3 border-t border-emerald-100 mt-2">
                   {user ? (
                     <>
-                      <div className="px-3 py-2 text-sm text-gray-400 bg-gray-800 rounded-lg mb-2">
-                        Signed in as <span className="font-medium text-gray-200 block mt-1">{user.email}</span>
+                      <div className="px-3 py-2 text-sm text-emerald-600 bg-emerald-50 rounded-lg mb-2">
+                        Signed in as <span className="font-semibold text-emerald-800 block mt-1">{user.email}</span>
                       </div>
-                      <Link href="/dashboard" className="block px-3 py-2.5 rounded-lg text-base font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-colors">
+                      <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-base font-bold text-emerald-700 hover:bg-emerald-50 transition-colors">
                         Dashboard
                       </Link>
-                      <Link href="/profile" className="block px-3 py-2.5 rounded-lg text-base font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-colors">
+                      <Link href="/profile" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-base font-bold text-emerald-700 hover:bg-emerald-50 transition-colors">
                         Profile
                       </Link>
                       <button
@@ -308,7 +318,7 @@ export default function Header() {
                           setMobileMenuOpen(false);
                           router.push('/');
                         }}
-                        className="block w-full text-left px-3 py-2.5 rounded-lg text-base font-medium text-red-400 hover:bg-red-900/20 transition-colors"
+                        className="block w-full text-left px-3 py-2.5 rounded-lg text-base font-bold text-red-600 hover:bg-red-50 transition-colors"
                       >
                         Logout
                       </button>
@@ -320,7 +330,7 @@ export default function Header() {
                           router.push('/login');
                           setMobileMenuOpen(false);
                         }}
-                        className="block w-full text-left px-3 py-2.5 rounded-lg text-base font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+                        className="block w-full text-left px-3 py-2.5 rounded-lg text-base font-bold text-emerald-700 hover:bg-emerald-50 transition-colors"
                       >
                         Login
                       </button>
@@ -329,18 +339,18 @@ export default function Header() {
                           router.push('/select-role');
                           setMobileMenuOpen(false);
                         }}
-                        className="block w-full mt-2 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 px-4 py-3 text-base font-medium text-white text-center shadow-lg"
+                        className="block w-full mt-2 bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-3 rounded-full text-base font-bold text-center transition-colors"
                       >
                         Sign Up
                       </button>
                     </>
                   )}
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </motion.div>
     </motion.header>
   );
 }
