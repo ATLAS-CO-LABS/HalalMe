@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { motion, useScroll, useTransform, AnimatePresence, useMotionValueEvent } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
@@ -13,105 +13,86 @@ export default function Header() {
   const { user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [hidden, setHidden] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
-  const { scrollY } = useScroll();
-
-  const headerShadow = useTransform(
-    scrollY,
-    [0, 100],
-    ["0 1px 2px 0 rgba(0, 0, 0, 0.03)", "0 4px 12px -2px rgba(0, 0, 0, 0.08)"]
-  );
-
-  useMotionValueEvent(scrollY, "change", (latest) => {
-    const previous = scrollY.getPrevious() ?? 0;
-    const isScrollingDown = latest > previous;
-
-    if (latest < 40) {
-      setHidden(false);
-      return;
-    }
-
-    if (isScrollingDown && latest > 120) {
-      setHidden(true);
-    } else {
-      setHidden(false);
-    }
-  });
-
   const navLinks = [
+    { href: '/fresh', label: 'Fresh' },
+    { href: '/kitchen', label: 'Kitchen' },
+    { href: '/travel', label: 'Travel' },
     { href: '/about', label: 'About' },
     { href: '/contact', label: 'Contact' },
     { href: '/help', label: 'Help' },
   ];
 
+  // Close menus on route change
   useEffect(() => {
     setMobileMenuOpen(false);
     setUserMenuOpen(false);
   }, [pathname]);
 
+  // Scroll detection
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 10);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // Close user menu on outside click
   useEffect(() => {
     if (!userMenuOpen) return;
-
-    const handleOutsideClick = (event: MouseEvent) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
         setUserMenuOpen(false);
       }
     };
-
     document.addEventListener('mousedown', handleOutsideClick);
     return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, [userMenuOpen]);
 
-  // Stagger animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.08,
-        delayChildren: 0.1,
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: -8 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.3, ease: "easeOut" as const }
-    }
-  };
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [mobileMenuOpen]);
 
   return (
-    <motion.header
-      variants={{
-        visible: { y: 0, opacity: 1 },
-        hidden: { y: "-120%", opacity: 0.98 }
-      }}
-      animate={hidden ? "hidden" : "visible"}
-      transition={{ duration: 0.28, ease: "easeInOut" }}
-      className="fixed top-0 left-0 right-0 z-50 px-3 pt-3 sm:px-6"
-    >
-      <motion.div
-        className="mx-auto max-w-7xl rounded-2xl border border-emerald-200/70 bg-white/90 backdrop-blur-xl"
-        style={{ boxShadow: headerShadow }}
+    <>
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          scrolled
+            ? 'bg-white/95 backdrop-blur-md shadow-sm border-b border-emerald-100/60'
+            : 'bg-white/80 backdrop-blur-sm'
+        }`}
       >
-        <div className="flex items-center justify-between h-16 px-3 sm:px-6">
-          {/* Logo - Left */}
-          <Link href="/">
-            <motion.div
-              className="flex items-center gap-2.5 cursor-pointer"
-              whileHover={{ opacity: 0.9 }}
-              transition={{ duration: 0.2 }}
-            >
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+
+            {/* ─── Mobile: Hamburger (left) ─── */}
+            <div className="md:hidden flex items-center">
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="p-2 -ml-2 rounded-lg text-emerald-700 hover:bg-emerald-50 transition-colors"
+                aria-label="Toggle menu"
+              >
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  {mobileMenuOpen ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                  )}
+                </svg>
+              </button>
+            </div>
+
+            {/* ─── Logo ─── */}
+            {/* Desktop: sits on the left. Mobile: centered via flex */}
+            <Link href="/" className="flex items-center gap-2.5 md:flex-none">
               <Image
                 src="/logo/logo.png"
                 alt="HalalMe Logo"
-                width={36}
-                height={36}
+                width={34}
+                height={34}
                 className="object-contain"
               />
               <span
@@ -120,197 +101,236 @@ export default function Header() {
               >
                 HalalMe
               </span>
-            </motion.div>
-          </Link>
+            </Link>
 
-          {/* Desktop Navigation + Auth */}
-          <div className="hidden md:flex items-center gap-3">
-            <motion.nav
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              className="flex items-center gap-4 bg-emerald-50/80 ring-1 ring-emerald-200 rounded-full px-3 py-2"
-            >
-              {navLinks.map((link, index) => (
-                <motion.div
-                  key={link.label}
-                  variants={itemVariants}
-                  style={{ transform: `translateY(${index % 2 === 0 ? '-2px' : '2px'})` }}
-                  whileHover={{ y: -2 }}
-                >
-                  <Link href={link.href}>
+            {/* ─── Desktop Navigation (center-right) ─── */}
+            <nav className="hidden md:flex items-center gap-1">
+              {navLinks.map((link) => {
+                const isActive = pathname?.startsWith(link.href);
+                return (
+                  <Link key={link.href} href={link.href}>
                     <span
-                      className={`px-3 py-2 rounded-full text-sm font-bold transition-all duration-200 cursor-pointer ${
-                        pathname?.startsWith(link.href)
-                          ? 'text-emerald-950 bg-white ring-1 ring-emerald-300 shadow-sm'
-                          : 'text-emerald-700 hover:text-emerald-900 bg-white/70 hover:bg-white'
+                      className={`relative px-3.5 py-2 rounded-lg text-sm font-semibold transition-colors duration-200 ${
+                        isActive
+                          ? 'text-emerald-900 bg-emerald-50'
+                          : 'text-gray-600 hover:text-emerald-800 hover:bg-emerald-50/60'
                       }`}
                     >
                       {link.label}
+                      {isActive && (
+                        <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-emerald-600 rounded-full" />
+                      )}
                     </span>
                   </Link>
-                </motion.div>
-              ))}
-            </motion.nav>
+                );
+              })}
+            </nav>
 
-            {user ? (
-              <motion.div variants={itemVariants} className="relative" ref={userMenuRef}>
-                <button
-                  onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="flex items-center gap-2 text-emerald-800 font-bold text-sm hover:text-emerald-900 transition-colors bg-emerald-50/70 border border-emerald-200 rounded-full pl-1.5 pr-3 py-1.5"
-                >
-                  <div className="h-7 w-7 rounded-full bg-emerald-600 flex items-center justify-center">
-                    <span className="text-xs font-bold text-white">{user.name.charAt(0).toUpperCase()}</span>
-                  </div>
-                  <span className="max-w-20 truncate">{user.name}</span>
-                  <svg
-                    className={`h-4 w-4 transition-transform duration-200 ${userMenuOpen ? 'rotate-180' : ''}`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
+            {/* ─── Desktop Auth ─── */}
+            <div className="hidden md:flex items-center gap-2.5">
+              {user ? (
+                <div className="relative" ref={userMenuRef}>
+                  <button
+                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                    className="flex items-center gap-2 text-sm font-semibold text-emerald-800 hover:text-emerald-900 transition-colors rounded-full pl-1 pr-3 py-1 hover:bg-emerald-50 border border-transparent hover:border-emerald-200"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-
-                <AnimatePresence>
-                  {userMenuOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -8 }}
-                      transition={{ duration: 0.2, ease: "easeOut" }}
-                      className="absolute right-0 mt-3 w-56 rounded-xl bg-white shadow-xl ring-1 ring-emerald-100 overflow-hidden"
+                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-sm">
+                      <span className="text-xs font-bold text-white">
+                        {user.name.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <span className="max-w-24 truncate">{user.name}</span>
+                    <svg
+                      className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${userMenuOpen ? 'rotate-180' : ''}`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
                     >
-                      <div className="bg-emerald-50 px-4 py-3 border-b border-emerald-100">
-                        <p className="text-xs text-emerald-600">Signed in as</p>
-                        <p className="text-sm font-semibold text-emerald-800 truncate">{user.email}</p>
-                      </div>
-                      <div className="py-1">
-                        <Link href="/profile">
-                          <div className="flex items-center px-4 py-2.5 text-sm text-emerald-700 hover:bg-emerald-50 cursor-pointer transition-colors">
-                            Profile Settings
-                          </div>
-                        </Link>
-                        <Link href="/dashboard">
-                          <div className="flex items-center px-4 py-2.5 text-sm text-emerald-700 hover:bg-emerald-50 cursor-pointer transition-colors">
-                            Dashboard
-                          </div>
-                        </Link>
-                        <hr className="my-1 border-emerald-100" />
-                        <button
-                          onClick={() => {
-                            logout();
-                            setUserMenuOpen(false);
-                            router.push('/');
-                          }}
-                          className="flex w-full items-center px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                        >
-                          Logout
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => router.push('/login')}
-                  className="text-emerald-800 font-bold text-sm hover:text-emerald-950 transition-colors px-3 py-2 rounded-lg border border-emerald-200 bg-white/80"
-                >
-                  Login
-                </button>
-                <button
-                  onClick={() => router.push('/select-role')}
-                  className="bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-800 hover:to-teal-800 text-white px-5 py-2.5 rounded-full font-bold text-sm transition-all duration-200 shadow-lg shadow-emerald-800/20"
-                >
-                  Sign Up
-                </button>
-              </div>
-            )}
-          </div>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
 
-          {/* Mobile Actions */}
-          <div className="flex md:hidden items-center gap-2">
-            {!user && (
-              <>
-                <button
-                  onClick={() => router.push('/login')}
-                  className="px-3 py-2 text-sm font-bold text-emerald-800 rounded-lg border border-emerald-200 bg-emerald-50/70"
-                >
-                  Login
-                </button>
+                  {/* Dropdown */}
+                  <AnimatePresence>
+                    {userMenuOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                        transition={{ duration: 0.18, ease: 'easeOut' }}
+                        className="absolute right-0 mt-2 w-56 rounded-xl bg-white shadow-xl ring-1 ring-gray-200/60 overflow-hidden"
+                      >
+                        <div className="bg-emerald-50/50 px-4 py-3 border-b border-emerald-100/50">
+                          <p className="text-xs text-gray-500">Signed in as</p>
+                          <p className="text-sm font-semibold text-emerald-800 truncate">{user.email}</p>
+                        </div>
+                        <div className="py-1">
+                          <Link href="/profile">
+                            <div className="px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 cursor-pointer transition-colors">
+                              Profile Settings
+                            </div>
+                          </Link>
+                          <Link href="/dashboard">
+                            <div className="px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 cursor-pointer transition-colors">
+                              Dashboard
+                            </div>
+                          </Link>
+                          <hr className="my-1 border-gray-100" />
+                          <button
+                            onClick={() => {
+                              logout();
+                              setUserMenuOpen(false);
+                              router.push('/');
+                            }}
+                            className="flex w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                          >
+                            Logout
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ) : (
+                <>
+                  <button
+                    onClick={() => router.push('/login')}
+                    className="text-sm font-semibold text-gray-600 hover:text-emerald-800 px-4 py-2 rounded-lg transition-colors"
+                  >
+                    Log in
+                  </button>
+                  <button
+                    onClick={() => router.push('/select-role')}
+                    className="text-sm font-bold text-white bg-emerald-700 hover:bg-emerald-800 px-5 py-2.5 rounded-full transition-colors shadow-sm"
+                  >
+                    Sign Up
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* ─── Mobile: Auth avatar or placeholder (right) ─── */}
+            <div className="md:hidden flex items-center">
+              {user ? (
+                <Link href="/dashboard">
+                  <div className="h-8 w-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                    <span className="text-xs font-bold text-white">
+                      {user.name.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                </Link>
+              ) : (
                 <button
                   onClick={() => router.push('/select-role')}
-                  className="px-3 py-2 text-sm font-bold text-white rounded-lg bg-gradient-to-r from-emerald-700 to-teal-700"
+                  className="text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 px-4 py-2 rounded-full transition-colors"
                 >
                   Sign Up
                 </button>
-              </>
-            )}
-            {user && (
-              <Link href="/dashboard">
-                <div className="h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center">
-                  <span className="text-xs font-bold text-emerald-700">{user.name.charAt(0).toUpperCase()}</span>
-                </div>
-              </Link>
-            )}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg text-emerald-700 hover:bg-emerald-50 transition-colors border border-transparent hover:border-emerald-200"
-            >
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                {mobileMenuOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                )}
-              </svg>
-            </button>
+              )}
+            </div>
+
           </div>
         </div>
+      </header>
 
-        {/* Mobile Menu */}
-        <AnimatePresence>
-          {mobileMenuOpen && (
+      {/* ─── Mobile Slide-Over Menu ─── */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <>
+            {/* Backdrop */}
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.25, ease: "easeOut" }}
-              className="md:hidden overflow-hidden border-t border-emerald-100 bg-white/95 backdrop-blur-sm"
-            >
-              <motion.div
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                className="px-2 pt-3 pb-4 space-y-1"
-              >
-                {navLinks.map((link) => (
-                  <motion.div key={link.label} variants={itemVariants}>
-                    <Link
-                      href={link.href}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="block px-3 py-2.5 rounded-lg text-base font-bold text-emerald-700 hover:bg-emerald-50 transition-colors"
-                    >
-                      {link.label}
-                    </Link>
-                  </motion.div>
-                ))}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-[60] bg-black/30 backdrop-blur-sm md:hidden"
+              onClick={() => setMobileMenuOpen(false)}
+            />
 
-                {/* Mobile Auth Section */}
-                <motion.div variants={itemVariants} className="pt-3 border-t border-emerald-100 mt-2">
-                  {user ? (
-                    <>
-                      <div className="px-3 py-2 text-sm text-emerald-600 bg-emerald-50 rounded-lg mb-2">
-                        Signed in as <span className="font-semibold text-emerald-800 block mt-1">{user.email}</span>
+            {/* Panel */}
+            <motion.div
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+              className="fixed top-0 left-0 bottom-0 z-[70] w-[280px] bg-white shadow-2xl md:hidden flex flex-col"
+            >
+              {/* Panel header */}
+              <div className="flex items-center justify-between px-5 h-16 border-b border-gray-100">
+                <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2">
+                  <Image
+                    src="/logo/logo.png"
+                    alt="HalalMe Logo"
+                    width={30}
+                    height={30}
+                    className="object-contain"
+                  />
+                  <span className="text-lg font-black text-emerald-900" style={{ fontFamily: 'var(--font-logo)' }}>
+                    HalalMe
+                  </span>
+                </Link>
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="p-2 -mr-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Nav links */}
+              <nav className="flex-1 overflow-y-auto px-3 py-4">
+                <div className="space-y-0.5">
+                  {navLinks.map((link, i) => {
+                    const isActive = pathname?.startsWith(link.href);
+                    return (
+                      <motion.div
+                        key={link.href}
+                        initial={{ opacity: 0, x: -12 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.05 + i * 0.04, duration: 0.25 }}
+                      >
+                        <Link
+                          href={link.href}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className={`flex items-center px-4 py-3 rounded-xl text-[15px] font-semibold transition-colors ${
+                            isActive
+                              ? 'text-emerald-900 bg-emerald-50'
+                              : 'text-gray-700 hover:bg-gray-50 hover:text-emerald-800'
+                          }`}
+                        >
+                          {link.label}
+                          {isActive && (
+                            <span className="ml-auto w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          )}
+                        </Link>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </nav>
+
+              {/* Panel footer — auth */}
+              <div className="px-4 py-5 border-t border-gray-100">
+                {user ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3 px-2 py-2">
+                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shrink-0">
+                        <span className="text-sm font-bold text-white">{user.name.charAt(0).toUpperCase()}</span>
                       </div>
-                      <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-base font-bold text-emerald-700 hover:bg-emerald-50 transition-colors">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 truncate">{user.name}</p>
+                        <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Link
+                        href="/dashboard"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex-1 text-center text-sm font-semibold text-emerald-700 py-2.5 rounded-lg border border-emerald-200 hover:bg-emerald-50 transition-colors"
+                      >
                         Dashboard
-                      </Link>
-                      <Link href="/profile" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-base font-bold text-emerald-700 hover:bg-emerald-50 transition-colors">
-                        Profile
                       </Link>
                       <button
                         onClick={() => {
@@ -318,39 +338,39 @@ export default function Header() {
                           setMobileMenuOpen(false);
                           router.push('/');
                         }}
-                        className="block w-full text-left px-3 py-2.5 rounded-lg text-base font-bold text-red-600 hover:bg-red-50 transition-colors"
+                        className="flex-1 text-center text-sm font-semibold text-red-600 py-2.5 rounded-lg border border-red-200 hover:bg-red-50 transition-colors"
                       >
                         Logout
                       </button>
-                    </>
-                  ) : (
-                    <>
-                      <button
-                        onClick={() => {
-                          router.push('/login');
-                          setMobileMenuOpen(false);
-                        }}
-                        className="block w-full text-left px-3 py-2.5 rounded-lg text-base font-bold text-emerald-700 hover:bg-emerald-50 transition-colors"
-                      >
-                        Login
-                      </button>
-                      <button
-                        onClick={() => {
-                          router.push('/select-role');
-                          setMobileMenuOpen(false);
-                        }}
-                        className="block w-full mt-2 bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-3 rounded-full text-base font-bold text-center transition-colors"
-                      >
-                        Sign Up
-                      </button>
-                    </>
-                  )}
-                </motion.div>
-              </motion.div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2.5">
+                    <button
+                      onClick={() => {
+                        router.push('/select-role');
+                        setMobileMenuOpen(false);
+                      }}
+                      className="w-full text-sm font-bold text-white bg-emerald-700 hover:bg-emerald-800 py-3 rounded-full transition-colors"
+                    >
+                      Sign Up
+                    </button>
+                    <button
+                      onClick={() => {
+                        router.push('/login');
+                        setMobileMenuOpen(false);
+                      }}
+                      className="w-full text-sm font-semibold text-gray-600 hover:text-emerald-800 py-3 rounded-lg border border-gray-200 hover:border-emerald-200 hover:bg-emerald-50/50 transition-colors"
+                    >
+                      Log in
+                    </button>
+                  </div>
+                )}
+              </div>
             </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-    </motion.header>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
