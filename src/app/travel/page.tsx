@@ -86,7 +86,7 @@ export default function TravelLandingPage() {
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <Image
-            src="https://images.unsplash.com/photo-1436491865332-7a61a109db05?w=1920&auto=format&fit=crop&q=80"
+            src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1920&auto=format&fit=crop&q=80"
             alt="Halal-friendly travel"
             fill
             className="object-cover"
@@ -104,15 +104,14 @@ export default function TravelLandingPage() {
         <div className="absolute top-1/3 right-0 w-[280px] h-[280px] bg-cyan-500/8 rounded-full blur-3xl z-[1]" />
 
         {/* Content */}
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12">
-          <div className="grid items-center gap-10 lg:grid-cols-[1.08fr_0.92fr]">
-            <div className="max-w-3xl">
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12 pt-20">
+          <div className="max-w-3xl">
             {/* Badge */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="inline-flex items-center gap-2.5 bg-sky-500/15 border border-sky-400/25 backdrop-blur-md rounded-full px-5 py-2.5 mb-8"
+              className="inline-flex items-center gap-2.5 bg-sky-500/15 border border-sky-400/25 backdrop-blur-md rounded-full px-5 py-2.5 mb-5 sm:mb-8"
             >
               <span className="w-2.5 h-2.5 rounded-full bg-sky-400 animate-pulse" />
               <span className="text-sky-300 text-sm font-semibold tracking-wide">
@@ -147,7 +146,7 @@ export default function TravelLandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.5 }}
-              className="text-base sm:text-lg md:text-xl text-gray-300/90 max-w-xl leading-relaxed mb-10"
+              className="text-base sm:text-lg md:text-xl text-gray-300/90 max-w-xl leading-relaxed mb-6 sm:mb-10"
               style={{ fontFamily: 'var(--font-body)' }}
             >
               Compare flights, hotels & car rentals from top providers worldwide.
@@ -184,61 +183,23 @@ export default function TravelLandingPage() {
               </motion.button>
             </motion.div>
 
-              {/* Trust row */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.9 }}
-                className="flex flex-wrap gap-4 sm:gap-6 text-xs sm:text-sm"
-              >
-                {[
-                  { icon: ShieldCheck, text: 'Halal-Friendly', color: 'text-sky-400' },
-                  { icon: Globe, text: '1000+ Destinations', color: 'text-cyan-400' },
-                  { icon: Tag, text: 'Best Prices', color: 'text-sky-400' },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center gap-2 text-gray-400">
-                    <item.icon className={`w-4 h-4 ${item.color}`} />
-                    <span>{item.text}</span>
-                  </div>
-                ))}
-              </motion.div>
-            </div>
-
+            {/* Trust row */}
             <motion.div
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.75 }}
-              className="relative hidden lg:block"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.9 }}
+              className="flex flex-wrap gap-4 sm:gap-6 text-xs sm:text-sm"
             >
-              <div className="relative h-[510px]">
-                <div className="absolute right-0 top-0 h-[360px] w-[300px] overflow-hidden rounded-[2rem] border border-white/20 shadow-2xl">
-                  <Image
-                    src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=900&q=80"
-                    alt="Traveler at destination"
-                    fill
-                    className="object-cover"
-                    sizes="300px"
-                  />
-                  <div className="absolute inset-x-0 bottom-0 bg-gray-950/65 p-4">
-                    <p className="text-xs uppercase tracking-[0.14em] text-sky-300">Featured City</p>
-                    <p className="text-lg font-bold text-white">Istanbul</p>
-                  </div>
+              {[
+                { icon: ShieldCheck, text: 'Halal-Friendly', color: 'text-sky-400' },
+                { icon: Globe, text: '1000+ Destinations', color: 'text-cyan-400' },
+                { icon: Tag, text: 'Best Prices', color: 'text-sky-400' },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-2 text-gray-400">
+                  <item.icon className={`w-4 h-4 ${item.color}`} />
+                  <span>{item.text}</span>
                 </div>
-                <div className="absolute bottom-0 left-0 h-[250px] w-[260px] overflow-hidden rounded-[1.7rem] border border-white/20 shadow-2xl">
-                  <Image
-                    src="https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=900&q=80"
-                    alt="Muslim-friendly travel experience"
-                    fill
-                    className="object-cover"
-                    sizes="260px"
-                  />
-                  <div className="absolute inset-0 bg-gray-950/35" />
-                </div>
-                <div className="absolute bottom-6 right-8 rounded-2xl border border-sky-400/35 bg-sky-500/15 px-4 py-3 backdrop-blur-md">
-                  <p className="text-xs text-sky-300">Live deal found</p>
-                  <p className="text-xl font-bold text-white">-28% Fare</p>
-                </div>
-              </div>
+              ))}
             </motion.div>
           </div>
         </div>

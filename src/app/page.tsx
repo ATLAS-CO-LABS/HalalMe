@@ -78,15 +78,8 @@ export default function Home() {
 
             <div className="mx-auto max-w-7xl relative px-6 mb-16">
               <div className="max-w-3xl">
-                <motion.span
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  className="text-amber-400 font-bold tracking-widest uppercase text-base md:text-lg"
-                >
-                  The Ecosystem
-                </motion.span>
                 <h2
-                  className="text-4xl md:text-6xl font-extrabold text-white mt-4 mb-8"
+                  className="text-4xl md:text-6xl font-extrabold text-white mb-8"
                   style={{ fontFamily: "var(--font-headline)" }}
                 >
                   Six Services. <br />
@@ -107,29 +100,29 @@ export default function Home() {
                   image: "/images/services/halal01.jpg",
                 },
                 {
-                  link: "#kitchen",
+                  link: "/kitchen",
                   text: "HalalMe Kitchen",
                   image: "/images/services/halal05.jpg",
                 },
                 {
-                  link: "#fresh",
+                  link: "/fresh",
                   text: "HalalMe Fresh",
                   image: "/images/services/halal02.jpg",
                 },
                 {
-                  link: "#hub",
+                  link: "/hub",
                   text: "HalalMe Hub",
-                  image: "https://images.unsplash.com/photo-1529543544282-ea57407bc3e9?auto=format&fit=crop&w=1200&q=80",
+                  image: "/images/services/halal03.jpg",
                 },
                 {
-                  link: "#travel",
+                  link: "/travel",
                   text: "HalalMe Travel",
-                  image: "https://images.unsplash.com/photo-1436491865332-7a61a109db05?auto=format&fit=crop&w=1200&q=80",
+                  image: "/images/services/halal04.jpg",
                 },
                 {
-                  link: "#rewards",
+                  link: "/rewards",
                   text: "HalalMe Rewards",
-                  image: "/images/services/halal02.jpg",
+                  image: "/images/services/halal01.jpg",
                 },
               ]}
               speed={20}
@@ -170,7 +163,7 @@ function HeroSection() {
         <div className="absolute top-1/4 right-1/4 w-72 h-72 bg-amber-500/10 rounded-full blur-[120px]"></div>
       </div>
 
-      <div className="container mx-auto px-6 relative z-10 pt-20">
+      <div className="container mx-auto px-6 relative z-10 pt-24 sm:pt-28">
         <div className="max-w-4xl">
           <motion.div
             initial={{ opacity: 0, x: -30 }}
@@ -182,7 +175,7 @@ function HeroSection() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2 mb-8"
+              className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2 mb-6 sm:mb-8"
             >
               <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
               <span className="text-emerald-100 text-sm font-medium">
@@ -191,7 +184,7 @@ function HeroSection() {
             </motion.div>
 
             <h1
-              className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold text-white leading-[1.05]"
+              className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-extrabold text-white leading-[1.05]"
               style={{ fontFamily: "var(--font-headline)" }}
             >
               Halal Living <br />
@@ -208,7 +201,7 @@ function HeroSection() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
-              className="mt-8 text-lg md:text-xl text-emerald-50/90 max-w-xl leading-relaxed"
+              className="mt-5 sm:mt-8 text-base sm:text-lg md:text-xl text-emerald-50/90 max-w-xl leading-relaxed"
             >
               The world&apos;s first unified ecosystem for Halal food, verified
               recipes, global travel, and community giving.
@@ -219,7 +212,7 @@ function HeroSection() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              className="mt-12 flex flex-wrap gap-4"
+              className="mt-8 sm:mt-12 flex flex-wrap gap-3 sm:gap-4"
             >
               {/* Primary CTA - High visibility amber button */}
               <Link href="/select-role">
@@ -265,7 +258,7 @@ function HeroSection() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.8 }}
-              className="mt-12 flex flex-wrap items-center gap-6 text-emerald-200/70 text-sm"
+              className="mt-8 sm:mt-12 flex flex-wrap items-center gap-4 sm:gap-6 text-emerald-200/70 text-xs sm:text-sm"
             >
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-emerald-400" />
@@ -335,16 +328,12 @@ function WhatIsHalalMeSection() {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <span className="inline-flex items-center gap-2 bg-emerald-100 text-emerald-700 px-4 py-2 rounded-full text-sm font-semibold mb-6">
-            <Star className="w-4 h-4" />
-            Why Choose HalalMe
-          </span>
           <h2
             className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-6"
             style={{ fontFamily: "var(--font-headline)" }}
           >
             Redefining the{" "}
-            <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
               Halal Experience
             </span>
           </h2>
@@ -580,20 +569,6 @@ function FinalCTA() {
 
       {/* Content */}
       <div className="relative z-10 w-full max-w-4xl mx-auto px-6 py-20 text-center">
-        {/* Badge - gentle fade */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={isInView ? { opacity: 1 } : {}}
-          transition={{ duration: 0.4, ease: "easeOut" }}
-          className="inline-flex items-center gap-2 mb-8"
-        >
-          <span className="w-1.5 h-1.5 bg-amber-400 rounded-full" />
-          <span className="text-emerald-200/80 text-sm font-medium tracking-wide uppercase">
-            Join 50,000+ Users Worldwide
-          </span>
-          <span className="w-1.5 h-1.5 bg-amber-400 rounded-full" />
-        </motion.div>
-
         {/* Main heading - subtle slide up */}
         <motion.h2
           initial={{ opacity: 0, y: 12 }}

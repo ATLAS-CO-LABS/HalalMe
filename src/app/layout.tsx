@@ -64,13 +64,13 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
   // Pages where header should be hidden
   const hideHeaderPaths = [
-    "/hub",
     "/login",
     "/signup",
     "/forgot-password",
     "/dashboard",
     "/profile",
     "/select-role",
+    "/kitchen/ai-assistant",
   ];
 
   const shouldHideFooter = hideFooterPaths.some((path) =>

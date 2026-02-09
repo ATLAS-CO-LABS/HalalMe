@@ -14,8 +14,6 @@ import {
   Globe,
   ArrowRight,
 } from "lucide-react";
-import Header from "@/components/layout/Header";
-
 export default function HubLandingPage() {
   const router = useRouter();
 
@@ -48,15 +46,12 @@ export default function HubLandingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-amber-950 to-gray-900">
-      {/* Main Header */}
-      <Header />
-
       {/* Hero Section */}
       <section className="relative h-screen min-h-[600px] max-h-[900px] flex items-center overflow-hidden">
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <Image
-            src="https://images.unsplash.com/photo-1529543544282-ea57407bc3e9?w=1920&auto=format&fit=crop&q=80"
+            src="https://images.unsplash.com/photo-1543269865-cbf427effbad?w=1920&auto=format&fit=crop&q=80"
             alt="Halal food community"
             fill
             className="object-cover"
@@ -74,15 +69,14 @@ export default function HubLandingPage() {
         <div className="absolute top-1/3 right-0 w-[280px] h-[280px] bg-orange-500/8 rounded-full blur-3xl z-[1]" />
 
         {/* Content */}
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12">
-          <div className="grid items-center gap-10 lg:grid-cols-[1.08fr_0.92fr]">
-            <div className="max-w-3xl">
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12 pt-20">
+          <div className="max-w-3xl">
             {/* Badge */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="inline-flex items-center gap-2.5 bg-amber-500/15 border border-amber-400/25 backdrop-blur-md rounded-full px-5 py-2.5 mb-8"
+              className="inline-flex items-center gap-2.5 bg-amber-500/15 border border-amber-400/25 backdrop-blur-md rounded-full px-5 py-2.5 mb-5 sm:mb-8"
             >
               <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" />
               <span className="text-amber-300 text-sm font-semibold tracking-wide">
@@ -117,7 +111,7 @@ export default function HubLandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.5 }}
-              className="text-base sm:text-lg md:text-xl text-gray-300/90 max-w-xl leading-relaxed mb-10"
+              className="text-base sm:text-lg md:text-xl text-gray-300/90 max-w-xl leading-relaxed mb-6 sm:mb-10"
               style={{ fontFamily: "var(--font-body)" }}
             >
               Join thousands of food lovers sharing recipes, posting food
@@ -154,61 +148,23 @@ export default function HubLandingPage() {
               </motion.button>
             </motion.div>
 
-              {/* Trust row */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.9 }}
-                className="flex flex-wrap gap-4 sm:gap-6 text-xs sm:text-sm"
-              >
-                {[
-                  { icon: Users, text: "10K+ Members", color: "text-amber-400" },
-                  { icon: Globe, text: "Global Community", color: "text-orange-400" },
-                  { icon: TrendingUp, text: "Daily Content", color: "text-amber-400" },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center gap-2 text-gray-400">
-                    <item.icon className={`w-4 h-4 ${item.color}`} />
-                    <span>{item.text}</span>
-                  </div>
-                ))}
-              </motion.div>
-            </div>
-
+            {/* Trust row */}
             <motion.div
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.75 }}
-              className="relative hidden lg:block"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.9 }}
+              className="flex flex-wrap gap-4 sm:gap-6 text-xs sm:text-sm"
             >
-              <div className="relative h-[510px]">
-                <div className="absolute right-0 top-0 h-[360px] w-[300px] overflow-hidden rounded-[2rem] border border-white/20 shadow-2xl">
-                  <Image
-                    src="https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=900&q=80"
-                    alt="Food creator sharing a halal dish"
-                    fill
-                    className="object-cover"
-                    sizes="300px"
-                  />
-                  <div className="absolute inset-x-0 bottom-0 bg-gray-950/65 p-4">
-                    <p className="text-xs uppercase tracking-[0.14em] text-amber-300">Top Post</p>
-                    <p className="text-lg font-bold text-white">Street Grill Bowl</p>
-                  </div>
+              {[
+                { icon: Users, text: "10K+ Members", color: "text-amber-400" },
+                { icon: Globe, text: "Global Community", color: "text-orange-400" },
+                { icon: TrendingUp, text: "Daily Content", color: "text-amber-400" },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-2 text-gray-400">
+                  <item.icon className={`w-4 h-4 ${item.color}`} />
+                  <span>{item.text}</span>
                 </div>
-                <div className="absolute bottom-0 left-0 h-[250px] w-[260px] overflow-hidden rounded-[1.7rem] border border-white/20 shadow-2xl">
-                  <Image
-                    src="https://images.unsplash.com/photo-1528715471579-d1bcf0ba5e83?auto=format&fit=crop&w=900&q=80"
-                    alt="Halal meal community inspiration"
-                    fill
-                    className="object-cover"
-                    sizes="260px"
-                  />
-                  <div className="absolute inset-0 bg-gray-950/35" />
-                </div>
-                <div className="absolute bottom-6 right-8 rounded-2xl border border-amber-400/35 bg-amber-500/15 px-4 py-3 backdrop-blur-md">
-                  <p className="text-xs text-amber-300">Community activity</p>
-                  <p className="text-xl font-bold text-white">+1.2K Posts</p>
-                </div>
-              </div>
+              ))}
             </motion.div>
           </div>
         </div>

@@ -24,7 +24,7 @@ const popularMeals = meals.filter((m) => m.isPopular).slice(0, 4);
 
 export default function FreshLandingPage() {
   return (
-    <div className="min-h-screen bg-gray-950 overflow-x-hidden">
+    <div className="min-h-screen bg-gray-950 overflow-x-hidden pt-16">
       {/* Promo Ticker Bar */}
       <PromoBar />
 
@@ -108,14 +108,14 @@ function HeroSection() {
       <div className="absolute top-1/3 right-0 w-[250px] h-[250px] bg-green-500/8 rounded-full blur-3xl z-[1]" />
 
       {/* Content */}
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12">
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12 pt-20">
         <div className="max-w-3xl">
           {/* Badge */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="inline-flex items-center gap-2.5 bg-lime-500/15 border border-lime-400/25 backdrop-blur-md rounded-full px-5 py-2.5 mb-8"
+            className="inline-flex items-center gap-2.5 bg-lime-500/15 border border-lime-400/25 backdrop-blur-md rounded-full px-5 py-2.5 mb-5 sm:mb-8"
           >
             <span className="w-2.5 h-2.5 rounded-full bg-lime-400 animate-pulse" />
             <span className="text-lime-300 text-sm font-semibold tracking-wide">
@@ -150,7 +150,7 @@ function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.5 }}
-            className="text-base sm:text-lg md:text-xl text-gray-300/90 max-w-xl leading-relaxed mb-10"
+            className="text-base sm:text-lg md:text-xl text-gray-300/90 max-w-xl leading-relaxed mb-6 sm:mb-10"
           >
             Chef-prepared meals made fresh daily with certified halal ingredients.
             No cooking, no hassle — just heat, eat, and enjoy.

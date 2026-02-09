@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Send, Loader2, ChefHat, ArrowLeft } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Send, Loader2, ChefHat, ArrowLeft, Sparkles } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 type Message = {
   id: string;
@@ -11,6 +12,20 @@ type Message = {
   content: string;
   timestamp: Date;
 };
+
+function renderMarkdown(text: string) {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return (
+        <strong key={i} className="font-semibold text-white">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    return <span key={i}>{part}</span>;
+  });
+}
 
 export default function AIAssistantPage() {
   const [messages, setMessages] = useState<Message[]>([
@@ -25,6 +40,7 @@ export default function AIAssistantPage() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -49,7 +65,6 @@ export default function AIAssistantPage() {
     setInput("");
     setIsLoading(true);
 
-    // Simulate AI response (replace with actual API call later)
     setTimeout(() => {
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -62,200 +77,222 @@ export default function AIAssistantPage() {
     }, 1500);
   };
 
-  // Mock response generator (replace with actual AI API integration)
   const generateMockResponse = (userInput: string): string => {
     const lowerInput = userInput.toLowerCase();
 
     if (lowerInput.includes("chicken") || lowerInput.includes("ingredients")) {
-      return `Great! With chicken, you can make several delicious halal dishes:\n\n🍗 **Chicken Biryani**\n- Cook time: 45 minutes\n- Perfect for: Dinner parties\n\n🥘 **Butter Chicken**\n- Cook time: 40 minutes\n- Perfect for: Family dinners\n\n🍛 **Chicken Curry**\n- Cook time: 35 minutes\n- Perfect for: Quick weeknight meals\n\nWould you like the detailed recipe for any of these?`;
+      return `Great! With chicken, you can make several delicious halal dishes:\n\n🍗 **Chicken Biryani**\nCook time: 45 minutes · Perfect for dinner parties\n\n🥘 **Butter Chicken**\nCook time: 40 minutes · Perfect for family dinners\n\n🍛 **Chicken Curry**\nCook time: 35 minutes · Perfect for quick weeknight meals\n\nWould you like the detailed recipe for any of these?`;
     } else if (lowerInput.includes("pasta")) {
-      return `For halal pasta dishes, I recommend:\n\n🍝 **Halal Chicken Alfredo**\nIngredients needed:\n- Pasta (any type)\n- Chicken breast\n- Heavy cream\n- Garlic\n- Parmesan cheese\n- Butter\n\nCook time: 25 minutes\nDifficulty: Easy\n\nWould you like step-by-step instructions?`;
+      return `For halal pasta dishes, I recommend:\n\n🍝 **Halal Chicken Alfredo**\n\nIngredients needed:\n• Pasta (any type)\n• Chicken breast\n• Heavy cream\n• Garlic, Parmesan, Butter\n\nCook time: 25 minutes · Difficulty: Easy\n\nWould you like step-by-step instructions?`;
     } else if (lowerInput.includes("dry") || lowerInput.includes("help")) {
-      return `If your chicken is too dry, here are some fixes:\n\n💡 **Immediate Fixes:**\n1. Make a quick sauce (gravy, yogurt-based)\n2. Shred the chicken and mix with sauce\n3. Add chicken broth or cream\n\n🔧 **Prevention Tips:**\n- Don't overcook (use meat thermometer: 165°F)\n- Marinate before cooking\n- Cover while cooking to retain moisture\n- Let it rest 5 minutes before cutting\n\nNeed more specific help?`;
+      return `If your chicken is too dry, here are some fixes:\n\n💡 **Immediate Fixes:**\n1. Make a quick sauce (gravy, yogurt-based)\n2. Shred the chicken and mix with sauce\n3. Add chicken broth or cream\n\n🔧 **Prevention Tips:**\n• Don't overcook — use a meat thermometer (165°F)\n• Marinate before cooking\n• Cover while cooking to retain moisture\n• Let it rest 5 minutes before cutting\n\nNeed more specific help?`;
     } else {
-      return `I'd be happy to help you with that! Could you provide more details? For example:\n\n- What ingredients do you have?\n- What type of dish are you looking to make?\n- Any dietary restrictions or preferences?\n- Cooking skill level?\n\nThe more information you share, the better I can assist you!`;
+      return `I'd be happy to help you with that! Could you provide more details?\n\n• What ingredients do you have?\n• What type of dish are you looking to make?\n• Any dietary restrictions or preferences?\n• Cooking skill level?\n\nThe more information you share, the better I can assist you!`;
     }
   };
 
   const quickPrompts = [
     "I have chicken, rice, and spices",
-    "Show me easy breakfast recipes",
-    "What can I cook in 30 minutes?",
-    "Suggest vegetarian halal dishes",
+    "Easy breakfast recipes",
+    "Cook something in 30 mins",
+    "Vegetarian halal dishes",
   ];
 
+  const handleQuickPrompt = (prompt: string) => {
+    setInput(prompt);
+    inputRef.current?.focus();
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-fuchsia-950 to-gray-900">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-gray-900/95 backdrop-blur-lg border-b border-gray-700">
-        <div className="mx-auto max-w-4xl px-4 md:px-6 py-3 md:py-4">
+    <div className="flex flex-col h-dvh bg-gray-950">
+      {/* ─── Top Bar ─── */}
+      <div className="shrink-0 bg-gray-950/95 backdrop-blur-lg border-b border-white/[0.06] z-10">
+        <div className="mx-auto max-w-3xl px-4 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <Link href="/kitchen">
                 <motion.button
-                  className="text-gray-400 hover:text-white transition-colors"
-                  whileHover={{ scale: 1.1 }}
+                  className="p-2 -ml-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
                   whileTap={{ scale: 0.95 }}
                 >
-                  <ArrowLeft className="w-6 h-6" />
+                  <ArrowLeft className="w-5 h-5" />
                 </motion.button>
               </Link>
-              <div className="flex items-center gap-2 md:gap-3">
-                <div className="bg-gradient-to-br from-fuchsia-600 to-pink-600 rounded-full p-1.5 md:p-2">
-                  <ChefHat className="w-5 h-5 md:w-6 md:h-6 text-white" />
+              <div className="flex items-center gap-2.5">
+                <div className="relative">
+                  <div className="w-9 h-9 bg-gradient-to-br from-fuchsia-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg shadow-fuchsia-500/20">
+                    <ChefHat className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-gray-950" />
                 </div>
                 <div>
-                  <h1
-                    className="text-base md:text-xl font-bold text-white"
-                    style={{ fontFamily: "var(--font-headline)" }}
-                  >
+                  <h1 className="text-sm font-bold text-white leading-tight">
                     AI Recipe Assistant
                   </h1>
-                  <p
-                    className="text-xs md:text-sm text-gray-400 hidden sm:block"
-                    style={{ fontFamily: "var(--font-body)" }}
-                  >
-                    Your personal halal cooking helper
+                  <p className="text-[11px] text-emerald-400 font-medium leading-tight">
+                    Online
                   </p>
                 </div>
               </div>
             </div>
-            <div className="hidden md:flex items-center gap-2">
-              <ChefHat className="w-5 h-5 text-fuchsia-400" />
-              <span className="text-sm text-gray-400">Recipe Assistant</span>
-            </div>
+            <Link href="/">
+              <Image
+                src="/logo/logo.png"
+                alt="HalalMe"
+                width={28}
+                height={28}
+                className="opacity-60 hover:opacity-100 transition-opacity"
+              />
+            </Link>
           </div>
         </div>
       </div>
 
-      {/* Messages Container */}
-      <div className="mx-auto max-w-4xl px-4 md:px-6 py-4 md:py-8">
-        <div className="space-y-4 md:space-y-6 mb-32">
-          {messages.map((message) => (
-            <motion.div
-              key={message.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className={`flex ${
-                message.role === "user" ? "justify-end" : "justify-start"
-              }`}
-            >
-              <div
-                className={`max-w-[85%] md:max-w-[80%] rounded-2xl px-4 md:px-6 py-3 md:py-4 ${
-                  message.role === "user"
-                    ? "bg-gradient-to-br from-fuchsia-600 to-pink-600 text-white"
-                    : "bg-gray-800 text-gray-100 border border-gray-700"
+      {/* ─── Chat Area ─── */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="mx-auto max-w-3xl px-4 py-6">
+          <div className="space-y-5">
+            {messages.map((message) => (
+              <motion.div
+                key={message.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25 }}
+                className={`flex gap-3 ${
+                  message.role === "user" ? "justify-end" : "justify-start"
                 }`}
               >
-                <div className="flex items-start gap-3">
-                  {message.role === "assistant" && (
-                    <div className="mt-1 bg-gradient-to-br from-fuchsia-600 to-pink-600 rounded-full p-1.5">
+                {message.role === "assistant" && (
+                  <div className="shrink-0 mt-1">
+                    <div className="w-8 h-8 bg-gradient-to-br from-fuchsia-500 to-pink-600 rounded-lg flex items-center justify-center">
                       <ChefHat className="w-4 h-4 text-white" />
                     </div>
-                  )}
-                  <div className="flex-1">
-                    <p
-                      className="whitespace-pre-wrap leading-relaxed font-normal"
-                      style={{ fontFamily: "var(--font-body)" }}
-                    >
-                      {message.content}
-                    </p>
-                    <p className="text-xs mt-2 opacity-60">
-                      {message.timestamp.toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
                   </div>
-                </div>
-              </div>
-            </motion.div>
-          ))}
+                )}
 
-          {isLoading && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex justify-start"
-            >
-              <div className="bg-gray-800 border border-gray-700 rounded-2xl px-6 py-4">
-                <div className="flex items-center gap-3">
-                  <Loader2 className="w-5 h-5 text-fuchsia-400 animate-spin" />
-                  <span className="text-gray-400">AI is thinking...</span>
+                <div
+                  className={`max-w-[85%] sm:max-w-[75%] ${
+                    message.role === "user"
+                      ? "bg-fuchsia-600 text-white rounded-2xl rounded-br-md"
+                      : "bg-white/[0.06] text-gray-200 border border-white/[0.06] rounded-2xl rounded-tl-md"
+                  } px-4 py-3`}
+                >
+                  <div
+                    className="whitespace-pre-wrap text-[14px] leading-relaxed"
+                    style={{ fontFamily: "var(--font-body)" }}
+                  >
+                    {renderMarkdown(message.content)}
+                  </div>
+                  <p
+                    className={`text-[10px] mt-2 ${
+                      message.role === "user"
+                        ? "text-fuchsia-200/60"
+                        : "text-gray-500"
+                    }`}
+                  >
+                    {message.timestamp.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
                 </div>
-              </div>
-            </motion.div>
-          )}
+              </motion.div>
+            ))}
 
-          <div ref={messagesEndRef} />
+            <AnimatePresence>
+              {isLoading && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="flex gap-3"
+                >
+                  <div className="shrink-0 mt-1">
+                    <div className="w-8 h-8 bg-gradient-to-br from-fuchsia-500 to-pink-600 rounded-lg flex items-center justify-center">
+                      <ChefHat className="w-4 h-4 text-white" />
+                    </div>
+                  </div>
+                  <div className="bg-white/[0.06] border border-white/[0.06] rounded-2xl rounded-tl-md px-4 py-3">
+                    <div className="flex items-center gap-2.5">
+                      <Loader2 className="w-4 h-4 text-fuchsia-400 animate-spin" />
+                      <span className="text-sm text-gray-400">Thinking...</span>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <div ref={messagesEndRef} />
+          </div>
         </div>
       </div>
 
-      {/* Input Area - Fixed at bottom */}
-      <div className="fixed bottom-0 left-0 right-0 bg-gray-900/98 backdrop-blur-lg border-t border-gray-700 safe-area-padding-bottom">
-        <div className="mx-auto max-w-4xl px-4 md:px-6 py-3 md:py-4">
+      {/* ─── Input Area ─── */}
+      <div className="shrink-0 border-t border-white/[0.06] bg-gray-950/95 backdrop-blur-lg">
+        <div className="mx-auto max-w-3xl px-4 py-3">
           {/* Quick Prompts */}
-          {messages.length === 1 && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-4"
-            >
-              <p
-                className="text-xs md:text-sm text-gray-400 mb-2 md:mb-3 font-normal"
-                style={{ fontFamily: "var(--font-body)" }}
+          <AnimatePresence>
+            {messages.length === 1 && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mb-3 overflow-hidden"
               >
-                Quick suggestions:
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {quickPrompts.map((prompt, index) => (
-                  <motion.button
-                    key={index}
-                    onClick={() => setInput(prompt)}
-                    className="px-3 md:px-4 py-1.5 md:py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs md:text-sm rounded-full border border-gray-700 hover:border-fuchsia-500 transition-colors"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    {prompt}
-                  </motion.button>
-                ))}
-              </div>
-            </motion.div>
-          )}
+                <div className="flex items-center gap-1.5 mb-2">
+                  <Sparkles className="w-3 h-3 text-fuchsia-400" />
+                  <p className="text-[11px] text-gray-500 font-medium uppercase tracking-wider">
+                    Try asking
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {quickPrompts.map((prompt, index) => (
+                    <motion.button
+                      key={index}
+                      onClick={() => handleQuickPrompt(prompt)}
+                      className="px-3 py-1.5 bg-white/[0.04] hover:bg-white/[0.08] text-gray-400 hover:text-gray-200 text-xs rounded-full border border-white/[0.06] hover:border-fuchsia-500/30 transition-all"
+                      whileTap={{ scale: 0.97 }}
+                    >
+                      {prompt}
+                    </motion.button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Input Form */}
-          <form onSubmit={handleSubmit} className="flex gap-2 md:gap-3">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask me about cooking..."
-              className="flex-1 bg-gray-800 text-white text-sm md:text-base rounded-full px-4 md:px-6 py-3 md:py-4 border border-gray-700 focus:outline-none focus:border-fuchsia-500 transition-colors font-normal"
-              style={{ fontFamily: "var(--font-body)" }}
-              disabled={isLoading}
-            />
+          <form onSubmit={handleSubmit} className="flex gap-2">
+            <div className="flex-1 relative">
+              <input
+                ref={inputRef}
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Ask about recipes, ingredients, tips..."
+                className="w-full bg-white/[0.05] text-white text-sm rounded-xl px-4 py-3 border border-white/[0.08] focus:outline-none focus:border-fuchsia-500/50 focus:ring-1 focus:ring-fuchsia-500/20 transition-all placeholder:text-gray-600"
+                style={{ fontFamily: "var(--font-body)" }}
+                disabled={isLoading}
+              />
+            </div>
             <motion.button
               type="submit"
               disabled={!input.trim() || isLoading}
-              className={`rounded-full px-4 md:px-6 py-3 md:py-4 font-semibold transition-all ${
+              className={`shrink-0 rounded-xl p-3 transition-all ${
                 input.trim() && !isLoading
-                  ? "bg-gradient-to-br from-fuchsia-600 to-pink-600 text-white shadow-lg"
-                  : "bg-gray-800 text-gray-500 cursor-not-allowed"
+                  ? "bg-gradient-to-br from-fuchsia-500 to-pink-600 text-white shadow-lg shadow-fuchsia-500/20"
+                  : "bg-white/[0.04] text-gray-600 cursor-not-allowed"
               }`}
               whileHover={input.trim() && !isLoading ? { scale: 1.05 } : {}}
               whileTap={input.trim() && !isLoading ? { scale: 0.95 } : {}}
             >
-              <Send className="w-4 h-4 md:w-5 md:h-5" />
+              <Send className="w-4 h-4" />
             </motion.button>
           </form>
 
-          <p
-            className="text-xs text-gray-500 mt-3 text-center font-normal"
-            style={{ fontFamily: "var(--font-body)" }}
-          >
-            AI responses are suggestions. Always verify ingredient compatibility
-            with your dietary needs.
+          <p className="text-[10px] text-gray-600 mt-2 text-center">
+            AI responses are suggestions. Always verify ingredients with your
+            dietary needs.
           </p>
         </div>
       </div>

@@ -70,14 +70,14 @@ export default function KitchenLandingPage() {
         <div className="absolute top-1/3 right-0 w-[280px] h-[280px] bg-pink-500/8 rounded-full blur-3xl z-[1]" />
 
         {/* Content */}
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12">
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12 pt-20">
           <div className="max-w-3xl">
             {/* Badge */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="inline-flex items-center gap-2.5 bg-fuchsia-500/15 border border-fuchsia-400/25 backdrop-blur-md rounded-full px-5 py-2.5 mb-8"
+              className="inline-flex items-center gap-2.5 bg-fuchsia-500/15 border border-fuchsia-400/25 backdrop-blur-md rounded-full px-5 py-2.5 mb-5 sm:mb-8"
             >
               <span className="w-2.5 h-2.5 rounded-full bg-fuchsia-400 animate-pulse" />
               <span className="text-fuchsia-300 text-sm font-semibold tracking-wide">
@@ -112,7 +112,7 @@ export default function KitchenLandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.5 }}
-              className="text-base sm:text-lg md:text-xl text-gray-300/90 max-w-xl leading-relaxed mb-10"
+              className="text-base sm:text-lg md:text-xl text-gray-300/90 max-w-xl leading-relaxed mb-6 sm:mb-10"
               style={{ fontFamily: 'var(--font-body)' }}
             >
               Get AI-powered recipe suggestions, discover community recipes,

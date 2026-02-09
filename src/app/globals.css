@@ -454,6 +454,7 @@ main:has(.loading-header) {
 .loading-h1 {
   white-space: nowrap;
   justify-content: center;
+  align-items: center;
   font-size: 12.5em;
   font-weight: 700;
   line-height: 0.75;
@@ -464,14 +465,14 @@ main:has(.loading-header) {
 
 .h1-start {
   justify-content: flex-end;
-  width: 1.8em;
+  width: 2em;
   display: flex;
   overflow: hidden;
 }
 
 .h1-end {
   justify-content: flex-start;
-  width: 2.5em;
+  width: 2.9em;
   display: flex;
   overflow: hidden;
 }
