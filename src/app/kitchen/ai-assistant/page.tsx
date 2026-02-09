@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Send, Loader2, ChefHat, Sparkles, ArrowLeft } from "lucide-react";
+import { Send, Loader2, ChefHat, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 type Message = {
@@ -121,8 +121,8 @@ export default function AIAssistantPage() {
               </div>
             </div>
             <div className="hidden md:flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-fuchsia-400" />
-              <span className="text-sm text-gray-400">Powered by AI</span>
+              <ChefHat className="w-5 h-5 text-fuchsia-400" />
+              <span className="text-sm text-gray-400">Recipe Assistant</span>
             </div>
           </div>
         </div>

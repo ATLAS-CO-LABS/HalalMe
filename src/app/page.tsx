@@ -9,7 +9,7 @@ import LoadingScreen from "@/components/loading/LoadingScreen";
 import {
   Fingerprint,
   ShieldCheck,
-  Sparkles,
+  BookOpen,
   UserCircle,
   LayoutGrid,
   Zap,
@@ -102,7 +102,7 @@ export default function Home() {
             <FlowingMenu
               items={[
                 {
-                  link: "#delivery",
+                  link: "/delivery",
                   text: "HalalMe Delivery",
                   image: "/images/services/halal01.jpg",
                 },
@@ -119,12 +119,12 @@ export default function Home() {
                 {
                   link: "#hub",
                   text: "HalalMe Hub",
-                  image: "/images/services/halal03.jpg",
+                  image: "https://images.unsplash.com/photo-1529543544282-ea57407bc3e9?auto=format&fit=crop&w=1200&q=80",
                 },
                 {
                   link: "#travel",
                   text: "HalalMe Travel",
-                  image: "/images/services/halal04.jpg",
+                  image: "https://images.unsplash.com/photo-1436491865332-7a61a109db05?auto=format&fit=crop&w=1200&q=80",
                 },
                 {
                   link: "#rewards",
@@ -311,7 +311,7 @@ function WhatIsHalalMeSection() {
     {
       title: "Smart Recipes",
       desc: "AI-powered meal planning tailored to your dietary needs. Discover new Halal recipes personalized just for you.",
-      Icon: Sparkles,
+      Icon: BookOpen,
       gradient: "from-teal-500 to-emerald-600",
       bgGradient: "from-teal-50 to-emerald-50",
       iconBg: "bg-teal-500",
@@ -321,7 +321,7 @@ function WhatIsHalalMeSection() {
   return (
     <section
       ref={ref}
-      className="py-24 px-6 bg-gradient-to-b from-white via-slate-50 to-white relative overflow-hidden"
+      className="py-24 px-6 bg-emerald-950 relative overflow-hidden"
     >
       {/* Decorative background elements */}
       <div className="absolute top-0 left-0 w-72 h-72 bg-emerald-100 rounded-full filter blur-3xl opacity-40 -translate-x-1/2 -translate-y-1/2"></div>
@@ -340,7 +340,7 @@ function WhatIsHalalMeSection() {
             Why Choose HalalMe
           </span>
           <h2
-            className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-emerald-950 mb-6"
+            className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-6"
             style={{ fontFamily: "var(--font-headline)" }}
           >
             Redefining the{" "}
@@ -348,7 +348,7 @@ function WhatIsHalalMeSection() {
               Halal Experience
             </span>
           </h2>
-          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+          <p className="text-lg text-emerald-100/80 max-w-2xl mx-auto">
             Built from the ground up for the modern Muslim lifestyle, combining
             technology with tradition.
           </p>
@@ -454,7 +454,7 @@ function HowItWorksSection() {
   return (
     <section
       ref={ref}
-      className="py-24 bg-gradient-to-b from-slate-50 via-white to-slate-50 relative overflow-hidden"
+      className="py-24 bg-emerald-950 relative overflow-hidden"
     >
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-[0.02]">
@@ -477,7 +477,7 @@ function HowItWorksSection() {
           className="text-center mb-20"
         >
           <h2
-            className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-emerald-950 mb-6"
+            className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-6"
             style={{ fontFamily: "var(--font-headline)" }}
           >
             Simple.{" "}
@@ -486,7 +486,7 @@ function HowItWorksSection() {
             </span>{" "}
             Elegant.
           </h2>
-          <p className="text-lg text-slate-600 max-w-xl mx-auto">
+          <p className="text-lg text-emerald-100/80 max-w-xl mx-auto">
             Get started in three simple steps and unlock the full HalalMe
             experience.
           </p>
@@ -537,10 +537,10 @@ function HowItWorksSection() {
                     </motion.div>
 
                     {/* Content */}
-                    <h3 className="text-2xl font-bold text-emerald-950 mb-4">
+                    <h3 className="text-2xl font-bold text-white mb-4">
                       {step.title}
                     </h3>
-                    <p className="text-slate-600 leading-relaxed max-w-xs mx-auto">
+                    <p className="text-emerald-100/80 leading-relaxed max-w-xs mx-auto">
                       {step.desc}
                     </p>
                   </div>
@@ -564,7 +564,7 @@ function FinalCTA() {
       className="relative min-h-[70vh] flex items-center justify-center overflow-hidden"
     >
       {/* Full-bleed emerald gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-900">
+      <div className="absolute inset-0 bg-emerald-950">
         {/* Static gradient orbs - no heavy animation */}
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-br from-emerald-600/30 to-teal-500/20 rounded-full blur-[150px] -translate-y-1/3 translate-x-1/4" />
         <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-amber-500/15 to-orange-400/10 rounded-full blur-[120px] translate-y-1/3 -translate-x-1/4" />
@@ -684,3 +684,6 @@ function FinalCTA() {
     </section>
   );
 }
+
+
+

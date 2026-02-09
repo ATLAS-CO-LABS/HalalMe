@@ -26,20 +26,20 @@ const services = [
     description:
       "Order fresh halal meals from certified restaurants and vendors delivered straight to your door.",
     icon: Truck,
-    gradient: "from-orange-500 to-amber-600",
-    bgHover: "group-hover:bg-orange-500/5",
-    href: "https://www.halalme.co.uk/en/home",
-    external: true,
+    iconBg: "bg-amber-500",
+    bgHover: "group-hover:bg-white/10",
+    href: "/delivery",
+    external: false,
     tag: "Live",
-    tagColor: "bg-emerald-400/20 text-emerald-300 border-emerald-400/30",
+    tagColor: "bg-[#065f46]/35 text-white/90 border-[#065f46]",
   },
   {
     name: "Kitchen",
     description:
       "Discover halal recipes, AI-powered meal planning, and step-by-step cooking guides for every skill level.",
     icon: ChefHat,
-    gradient: "from-pink-500 to-rose-600",
-    bgHover: "group-hover:bg-pink-500/5",
+    iconBg: "bg-pink-500",
+    bgHover: "group-hover:bg-white/10",
     href: "/kitchen",
     external: false,
     tag: "Beta",
@@ -50,20 +50,20 @@ const services = [
     description:
       "Shop pre-made halal meals and fresh ingredients. Quality assured, ready to heat or cook at home.",
     icon: ShoppingBag,
-    gradient: "from-lime-500 to-green-600",
-    bgHover: "group-hover:bg-lime-500/5",
+    iconBg: "bg-lime-500",
+    bgHover: "group-hover:bg-white/10",
     href: "/fresh",
     external: false,
     tag: "Live",
-    tagColor: "bg-emerald-400/20 text-emerald-300 border-emerald-400/30",
+    tagColor: "bg-[#065f46]/35 text-white/90 border-[#065f46]",
   },
   {
     name: "Hub",
     description:
       "Connect with your local halal community. Share recipes, attend food events, and discover new favourites.",
     icon: Users,
-    gradient: "from-amber-500 to-yellow-600",
-    bgHover: "group-hover:bg-amber-500/5",
+    iconBg: "bg-amber-500",
+    bgHover: "group-hover:bg-white/10",
     href: "/hub",
     external: false,
     tag: "Beta",
@@ -74,24 +74,24 @@ const services = [
     description:
       "Find halal-friendly hotels, flights, and city guides. Travel the world without compromising your values.",
     icon: Plane,
-    gradient: "from-sky-500 to-blue-600",
-    bgHover: "group-hover:bg-sky-500/5",
+    iconBg: "bg-sky-500",
+    bgHover: "group-hover:bg-white/10",
     href: "/travel",
     external: false,
     tag: "Live",
-    tagColor: "bg-emerald-400/20 text-emerald-300 border-emerald-400/30",
+    tagColor: "bg-[#065f46]/35 text-white/90 border-[#065f46]",
   },
   {
     name: "Rewards",
     description:
       "Earn points across all HalalMe services. Redeem for discounts, donate to charity, or unlock exclusive perks.",
     icon: Gift,
-    gradient: "from-teal-500 to-emerald-600",
-    bgHover: "group-hover:bg-teal-500/5",
+    iconBg: "bg-[#065f46]",
+    bgHover: "group-hover:bg-white/10",
     href: "/rewards",
     external: false,
     tag: "Live",
-    tagColor: "bg-emerald-400/20 text-emerald-300 border-emerald-400/30",
+    tagColor: "bg-[#065f46]/35 text-white/90 border-[#065f46]",
   },
 ];
 
@@ -99,23 +99,9 @@ export default function DashboardPage() {
   const { user, logout } = useAuth();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-950 via-emerald-900 to-teal-900 relative overflow-hidden">
-      {/* Lightweight ambient background - radial gradients instead of blur orbs */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background:
-            "radial-gradient(ellipse 60% 40% at 70% 5%, rgba(16,185,129,0.10) 0%, transparent 70%), radial-gradient(ellipse 40% 40% at 5% 70%, rgba(245,158,11,0.06) 0%, transparent 70%), radial-gradient(ellipse 40% 30% at 90% 90%, rgba(20,184,166,0.06) 0%, transparent 70%)",
-        }}
-      />
-      <div
-        className="absolute inset-0 pointer-events-none opacity-[0.02]"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 2px 2px, white 1px, transparent 0)",
-          backgroundSize: "40px 40px",
-        }}
-      />
+    <div className="min-h-screen bg-[#052e26] relative overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none bg-[#052e26]" />
+      <div className="absolute inset-0 pointer-events-none opacity-[0.02] bg-white/5" />
 
       <div className="relative z-10">
         {/* Top Navigation Bar */}
@@ -159,10 +145,10 @@ export default function DashboardPage() {
               <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-4">
                 <div>
                   <div className="flex items-center gap-3 mb-1">
-                    <p className="text-emerald-400 text-sm font-medium">
+                    <p className="text-white/80 text-sm font-medium">
                       Welcome back
                     </p>
-                    <span className="inline-flex sm:hidden items-center gap-1 rounded-full bg-emerald-400/15 border border-emerald-400/20 px-2 py-0.5 text-[10px] font-medium text-emerald-300">
+                    <span className="inline-flex sm:hidden items-center gap-1 rounded-full bg-[#065f46]/35 border border-[#065f46] px-2 py-0.5 text-[10px] font-medium text-white/90">
                       <ShieldCheck className="w-3 h-3" />
                       Verified
                     </span>
@@ -173,12 +159,12 @@ export default function DashboardPage() {
                   >
                     {user?.name || "there"}
                   </h1>
-                  <p className="mt-1.5 sm:mt-2 text-emerald-200/50 text-xs sm:text-sm">
+                  <p className="mt-1.5 sm:mt-2 text-white/60 text-xs sm:text-sm">
                     Your halal ecosystem dashboard
                   </p>
                 </div>
                 <div className="hidden sm:flex items-center gap-2">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-400/15 border border-emerald-400/20 px-3 py-1.5 text-xs font-medium text-emerald-300">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[#065f46]/35 border border-[#065f46] px-3 py-1.5 text-xs font-medium text-white/90">
                     <ShieldCheck className="w-3.5 h-3.5" />
                     Verified Member
                   </span>
@@ -202,8 +188,8 @@ export default function DashboardPage() {
                   value: "0",
                   sub: "Start earning today",
                   icon: Star,
-                  color: "text-emerald-400",
-                  bg: "bg-emerald-400/10",
+                  color: "text-white",
+                  bg: "bg-[#065f46]",
                 },
                 {
                   label: "Saved Items",
@@ -219,7 +205,7 @@ export default function DashboardPage() {
                   className="rounded-2xl bg-white/[0.05] border border-white/8 p-5 hover:bg-white/[0.08] transition-colors duration-300"
                 >
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm text-emerald-200/50">
+                    <span className="text-sm text-white/60">
                       {stat.label}
                     </span>
                     <div
@@ -229,7 +215,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <p className="text-2xl font-bold text-white">{stat.value}</p>
-                  <p className="text-xs text-emerald-200/40 mt-1">{stat.sub}</p>
+                  <p className="text-xs text-white/50 mt-1">{stat.sub}</p>
                 </div>
               ))}
             </div>
@@ -243,11 +229,11 @@ export default function DashboardPage() {
                     style={{ fontFamily: "var(--font-headline)" }}
                   >
                     Explore the{" "}
-                    <span className="bg-gradient-to-r from-amber-300 to-amber-400 bg-clip-text text-transparent">
+                    <span className="text-amber-300">
                       Ecosystem
                     </span>
                   </h2>
-                  <p className="text-sm text-emerald-200/40 mt-1">
+                  <p className="text-sm text-white/50 mt-1">
                     Six services, one unified account
                   </p>
                 </div>
@@ -271,7 +257,7 @@ export default function DashboardPage() {
                       {/* Top row: icon + tag */}
                       <div className="flex items-start justify-between mb-4">
                         <div
-                          className={`w-12 h-12 rounded-xl bg-gradient-to-br ${service.gradient} flex items-center justify-center`}
+                          className={`w-12 h-12 rounded-xl ${service.iconBg} flex items-center justify-center`}
                         >
                           <Icon className="w-6 h-6 text-white" />
                         </div>
@@ -288,12 +274,12 @@ export default function DashboardPage() {
                       </h3>
 
                       {/* Description */}
-                      <p className="text-sm text-emerald-200/50 leading-relaxed mb-4">
+                      <p className="text-sm text-white/60 leading-relaxed mb-4">
                         {service.description}
                       </p>
 
                       {/* Link indicator */}
-                      <div className="flex items-center text-sm font-medium text-emerald-400/70 group-hover:text-emerald-400 transition-colors">
+                      <div className="flex items-center text-sm font-medium text-white/75 group-hover:text-white transition-colors">
                         <span>
                           {service.external ? "Visit platform" : "Explore"}
                         </span>
@@ -330,7 +316,7 @@ export default function DashboardPage() {
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                   {/* Avatar */}
-                  <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-bold text-base sm:text-lg flex-shrink-0">
+                  <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#065f46] flex items-center justify-center text-white font-bold text-base sm:text-lg flex-shrink-0">
                     {user?.name?.charAt(0)?.toUpperCase() || "U"}
                   </div>
                   <div className="min-w-0">
@@ -338,8 +324,8 @@ export default function DashboardPage() {
                       {user?.email}
                     </p>
                     <div className="flex items-center gap-1.5 mt-0.5">
-                      <Clock className="w-3 h-3 text-emerald-200/40 flex-shrink-0" />
-                      <p className="text-xs text-emerald-200/40">
+                      <Clock className="w-3 h-3 text-white/50 flex-shrink-0" />
+                      <p className="text-xs text-white/50">
                         Member since{" "}
                         {user?.createdAt
                           ? new Date(user.createdAt).toLocaleDateString(

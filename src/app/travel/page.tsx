@@ -2,12 +2,12 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
   Plane,
   Building2,
   Car,
-  Sparkles,
   Globe,
   Shield,
   Tag,
@@ -16,7 +16,9 @@ import {
   BookOpen,
   Search,
   Bell,
-  Star
+  Star,
+  ArrowRight,
+  ShieldCheck,
 } from 'lucide-react';
 import { popularDestinations } from '@/data/travelMockData';
 
@@ -80,86 +82,172 @@ export default function TravelLandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-sky-950 to-gray-900">
       {/* Hero Section */}
-      <section className="relative overflow-hidden pt-24 pb-16 md:pt-32 md:pb-24 px-4 md:px-6">
-        {/* Background Effects */}
-        <div className="absolute inset-0">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-sky-600 rounded-full filter blur-3xl opacity-20 animate-pulse"></div>
-          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-600 rounded-full filter blur-3xl opacity-20 animate-pulse"></div>
+      <section className="relative h-screen min-h-[600px] max-h-[900px] flex items-center overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="https://images.unsplash.com/photo-1436491865332-7a61a109db05?w=1920&auto=format&fit=crop&q=80"
+            alt="Halal-friendly travel"
+            fill
+            className="object-cover"
+            priority
+            sizes="100vw"
+          />
         </div>
 
-        <div className="mx-auto max-w-5xl text-center relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
+        {/* Gradient overlays */}
+        <div className="absolute inset-0 z-[1] bg-gradient-to-r from-gray-950 via-gray-950/75 to-transparent" />
+        <div className="absolute inset-0 z-[1] bg-gradient-to-t from-gray-950 via-transparent to-gray-950/40" />
+
+        {/* Ambient glow */}
+        <div className="absolute bottom-0 left-1/4 w-[420px] h-[420px] bg-sky-600/12 rounded-full blur-3xl z-[1]" />
+        <div className="absolute top-1/3 right-0 w-[280px] h-[280px] bg-cyan-500/8 rounded-full blur-3xl z-[1]" />
+
+        {/* Content */}
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12">
+          <div className="grid items-center gap-10 lg:grid-cols-[1.08fr_0.92fr]">
+            <div className="max-w-3xl">
             {/* Badge */}
             <motion.div
-              className="inline-flex items-center gap-2 bg-sky-500/20 border border-sky-500/30 rounded-full px-4 py-2 mb-6"
-              animate={{ scale: [1, 1.05, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="inline-flex items-center gap-2.5 bg-sky-500/15 border border-sky-400/25 backdrop-blur-md rounded-full px-5 py-2.5 mb-8"
             >
-              <Sparkles className="w-4 h-4 text-sky-400" />
-              <span className="text-sky-300 text-sm font-semibold">
+              <span className="w-2.5 h-2.5 rounded-full bg-sky-400 animate-pulse" />
+              <span className="text-sky-300 text-sm font-semibold tracking-wide">
                 Powered by Skyscanner
               </span>
             </motion.div>
 
-            <h1
-              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white mb-6"
+            {/* Headline */}
+            <motion.h1
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.3 }}
+              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-[1.05] mb-6 tracking-tight"
               style={{ fontFamily: 'var(--font-headline)' }}
             >
               HalalMe{' '}
-              <span className="bg-gradient-to-r from-sky-400 via-cyan-400 to-teal-400 bg-clip-text text-transparent">
-                Travel
+              <span className="relative inline-block">
+                <span className="bg-gradient-to-r from-sky-400 via-cyan-400 to-teal-400 bg-clip-text text-transparent">
+                  Travel
+                </span>
+                <motion.span
+                  className="absolute -bottom-1 left-0 right-0 h-1 bg-gradient-to-r from-sky-500 to-cyan-500 rounded-full origin-left"
+                  initial={{ scaleX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={{ duration: 0.8, delay: 1 }}
+                />
               </span>
-            </h1>
+            </motion.h1>
 
-            <p
-              className="text-lg sm:text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto mb-8 leading-relaxed font-normal"
+            {/* Subtitle */}
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+              className="text-base sm:text-lg md:text-xl text-gray-300/90 max-w-xl leading-relaxed mb-10"
               style={{ fontFamily: 'var(--font-body)' }}
             >
               Compare flights, hotels & car rentals from top providers worldwide.
               Built for halal-friendly travel.
-            </p>
+            </motion.p>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            {/* CTAs */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.65 }}
+              className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 mb-12 sm:mb-14"
+            >
               <motion.button
                 onClick={() => router.push('/travel/flights')}
-                className="w-full sm:w-auto bg-gradient-to-r from-sky-600 via-cyan-500 to-cyan-600 text-white px-8 py-4 rounded-full font-bold text-lg shadow-2xl"
-                whileHover={{
-                  scale: 1.05,
-                  boxShadow: "0 20px 40px -10px rgba(14, 165, 233, 0.6)",
-                }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.04, boxShadow: '0 20px 50px -12px rgba(14,165,233,0.5)' }}
+                whileTap={{ scale: 0.97 }}
+                className="group relative w-full sm:w-auto px-8 py-4 md:px-10 md:py-5 bg-gradient-to-r from-sky-500 to-cyan-600 text-white font-bold text-lg rounded-full shadow-xl shadow-sky-600/25 overflow-hidden"
               >
-                Search Flights
+                <span className="relative z-10 flex items-center justify-center gap-2.5">
+                  Search Flights
+                  <ArrowRight className="w-5 h-5" />
+                </span>
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
               </motion.button>
 
               <motion.button
                 onClick={() => router.push('/travel/hotels')}
-                className="w-full sm:w-auto bg-gray-800 hover:bg-gray-700 text-white px-8 py-4 rounded-full font-bold text-lg border-2 border-gray-700 hover:border-sky-500 transition-all"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.04, backgroundColor: 'rgba(255,255,255,0.12)' }}
+                whileTap={{ scale: 0.97 }}
+                className="w-full sm:w-auto px-8 py-4 md:px-10 md:py-5 bg-white/8 border border-white/20 backdrop-blur-sm text-white font-bold text-lg rounded-full hover:border-white/40 transition-all"
               >
                 Find Hotels
               </motion.button>
+            </motion.div>
+
+              {/* Trust row */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.9 }}
+                className="flex flex-wrap gap-4 sm:gap-6 text-xs sm:text-sm"
+              >
+                {[
+                  { icon: ShieldCheck, text: 'Halal-Friendly', color: 'text-sky-400' },
+                  { icon: Globe, text: '1000+ Destinations', color: 'text-cyan-400' },
+                  { icon: Tag, text: 'Best Prices', color: 'text-sky-400' },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center gap-2 text-gray-400">
+                    <item.icon className={`w-4 h-4 ${item.color}`} />
+                    <span>{item.text}</span>
+                  </div>
+                ))}
+              </motion.div>
             </div>
 
-            <p
-              className="text-gray-500 text-sm mt-6 font-normal"
-              style={{ fontFamily: 'var(--font-body)' }}
+            <motion.div
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.75 }}
+              className="relative hidden lg:block"
             >
-              New to HalalMe?{' '}
-              <Link
-                href="/select-role"
-                className="text-sky-400 hover:text-sky-300 font-semibold underline"
-              >
-                Create an account
-              </Link>
-            </p>
-          </motion.div>
+              <div className="relative h-[510px]">
+                <div className="absolute right-0 top-0 h-[360px] w-[300px] overflow-hidden rounded-[2rem] border border-white/20 shadow-2xl">
+                  <Image
+                    src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=900&q=80"
+                    alt="Traveler at destination"
+                    fill
+                    className="object-cover"
+                    sizes="300px"
+                  />
+                  <div className="absolute inset-x-0 bottom-0 bg-gray-950/65 p-4">
+                    <p className="text-xs uppercase tracking-[0.14em] text-sky-300">Featured City</p>
+                    <p className="text-lg font-bold text-white">Istanbul</p>
+                  </div>
+                </div>
+                <div className="absolute bottom-0 left-0 h-[250px] w-[260px] overflow-hidden rounded-[1.7rem] border border-white/20 shadow-2xl">
+                  <Image
+                    src="https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=900&q=80"
+                    alt="Muslim-friendly travel experience"
+                    fill
+                    className="object-cover"
+                    sizes="260px"
+                  />
+                  <div className="absolute inset-0 bg-gray-950/35" />
+                </div>
+                <div className="absolute bottom-6 right-8 rounded-2xl border border-sky-400/35 bg-sky-500/15 px-4 py-3 backdrop-blur-md">
+                  <p className="text-xs text-sky-300">Live deal found</p>
+                  <p className="text-xl font-bold text-white">-28% Fare</p>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+
+        {/* Scroll hint */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 animate-bounce">
+          <div className="w-6 h-10 border-2 border-white/20 rounded-full flex justify-center pt-2">
+            <div className="w-1.5 h-3 bg-sky-400 rounded-full" />
+          </div>
         </div>
       </section>
 
@@ -586,3 +674,4 @@ export default function TravelLandingPage() {
     </div>
   );
 }
+

@@ -53,6 +53,13 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     "/profile",
     "/hub",
     "/select-role",
+    "/help",
+    "/contact",
+    "/about",
+    "/fresh",
+    "/delivery",
+    "/travel",
+    "/rewards",
   ];
 
   // Pages where header should be hidden

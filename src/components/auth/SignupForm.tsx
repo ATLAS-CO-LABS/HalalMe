@@ -75,7 +75,7 @@ export default function SignupForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="space-y-1.5">
-        <label htmlFor="name" className="text-sm font-medium text-emerald-100/80">
+        <label htmlFor="name" className="text-sm font-medium text-white/85">
           Full Name
         </label>
         <input
@@ -86,12 +86,12 @@ export default function SignupForm() {
           onChange={(e) => setName(e.target.value)}
           required
           disabled={isLoading}
-          className="w-full h-11 px-4 rounded-xl bg-white/[0.08] border border-white/15 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400/50 transition-all disabled:opacity-50"
+          className="w-full h-11 px-4 rounded-xl bg-white/[0.08] border border-white/15 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#065f46]/70 focus:border-[#065f46] transition-all disabled:opacity-50"
         />
       </div>
 
       <div className="space-y-1.5">
-        <label htmlFor="email" className="text-sm font-medium text-emerald-100/80">
+        <label htmlFor="email" className="text-sm font-medium text-white/85">
           Email
         </label>
         <input
@@ -102,12 +102,12 @@ export default function SignupForm() {
           onChange={(e) => setEmail(e.target.value)}
           required
           disabled={isLoading}
-          className="w-full h-11 px-4 rounded-xl bg-white/[0.08] border border-white/15 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400/50 transition-all disabled:opacity-50"
+          className="w-full h-11 px-4 rounded-xl bg-white/[0.08] border border-white/15 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#065f46]/70 focus:border-[#065f46] transition-all disabled:opacity-50"
         />
       </div>
 
       <div className="space-y-1.5">
-        <label htmlFor="password" className="text-sm font-medium text-emerald-100/80">
+        <label htmlFor="password" className="text-sm font-medium text-white/85">
           Password
         </label>
         <div className="relative">
@@ -119,7 +119,7 @@ export default function SignupForm() {
             onChange={(e) => setPassword(e.target.value)}
             required
             disabled={isLoading}
-            className="w-full h-11 px-4 pr-11 rounded-xl bg-white/[0.08] border border-white/15 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400/50 transition-all disabled:opacity-50"
+            className="w-full h-11 px-4 pr-11 rounded-xl bg-white/[0.08] border border-white/15 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#065f46]/70 focus:border-[#065f46] transition-all disabled:opacity-50"
           />
           <button
             type="button"
@@ -138,12 +138,12 @@ export default function SignupForm() {
             {passwordChecks.map((check, i) => (
               <div key={i} className="flex items-center gap-1">
                 {check.met ? (
-                  <Check className="w-3 h-3 text-emerald-400 flex-shrink-0" />
+                  <Check className="w-3 h-3 text-[#34a37a] flex-shrink-0" />
                 ) : (
                   <X className="w-3 h-3 text-white/30 flex-shrink-0" />
                 )}
                 <span
-                  className={`text-xs whitespace-nowrap ${check.met ? "text-emerald-400" : "text-white/30"}`}
+                  className={`text-xs whitespace-nowrap ${check.met ? "text-[#34a37a]" : "text-white/30"}`}
                 >
                   {check.label}
                 </span>
@@ -156,7 +156,7 @@ export default function SignupForm() {
       <div className="space-y-1.5">
         <label
           htmlFor="confirmPassword"
-          className="text-sm font-medium text-emerald-100/80"
+          className="text-sm font-medium text-white/85"
         >
           Confirm Password
         </label>
@@ -168,10 +168,10 @@ export default function SignupForm() {
           onChange={(e) => setConfirmPassword(e.target.value)}
           required
           disabled={isLoading}
-          className={`w-full h-11 px-4 rounded-xl bg-white/[0.08] border text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-emerald-400/50 transition-all disabled:opacity-50 ${
+          className={`w-full h-11 px-4 rounded-xl bg-white/[0.08] border text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#065f46]/70 transition-all disabled:opacity-50 ${
             confirmPassword.length > 0 && password !== confirmPassword
               ? "border-red-400/50"
-              : "border-white/15 focus:border-emerald-400/50"
+              : "border-white/15 focus:border-[#065f46]"
           }`}
         />
         {confirmPassword.length > 0 && password !== confirmPassword && (
@@ -185,10 +185,10 @@ export default function SignupForm() {
           type="checkbox"
           checked={agreeToTerms}
           onChange={(e) => setAgreeToTerms(e.target.checked)}
-          className="mt-1 h-4 w-4 rounded border-white/30 bg-white/10 text-emerald-500 focus:ring-emerald-400/50 accent-emerald-500"
+          className="mt-1 h-4 w-4 rounded border-white/30 bg-white/10 text-[#065f46] focus:ring-[#065f46]/70 accent-[#065f46]"
           disabled={isLoading}
         />
-        <label htmlFor="terms" className="text-sm text-emerald-200/60">
+        <label htmlFor="terms" className="text-sm text-white/65">
           I agree to the{" "}
           <Link
             href="/terms"
@@ -215,7 +215,7 @@ export default function SignupForm() {
 
       <Button
         type="submit"
-        className="w-full bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-white font-bold rounded-xl h-12 shadow-lg shadow-emerald-500/20 text-base"
+        className="w-full bg-[#065f46] hover:bg-[#064e3b] text-white font-bold rounded-xl h-12 shadow-lg shadow-black/25 text-base"
         disabled={isLoading}
       >
         {isLoading ? (
@@ -228,7 +228,7 @@ export default function SignupForm() {
         )}
       </Button>
 
-      <p className="text-center text-sm text-emerald-200/50">
+      <p className="text-center text-sm text-white/60">
         Already have an account?{" "}
         <Link
           href="/login"

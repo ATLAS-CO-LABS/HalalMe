@@ -34,7 +34,7 @@ export default function LoginForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="space-y-1.5">
-        <label htmlFor="email" className="text-sm font-medium text-emerald-100/80">
+        <label htmlFor="email" className="text-sm font-medium text-white/85">
           Email
         </label>
         <input
@@ -45,13 +45,13 @@ export default function LoginForm() {
           onChange={(e) => setEmail(e.target.value)}
           required
           disabled={isLoading}
-          className="w-full h-11 px-4 rounded-xl bg-white/[0.08] border border-white/15 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400/50 transition-all disabled:opacity-50"
+          className="w-full h-11 px-4 rounded-xl bg-white/[0.08] border border-white/15 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#065f46]/70 focus:border-[#065f46] transition-all disabled:opacity-50"
         />
       </div>
 
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
-          <label htmlFor="password" className="text-sm font-medium text-emerald-100/80">
+          <label htmlFor="password" className="text-sm font-medium text-white/85">
             Password
           </label>
           <Link
@@ -70,7 +70,7 @@ export default function LoginForm() {
             onChange={(e) => setPassword(e.target.value)}
             required
             disabled={isLoading}
-            className="w-full h-11 px-4 pr-11 rounded-xl bg-white/[0.08] border border-white/15 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400/50 transition-all disabled:opacity-50"
+            className="w-full h-11 px-4 pr-11 rounded-xl bg-white/[0.08] border border-white/15 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#065f46]/70 focus:border-[#065f46] transition-all disabled:opacity-50"
           />
           <button
             type="button"
@@ -95,7 +95,7 @@ export default function LoginForm() {
 
       <Button
         type="submit"
-        className="w-full bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-white font-bold rounded-xl h-12 shadow-lg shadow-emerald-500/20 text-base"
+        className="w-full bg-[#065f46] hover:bg-[#064e3b] text-white font-bold rounded-xl h-12 shadow-lg shadow-black/25 text-base"
         disabled={isLoading}
       >
         {isLoading ? (
@@ -108,7 +108,7 @@ export default function LoginForm() {
         )}
       </Button>
 
-      <p className="text-center text-sm text-emerald-200/50">
+      <p className="text-center text-sm text-white/60">
         Don&apos;t have an account?{" "}
         <Link
           href="/signup"
