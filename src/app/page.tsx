@@ -82,7 +82,7 @@ export default function Home() {
                   className="text-4xl md:text-6xl font-extrabold text-white mb-8"
                   style={{ fontFamily: "var(--font-headline)" }}
                 >
-                  Six Services. <br />
+                  Seven Services. <br />
                   <span className="text-emerald-400">One Unified Account.</span>
                 </h2>
                 <p className="text-xl text-emerald-100/80 leading-relaxed">
@@ -123,6 +123,11 @@ export default function Home() {
                   link: "/rewards",
                   text: "HalalMe Rewards",
                   image: "/images/services/halal01.jpg",
+                },
+                {
+                  link: "/marketplace",
+                  text: "HalalMe Marketplace",
+                  image: "/images/services/halal03.jpg",
                 },
               ]}
               speed={20}
@@ -270,7 +275,7 @@ function HeroSection() {
               </div>
               <div className="flex items-center gap-2">
                 <Zap className="w-4 h-4 text-emerald-400" />
-                <span>6 Services, One Account</span>
+                <span>7 Services, One Account</span>
               </div>
             </motion.div>
           </motion.div>
@@ -403,7 +408,7 @@ function HowItWorksSection() {
     {
       num: "02",
       title: "Select Service",
-      desc: "Choose from Delivery, Kitchen, Fresh, Travel, Hub, and Rewards. All connected, all Halal certified.",
+      desc: "Choose from Delivery, Kitchen, Fresh, Travel, Hub, Rewards, and Marketplace. All connected, all Halal certified.",
       Icon: LayoutGrid,
       color: "amber",
     },

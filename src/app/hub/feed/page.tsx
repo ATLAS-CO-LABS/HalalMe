@@ -120,9 +120,9 @@ export default function HubPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pt-16">
       {/* Header */}
-      <div className="bg-gray-900/95 backdrop-blur-lg border-b border-gray-700 sticky top-0 z-40">
+      <div className="bg-gray-900/95 backdrop-blur-lg border-b border-gray-700 sticky top-16 z-40">
         <div className="mx-auto max-w-4xl px-4 md:px-6 py-3 md:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">

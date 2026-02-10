@@ -14,6 +14,7 @@ const serviceLinks = [
   { href: '/hub', label: 'Hub', desc: 'Community & sharing', color: 'bg-amber-500' },
   { href: '/travel', label: 'Travel', desc: 'Flights, hotels & cars', color: 'bg-sky-500' },
   { href: '/rewards', label: 'Rewards', desc: 'Give back, get rewarded', color: 'bg-emerald-500' },
+  { href: '/marketplace', label: 'Marketplace', desc: 'Halal products & essentials', color: 'bg-indigo-600' },
 ];
 
 const infoLinks = [

@@ -15,12 +15,13 @@ export default function Footer() {
       { label: 'Careers', href: '/careers' },
     ],
     services: [
-      { label: 'Delivery', href: '/#delivery', color: 'hover:text-emerald-500' },
-      { label: 'Kitchen', href: '/#kitchen', color: 'hover:text-amber-500' },
-      { label: 'Fresh', href: '/#fresh', color: 'hover:text-emerald-500' },
-      { label: 'Hub', href: '/#hub', color: 'hover:text-teal-500' },
-      { label: 'Travel', href: '/#travel', color: 'hover:text-amber-500' },
-      { label: 'Rewards', href: '/#rewards', color: 'hover:text-emerald-500' },
+      { label: 'Delivery', href: '/delivery', color: 'hover:text-red-500' },
+      { label: 'Fresh', href: '/fresh', color: 'hover:text-lime-500' },
+      { label: 'Kitchen', href: '/kitchen', color: 'hover:text-fuchsia-500' },
+      { label: 'Hub', href: '/hub', color: 'hover:text-amber-500' },
+      { label: 'Travel', href: '/travel', color: 'hover:text-sky-500' },
+      { label: 'Rewards', href: '/rewards', color: 'hover:text-emerald-500' },
+      { label: 'Marketplace', href: '/marketplace', color: 'hover:text-indigo-500' },
     ],
     legal: [
       { label: 'Privacy Policy', href: '/privacy' },
@@ -60,7 +61,7 @@ export default function Footer() {
               </motion.div>
             </Link>
             <p className="text-slate-600 text-sm leading-relaxed mb-6 max-w-xs">
-              The complete Halal ecosystem. Six services, one account, endless possibilities for mindful living.
+              The complete Halal ecosystem. Seven services, one account, endless possibilities for mindful living.
             </p>
             {/* Social Icons */}
             <div className="flex gap-3">
@@ -121,12 +122,12 @@ export default function Footer() {
             <ul className="space-y-3">
               {footerLinks.services.map((link) => (
                 <li key={link.label}>
-                  <a
+                  <Link
                     href={link.href}
                     className={`text-slate-600 ${link.color} text-sm transition-colors`}
                   >
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
