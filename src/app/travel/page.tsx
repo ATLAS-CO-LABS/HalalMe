@@ -26,30 +26,10 @@ export default function TravelLandingPage() {
   const router = useRouter();
 
   const features = [
-    {
-      icon: Shield,
-      title: "Halal-Friendly",
-      description: "Find Muslim-friendly hotels and destinations",
-      color: "from-sky-500 to-sky-600",
-    },
-    {
-      icon: Tag,
-      title: "Best Prices",
-      description: "Compare prices from top travel providers",
-      color: "from-cyan-500 to-cyan-600",
-    },
-    {
-      icon: Globe,
-      title: "Global Coverage",
-      description: "Search flights, hotels & cars worldwide",
-      color: "from-teal-500 to-teal-600",
-    },
-    {
-      icon: Bell,
-      title: "Price Alerts",
-      description: "Get notified when prices drop",
-      color: "from-sky-500 to-cyan-600",
-    },
+    { icon: Shield, title: "Halal-Friendly", description: "Find Muslim-friendly hotels and destinations" },
+    { icon: Tag, title: "Best Prices", description: "Compare prices from top travel providers" },
+    { icon: Globe, title: "Global Coverage", description: "Search flights, hotels & cars worldwide" },
+    { icon: Bell, title: "Price Alerts", description: "Get notified when prices drop" },
   ];
 
   const searchOptions = [
@@ -58,7 +38,6 @@ export default function TravelLandingPage() {
       title: "Flights",
       description: "Compare flights from 100+ airlines worldwide",
       href: "/travel/flights",
-      color: "from-sky-600 via-sky-500 to-cyan-600",
       features: ["Direct & connecting flights", "Flexible date search", "Price calendar"],
     },
     {
@@ -66,7 +45,6 @@ export default function TravelLandingPage() {
       title: "Hotels",
       description: "Find halal-friendly hotels with prayer facilities",
       href: "/travel/hotels",
-      color: "from-cyan-600 via-cyan-500 to-teal-600",
       features: ["Halal food options", "Prayer room filters", "Near mosque search"],
     },
     {
@@ -74,16 +52,14 @@ export default function TravelLandingPage() {
       title: "Car Rentals",
       description: "Rent cars from trusted providers worldwide",
       href: "/travel/cars",
-      color: "from-teal-600 via-teal-500 to-sky-600",
       features: ["All car types", "Free cancellation", "Full insurance options"],
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-sky-950 to-gray-900">
+    <div className="min-h-screen bg-gray-950">
       {/* Hero Section */}
       <section className="relative h-screen min-h-[600px] max-h-[900px] flex items-center overflow-hidden">
-        {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <Image
             src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1920&auto=format&fit=crop&q=80"
@@ -94,19 +70,10 @@ export default function TravelLandingPage() {
             sizes="100vw"
           />
         </div>
+        <div className="absolute inset-0 z-[1] bg-gray-950/70" />
 
-        {/* Gradient overlays */}
-        <div className="absolute inset-0 z-[1] bg-gradient-to-r from-gray-950 via-gray-950/75 to-transparent" />
-        <div className="absolute inset-0 z-[1] bg-gradient-to-t from-gray-950 via-transparent to-gray-950/40" />
-
-        {/* Ambient glow */}
-        <div className="absolute bottom-0 left-1/4 w-[420px] h-[420px] bg-sky-600/12 rounded-full blur-3xl z-[1]" />
-        <div className="absolute top-1/3 right-0 w-[280px] h-[280px] bg-cyan-500/8 rounded-full blur-3xl z-[1]" />
-
-        {/* Content */}
         <div className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12 pt-20">
           <div className="max-w-3xl">
-            {/* Badge */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -114,12 +81,9 @@ export default function TravelLandingPage() {
               className="inline-flex items-center gap-2.5 bg-sky-500/15 border border-sky-400/25 backdrop-blur-md rounded-full px-5 py-2.5 mb-5 sm:mb-8"
             >
               <span className="w-2.5 h-2.5 rounded-full bg-sky-400 animate-pulse" />
-              <span className="text-sky-300 text-sm font-semibold tracking-wide">
-                Powered by Skyscanner
-              </span>
+              <span className="text-sky-300 text-sm font-semibold tracking-wide">Powered by Skyscanner</span>
             </motion.div>
 
-            {/* Headline */}
             <motion.h1
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -129,11 +93,9 @@ export default function TravelLandingPage() {
             >
               HalalMe{' '}
               <span className="relative inline-block">
-                <span className="bg-gradient-to-r from-sky-400 via-cyan-400 to-teal-400 bg-clip-text text-transparent">
-                  Travel
-                </span>
+                <span className="text-sky-400">Travel</span>
                 <motion.span
-                  className="absolute -bottom-1 left-0 right-0 h-1 bg-gradient-to-r from-sky-500 to-cyan-500 rounded-full origin-left"
+                  className="absolute -bottom-1 left-0 right-0 h-1 bg-sky-500 rounded-full origin-left"
                   initial={{ scaleX: 0 }}
                   animate={{ scaleX: 1 }}
                   transition={{ duration: 0.8, delay: 1 }}
@@ -141,7 +103,6 @@ export default function TravelLandingPage() {
               </span>
             </motion.h1>
 
-            {/* Subtitle */}
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -149,11 +110,9 @@ export default function TravelLandingPage() {
               className="text-base sm:text-lg md:text-xl text-gray-300/90 max-w-xl leading-relaxed mb-6 sm:mb-10"
               style={{ fontFamily: 'var(--font-body)' }}
             >
-              Compare flights, hotels & car rentals from top providers worldwide.
-              Built for halal-friendly travel.
+              Compare flights, hotels & car rentals from top providers worldwide. Built for halal-friendly travel.
             </motion.p>
 
-            {/* CTAs */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -164,15 +123,11 @@ export default function TravelLandingPage() {
                 onClick={() => router.push('/travel/flights')}
                 whileHover={{ scale: 1.04, boxShadow: '0 20px 50px -12px rgba(14,165,233,0.5)' }}
                 whileTap={{ scale: 0.97 }}
-                className="group relative w-full sm:w-auto px-8 py-4 md:px-10 md:py-5 bg-gradient-to-r from-sky-500 to-cyan-600 text-white font-bold text-lg rounded-full shadow-xl shadow-sky-600/25 overflow-hidden"
+                className="w-full sm:w-auto px-8 py-4 md:px-10 md:py-5 bg-sky-500 text-white font-bold text-lg rounded-full shadow-xl shadow-sky-500/25 flex items-center justify-center gap-2.5"
               >
-                <span className="relative z-10 flex items-center justify-center gap-2.5">
-                  Search Flights
-                  <ArrowRight className="w-5 h-5" />
-                </span>
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                Search Flights
+                <ArrowRight className="w-5 h-5" />
               </motion.button>
-
               <motion.button
                 onClick={() => router.push('/travel/hotels')}
                 whileHover={{ scale: 1.04, backgroundColor: 'rgba(255,255,255,0.12)' }}
@@ -183,7 +138,6 @@ export default function TravelLandingPage() {
               </motion.button>
             </motion.div>
 
-            {/* Trust row */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -191,12 +145,12 @@ export default function TravelLandingPage() {
               className="flex flex-wrap gap-4 sm:gap-6 text-xs sm:text-sm"
             >
               {[
-                { icon: ShieldCheck, text: 'Halal-Friendly', color: 'text-sky-400' },
-                { icon: Globe, text: '1000+ Destinations', color: 'text-cyan-400' },
-                { icon: Tag, text: 'Best Prices', color: 'text-sky-400' },
+                { icon: ShieldCheck, text: 'Halal-Friendly' },
+                { icon: Globe, text: '1000+ Destinations' },
+                { icon: Tag, text: 'Best Prices' },
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-2 text-gray-400">
-                  <item.icon className={`w-4 h-4 ${item.color}`} />
+                  <item.icon className="w-4 h-4 text-sky-400" />
                   <span>{item.text}</span>
                 </div>
               ))}
@@ -204,7 +158,6 @@ export default function TravelLandingPage() {
           </div>
         </div>
 
-        {/* Scroll hint */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 animate-bounce">
           <div className="w-6 h-10 border-2 border-white/20 rounded-full flex justify-center pt-2">
             <div className="w-1.5 h-3 bg-sky-400 rounded-full" />
@@ -213,7 +166,7 @@ export default function TravelLandingPage() {
       </section>
 
       {/* Main Search Cards Section */}
-      <section className="px-4 md:px-6 py-16 md:py-20 bg-gradient-to-r from-sky-900/20 to-cyan-900/20">
+      <section className="px-4 md:px-6 py-16 md:py-20 bg-gray-900">
         <div className="mx-auto max-w-6xl">
           <div className="grid md:grid-cols-3 gap-6 md:gap-8">
             {searchOptions.map((option, index) => {
@@ -228,25 +181,18 @@ export default function TravelLandingPage() {
                 >
                   <Link href={option.href}>
                     <motion.div
-                      className="group relative h-full bg-gray-800 rounded-2xl md:rounded-3xl p-6 md:p-8 shadow-2xl overflow-hidden cursor-pointer border border-gray-700 hover:border-sky-500 transition-all"
-                      whileHover={{ scale: 1.02, y: -8 }}
+                      className="group relative h-full bg-gray-800 rounded-2xl md:rounded-3xl p-6 md:p-8 shadow-xl overflow-hidden cursor-pointer border border-gray-700 hover:border-sky-500/50 transition-all"
+                      whileHover={{ scale: 1.02, y: -6 }}
                       transition={{ duration: 0.3 }}
                     >
-                      {/* Background Pattern */}
-                      <div className="absolute inset-0 opacity-5">
-                        <div className={`absolute top-0 right-0 w-64 h-64 bg-gradient-to-br ${option.color} rounded-full filter blur-3xl`}></div>
-                      </div>
-
                       <div className="relative z-10">
                         <div className="flex items-center justify-between mb-6">
-                          <div className={`bg-gradient-to-br ${option.color} rounded-full p-4`}>
+                          <div className="bg-sky-500 rounded-full p-4 shadow-md">
                             <Icon className="w-10 h-10 text-white" />
                           </div>
                           <motion.svg
                             className="w-8 h-8 text-gray-400 opacity-70 group-hover:opacity-100 group-hover:text-sky-400"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
+                            fill="none" viewBox="0 0 24 24" stroke="currentColor"
                             animate={{ x: [0, 4, 0] }}
                             transition={{ duration: 1.5, repeat: Infinity }}
                           >
@@ -254,35 +200,26 @@ export default function TravelLandingPage() {
                           </motion.svg>
                         </div>
 
-                        <h2
-                          className="text-2xl font-bold text-white mb-3"
-                          style={{ fontFamily: 'var(--font-headline)' }}
-                        >
+                        <h2 className="text-2xl font-bold text-white mb-3" style={{ fontFamily: 'var(--font-headline)' }}>
                           {option.title}
                         </h2>
-
-                        <p
-                          className="text-gray-300 text-base leading-relaxed mb-4 font-normal"
-                          style={{ fontFamily: 'var(--font-body)' }}
-                        >
+                        <p className="text-gray-300 text-base leading-relaxed mb-4" style={{ fontFamily: 'var(--font-body)' }}>
                           {option.description}
                         </p>
 
                         <div className="space-y-2">
                           {option.features.map((feature, idx) => (
                             <div key={idx} className="flex items-center gap-2">
-                              <div className="w-5 h-5 rounded-full bg-sky-500/30 flex items-center justify-center flex-shrink-0">
+                              <div className="w-5 h-5 rounded-full bg-sky-500/20 flex items-center justify-center flex-shrink-0">
                                 <span className="text-sky-400 text-xs">✓</span>
                               </div>
-                              <p className="text-gray-400 text-sm font-normal" style={{ fontFamily: 'var(--font-body)' }}>
-                                {feature}
-                              </p>
+                              <p className="text-gray-400 text-sm" style={{ fontFamily: 'var(--font-body)' }}>{feature}</p>
                             </div>
                           ))}
                         </div>
 
                         <motion.div
-                          className={`mt-6 inline-flex items-center gap-2 bg-gradient-to-r ${option.color} text-white px-5 py-2.5 rounded-full font-semibold text-sm`}
+                          className="mt-6 inline-flex items-center gap-2 bg-sky-500 text-white px-5 py-2.5 rounded-full font-semibold text-sm shadow-md"
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.98 }}
                         >
@@ -299,7 +236,7 @@ export default function TravelLandingPage() {
       </section>
 
       {/* Features Grid */}
-      <section className="px-4 md:px-6 py-16 md:py-20">
+      <section className="px-4 md:px-6 py-16 md:py-20 bg-gray-950">
         <div className="mx-auto max-w-6xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -308,16 +245,10 @@ export default function TravelLandingPage() {
             transition={{ duration: 0.6 }}
             className="text-center mb-12"
           >
-            <h2
-              className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4"
-              style={{ fontFamily: 'var(--font-headline)' }}
-            >
-              Why Choose HalalMe Travel?
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4" style={{ fontFamily: 'var(--font-headline)' }}>
+              Why Choose HalalMe <span className="text-sky-400">Travel?</span>
             </h2>
-            <p
-              className="text-lg md:text-xl text-gray-400 font-normal"
-              style={{ fontFamily: 'var(--font-body)' }}
-            >
+            <p className="text-lg md:text-xl text-gray-400" style={{ fontFamily: 'var(--font-body)' }}>
               Your trusted partner for halal-friendly travel worldwide
             </p>
           </motion.div>
@@ -332,24 +263,16 @@ export default function TravelLandingPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
-                  whileHover={{ y: -8 }}
-                  className="bg-gray-800 rounded-2xl p-6 border border-gray-700 hover:border-sky-500 transition-all"
+                  whileHover={{ y: -6 }}
+                  className="bg-gray-800 rounded-2xl p-6 border border-gray-700 hover:border-sky-500/40 transition-all shadow-sm hover:shadow-md"
                 >
-                  <div
-                    className={`bg-gradient-to-br ${feature.color} rounded-xl p-4 mb-4 inline-block`}
-                  >
+                  <div className="bg-sky-500 rounded-xl p-4 mb-4 inline-block shadow-md">
                     <Icon className="w-8 h-8 text-white" />
                   </div>
-                  <h3
-                    className="text-xl font-bold text-white mb-2"
-                    style={{ fontFamily: 'var(--font-headline)' }}
-                  >
+                  <h3 className="text-xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-headline)' }}>
                     {feature.title}
                   </h3>
-                  <p
-                    className="text-gray-400 font-normal"
-                    style={{ fontFamily: 'var(--font-body)' }}
-                  >
+                  <p className="text-gray-400" style={{ fontFamily: 'var(--font-body)' }}>
                     {feature.description}
                   </p>
                 </motion.div>
@@ -360,7 +283,7 @@ export default function TravelLandingPage() {
       </section>
 
       {/* Popular Destinations */}
-      <section className="px-4 md:px-6 py-16 md:py-20 bg-gradient-to-r from-sky-900/20 to-cyan-900/20">
+      <section className="px-4 md:px-6 py-16 md:py-20 bg-gray-900">
         <div className="mx-auto max-w-6xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -369,16 +292,10 @@ export default function TravelLandingPage() {
             transition={{ duration: 0.6 }}
             className="text-center mb-12"
           >
-            <h2
-              className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4"
-              style={{ fontFamily: 'var(--font-headline)' }}
-            >
-              Popular Destinations
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4" style={{ fontFamily: 'var(--font-headline)' }}>
+              Popular <span className="text-sky-400">Destinations</span>
             </h2>
-            <p
-              className="text-lg md:text-xl text-gray-400 font-normal"
-              style={{ fontFamily: 'var(--font-body)' }}
-            >
+            <p className="text-lg md:text-xl text-gray-400" style={{ fontFamily: 'var(--font-body)' }}>
               Explore Muslim-friendly destinations around the world
             </p>
           </motion.div>
@@ -394,18 +311,14 @@ export default function TravelLandingPage() {
               >
                 <Link href={`/travel/guide/cities/${destination.slug}`}>
                   <motion.div
-                    className="group relative h-64 rounded-2xl overflow-hidden cursor-pointer"
+                    className="group relative h-64 rounded-2xl overflow-hidden cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
                     whileHover={{ scale: 1.02 }}
                   >
-                    {/* Background Image */}
                     <div
                       className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
                       style={{ backgroundImage: `url(${destination.image})` }}
                     />
-                    {/* Gradient Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/50 to-transparent" />
-
-                    {/* Content */}
+                    <div className="absolute inset-0 bg-gray-900/60" />
                     <div className="absolute bottom-0 left-0 right-0 p-6">
                       <div className="flex items-center gap-2 mb-2">
                         <MapPin className="w-4 h-4 text-sky-400" />
@@ -415,22 +328,12 @@ export default function TravelLandingPage() {
                         {destination.city}
                       </h3>
                       <div className="flex items-center gap-4 text-sm">
-                        <span className="text-gray-300">
-                          <Plane className="w-4 h-4 inline mr-1" />
-                          From £{destination.flightPriceFrom}
-                        </span>
-                        <span className="text-gray-300">
-                          <Building2 className="w-4 h-4 inline mr-1" />
-                          From £{destination.hotelPriceFrom}/night
-                        </span>
+                        <span className="text-gray-300"><Plane className="w-4 h-4 inline mr-1" />From £{destination.flightPriceFrom}</span>
+                        <span className="text-gray-300"><Building2 className="w-4 h-4 inline mr-1" />From £{destination.hotelPriceFrom}/night</span>
                       </div>
-                      {/* Halal Score */}
                       <div className="flex items-center gap-1 mt-2">
                         {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`w-4 h-4 ${i < destination.halalScore ? 'text-sky-400 fill-sky-400' : 'text-gray-600'}`}
-                          />
+                          <Star key={i} className={`w-4 h-4 ${i < destination.halalScore ? 'text-sky-400 fill-sky-400' : 'text-gray-600'}`} />
                         ))}
                         <span className="text-gray-400 text-xs ml-1">Halal Score</span>
                       </div>
@@ -457,7 +360,7 @@ export default function TravelLandingPage() {
       </section>
 
       {/* Stats Section */}
-      <section className="px-4 md:px-6 py-16 md:py-20">
+      <section className="px-4 md:px-6 py-16 bg-sky-500/5 border-y border-sky-500/10">
         <div className="mx-auto max-w-5xl">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
@@ -474,18 +377,10 @@ export default function TravelLandingPage() {
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 className="text-center"
               >
-                <h3
-                  className="text-3xl md:text-4xl font-bold text-white mb-2"
-                  style={{ fontFamily: 'var(--font-headline)' }}
-                >
+                <h3 className="text-3xl md:text-4xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-headline)' }}>
                   {stat.value}
                 </h3>
-                <p
-                  className="text-gray-400 font-normal"
-                  style={{ fontFamily: 'var(--font-body)' }}
-                >
-                  {stat.label}
-                </p>
+                <p className="text-gray-400" style={{ fontFamily: 'var(--font-body)' }}>{stat.label}</p>
               </motion.div>
             ))}
           </div>
@@ -493,37 +388,31 @@ export default function TravelLandingPage() {
       </section>
 
       {/* Muslim Travel Guide CTA */}
-      <section className="px-4 md:px-6 py-16 md:py-20 bg-gradient-to-r from-sky-900/30 to-cyan-900/30">
+      <section className="px-4 md:px-6 py-16 md:py-20 bg-gray-950">
         <div className="mx-auto max-w-5xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="bg-gray-800 rounded-3xl p-8 md:p-12 border border-gray-700"
+            className="bg-gray-800 rounded-3xl p-8 md:p-12 border border-gray-700 shadow-lg"
           >
             <div className="grid md:grid-cols-2 gap-8 items-center">
               <div>
-                <div className="inline-flex items-center gap-2 bg-sky-500/20 border border-sky-500/30 rounded-full px-4 py-2 mb-4">
+                <div className="inline-flex items-center gap-2 bg-sky-500/10 border border-sky-500/20 rounded-full px-4 py-2 mb-4">
                   <Compass className="w-4 h-4 text-sky-400" />
                   <span className="text-sky-300 text-sm font-semibold">Muslim Travel Guide</span>
                 </div>
-                <h2
-                  className="text-3xl md:text-4xl font-bold text-white mb-4"
-                  style={{ fontFamily: 'var(--font-headline)' }}
-                >
-                  Plan Your Halal-Friendly Trip
+                <h2 className="text-3xl md:text-4xl font-bold text-white mb-4" style={{ fontFamily: 'var(--font-headline)' }}>
+                  Plan Your <span className="text-sky-400">Halal-Friendly</span> Trip
                 </h2>
-                <p
-                  className="text-gray-300 text-lg mb-6 font-normal"
-                  style={{ fontFamily: 'var(--font-body)' }}
-                >
-                  Discover mosques, halal restaurants, and Muslim-friendly attractions in cities around the world. Our comprehensive guides help you travel with confidence.
+                <p className="text-gray-300 text-lg mb-6" style={{ fontFamily: 'var(--font-body)' }}>
+                  Discover mosques, halal restaurants, and Muslim-friendly attractions in cities around the world.
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <motion.button
                     onClick={() => router.push('/travel/guide')}
-                    className="bg-gradient-to-r from-sky-600 via-cyan-500 to-cyan-600 text-white px-6 py-3 rounded-full font-semibold"
+                    className="bg-sky-500 text-white px-6 py-3 rounded-full font-semibold shadow-md"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
@@ -569,7 +458,7 @@ export default function TravelLandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="px-4 md:px-6 py-16 md:py-24">
+      <section className="px-4 md:px-6 py-16 md:py-20 bg-gray-900">
         <div className="mx-auto max-w-4xl text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -578,25 +467,16 @@ export default function TravelLandingPage() {
             transition={{ duration: 0.6 }}
           >
             <Globe className="w-16 h-16 text-sky-400 mx-auto mb-6" />
-            <h2
-              className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6"
-              style={{ fontFamily: 'var(--font-headline)' }}
-            >
-              Ready to Explore the World?
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4" style={{ fontFamily: 'var(--font-headline)' }}>
+              Ready to <span className="text-sky-400">Explore the World?</span>
             </h2>
-            <p
-              className="text-lg md:text-xl text-gray-400 mb-8 font-normal"
-              style={{ fontFamily: 'var(--font-body)' }}
-            >
+            <p className="text-lg md:text-xl text-gray-400 mb-8" style={{ fontFamily: 'var(--font-body)' }}>
               Compare prices from hundreds of travel sites and find your perfect halal-friendly trip.
             </p>
             <motion.button
               onClick={() => router.push('/travel/flights')}
-              className="bg-gradient-to-r from-sky-600 via-cyan-500 to-cyan-600 text-white px-10 py-5 rounded-full font-bold text-xl shadow-2xl"
-              whileHover={{
-                scale: 1.05,
-                boxShadow: "0 25px 50px -12px rgba(14, 165, 233, 0.6)",
-              }}
+              className="bg-sky-500 text-white px-10 py-5 rounded-full font-bold text-xl shadow-xl shadow-sky-500/20"
+              whileHover={{ scale: 1.05, boxShadow: "0 25px 50px -12px rgba(14,165,233,0.5)" }}
               whileTap={{ scale: 0.95 }}
             >
               Start Searching
@@ -606,33 +486,22 @@ export default function TravelLandingPage() {
       </section>
 
       {/* Disclaimer */}
-      <section className="px-4 md:px-6 pb-8">
+      <section className="px-4 md:px-6 pb-8 bg-gray-900">
         <div className="mx-auto max-w-4xl text-center">
           <p className="text-gray-500 text-sm" style={{ fontFamily: 'var(--font-body)' }}>
             Prices displayed are provided by our travel partners. HalalMe Travel is a comparison service —
-            all bookings are completed on partner websites. We do not process payments or store booking information.
+            all bookings are completed on partner websites.
           </p>
         </div>
       </section>
 
       {/* Back Links */}
-      <section className="px-4 md:px-6 pb-16">
+      <section className="px-4 md:px-6 py-8 bg-gray-900">
         <div className="mx-auto max-w-4xl text-center flex justify-center gap-6">
-          <Link
-            href="/rewards"
-            className="text-gray-400 hover:text-sky-400 transition-colors text-sm font-semibold"
-          >
-            ← Rewards
-          </Link>
-          <Link
-            href="/kitchen"
-            className="text-gray-400 hover:text-sky-400 transition-colors text-sm font-semibold"
-          >
-            Kitchen →
-          </Link>
+          <Link href="/rewards" className="text-gray-400 hover:text-sky-400 transition-colors text-sm font-semibold">← Rewards</Link>
+          <Link href="/kitchen" className="text-gray-400 hover:text-sky-400 transition-colors text-sm font-semibold">Kitchen →</Link>
         </div>
       </section>
     </div>
   );
 }
-

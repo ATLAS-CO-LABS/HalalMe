@@ -1,13 +1,12 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import FlowingMenu from "@/components/navigation/FlowingMenu";
 import LoadingScreen from "@/components/loading/LoadingScreen";
 import {
-  Fingerprint,
   ShieldCheck,
   BookOpen,
   UserCircle,
@@ -15,24 +14,17 @@ import {
   Zap,
   ArrowRight,
   Star,
+  ChevronDown,
+  Fingerprint,
 } from "lucide-react";
-
-// --- Theme Constants (Emerald + White + Amber) ---
-const COLORS = {
-  emerald: "#064E3B",
-  emeraldLight: "#10B981",
-  mint: "#ECFDF5",
-  saffron: "#F59E0B",
-  gold: "#D97706",
-  cream: "#FFFBEB",
-  ebony: "#0F172A",
-};
 
 declare global {
   interface Window {
     __halalmeHomeVisited?: boolean;
   }
 }
+
+const CYCLE_WORDS = ["Perfected.", "Simplified.", "Connected.", "Elevated."];
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(() => {
@@ -53,96 +45,59 @@ export default function Home() {
         )}
       </AnimatePresence>
 
+      {/* Primary bg is deep forest — visible green, not near-black */}
       <div
-        className={`min-h-screen bg-[#F8FAFC] font-sans antialiased selection:bg-emerald-200 ${isLoading ? "overflow-hidden h-screen" : ""}`}
+        className={`min-h-screen bg-[#102C26] font-sans antialiased selection:bg-[#F7E7CE] selection:text-[#102C26] ${
+          isLoading ? "overflow-hidden h-screen" : ""
+        }`}
       >
-        {/* Hero Section - Immersive & Premium */}
         <HeroSection />
 
-        <div className="relative z-10">
-          {/* Bento Grid: What is HalalMe */}
-          <WhatIsHalalMeSection />
+        <div className="relative z-10 mt-[100vh]">
+          {/* Champagne ticker — forest + champagne, no amber dominance */}
+          <ServiceTicker />
 
-          {/* The HalalMe Network - The "Flowing" Experience */}
-          <section className="bg-emerald-950 relative overflow-hidden py-20">
-            <div className="absolute inset-0 opacity-10">
-              <div
-                className="absolute top-0 left-0 w-full h-full"
-                style={{
-                  backgroundImage:
-                    "radial-gradient(circle at 2px 2px, white 1px, transparent 0)",
-                  backgroundSize: "40px 40px",
-                }}
-              ></div>
-            </div>
+          {/* Stats on dark contrast bg */}
+          <StatsStrip />
 
-            <div className="mx-auto max-w-7xl relative px-6 mb-16">
-              <div className="max-w-3xl">
-                <h2
-                  className="text-4xl md:text-6xl font-extrabold text-white mb-8"
-                  style={{ fontFamily: "var(--font-headline)" }}
-                >
-                  Seven Services. <br />
-                  <span className="text-emerald-400">One Unified Account.</span>
-                </h2>
-                <p className="text-xl text-emerald-100/80 leading-relaxed">
-                  Seamlessly transition between delivery, community, and travel.
-                  Your Halal lifestyle, interconnected.
-                </p>
+          {/* Features */}
+          <FeaturesSection />
+
+          {/* Seven Services */}
+          <section className="bg-[#102C26] py-24 md:py-32 overflow-hidden">
+            <div className="max-w-[95vw] mx-auto px-6 md:px-10 mb-14 md:mb-20">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-px bg-[#F59E0B]" />
+                <span className="text-[#F59E0B] text-[10px] md:text-xs uppercase tracking-[0.3em] font-bold">
+                  Our Platform
+                </span>
               </div>
+              <h2 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-extrabold uppercase tracking-tighter leading-[0.88] text-[#F7E7CE]">
+                Seven Services.
+                <br />
+                <span className="text-[#F7E7CE]/50">One Unified Account.</span>
+              </h2>
             </div>
-
             <FlowingMenu
               items={[
-                {
-                  link: "/delivery",
-                  text: "HalalMe Delivery",
-                  image: "/images/services/halal01.jpg",
-                },
-                {
-                  link: "/kitchen",
-                  text: "HalalMe Kitchen",
-                  image: "/images/services/halal05.jpg",
-                },
-                {
-                  link: "/fresh",
-                  text: "HalalMe Fresh",
-                  image: "/images/services/halal02.jpg",
-                },
-                {
-                  link: "/hub",
-                  text: "HalalMe Hub",
-                  image: "/images/services/halal03.jpg",
-                },
-                {
-                  link: "/travel",
-                  text: "HalalMe Travel",
-                  image: "/images/services/halal04.jpg",
-                },
-                {
-                  link: "/rewards",
-                  text: "HalalMe Rewards",
-                  image: "/images/services/halal01.jpg",
-                },
-                {
-                  link: "/marketplace",
-                  text: "HalalMe Marketplace",
-                  image: "/images/services/halal03.jpg",
-                },
+                { link: "/delivery",    text: "HalalMe Delivery",    image: "/images/services/halal01.jpg" },
+                { link: "/kitchen",     text: "HalalMe Kitchen",     image: "/images/services/halal05.jpg" },
+                { link: "/fresh",       text: "HalalMe Fresh",       image: "/images/services/halal02.jpg" },
+                { link: "/hub",         text: "HalalMe Hub",         image: "/images/services/halal03.jpg" },
+                { link: "/travel",      text: "HalalMe Travel",      image: "/images/services/halal04.jpg" },
+                { link: "/rewards",     text: "HalalMe Rewards",     image: "/images/services/halal01.jpg" },
+                { link: "/marketplace", text: "HalalMe Marketplace", image: "/images/services/halal03.jpg" },
               ]}
               speed={20}
-              textColor="#fff"
+              textColor="#F7E7CE"
               bgColor="transparent"
-              marqueeBgColor="#F59E0B"
-              marqueeTextColor="#064E3B"
-              borderColor="rgba(255,255,255,0.1)"
+              marqueeBgColor="#F7E7CE"
+              marqueeTextColor="#102C26"
+              borderColor="rgba(247,231,206,0.1)"
             />
           </section>
 
-          {/* How it Works - Modern Timeline */}
           <HowItWorksSection />
-
-          {/* Final CTA - High Conversion */}
           <FinalCTA />
         </div>
       </div>
@@ -150,134 +105,113 @@ export default function Home() {
   );
 }
 
+/* ─── Hero ─────────────────────────────────────────────────────────── */
+
 function HeroSection() {
+  const [wordIndex, setWordIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setWordIndex((prev) => (prev + 1) % CYCLE_WORDS.length);
+    }, 2400);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
-    <section className="sticky top-0 h-screen flex items-center overflow-hidden bg-emerald-900">
-      {/* Background Image with enhanced overlay */}
+    <section className="fixed top-0 left-0 w-full h-screen z-0 flex items-center overflow-hidden bg-[#102C26]">
       <div className="absolute inset-0 z-0">
         <Image
           src="/images/hero/halal5.jpg"
-          alt="Premium Halal Food"
+          alt="Halal Lifestyle"
           fill
-          className="object-cover opacity-50 scale-105"
+          className="object-cover opacity-20 scale-105"
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-emerald-950 via-emerald-950/80 to-emerald-900/40"></div>
-        {/* Ambient glow */}
-        <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-emerald-500/20 rounded-full blur-[150px]"></div>
-        <div className="absolute top-1/4 right-1/4 w-72 h-72 bg-amber-500/10 rounded-full blur-[120px]"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-[#102C26] via-[#102C26]/92 to-[#102C26]/55" />
       </div>
 
-      <div className="container mx-auto px-6 relative z-10 pt-24 sm:pt-28">
-        <div className="max-w-4xl">
+      <div className="container mx-auto px-6 md:px-10 relative z-10 pt-20">
+        <div className="max-w-5xl">
           <motion.div
-            initial={{ opacity: 0, x: -30 }}
+            initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
+            transition={{ delay: 0.1 }}
+            className="flex items-center gap-3 mb-6 md:mb-8"
           >
-            {/* Tagline badge */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2 mb-6 sm:mb-8"
-            >
-              <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
-              <span className="text-emerald-100 text-sm font-medium">
-                The Complete Halal Ecosystem
-              </span>
-            </motion.div>
+            <div className="w-8 h-px bg-[#F59E0B]" />
+            <span className="text-[#F59E0B] text-[10px] md:text-xs font-bold uppercase tracking-[0.3em]">
+              The All-in-One Halal Platform
+            </span>
+          </motion.div>
 
-            <h1
-              className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-extrabold text-white leading-[1.05]"
-              style={{ fontFamily: "var(--font-headline)" }}
+          <h1 className="font-extrabold uppercase tracking-tighter leading-[0.88]">
+            <motion.span
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.7 }}
+              className="block text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#F7E7CE]/40 mb-1"
             >
-              Halal Living <br />
-              <motion.span
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="bg-gradient-to-r from-amber-300 via-amber-400 to-orange-400 bg-clip-text text-transparent"
+              Your All-in-One
+            </motion.span>
+            <motion.span
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.32, duration: 0.7 }}
+              className="block text-[clamp(3rem,8vw,8rem)] text-[#F7E7CE]"
+            >
+              Halal Living,
+            </motion.span>
+            <span className="block text-[clamp(3rem,8vw,8rem)] min-h-[1em]">
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={wordIndex}
+                  initial={{ opacity: 0, y: 36 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -36 }}
+                  transition={{ duration: 0.36, ease: [0.22, 1, 0.36, 1] }}
+                  className="inline-block text-[#F7E7CE]/70"
+                >
+                  {CYCLE_WORDS[wordIndex]}
+                </motion.span>
+              </AnimatePresence>
+            </span>
+          </h1>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="mt-6 md:mt-7 text-base md:text-lg text-[#F7E7CE]/50 max-w-md leading-relaxed"
+          >
+            Live daily life the halal way, without switching apps.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.72 }}
+            className="mt-8 flex flex-wrap gap-4"
+          >
+            <Link href="/select-role">
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                className="flex items-center gap-3 px-7 sm:px-8 py-3.5 sm:py-4 bg-[#F7E7CE] text-[#102C26] font-extrabold uppercase tracking-tighter text-sm sm:text-base"
               >
-                Perfected.
-              </motion.span>
-            </h1>
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="mt-5 sm:mt-8 text-base sm:text-lg md:text-xl text-emerald-50/90 max-w-xl leading-relaxed"
-            >
-              The world&apos;s first unified ecosystem for Halal food, verified
-              recipes, global travel, and community giving.
-            </motion.p>
-
-            {/* Enhanced CTA Buttons */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              className="mt-8 sm:mt-12 flex flex-wrap gap-3 sm:gap-4"
-            >
-              {/* Primary CTA - High visibility amber button */}
-              <Link href="/select-role">
-                <motion.button
-                  whileHover={{
-                    scale: 1.05,
-                    boxShadow: "0 20px 40px -10px rgba(245, 158, 11, 0.5)",
-                  }}
-                  whileTap={{ scale: 0.98 }}
-                  className="group relative px-8 py-4 md:px-10 md:py-5 bg-gradient-to-r from-amber-400 to-amber-500 text-emerald-950 font-bold text-lg rounded-full shadow-xl shadow-amber-500/30 overflow-hidden"
-                >
-                  <span className="relative z-10 flex items-center gap-2">
-                    Explore the Network
-                    <motion.span
-                      animate={{ x: [0, 4, 0] }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                    >
-                      <ArrowRight className="w-5 h-5" />
-                    </motion.span>
-                  </span>
-                  {/* Hover shimmer */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-                </motion.button>
-              </Link>
-
-              {/* Secondary CTA - Clear visibility */}
-              <Link href="/select-role">
-                <motion.button
-                  whileHover={{
-                    scale: 1.05,
-                    backgroundColor: "rgba(255,255,255,0.15)",
-                  }}
-                  whileTap={{ scale: 0.98 }}
-                  className="px-8 py-4 md:px-10 md:py-5 bg-white/10 border-2 border-white/40 backdrop-blur-sm text-white font-bold text-lg rounded-full hover:border-white/60 transition-all"
-                >
-                  Join the Community
-                </motion.button>
-              </Link>
-            </motion.div>
-
-            {/* Trust indicators */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.8 }}
-              className="mt-8 sm:mt-12 flex flex-wrap items-center gap-4 sm:gap-6 text-emerald-200/70 text-xs sm:text-sm"
-            >
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                <span>100% Halal Verified</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Star className="w-4 h-4 text-amber-400" />
-                <span>50,000+ Users</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Zap className="w-4 h-4 text-emerald-400" />
-                <span>7 Services, One Account</span>
-              </div>
-            </motion.div>
+                Create Free Account
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+              </motion.button>
+            </Link>
+            <a href="#how-it-works">
+              <motion.button
+                whileHover={{ scale: 1.03, backgroundColor: "rgba(247,231,206,0.08)" }}
+                whileTap={{ scale: 0.97 }}
+                className="flex items-center gap-3 px-7 sm:px-8 py-3.5 sm:py-4 border-2 border-[#F7E7CE]/25 text-[#F7E7CE] font-extrabold uppercase tracking-tighter text-sm sm:text-base transition-all"
+              >
+                See How It Works
+                <ChevronDown className="w-4 h-4 opacity-60" />
+              </motion.button>
+            </a>
           </motion.div>
         </div>
       </div>
@@ -285,113 +219,166 @@ function HeroSection() {
   );
 }
 
-function WhatIsHalalMeSection() {
+/* ─── Service Ticker — champagne bg, forest text ───────────────────── */
+
+function ServiceTicker() {
+  const services = [
+    "HalalMe Delivery",
+    "HalalMe Kitchen",
+    "HalalMe Fresh",
+    "HalalMe Hub",
+    "HalalMe Travel",
+    "HalalMe Rewards",
+    "HalalMe Marketplace",
+  ];
+
+  return (
+    <div className="overflow-hidden bg-[#F7E7CE] py-4">
+      <style>{`
+        @keyframes hm-ticker {
+          from { transform: translateX(0); }
+          to   { transform: translateX(-50%); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .hm-ticker-track { animation: none !important; }
+        }
+      `}</style>
+      <div
+        className="hm-ticker-track flex whitespace-nowrap"
+        style={{ animation: "hm-ticker 28s linear infinite", width: "max-content" }}
+      >
+        {[...services, ...services].map((s, i) => (
+          <span
+            key={i}
+            className="inline-flex items-center gap-8 md:gap-12 px-8 md:px-12 text-[#102C26] font-extrabold uppercase tracking-tighter text-base md:text-xl"
+          >
+            {s}
+            <span className="text-[#102C26]/25 text-sm" aria-hidden="true">✦</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Stats Strip — dark contrast, champagne numbers ──────────────── */
+
+function StatsStrip() {
+  const stats = [
+    { value: "50K+", label: "Active Users"  },
+    { value: "500+", label: "Halal Vendors" },
+    { value: "7",    label: "Services"      },
+    { value: "40+",  label: "Countries"     },
+  ];
+
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-[#F7E7CE]/8">
+      {stats.map((s, i) => (
+        <div
+          key={i}
+          className="bg-[#0A1C19] py-10 md:py-14 px-8 md:px-12 text-center md:text-left"
+        >
+          <div className="text-[3rem] md:text-[4.5rem] lg:text-[5.5rem] font-extrabold tracking-tighter leading-none text-[#F7E7CE]">
+            {s.value}
+          </div>
+          <div className="text-[#F7E7CE]/30 text-[10px] md:text-xs uppercase tracking-[0.25em] mt-2 font-medium">
+            {s.label}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ─── Features — champagne hover inversion ─────────────────────────── */
+
+function FeaturesSection() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true });
 
   const features = [
     {
+      num: "01",
       title: "One Identity",
-      desc: "Single sign-on for all 6 services. Your profile, preferences, and rewards sync seamlessly across the entire HalalMe ecosystem.",
+      desc: "Single sign-on for all 7 services. Your profile, preferences, and rewards sync seamlessly across the entire HalalMe ecosystem.",
       Icon: Fingerprint,
-      gradient: "from-emerald-500 to-teal-600",
-      bgGradient: "from-emerald-50 to-teal-50",
-      iconBg: "bg-emerald-500",
     },
     {
+      num: "02",
       title: "Verified Halal",
       desc: "Every vendor undergoes strict certification. Our audit process ensures authentic Halal standards you can trust.",
       Icon: ShieldCheck,
-      gradient: "from-amber-500 to-orange-600",
-      bgGradient: "from-amber-50 to-orange-50",
-      iconBg: "bg-amber-500",
     },
     {
+      num: "03",
       title: "Smart Recipes",
       desc: "AI-powered meal planning tailored to your dietary needs. Discover new Halal recipes personalized just for you.",
       Icon: BookOpen,
-      gradient: "from-teal-500 to-emerald-600",
-      bgGradient: "from-teal-50 to-emerald-50",
-      iconBg: "bg-teal-500",
     },
   ];
 
   return (
-    <section
-      ref={ref}
-      className="py-24 px-6 bg-emerald-950 relative overflow-hidden"
-    >
-      {/* Decorative background elements */}
-      <div className="absolute top-0 left-0 w-72 h-72 bg-emerald-100 rounded-full filter blur-3xl opacity-40 -translate-x-1/2 -translate-y-1/2"></div>
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-amber-100 rounded-full filter blur-3xl opacity-40 translate-x-1/2 translate-y-1/2"></div>
-
-      <div className="max-w-7xl mx-auto relative z-10">
-        {/* Section Header */}
+    <section ref={ref} className="bg-[#102C26] py-24 md:py-32">
+      <div className="max-w-[95vw] mx-auto px-6 md:px-10 mb-14 md:mb-20">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, x: -20 }}
+          animate={isInView ? { opacity: 1, x: 0 } : {}}
+          className="flex items-center gap-3 mb-6"
+        >
+          <div className="w-8 h-px bg-[#F59E0B]" />
+          <span className="text-[#F59E0B] text-[10px] md:text-xs uppercase tracking-[0.3em] font-bold">
+            What is HalalMe
+          </span>
+        </motion.div>
+        <motion.h2
+          initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-extrabold uppercase tracking-tighter leading-[0.88] text-[#F7E7CE]"
         >
-          <h2
-            className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-6"
-            style={{ fontFamily: "var(--font-headline)" }}
-          >
-            Redefining the{" "}
-            <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
-              Halal Experience
-            </span>
-          </h2>
-          <p className="text-lg text-emerald-100/80 max-w-2xl mx-auto">
-            Built from the ground up for the modern Muslim lifestyle, combining
-            technology with tradition.
-          </p>
-        </motion.div>
+          Redefining the
+          <br />
+          <span className="text-[#F7E7CE]/50">Halal Experience</span>
+        </motion.h2>
+      </div>
 
-        {/* Feature Cards */}
-        <div className="grid md:grid-cols-3 gap-8">
-          {features.map((f, i) => {
-            const Icon = f.Icon;
-            return (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 30 }}
-                animate={isInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ delay: 0.2 + i * 0.15, duration: 0.5 }}
-                whileHover={{ y: -8, transition: { duration: 0.3 } }}
-                className="group relative"
+      {/* gap-px hairline grid — hover inverts to champagne */}
+      <div className="max-w-[95vw] mx-auto px-6 md:px-10 grid md:grid-cols-3 gap-px bg-[#F7E7CE]/8">
+        {features.map((f, i) => {
+          const Icon = f.Icon;
+          return (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 30 }}
+              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ delay: i * 0.12, duration: 0.5 }}
+              className="group relative bg-[#102C26] border border-[#F7E7CE]/8 p-8 md:p-10 overflow-hidden hover:bg-[#F7E7CE] transition-colors duration-300 cursor-default"
+            >
+              <span
+                aria-hidden="true"
+                className="absolute -top-6 -right-3 text-[8rem] md:text-[10rem] font-extrabold text-[#0A1C19] group-hover:text-[#102C26]/15 leading-none select-none pointer-events-none transition-colors duration-300"
               >
-                <div
-                  className={`absolute inset-0 bg-gradient-to-br ${f.bgGradient} rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500`}
-                ></div>
-                <div className="relative bg-white p-8 rounded-3xl border border-slate-200 shadow-lg shadow-slate-200/50 group-hover:border-transparent group-hover:shadow-2xl group-hover:shadow-slate-300/50 transition-all duration-500">
-                  {/* Icon */}
-                  <div
-                    className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${f.gradient} flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300`}
-                  >
-                    <Icon className="w-8 h-8 text-white" />
-                  </div>
+                {f.num}
+              </span>
 
-                  {/* Content */}
-                  <h3 className="text-2xl font-bold text-emerald-950 mb-3 group-hover:text-emerald-700 transition-colors">
-                    {f.title}
-                  </h3>
-                  <p className="text-slate-600 leading-relaxed">{f.desc}</p>
-
-                  {/* Hover arrow */}
-                  <div className="mt-6 flex items-center text-emerald-600 font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <span className="text-sm">Learn more</span>
-                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
+              <div className="relative z-10 flex flex-col min-h-[200px] md:min-h-[240px]">
+                <Icon className="w-7 h-7 text-[#F7E7CE]/60 group-hover:text-[#102C26] mb-8 flex-shrink-0 transition-colors duration-300" />
+                <h3 className="text-xl md:text-2xl lg:text-3xl font-extrabold uppercase tracking-tighter text-[#F7E7CE] group-hover:text-[#102C26] mb-4 transition-colors duration-300">
+                  {f.title}
+                </h3>
+                <p className="text-[#F7E7CE]/50 group-hover:text-[#102C26]/65 leading-relaxed text-sm md:text-base transition-colors duration-300">
+                  {f.desc}
+                </p>
+              </div>
+            </motion.div>
+          );
+        })}
       </div>
     </section>
   );
 }
+
+/* ─── How It Works — champagne hover inversion ─────────────────────── */
 
 function HowItWorksSection() {
   const ref = useRef(null);
@@ -403,267 +390,169 @@ function HowItWorksSection() {
       title: "Unified Profile",
       desc: "Create one account that follows you everywhere. Your preferences, history, and rewards all in one place.",
       Icon: UserCircle,
-      color: "emerald",
     },
     {
       num: "02",
       title: "Select Service",
       desc: "Choose from Delivery, Kitchen, Fresh, Travel, Hub, Rewards, and Marketplace. All connected, all Halal certified.",
       Icon: LayoutGrid,
-      color: "amber",
     },
     {
       num: "03",
       title: "Live Seamlessly",
       desc: "Earn rewards, track orders, and explore Halal options across the globe. One ecosystem, endless possibilities.",
       Icon: Zap,
-      color: "teal",
     },
   ];
 
-  const colorMap: Record<
-    string,
-    { gradient: string; bg: string; text: string; ring: string }
-  > = {
-    emerald: {
-      gradient: "from-emerald-500 to-teal-500",
-      bg: "bg-emerald-500",
-      text: "text-emerald-500",
-      ring: "ring-emerald-500/20",
-    },
-    amber: {
-      gradient: "from-amber-500 to-orange-500",
-      bg: "bg-amber-500",
-      text: "text-amber-500",
-      ring: "ring-amber-500/20",
-    },
-    teal: {
-      gradient: "from-teal-500 to-emerald-600",
-      bg: "bg-teal-500",
-      text: "text-teal-600",
-      ring: "ring-teal-500/20",
-    },
-  };
-
   return (
-    <section
-      ref={ref}
-      className="py-24 bg-emerald-950 relative overflow-hidden"
-    >
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-[0.02]">
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 1px 1px, #064E3B 1px, transparent 0)",
-            backgroundSize: "32px 32px",
-          }}
-        ></div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-6 relative z-10">
-        {/* Section Header */}
+    <section id="how-it-works" ref={ref} className="bg-[#0A1C19] py-24 md:py-32">
+      <div className="max-w-[95vw] mx-auto px-6 md:px-10 mb-14 md:mb-20">
         <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={isInView ? { opacity: 1, x: 0 } : {}}
+          className="flex items-center gap-3 mb-6"
+        >
+          <div className="w-8 h-px bg-[#F59E0B]" />
+          <span className="text-[#F59E0B] text-[10px] md:text-xs uppercase tracking-[0.3em] font-bold">
+            How It Works
+          </span>
+        </motion.div>
+        <motion.h2
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
-          className="text-center mb-20"
+          className="text-4xl sm:text-5xl md:text-7xl font-extrabold uppercase tracking-tighter leading-[0.88] text-[#F7E7CE]"
         >
-          <h2
-            className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-6"
-            style={{ fontFamily: "var(--font-headline)" }}
-          >
-            Simple.{" "}
-            <span className="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
-              Unified.
-            </span>{" "}
-            Elegant.
-          </h2>
-          <p className="text-lg text-emerald-100/80 max-w-xl mx-auto">
-            Get started in three simple steps and unlock the full HalalMe
-            experience.
-          </p>
-        </motion.div>
+          Simple.
+          <br />
+          <span className="text-[#F7E7CE]/50">Unified.</span>
+          <br />
+          Elegant.
+        </motion.h2>
+      </div>
 
-        {/* Steps */}
-        <div className="relative">
-          {/* Connecting Line - Desktop */}
-          <div className="hidden md:block absolute top-24 left-[16.67%] right-[16.67%] h-0.5 bg-gradient-to-r from-emerald-300 via-amber-300 to-teal-300"></div>
-
-          <div className="grid md:grid-cols-3 gap-8 md:gap-12">
-            {steps.map((step, i) => {
-              const Icon = step.Icon;
-              const colors = colorMap[step.color];
-              return (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 40 }}
-                  animate={isInView ? { opacity: 1, y: 0 } : {}}
-                  transition={{ delay: 0.3 + i * 0.2, duration: 0.5 }}
-                  className="relative"
-                >
-                  <div className="text-center">
-                    {/* Step Number Circle */}
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={isInView ? { scale: 1 } : {}}
-                      transition={{
-                        delay: 0.5 + i * 0.2,
-                        type: "spring",
-                        stiffness: 200,
-                      }}
-                      className="relative mx-auto mb-8"
-                    >
-                      <div
-                        className={`w-20 h-20 rounded-full bg-gradient-to-br ${colors.gradient} flex items-center justify-center shadow-xl ring-8 ${colors.ring} mx-auto`}
-                      >
-                        <Icon className="w-9 h-9 text-white" />
-                      </div>
-                      {/* Step number badge */}
-                      <div
-                        className={`absolute -top-2 -right-2 w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center`}
-                      >
-                        <span className={`text-sm font-bold ${colors.text}`}>
-                          {step.num}
-                        </span>
-                      </div>
-                    </motion.div>
-
-                    {/* Content */}
-                    <h3 className="text-2xl font-bold text-white mb-4">
-                      {step.title}
-                    </h3>
-                    <p className="text-emerald-100/80 leading-relaxed max-w-xs mx-auto">
-                      {step.desc}
-                    </p>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
+      <div className="max-w-[95vw] mx-auto px-6 md:px-10 grid md:grid-cols-3 gap-px bg-[#F7E7CE]/8">
+        {steps.map((step, i) => {
+          const Icon = step.Icon;
+          return (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 40 }}
+              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ delay: 0.2 + i * 0.15, duration: 0.5 }}
+              className="group relative bg-[#0A1C19] border border-[#F7E7CE]/8 p-8 md:p-10 overflow-hidden hover:bg-[#F7E7CE] transition-colors duration-300 cursor-default"
+            >
+              <div
+                aria-hidden="true"
+                className="text-[6rem] md:text-[8rem] lg:text-[9rem] font-extrabold leading-none tracking-tighter text-[#102C26] group-hover:text-[#0A1C19]/15 transition-colors duration-300 select-none mb-2"
+              >
+                {step.num}
+              </div>
+              <Icon className="w-6 h-6 text-[#F7E7CE]/50 group-hover:text-[#102C26] mb-4 transition-colors duration-300" />
+              <h3 className="text-xl md:text-2xl font-extrabold uppercase tracking-tighter text-[#F7E7CE] group-hover:text-[#102C26] mb-3 transition-colors duration-300">
+                {step.title}
+              </h3>
+              <p className="text-[#F7E7CE]/50 group-hover:text-[#102C26]/65 leading-relaxed text-sm md:text-base transition-colors duration-300">
+                {step.desc}
+              </p>
+            </motion.div>
+          );
+        })}
       </div>
     </section>
   );
 }
+
+/* ─── Final CTA — champagne bg, forest text ────────────────────────── */
 
 function FinalCTA() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-50px" });
 
   return (
-    <section
-      ref={ref}
-      className="relative min-h-[70vh] flex items-center justify-center overflow-hidden"
-    >
-      {/* Full-bleed emerald gradient background */}
-      <div className="absolute inset-0 bg-emerald-950">
-        {/* Static gradient orbs - no heavy animation */}
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-br from-emerald-600/30 to-teal-500/20 rounded-full blur-[150px] -translate-y-1/3 translate-x-1/4" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-amber-500/15 to-orange-400/10 rounded-full blur-[120px] translate-y-1/3 -translate-x-1/4" />
-
-        {/* Subtle pattern overlay */}
-        <div
-          className="absolute inset-0 opacity-[0.02]"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          }}
-        />
-      </div>
-
-      {/* Content */}
-      <div className="relative z-10 w-full max-w-4xl mx-auto px-6 py-20 text-center">
-        {/* Main heading - subtle slide up */}
-        <motion.h2
-          initial={{ opacity: 0, y: 12 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.5, delay: 0.05, ease: "easeOut" }}
-          className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white mb-6 leading-[1.15]"
-          style={{ fontFamily: "var(--font-headline)" }}
+    <section ref={ref} className="relative overflow-hidden bg-[#F7E7CE] py-28 md:py-36">
+      <div className="relative z-10 max-w-[95vw] mx-auto px-6 md:px-10">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={isInView ? { opacity: 1 } : {}}
+          className="flex items-center gap-3 mb-8"
         >
-          Ready to start your{" "}
-          <span className="bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 bg-clip-text text-transparent">
-            HalalMe journey?
+          <div className="w-8 h-px bg-[#102C26]/30" />
+          <span className="text-[#102C26]/45 text-[10px] md:text-xs uppercase tracking-[0.3em] font-bold">
+            Join HalalMe Today
           </span>
+        </motion.div>
+
+        <motion.h2
+          initial={{ opacity: 0, y: 30 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ delay: 0.1, duration: 0.6 }}
+          className="text-4xl sm:text-6xl md:text-7xl lg:text-[clamp(3rem,7vw,7rem)] font-extrabold uppercase tracking-tighter leading-[0.88] text-[#102C26] mb-10 max-w-5xl"
+        >
+          Ready to start your
+          <br />
+          HalalMe journey?
         </motion.h2>
 
-        {/* Subtitle */}
         <motion.p
-          initial={{ opacity: 0, y: 10 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.4, delay: 0.1, ease: "easeOut" }}
-          className="text-emerald-100/70 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed"
+          initial={{ opacity: 0 }}
+          animate={isInView ? { opacity: 1 } : {}}
+          transition={{ delay: 0.2 }}
+          className="text-[#102C26]/55 text-base md:text-lg max-w-xl mb-12 leading-relaxed"
         >
           Join a global community that values quality, faith, and seamless
           technology. Your complete Halal lifestyle starts here.
         </motion.p>
 
-        {/* CTA Buttons */}
         <motion.div
-          initial={{ opacity: 0, y: 8 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.4, delay: 0.15, ease: "easeOut" }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12"
+          transition={{ delay: 0.3 }}
+          className="flex flex-col sm:flex-row gap-4 mb-16"
         >
           <Link href="/select-role">
-            <button className="bg-gradient-to-r from-amber-400 to-amber-500 text-emerald-950 px-8 py-4 rounded-full font-bold text-lg shadow-lg shadow-amber-500/20 hover:shadow-xl hover:shadow-amber-500/25 transition-shadow duration-300 flex items-center gap-2">
+            <button className="flex items-center gap-3 px-8 py-4 bg-[#102C26] text-[#F7E7CE] font-extrabold uppercase tracking-tighter text-base hover:bg-[#0A1C19] transition-colors">
               Create Free Account
               <ArrowRight className="w-5 h-5" />
             </button>
           </Link>
           <Link href="/contact">
-            <button className="px-8 py-4 rounded-full font-bold text-lg text-white border border-white/20 hover:border-white/35 hover:bg-white/5 transition-all duration-300">
+            <button className="flex items-center gap-3 px-8 py-4 border-2 border-[#102C26] text-[#102C26] font-extrabold uppercase tracking-tighter text-base hover:bg-[#102C26] hover:text-[#F7E7CE] transition-colors">
               Contact Support
             </button>
           </Link>
         </motion.div>
 
-        {/* Trust indicators */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={isInView ? { opacity: 1 } : {}}
-          transition={{ duration: 0.4, delay: 0.2, ease: "easeOut" }}
-          className="flex flex-wrap items-center justify-center gap-4"
+          transition={{ delay: 0.4 }}
+          className="flex flex-wrap gap-6 md:gap-10"
         >
           {[
-            {
-              icon: ShieldCheck,
-              text: "100% Halal Certified",
-              color: "emerald",
-            },
-            { icon: Star, text: "4.9/5 User Rating", color: "amber" },
-            { icon: Zap, text: "Instant Setup", color: "teal" },
+            { Icon: ShieldCheck, text: "100% Halal Certified" },
+            { Icon: Star,        text: "4.9/5 User Rating"    },
+            { Icon: Zap,         text: "Instant Setup"        },
           ].map((item, i) => (
             <div
               key={i}
-              className="flex items-center gap-2 text-white/60 text-sm"
+              className="flex items-center gap-2 text-[#102C26]/50 text-xs md:text-sm font-semibold uppercase tracking-wide"
             >
-              <item.icon
-                className={`w-4 h-4 ${item.color === "amber" ? "text-amber-400/70" : "text-emerald-400/70"}`}
-              />
-              <span>{item.text}</span>
+              <item.Icon className="w-4 h-4" />
+              {item.text}
             </div>
           ))}
         </motion.div>
       </div>
 
-      {/* Static bottom wave */}
-      <div className="absolute bottom-0 left-0 right-0 h-16">
-        <svg
-          className="w-full h-full"
-          viewBox="0 0 1440 100"
-          preserveAspectRatio="none"
-        >
-          <path
-            d="M0,30 C480,80 960,10 1440,50 L1440,100 L0,100 Z"
-            fill="#F8FAFC"
-          />
-        </svg>
+      {/* Decorative oversized background word */}
+      <div
+        aria-hidden="true"
+        className="absolute bottom-0 right-0 text-[8rem] md:text-[14rem] font-extrabold uppercase tracking-tighter leading-none text-[#102C26]/8 select-none pointer-events-none translate-x-6 translate-y-6"
+      >
+        Halal
       </div>
     </section>
   );
 }
-
-
-

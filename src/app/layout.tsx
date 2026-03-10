@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import ScrollToTop from "@/components/common/ScrollToTop";
 import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
 
@@ -82,6 +83,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
   return (
     <>
+      <ScrollToTop />
       {!shouldHideHeader && <Header />}
       <main>{children}</main>
       {!shouldHideFooter && <Footer />}

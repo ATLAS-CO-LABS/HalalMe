@@ -115,54 +115,14 @@ const products = [
 
 /* ── Marketplace categories ── */
 const categories = [
-  {
-    icon: Shirt,
-    title: 'Modest Fashion',
-    desc: 'Hijabs, abayas, thobes & modest activewear',
-    gradient: 'from-indigo-600 to-blue-600',
-  },
-  {
-    icon: ShoppingBasket,
-    title: 'Daily Essentials',
-    desc: 'Halal toiletries, home care & supplements',
-    gradient: 'from-blue-600 to-blue-500',
-  },
-  {
-    icon: BookOpen,
-    title: 'Books & Education',
-    desc: 'Quran, Islamic literature & learning',
-    gradient: 'from-indigo-700 to-indigo-500',
-  },
-  {
-    icon: Moon,
-    title: 'Prayer & Worship',
-    desc: 'Prayer mats, tasbih, attar & decor',
-    gradient: 'from-indigo-600 to-indigo-500',
-  },
-  {
-    icon: Sparkles,
-    title: 'Beauty & Skincare',
-    desc: 'Wudu-friendly makeup & halal skincare',
-    gradient: 'from-blue-500 to-indigo-500',
-  },
-  {
-    icon: Baby,
-    title: 'Kids & Family',
-    desc: 'Islamic toys, books & modest kids clothing',
-    gradient: 'from-blue-500 to-indigo-600',
-  },
-  {
-    icon: UtensilsCrossed,
-    title: 'Food & Pantry',
-    desc: 'Halal snacks, spices & international ingredients',
-    gradient: 'from-indigo-500 to-blue-600',
-  },
-  {
-    icon: Smartphone,
-    title: 'Tech & Accessories',
-    desc: 'Gadgets, phone accessories & smart devices',
-    gradient: 'from-indigo-600 to-blue-600',
-  },
+  { icon: Shirt, title: 'Modest Fashion', desc: 'Hijabs, abayas, thobes & modest activewear' },
+  { icon: ShoppingBasket, title: 'Daily Essentials', desc: 'Halal toiletries, home care & supplements' },
+  { icon: BookOpen, title: 'Books & Education', desc: 'Quran, Islamic literature & learning' },
+  { icon: Moon, title: 'Prayer & Worship', desc: 'Prayer mats, tasbih, attar & decor' },
+  { icon: Sparkles, title: 'Beauty & Skincare', desc: 'Wudu-friendly makeup & halal skincare' },
+  { icon: Baby, title: 'Kids & Family', desc: 'Islamic toys, books & modest kids clothing' },
+  { icon: UtensilsCrossed, title: 'Food & Pantry', desc: 'Halal snacks, spices & international ingredients' },
+  { icon: Smartphone, title: 'Tech & Accessories', desc: 'Gadgets, phone accessories & smart devices' },
 ];
 
 /* ═══════════════════════ Page Root ═══════════════════════ */
@@ -188,7 +148,7 @@ function PromoBar() {
     '15% OFF FIRST PURCHASE  \u00B7  100% HALAL CERTIFIED  \u00B7  2000+ PRODUCTS  \u00B7  TRUSTED SELLERS  \u00B7  FREE SHIPPING OVER £40  \u00B7  ';
 
   return (
-    <div className="overflow-hidden" style={{ background: 'linear-gradient(to right, #3730A3, #4F46E5, #3730A3)' }}>
+    <div className="overflow-hidden bg-indigo-600">
       <div
         className="flex whitespace-nowrap py-2.5"
         style={{ animation: 'ticker 18s linear infinite' }}
@@ -232,13 +192,8 @@ function HeroSection() {
         />
       </div>
 
-      {/* Gradient overlays */}
-      <div className="absolute inset-0 z-[1] bg-gradient-to-r from-gray-950 via-gray-950/75 to-transparent" />
-      <div className="absolute inset-0 z-[1] bg-gradient-to-t from-gray-950 via-transparent to-gray-950/40" />
-
-      {/* Ambient plum glow */}
-      <div className="absolute bottom-0 left-1/4 w-[420px] h-[420px] rounded-full blur-3xl z-[1]" style={{ backgroundColor: 'rgba(55,48,163,0.18)' }} />
-      <div className="absolute top-1/3 right-0 w-[280px] h-[280px] bg-blue-500/8 rounded-full blur-3xl z-[1]" />
+      {/* Overlay */}
+      <div className="absolute inset-0 z-[1] bg-gray-950/70" />
 
       {/* Content */}
       <div className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12 pt-20">
@@ -266,12 +221,9 @@ function HeroSection() {
           >
             HalalMe{' '}
             <span className="relative inline-block">
-              <span className="bg-gradient-to-r from-indigo-400 via-blue-400 to-sky-400 bg-clip-text text-transparent">
-                Marketplace
-              </span>
+              <span className="text-indigo-400">Marketplace</span>
               <motion.span
-                className="absolute -bottom-1 left-0 right-0 h-1 rounded-full origin-left"
-                style={{ background: 'linear-gradient(to right, #6366F1, #3B82F6)' }}
+                className="absolute -bottom-1 left-0 right-0 h-1 bg-indigo-600 rounded-full origin-left"
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: 1 }}
                 transition={{ duration: 0.8, delay: 1 }}
@@ -305,7 +257,7 @@ function HeroSection() {
                   boxShadow: '0 20px 50px -12px rgba(99,102,241,0.5)',
                 }}
                 whileTap={{ scale: 0.97 }}
-                className="group relative w-full sm:w-auto px-8 py-4 md:px-10 md:py-5 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-bold text-lg rounded-full shadow-xl shadow-indigo-600/25 overflow-hidden"
+                className="group relative w-full sm:w-auto px-8 py-4 md:px-10 md:py-5 bg-indigo-600 text-white font-bold text-lg rounded-full shadow-xl shadow-indigo-600/25 overflow-hidden"
               >
                 <span className="relative z-10 flex items-center justify-center gap-2.5">
                   Start Shopping
@@ -338,7 +290,7 @@ function HeroSection() {
           >
             {[
               { icon: ShieldCheck, text: '100% Halal', color: 'text-indigo-400' },
-              { icon: Store, text: '500+ Sellers', color: 'text-blue-400' },
+              { icon: Store, text: '500+ Sellers', color: 'text-indigo-400' },
               { icon: Truck, text: 'Free Shipping £40+', color: 'text-indigo-400' },
             ].map((item, i) => (
               <div key={i} className="flex items-center gap-2 text-gray-400">
@@ -366,17 +318,7 @@ function CategoriesSection() {
   const isInView = useInView(ref, { once: true, margin: '-60px' });
 
   return (
-    <section id="categories" ref={ref} className="relative py-28 md:py-36 bg-gray-950 overflow-hidden">
-      {/* Dot pattern */}
-      <div
-        className="absolute inset-0 opacity-[0.03]"
-        style={{
-          backgroundImage:
-            'radial-gradient(circle at 1px 1px, #6366F1 1px, transparent 0)',
-          backgroundSize: '48px 48px',
-        }}
-      />
-
+    <section id="categories" ref={ref} className="relative py-20 bg-gray-950 overflow-hidden">
       <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-10">
         {/* Heading */}
         <motion.div
@@ -394,9 +336,7 @@ function CategoriesSection() {
             style={{ fontFamily: 'var(--font-headline)' }}
           >
             Shop by{' '}
-            <span className="bg-gradient-to-r from-indigo-400 to-blue-400 bg-clip-text text-transparent">
-              Category
-            </span>
+            <span className="text-indigo-400">Category</span>
           </h2>
           <p
             className="text-lg text-gray-400 max-w-xl mx-auto"
@@ -420,11 +360,8 @@ function CategoriesSection() {
                 whileHover={{ y: -8, transition: { duration: 0.3 } }}
                 className="group relative"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <div className="relative bg-gray-900 border border-gray-800 group-hover:border-indigo-500/30 rounded-2xl p-5 md:p-7 transition-all duration-500 cursor-pointer">
-                  <div
-                    className={`w-12 h-12 md:w-14 md:h-14 rounded-xl bg-gradient-to-br ${cat.gradient} flex items-center justify-center mb-4 md:mb-5 shadow-lg group-hover:scale-110 transition-transform duration-300`}
-                  >
+                  <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-indigo-600 flex items-center justify-center mb-4 md:mb-5 shadow-lg group-hover:scale-110 transition-transform duration-300">
                     <Icon className="w-6 h-6 md:w-7 md:h-7 text-white" />
                   </div>
                   <h3
@@ -456,11 +393,7 @@ function FeaturedProductsSection() {
   const isInView = useInView(ref, { once: true, margin: '-60px' });
 
   return (
-    <section ref={ref} className="relative py-28 md:py-36 overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-gray-950 via-indigo-950/20 to-gray-950" />
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-500/5 rounded-full blur-3xl" />
-
+    <section ref={ref} className="relative py-20 bg-gray-900 overflow-hidden">
       <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-10">
         {/* Heading */}
         <motion.div
@@ -479,9 +412,7 @@ function FeaturedProductsSection() {
               style={{ fontFamily: 'var(--font-headline)' }}
             >
               Featured{' '}
-              <span className="bg-gradient-to-r from-indigo-400 to-blue-400 bg-clip-text text-transparent">
-                Products
-              </span>
+              <span className="text-indigo-400">Products</span>
             </h2>
           </div>
           <Link href="/marketplace">
@@ -508,11 +439,11 @@ function FeaturedProductsSection() {
               <Link href="/marketplace">
                 <motion.div
                   whileHover={{ y: -8 }}
-                  className="group bg-gray-900 rounded-2xl overflow-hidden border border-gray-800 hover:border-indigo-500/50 transition-all duration-300 cursor-pointer"
+                  className="group bg-gray-950 rounded-2xl overflow-hidden border border-gray-800 hover:border-indigo-500/50 transition-all duration-300 cursor-pointer"
                 >
                   {/* Image */}
                   <div className="relative h-48 overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent z-10" />
+                    <div className="absolute inset-0 bg-gray-900/50 z-10" />
                     <div
                       className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
                       style={{
@@ -522,7 +453,7 @@ function FeaturedProductsSection() {
                     />
                     {p.popular && (
                       <div className="absolute top-3 left-3 z-20">
-                        <span className="text-white text-xs font-bold px-3 py-1.5 rounded-full" style={{ backgroundColor: '#4338CA' }}>
+                        <span className="text-white text-xs font-bold px-3 py-1.5 rounded-full bg-indigo-600">
                           Popular
                         </span>
                       </div>
@@ -575,7 +506,7 @@ function FeaturedProductsSection() {
                 boxShadow: '0 20px 50px -12px rgba(99,102,241,0.35)',
               }}
               whileTap={{ scale: 0.97 }}
-              className="px-10 py-4 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-bold text-lg rounded-full shadow-xl shadow-indigo-600/20"
+              className="px-10 py-4 bg-indigo-600 text-white font-bold text-lg rounded-full shadow-xl shadow-indigo-600/20"
             >
               Explore All Products
             </motion.button>
@@ -597,21 +528,18 @@ function HowItWorksSection() {
       icon: Search,
       title: 'Browse & Discover',
       desc: 'Explore thousands of halal-verified products across 8 curated categories. Filter, compare, and find exactly what you need.',
-      gradient: 'from-indigo-600 to-blue-600',
     },
     {
       num: '02',
       icon: ShieldCheck,
       title: 'Shop with Confidence',
       desc: 'Every seller and product is halal-certified. Read reviews, compare prices, and buy with complete peace of mind.',
-      gradient: 'from-blue-600 to-indigo-500',
     },
     {
       num: '03',
       icon: Truck,
       title: 'Fast & Secure Delivery',
       desc: 'Get your items delivered safely to your door with real-time tracking. Free shipping on orders over £40.',
-      gradient: 'from-indigo-600 to-blue-600',
     },
   ];
 
@@ -619,18 +547,8 @@ function HowItWorksSection() {
     <section
       id="how-it-works"
       ref={ref}
-      className="relative py-28 md:py-36 bg-gray-950 overflow-hidden"
+      className="relative py-20 bg-gray-950 overflow-hidden"
     >
-      {/* Dot pattern */}
-      <div
-        className="absolute inset-0 opacity-[0.03]"
-        style={{
-          backgroundImage:
-            'radial-gradient(circle at 1px 1px, #6366F1 1px, transparent 0)',
-          backgroundSize: '48px 48px',
-        }}
-      />
-
       <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-10">
         {/* Heading */}
         <motion.div
@@ -648,9 +566,7 @@ function HowItWorksSection() {
             style={{ fontFamily: 'var(--font-headline)' }}
           >
             How It{' '}
-            <span className="bg-gradient-to-r from-indigo-400 to-blue-400 bg-clip-text text-transparent">
-              Works
-            </span>
+            <span className="text-indigo-400">Works</span>
           </h2>
           <p
             className="text-lg text-gray-400 max-w-xl mx-auto"
@@ -664,7 +580,7 @@ function HowItWorksSection() {
         {/* Steps */}
         <div className="relative">
           {/* Connecting line — desktop */}
-          <div className="hidden md:block absolute top-28 left-[16.67%] right-[16.67%] h-px bg-gradient-to-r from-indigo-500/40 via-blue-500/40 to-indigo-600/40" />
+          <div className="hidden md:block absolute top-28 left-[16.67%] right-[16.67%] h-px bg-indigo-500/30" />
 
           <div className="grid md:grid-cols-3 gap-10 md:gap-8">
             {steps.map((step, i) => {
@@ -687,9 +603,7 @@ function HowItWorksSection() {
                     }}
                     className="relative mx-auto mb-8"
                   >
-                    <div
-                      className={`w-24 h-24 rounded-3xl bg-gradient-to-br ${step.gradient} flex items-center justify-center shadow-2xl shadow-indigo-500/10 mx-auto group-hover:shadow-indigo-500/25 transition-shadow duration-500 group-hover:scale-105 transform-gpu`}
-                    >
+                    <div className="w-24 h-24 rounded-3xl bg-indigo-600 flex items-center justify-center shadow-2xl shadow-indigo-500/10 mx-auto group-hover:shadow-indigo-500/25 transition-shadow duration-500 group-hover:scale-105 transform-gpu">
                       <Icon className="w-10 h-10 text-white" />
                     </div>
                     <div className="absolute -top-3 -right-3 w-9 h-9 rounded-xl bg-gray-900 border border-gray-700 flex items-center justify-center shadow-lg">
@@ -731,35 +645,29 @@ function WhyMarketplaceSection() {
       icon: ShieldCheck,
       title: '100% Halal Verified',
       desc: 'Every product and seller undergoes strict halal certification. Shop with complete confidence and peace of mind.',
-      gradient: 'from-indigo-600 to-indigo-700',
     },
     {
       icon: Store,
       title: 'Trusted Sellers',
       desc: 'Vetted marketplace sellers with verified reviews and quality guarantees. Only the best make it to our platform.',
-      gradient: 'from-blue-600 to-blue-700',
     },
     {
       icon: Lock,
       title: 'Secure Payments',
       desc: 'End-to-end encrypted transactions with buyer protection on every purchase. Your money is always safe.',
-      gradient: 'from-indigo-700 to-blue-700',
     },
     {
       icon: Users,
       title: 'Community Driven',
       desc: 'Support Muslim-owned businesses and discover products recommended by the community. Together, we thrive.',
-      gradient: 'from-blue-500 to-blue-600',
     },
   ];
 
   return (
     <section
       ref={ref}
-      className="relative py-28 md:py-36 bg-gray-950 overflow-hidden"
+      className="relative py-20 bg-gray-950 overflow-hidden"
     >
-      <div className="absolute top-1/2 left-0 w-[400px] h-[400px] bg-indigo-500/5 rounded-full blur-3xl -translate-y-1/2" />
-
       <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
@@ -776,9 +684,7 @@ function WhyMarketplaceSection() {
             style={{ fontFamily: 'var(--font-headline)' }}
           >
             Why{' '}
-            <span className="bg-gradient-to-r from-indigo-400 to-blue-400 bg-clip-text text-transparent">
-              HalalMe Marketplace
-            </span>
+            <span className="text-indigo-400">HalalMe Marketplace</span>
           </h2>
           <p
             className="text-lg text-gray-400 max-w-xl mx-auto"
@@ -801,11 +707,8 @@ function WhyMarketplaceSection() {
                 whileHover={{ y: -8, transition: { duration: 0.3 } }}
                 className="group relative"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <div className="relative bg-gray-900 border border-gray-800 group-hover:border-indigo-500/30 rounded-2xl p-7 transition-all duration-500">
-                  <div
-                    className={`w-14 h-14 rounded-xl bg-gradient-to-br ${b.gradient} flex items-center justify-center mb-5 shadow-lg group-hover:scale-110 transition-transform duration-300`}
-                  >
+                  <div className="w-14 h-14 rounded-xl bg-indigo-600 flex items-center justify-center mb-5 shadow-lg group-hover:scale-110 transition-transform duration-300">
                     <Icon className="w-7 h-7 text-white" />
                   </div>
                   <h3
@@ -843,9 +746,7 @@ function StatsSection() {
   ];
 
   return (
-    <section ref={ref} className="relative py-20 overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-r from-indigo-950/40 via-gray-950 to-indigo-950/40" />
-
+    <section ref={ref} className="relative py-20 bg-indigo-600/5 border-y border-indigo-500/10 overflow-hidden">
       <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-10">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {stats.map((s, i) => {
@@ -891,10 +792,8 @@ function PromoBanner() {
         initial={{ opacity: 0, scale: 0.96 }}
         animate={isInView ? { opacity: 1, scale: 1 } : {}}
         transition={{ duration: 0.6 }}
-        className="max-w-7xl mx-auto relative overflow-hidden rounded-3xl"
+        className="max-w-7xl mx-auto relative overflow-hidden rounded-3xl bg-indigo-600 shadow-xl shadow-indigo-600/20"
       >
-        {/* Background */}
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, #3730A3, #4F46E5, #3730A3)' }} />
         <div
           className="absolute inset-0 opacity-10"
           style={{
@@ -945,12 +844,7 @@ function FinalCTA() {
   const isInView = useInView(ref, { once: true, margin: '-50px' });
 
   return (
-    <section ref={ref} className="relative py-28 md:py-36 overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-indigo-950 to-gray-900" />
-      <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-indigo-500/8 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-1/4 w-[400px] h-[400px] bg-blue-500/6 rounded-full blur-3xl" />
-
+    <section ref={ref} className="relative py-20 bg-gray-950 overflow-hidden">
       <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
         {/* Icon */}
         <motion.div
@@ -972,9 +866,7 @@ function FinalCTA() {
           style={{ fontFamily: 'var(--font-headline)' }}
         >
           Ready to Shop{' '}
-          <span className="bg-gradient-to-r from-indigo-300 via-indigo-400 to-blue-400 bg-clip-text text-transparent">
-            Halal?
-          </span>
+          <span className="text-indigo-400">Halal?</span>
         </motion.h2>
 
         <motion.p
@@ -1001,7 +893,7 @@ function FinalCTA() {
                 boxShadow: '0 20px 50px -12px rgba(99,102,241,0.45)',
               }}
               whileTap={{ scale: 0.97 }}
-              className="px-10 py-5 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-bold text-lg rounded-full shadow-xl shadow-indigo-600/25 flex items-center gap-2"
+              className="px-10 py-5 bg-indigo-600 text-white font-bold text-lg rounded-full shadow-xl shadow-indigo-600/25 flex items-center gap-2"
             >
               Explore Marketplace
               <ArrowRight className="w-5 h-5" />

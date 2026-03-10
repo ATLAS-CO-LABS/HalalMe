@@ -23,25 +23,21 @@ export default function RewardsLandingPage() {
       icon: HandHeart,
       title: "Give Sadaqah",
       description: "Support meaningful causes and earn rewards",
-      color: "from-emerald-500 to-emerald-600",
     },
     {
       icon: Gift,
       title: "Earn Rewards",
       description: "Get points, badges, and exclusive benefits",
-      color: "from-teal-500 to-teal-600",
     },
     {
       icon: Star,
       title: "Level Up",
       description: "Unlock Bronze, Silver, Gold, and Platinum status",
-      color: "from-amber-500 to-amber-600",
     },
     {
       icon: TrendingUp,
       title: "Track Impact",
       description: "See how your donations make a difference",
-      color: "from-cyan-500 to-cyan-600",
     },
   ];
 
@@ -53,7 +49,7 @@ export default function RewardsLandingPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-emerald-950 to-gray-900">
+    <div className="min-h-screen bg-gray-950">
       {/* Hero Section */}
       <section className="relative h-screen min-h-[600px] max-h-[900px] flex items-center overflow-hidden">
         {/* Background Image */}
@@ -68,13 +64,8 @@ export default function RewardsLandingPage() {
           />
         </div>
 
-        {/* Gradient overlays */}
-        <div className="absolute inset-0 z-[1] bg-gradient-to-r from-gray-950 via-gray-950/75 to-transparent" />
-        <div className="absolute inset-0 z-[1] bg-gradient-to-t from-gray-950 via-transparent to-gray-950/40" />
-
-        {/* Ambient glow */}
-        <div className="absolute bottom-0 left-1/4 w-[420px] h-[420px] bg-emerald-600/12 rounded-full blur-3xl z-[1]" />
-        <div className="absolute top-1/3 right-0 w-[280px] h-[280px] bg-teal-500/8 rounded-full blur-3xl z-[1]" />
+        {/* Overlay */}
+        <div className="absolute inset-0 z-[1] bg-gray-950/70" />
 
         {/* Content */}
         <div className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12 pt-20">
@@ -84,10 +75,10 @@ export default function RewardsLandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="inline-flex items-center gap-2.5 bg-emerald-500/15 border border-emerald-400/25 backdrop-blur-md rounded-full px-5 py-2.5 mb-5 sm:mb-8"
+              className="inline-flex items-center gap-2.5 bg-teal-500/15 border border-teal-400/25 backdrop-blur-md rounded-full px-5 py-2.5 mb-5 sm:mb-8"
             >
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-emerald-300 text-sm font-semibold tracking-wide">
+              <span className="w-2.5 h-2.5 rounded-full bg-teal-400 animate-pulse" />
+              <span className="text-teal-300 text-sm font-semibold tracking-wide">
                 Donate Good. Feel Good. Get Rewarded.
               </span>
             </motion.div>
@@ -102,11 +93,9 @@ export default function RewardsLandingPage() {
             >
               HalalMe{" "}
               <span className="relative inline-block">
-                <span className="bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent">
-                  Rewards
-                </span>
+                <span className="text-teal-400">Rewards</span>
                 <motion.span
-                  className="absolute -bottom-1 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full origin-left"
+                  className="absolute -bottom-1 left-0 right-0 h-1 bg-teal-500 rounded-full origin-left"
                   initial={{ scaleX: 0 }}
                   animate={{ scaleX: 1 }}
                   transition={{ duration: 0.8, delay: 1 }}
@@ -135,9 +124,9 @@ export default function RewardsLandingPage() {
             >
               <motion.button
                 onClick={() => router.push("/rewards/causes")}
-                whileHover={{ scale: 1.04, boxShadow: "0 20px 50px -12px rgba(16,185,129,0.5)" }}
+                whileHover={{ scale: 1.04, boxShadow: "0 20px 50px -12px rgba(20,184,166,0.5)" }}
                 whileTap={{ scale: 0.97 }}
-                className="group relative w-full sm:w-auto px-8 py-4 md:px-10 md:py-5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold text-lg rounded-full shadow-xl shadow-emerald-600/25 overflow-hidden"
+                className="group relative w-full sm:w-auto px-8 py-4 md:px-10 md:py-5 bg-teal-500 text-white font-bold text-lg rounded-full shadow-xl shadow-teal-500/25 overflow-hidden"
               >
                 <span className="relative z-10 flex items-center justify-center gap-2.5">
                   Start Donating
@@ -164,9 +153,9 @@ export default function RewardsLandingPage() {
               className="flex flex-wrap gap-4 sm:gap-6 text-xs sm:text-sm"
             >
               {[
-                { icon: ShieldCheck, text: "Verified Causes", color: "text-emerald-400" },
-                { icon: HandHeart, text: "\u00A350K+ Donated", color: "text-teal-400" },
-                { icon: Gift, text: "Instant Rewards", color: "text-emerald-400" },
+                { icon: ShieldCheck, text: "Verified Causes", color: "text-teal-400" },
+                { icon: HandHeart, text: "£50K+ Donated", color: "text-teal-400" },
+                { icon: Gift, text: "Instant Rewards", color: "text-teal-400" },
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-2 text-gray-400">
                   <item.icon className={`w-4 h-4 ${item.color}`} />
@@ -180,13 +169,13 @@ export default function RewardsLandingPage() {
         {/* Scroll hint */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 animate-bounce">
           <div className="w-6 h-10 border-2 border-white/20 rounded-full flex justify-center pt-2">
-            <div className="w-1.5 h-3 bg-emerald-400 rounded-full" />
+            <div className="w-1.5 h-3 bg-teal-400 rounded-full" />
           </div>
         </div>
       </section>
 
       {/* How It Works Section */}
-      <section className="px-4 md:px-6 py-16 md:py-20 bg-gradient-to-r from-emerald-900/20 to-teal-900/20">
+      <section className="px-4 md:px-6 py-16 md:py-20 bg-gray-900">
         <div className="mx-auto max-w-5xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -241,12 +230,12 @@ export default function RewardsLandingPage() {
                 transition={{ duration: 0.6, delay: index * 0.2 }}
                 className="relative"
               >
-                <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-8 border border-gray-700 hover:border-emerald-500 transition-all h-full">
-                  <div className="absolute -top-4 left-8 bg-gradient-to-r from-emerald-500 to-teal-500 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg">
+                <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-8 border border-gray-700 hover:border-teal-500 transition-all h-full">
+                  <div className="absolute -top-4 left-8 bg-teal-500 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg">
                     {item.step}
                   </div>
                   <div className="mt-4">
-                    <item.icon className="w-12 h-12 text-emerald-400 mb-4" />
+                    <item.icon className="w-12 h-12 text-teal-400 mb-4" />
                     <h3
                       className="text-xl font-bold text-white mb-3"
                       style={{ fontFamily: "var(--font-headline)" }}
@@ -302,11 +291,9 @@ export default function RewardsLandingPage() {
                   viewport={{ once: true }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
                   whileHover={{ y: -8 }}
-                  className="bg-gray-800 rounded-2xl p-6 border border-gray-700 hover:border-emerald-500 transition-all"
+                  className="bg-gray-800 rounded-2xl p-6 border border-gray-700 hover:border-teal-500 transition-all"
                 >
-                  <div
-                    className={`bg-gradient-to-br ${feature.color} rounded-xl p-4 mb-4 inline-block`}
-                  >
+                  <div className="bg-teal-500 rounded-xl p-4 mb-4 inline-block">
                     <Icon className="w-8 h-8 text-white" />
                   </div>
                   <h3
@@ -329,7 +316,7 @@ export default function RewardsLandingPage() {
       </section>
 
       {/* Impact Stats Section */}
-      <section className="px-4 md:px-6 py-16 md:py-20 bg-gradient-to-r from-emerald-900/30 to-teal-900/30">
+      <section className="px-4 md:px-6 py-16 md:py-20 bg-teal-500/5 border-y border-teal-500/10">
         <div className="mx-auto max-w-5xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -409,25 +396,25 @@ export default function RewardsLandingPage() {
               {
                 level: "Bronze",
                 requirement: "£25+",
-                color: "from-amber-700 to-amber-800",
+                bg: "bg-amber-700",
                 borderColor: "border-amber-600",
               },
               {
                 level: "Silver",
                 requirement: "£100+",
-                color: "from-gray-400 to-gray-500",
+                bg: "bg-gray-400",
                 borderColor: "border-gray-400",
               },
               {
                 level: "Gold",
                 requirement: "£500+",
-                color: "from-yellow-500 to-yellow-600",
+                bg: "bg-yellow-500",
                 borderColor: "border-yellow-500",
               },
               {
                 level: "Platinum",
                 requirement: "£1000+",
-                color: "from-cyan-400 to-cyan-500",
+                bg: "bg-cyan-400",
                 borderColor: "border-cyan-400",
               },
             ].map((tier, index) => (
@@ -441,7 +428,7 @@ export default function RewardsLandingPage() {
                 className={`bg-gray-800/50 rounded-2xl p-6 border-2 ${tier.borderColor} text-center`}
               >
                 <div
-                  className={`bg-gradient-to-br ${tier.color} w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center`}
+                  className={`${tier.bg} w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center`}
                 >
                   <Star className="w-8 h-8 text-white" />
                 </div>
@@ -464,7 +451,7 @@ export default function RewardsLandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="px-4 md:px-6 py-16 md:py-24">
+      <section className="px-4 md:px-6 py-16 md:py-20 bg-gray-900">
         <div className="mx-auto max-w-4xl text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -472,7 +459,7 @@ export default function RewardsLandingPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <Globe className="w-16 h-16 text-emerald-400 mx-auto mb-6" />
+            <Globe className="w-16 h-16 text-teal-400 mx-auto mb-6" />
             <h2
               className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6"
               style={{ fontFamily: "var(--font-headline)" }}
@@ -488,10 +475,10 @@ export default function RewardsLandingPage() {
             </p>
             <motion.button
               onClick={() => router.push("/rewards/causes")}
-              className="bg-gradient-to-r from-emerald-600 via-teal-500 to-teal-600 text-white px-10 py-5 rounded-full font-bold text-xl shadow-2xl"
+              className="bg-teal-500 text-white px-10 py-5 rounded-full font-bold text-xl shadow-2xl shadow-teal-500/20"
               whileHover={{
                 scale: 1.05,
-                boxShadow: "0 25px 50px -12px rgba(16, 185, 129, 0.6)",
+                boxShadow: "0 25px 50px -12px rgba(20, 184, 166, 0.5)",
               }}
               whileTap={{ scale: 0.95 }}
             >
@@ -506,13 +493,13 @@ export default function RewardsLandingPage() {
         <div className="mx-auto max-w-4xl text-center flex justify-center gap-6">
           <Link
             href="/kitchen"
-            className="text-gray-400 hover:text-emerald-400 transition-colors text-sm font-semibold"
+            className="text-gray-400 hover:text-teal-400 transition-colors text-sm font-semibold"
           >
             ← Kitchen
           </Link>
           <Link
             href="/hub"
-            className="text-gray-400 hover:text-emerald-400 transition-colors text-sm font-semibold"
+            className="text-gray-400 hover:text-teal-400 transition-colors text-sm font-semibold"
           >
             Hub →
           </Link>
