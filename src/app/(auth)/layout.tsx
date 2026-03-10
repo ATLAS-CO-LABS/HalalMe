@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export default function AuthLayout({
   children,
@@ -6,33 +7,39 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen flex-col bg-[#052e26] relative overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none bg-[#052e26]" />
-      <div className="absolute inset-0 pointer-events-none opacity-[0.02] bg-white/5" />
+    <div className="flex min-h-screen flex-col bg-[#102C26] relative overflow-hidden">
+      {/* Subtle texture */}
+      <div className="absolute inset-0 pointer-events-none opacity-[0.015]"
+        style={{
+          backgroundImage: "radial-gradient(circle at 1px 1px, #F7E7CE 1px, transparent 0)",
+          backgroundSize: "32px 32px",
+        }}
+      />
 
       {/* Header */}
-      <header className="relative z-10 border-b border-white/10 bg-white/5">
-        <div className="container mx-auto flex h-14 sm:h-16 items-center px-4 sm:px-6">
-          <Link href="/" className="flex items-center space-x-2">
+      <header className="relative z-10 border-b border-[#F7E7CE]/8 bg-[#0A1C19]/60 backdrop-blur-sm">
+        <div className="container mx-auto flex h-14 sm:h-16 items-center px-6">
+          <Link href="/" className="flex items-center gap-2.5">
+            <Image src="/logo/logo.png" alt="HalalMe" width={28} height={28} className="object-contain" />
             <span
-              className="text-xl sm:text-2xl font-bold text-white"
-              style={{ fontFamily: "var(--font-headline)" }}
+              className="text-lg sm:text-xl font-black text-[#F7E7CE] tracking-tight"
+              style={{ fontFamily: "var(--font-logo)" }}
             >
-              Halal<span className="text-amber-400">Me</span>
+              HalalMe
             </span>
           </Link>
         </div>
       </header>
 
       {/* Main content */}
-      <main className="relative z-10 flex flex-1 items-start sm:items-center justify-center px-4 py-6 sm:py-12 overflow-y-auto">
+      <main className="relative z-10 flex flex-1 items-start sm:items-center justify-center px-4 py-8 sm:py-12 overflow-y-auto">
         <div className="w-full max-w-md">{children}</div>
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-white/10 bg-white/5">
-        <div className="container mx-auto px-4 py-4 sm:py-6 text-center text-xs sm:text-sm text-emerald-200/60">
-          <p>&copy; 2025 HalalMe. All rights reserved.</p>
+      <footer className="relative z-10 border-t border-[#F7E7CE]/8">
+        <div className="container mx-auto px-4 py-4 sm:py-5 text-center text-xs text-[#F7E7CE]/25">
+          <p>© {new Date().getFullYear()} HalalMe. All rights reserved.</p>
         </div>
       </footer>
     </div>

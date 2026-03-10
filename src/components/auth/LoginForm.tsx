@@ -4,8 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, X } from "lucide-react";
+import { Eye, EyeOff, ArrowRight, X } from "lucide-react";
+
+const inputClass =
+  "w-full h-12 px-4 bg-[#102C26] border border-[#F7E7CE]/12 text-[#F7E7CE] placeholder:text-[#F7E7CE]/20 focus:outline-none focus:border-[#F7E7CE]/40 transition-colors text-sm disabled:opacity-50";
+
+const labelClass =
+  "block text-[10px] font-bold text-[#F7E7CE]/35 uppercase tracking-[0.22em] mb-1.5";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -20,7 +25,6 @@ export default function LoginForm() {
     e.preventDefault();
     setError("");
     setIsLoading(true);
-
     try {
       await login(email, password);
       router.push("/dashboard");
@@ -33,32 +37,22 @@ export default function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      <div className="space-y-1.5">
-        <label htmlFor="email" className="text-sm font-medium text-white/85">
-          Email
-        </label>
+      {/* Email */}
+      <div>
+        <label htmlFor="email" className={labelClass}>Email</label>
         <input
-          id="email"
-          type="email"
-          placeholder="you@example.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          disabled={isLoading}
-          className="w-full h-11 px-4 rounded-xl bg-white/[0.08] border border-white/15 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#065f46]/70 focus:border-[#065f46] transition-all disabled:opacity-50"
+          id="email" type="email" placeholder="you@example.com"
+          value={email} onChange={(e) => setEmail(e.target.value)}
+          required disabled={isLoading} className={inputClass}
         />
       </div>
 
-      <div className="space-y-1.5">
-        <div className="flex items-center justify-between">
-          <label htmlFor="password" className="text-sm font-medium text-white/85">
-            Password
-          </label>
-          <Link
-            href="/forgot-password"
-            className="text-xs text-amber-400 hover:text-amber-300 transition-colors"
-          >
-            Forgot password?
+      {/* Password */}
+      <div>
+        <div className="flex items-center justify-between mb-1.5">
+          <label htmlFor="password" className={labelClass} style={{ marginBottom: 0 }}>Password</label>
+          <Link href="/forgot-password" className="text-[10px] text-[#F7E7CE]/40 hover:text-[#F7E7CE]/70 uppercase tracking-wide transition-colors">
+            Forgot?
           </Link>
         </div>
         <div className="relative">
@@ -66,57 +60,46 @@ export default function LoginForm() {
             id="password"
             type={showPassword ? "text" : "password"}
             placeholder="Enter your password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            disabled={isLoading}
-            className="w-full h-11 px-4 pr-11 rounded-xl bg-white/[0.08] border border-white/15 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#065f46]/70 focus:border-[#065f46] transition-all disabled:opacity-50"
+            value={password} onChange={(e) => setPassword(e.target.value)}
+            required disabled={isLoading}
+            className={`${inputClass} pr-11`}
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#F7E7CE]/30 hover:text-[#F7E7CE]/60 transition-colors"
           >
-            {showPassword ? (
-              <EyeOff className="w-4 h-4" />
-            ) : (
-              <Eye className="w-4 h-4" />
-            )}
+            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         </div>
       </div>
 
+      {/* Error */}
       {error && (
-        <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-3 text-sm text-red-300 flex items-center gap-2">
-          <X className="w-4 h-4 flex-shrink-0" />
+        <div className="bg-red-900/20 border border-red-500/20 p-3 flex items-center gap-2 text-sm text-red-300">
+          <X className="w-4 h-4 shrink-0" />
           {error}
         </div>
       )}
 
-      <Button
+      {/* Submit */}
+      <button
         type="submit"
-        className="w-full bg-[#065f46] hover:bg-[#064e3b] text-white font-bold rounded-xl h-12 shadow-lg shadow-black/25 text-base"
         disabled={isLoading}
+        className="w-full h-12 bg-[#F7E7CE] text-[#102C26] font-extrabold uppercase tracking-tighter text-sm hover:bg-[#F7E7CE]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
       >
         {isLoading ? (
-          <span className="flex items-center gap-2">
-            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            Signing in...
-          </span>
+          <>
+            <span className="w-4 h-4 border-2 border-[#102C26]/30 border-t-[#102C26] rounded-full animate-spin" />
+            Signing in…
+          </>
         ) : (
-          "Sign in"
+          <>
+            Sign In
+            <ArrowRight className="w-4 h-4" />
+          </>
         )}
-      </Button>
-
-      <p className="text-center text-sm text-white/60">
-        Don&apos;t have an account?{" "}
-        <Link
-          href="/signup"
-          className="text-amber-400 hover:text-amber-300 font-medium transition-colors"
-        >
-          Sign up
-        </Link>
-      </p>
+      </button>
     </form>
   );
 }

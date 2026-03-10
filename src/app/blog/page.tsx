@@ -34,42 +34,40 @@ export default function BlogPage() {
   const regularPosts = filteredPosts.filter((post) => !post.featured || activeCategory !== 'All');
 
   return (
-    <div className="min-h-screen bg-[#FAFBFC]">
-      {/* Hero Section */}
+    <div className="min-h-screen bg-[#102C26]">
+      {/* Hero */}
       <HeroSection />
 
       {/* Search & Filters */}
-      <section className="relative z-10 -mt-8 px-6">
+      <section className="relative z-10 px-6 py-8 bg-[#0A1C19] border-b border-[#F7E7CE]/8">
         <div className="max-w-6xl mx-auto">
-          <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 p-4 md:p-6">
-            {/* Search Bar */}
-            <div className="relative mb-5">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search articles, topics, or tags..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-[15px] text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all"
-              />
-            </div>
+          {/* Search Bar */}
+          <div className="relative mb-5">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#F7E7CE]/30" />
+            <input
+              type="text"
+              placeholder="Search articles, topics, or tags..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-11 pr-4 h-12 bg-[#102C26] border border-[#F7E7CE]/12 text-[#F7E7CE] placeholder:text-[#F7E7CE]/20 focus:outline-none focus:border-[#F7E7CE]/40 transition-colors text-sm"
+            />
+          </div>
 
-            {/* Category Tabs */}
-            <div className="flex flex-wrap gap-2">
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setActiveCategory(cat)}
-                  className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
-                    activeCategory === cat
-                      ? 'bg-emerald-700 text-white shadow-md shadow-emerald-500/20'
-                      : 'bg-gray-100 text-gray-600 hover:bg-emerald-50 hover:text-emerald-700'
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
+          {/* Category Tabs */}
+          <div className="flex flex-wrap gap-2">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`px-4 py-2 text-xs font-bold uppercase tracking-[0.15em] transition-colors duration-200 ${
+                  activeCategory === cat
+                    ? 'bg-[#F7E7CE] text-[#102C26]'
+                    : 'border border-[#F7E7CE]/15 text-[#F7E7CE]/50 hover:border-[#F7E7CE]/30 hover:text-[#F7E7CE]/80'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
           </div>
         </div>
       </section>
@@ -90,53 +88,39 @@ export default function BlogPage() {
 
 function HeroSection() {
   return (
-    <section className="relative overflow-hidden px-6 pt-32 pb-20 md:pt-40 md:pb-28 bg-gradient-to-br from-emerald-950 via-emerald-900 to-teal-900">
-      {/* Ambient glow */}
-      <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-emerald-500/20 rounded-full blur-[150px]" />
-      <div className="absolute top-1/4 right-1/4 w-72 h-72 bg-amber-500/10 rounded-full blur-[120px]" />
-      {/* Dot pattern */}
+    <section className="relative overflow-hidden px-6 pt-32 pb-16 md:pt-40 md:pb-20 bg-[#102C26]">
+      {/* Dot texture */}
       <div
-        className="absolute inset-0 opacity-10"
+        className="absolute inset-0 pointer-events-none opacity-[0.015]"
         style={{
-          backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
-          backgroundSize: '40px 40px',
+          backgroundImage: 'radial-gradient(circle at 1px 1px, #F7E7CE 1px, transparent 0)',
+          backgroundSize: '32px 32px',
         }}
       />
 
-      <div className="mx-auto max-w-7xl relative z-10">
-        <div className="mx-auto max-w-4xl text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2 mb-8"
-          >
-            <BookOpen className="w-4 h-4 text-emerald-300" />
-            <span className="text-emerald-100 text-sm font-medium">HalalMe Blog</span>
-          </motion.div>
-
-          <motion.h1
-            className="text-5xl font-extrabold tracking-tight text-white md:text-7xl"
-            style={{ fontFamily: 'var(--font-headline)' }}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            Stories &{' '}
-            <span className="bg-gradient-to-r from-amber-300 via-amber-400 to-orange-400 bg-clip-text text-transparent">
-              Insights
+      <div className="mx-auto max-w-5xl relative z-10">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-8 h-px bg-[#F59E0B]" />
+            <span className="text-[#F59E0B] text-[10px] font-bold uppercase tracking-[0.3em]">
+              HalalMe Blog
             </span>
-          </motion.h1>
-          <motion.p
-            className="mt-6 text-lg leading-relaxed text-emerald-50/80 md:text-xl max-w-2xl mx-auto"
-            style={{ fontFamily: 'var(--font-body)' }}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            Explore guides, recipes, travel stories, and thoughtful perspectives on modern halal living.
-          </motion.p>
-        </div>
+            <div className="w-8 h-px bg-[#F59E0B]" />
+          </div>
+
+          <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold uppercase tracking-tighter leading-[0.88] text-[#F7E7CE]">
+            Stories &amp;
+            <br />
+            <span className="text-[#F7E7CE]/40">Insights</span>
+          </h1>
+          <p className="mt-5 text-base text-[#F7E7CE]/45 max-w-md leading-relaxed">
+            Guides, recipes, travel stories, and perspectives on modern halal living.
+          </p>
+        </motion.div>
       </div>
     </section>
   );
@@ -147,16 +131,17 @@ function FeaturedPostSection({ post }: { post: (typeof blogPosts)[0] }) {
   const isInView = useInView(ref, { once: true, amount: 0.2 });
 
   return (
-    <section ref={ref} className="px-6 pt-16 pb-4">
+    <section ref={ref} className="px-6 pt-12 pb-4">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.4 }}
-          className="flex items-center gap-2 mb-6"
+          className="flex items-center gap-3 mb-6"
         >
-          <TrendingUp className="w-5 h-5 text-amber-500" />
-          <span className="text-sm font-bold text-gray-500 uppercase tracking-wider">Featured Article</span>
+          <div className="w-6 h-px bg-[#F59E0B]" />
+          <TrendingUp className="w-4 h-4 text-[#F59E0B]" />
+          <span className="text-[10px] font-bold text-[#F59E0B] uppercase tracking-[0.25em]">Featured Article</span>
         </motion.div>
 
         <Link href={`/blog/${post.slug}`}>
@@ -164,51 +149,47 @@ function FeaturedPostSection({ post }: { post: (typeof blogPosts)[0] }) {
             initial={{ opacity: 0, y: 30 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.5, delay: 0.1 }}
-            whileHover={{ y: -4, transition: { duration: 0.25 } }}
-            className="group relative grid md:grid-cols-2 gap-0 bg-white rounded-3xl overflow-hidden shadow-lg shadow-gray-200/50 border border-gray-100 hover:shadow-xl hover:shadow-emerald-100/30 hover:border-emerald-200/50 transition-all duration-300"
+            className="group relative grid md:grid-cols-2 gap-px bg-[#F7E7CE]/8 border border-[#F7E7CE]/8 overflow-hidden"
           >
             {/* Image */}
-            <div className="relative h-64 md:h-auto md:min-h-[380px] overflow-hidden">
+            <div className="relative h-64 md:h-auto md:min-h-[360px] overflow-hidden bg-[#0A1C19]">
               <Image
                 src={post.image}
                 alt={post.title}
                 fill
-                className="object-cover group-hover:scale-105 transition-transform duration-700"
+                className="object-cover group-hover:scale-105 transition-transform duration-700 opacity-80"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent md:bg-gradient-to-r md:from-transparent md:to-black/5" />
               <div className="absolute top-4 left-4">
-                <span className="px-3 py-1.5 bg-amber-400 text-emerald-950 text-xs font-bold rounded-full shadow-md">
+                <span className="px-3 py-1 bg-[#F59E0B] text-[#102C26] text-[10px] font-bold uppercase tracking-[0.2em]">
                   {post.category}
                 </span>
               </div>
             </div>
 
             {/* Content */}
-            <div className="p-8 md:p-10 flex flex-col justify-center">
-              <h2
-                className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-4 leading-tight group-hover:text-emerald-800 transition-colors"
-                style={{ fontFamily: 'var(--font-headline)' }}
-              >
+            <div className="p-8 md:p-10 flex flex-col justify-center bg-[#0A1C19] group-hover:bg-[#F7E7CE] transition-colors duration-300">
+              <h2 className="text-2xl md:text-3xl font-extrabold uppercase tracking-tighter text-[#F7E7CE] group-hover:text-[#102C26] mb-4 leading-tight transition-colors duration-300">
                 {post.title}
               </h2>
-              <p className="text-gray-600 leading-relaxed mb-6 line-clamp-3">{post.excerpt}</p>
+              <p className="text-[#F7E7CE]/50 group-hover:text-[#102C26]/65 leading-relaxed mb-6 line-clamp-3 text-sm transition-colors duration-300">
+                {post.excerpt}
+              </p>
 
-              {/* Author & Meta */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-sm">
-                    <span className="text-xs font-bold text-white">{post.author.avatar}</span>
+                  <div className="w-8 h-8 bg-[#F7E7CE]/10 group-hover:bg-[#102C26]/10 border border-[#F7E7CE]/15 group-hover:border-[#102C26]/20 flex items-center justify-center transition-colors duration-300">
+                    <span className="text-[10px] font-bold text-[#F7E7CE]/60 group-hover:text-[#102C26]/60 transition-colors duration-300">{post.author.avatar}</span>
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-gray-900">{post.author.name}</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs font-bold text-[#F7E7CE]/70 group-hover:text-[#102C26]/80 uppercase tracking-wide transition-colors duration-300">{post.author.name}</p>
+                    <p className="text-[10px] text-[#F7E7CE]/35 group-hover:text-[#102C26]/50 transition-colors duration-300">
                       {formatDate(post.date)} &middot; {post.readTime}
                     </p>
                   </div>
                 </div>
-                <div className="hidden sm:flex items-center gap-1 text-emerald-600 font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  Read article
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                <div className="flex items-center gap-1 text-[#F7E7CE]/40 group-hover:text-[#102C26]/70 font-bold text-xs uppercase tracking-wide transition-all duration-300">
+                  Read
+                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
             </div>
@@ -232,18 +213,18 @@ function BlogGrid({ posts }: { posts: (typeof blogPosts) }) {
             animate={{ opacity: 1 }}
             className="text-center py-20"
           >
-            <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-gray-400 mb-2">No articles found</h3>
-            <p className="text-gray-400">Try adjusting your search or category filter.</p>
+            <BookOpen className="w-12 h-12 text-[#F7E7CE]/15 mx-auto mb-4" />
+            <h3 className="text-lg font-extrabold uppercase tracking-tighter text-[#F7E7CE]/30 mb-2">No articles found</h3>
+            <p className="text-[#F7E7CE]/25 text-sm">Try adjusting your search or category filter.</p>
           </motion.div>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-px bg-[#F7E7CE]/8">
             {posts.map((post, i) => (
               <motion.div
                 key={post.slug}
                 initial={{ opacity: 0, y: 30 }}
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ delay: 0.1 + i * 0.08, duration: 0.4 }}
+                transition={{ delay: 0.1 + i * 0.06, duration: 0.4 }}
               >
                 <BlogCard post={post} />
               </motion.div>
@@ -256,35 +237,19 @@ function BlogGrid({ posts }: { posts: (typeof blogPosts) }) {
 }
 
 function BlogCard({ post }: { post: (typeof blogPosts)[0] }) {
-  const categoryColorMap: Record<string, string> = {
-    'Halal Living': 'bg-emerald-100 text-emerald-700',
-    Recipes: 'bg-amber-100 text-amber-700',
-    Travel: 'bg-sky-100 text-sky-700',
-    Community: 'bg-violet-100 text-violet-700',
-    'Health & Wellness': 'bg-rose-100 text-rose-700',
-  };
-
   return (
     <Link href={`/blog/${post.slug}`}>
-      <motion.article
-        whileHover={{ y: -6, transition: { duration: 0.25 } }}
-        className="group h-full bg-white rounded-2xl overflow-hidden shadow-md shadow-gray-100/50 border border-gray-100 hover:shadow-xl hover:shadow-emerald-100/30 hover:border-emerald-200/40 transition-all duration-300 flex flex-col"
-      >
+      <article className="group h-full bg-[#102C26] hover:bg-[#F7E7CE] transition-colors duration-300 flex flex-col overflow-hidden">
         {/* Image */}
-        <div className="relative h-52 overflow-hidden">
+        <div className="relative h-48 overflow-hidden">
           <Image
             src={post.image}
             alt={post.title}
             fill
-            className="object-cover group-hover:scale-105 transition-transform duration-700"
+            className="object-cover group-hover:scale-105 transition-transform duration-700 opacity-75 group-hover:opacity-90"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
           <div className="absolute top-3 left-3">
-            <span
-              className={`px-2.5 py-1 text-xs font-bold rounded-full ${
-                categoryColorMap[post.category] || 'bg-gray-100 text-gray-700'
-              }`}
-            >
+            <span className="px-2.5 py-1 bg-[#0A1C19]/80 text-[#F7E7CE]/70 text-[9px] font-bold uppercase tracking-[0.2em]">
               {post.category}
             </span>
           </div>
@@ -292,31 +257,32 @@ function BlogCard({ post }: { post: (typeof blogPosts)[0] }) {
 
         {/* Content */}
         <div className="p-6 flex flex-col flex-1">
-          <h3
-            className="text-lg font-bold text-gray-900 mb-2 leading-snug group-hover:text-emerald-800 transition-colors line-clamp-2"
-            style={{ fontFamily: 'var(--font-headline)' }}
-          >
+          {/* Decorative number */}
+          <span aria-hidden="true" className="text-[4rem] font-extrabold text-[#0A1C19] group-hover:text-[#102C26]/10 leading-none select-none pointer-events-none absolute -right-2 bottom-2 transition-colors duration-300">
+            {String(blogPosts.indexOf(post) + 1).padStart(2, '0')}
+          </span>
+
+          <h3 className="text-base font-extrabold uppercase tracking-tighter text-[#F7E7CE] group-hover:text-[#102C26] mb-2 leading-tight line-clamp-2 transition-colors duration-300 relative z-10">
             {post.title}
           </h3>
-          <p className="text-sm text-gray-500 leading-relaxed mb-4 line-clamp-2 flex-1">
+          <p className="text-xs text-[#F7E7CE]/45 group-hover:text-[#102C26]/60 leading-relaxed mb-4 line-clamp-2 flex-1 transition-colors duration-300 relative z-10">
             {post.excerpt}
           </p>
 
-          {/* Footer */}
-          <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+          <div className="flex items-center justify-between pt-4 border-t border-[#F7E7CE]/8 group-hover:border-[#102C26]/15 transition-colors duration-300 relative z-10">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-                <span className="text-[10px] font-bold text-white">{post.author.avatar}</span>
+              <div className="w-6 h-6 bg-[#F7E7CE]/10 group-hover:bg-[#102C26]/10 flex items-center justify-center transition-colors duration-300">
+                <span className="text-[9px] font-bold text-[#F7E7CE]/50 group-hover:text-[#102C26]/50 transition-colors duration-300">{post.author.avatar}</span>
               </div>
-              <span className="text-xs font-semibold text-gray-700">{post.author.name}</span>
+              <span className="text-[10px] font-bold text-[#F7E7CE]/55 group-hover:text-[#102C26]/70 uppercase tracking-wide transition-colors duration-300">{post.author.name}</span>
             </div>
-            <div className="flex items-center gap-1 text-xs text-gray-400">
-              <Clock className="w-3.5 h-3.5" />
+            <div className="flex items-center gap-1 text-[10px] text-[#F7E7CE]/35 group-hover:text-[#102C26]/50 transition-colors duration-300">
+              <Clock className="w-3 h-3" />
               {post.readTime}
             </div>
           </div>
         </div>
-      </motion.article>
+      </article>
     </Link>
   );
 }
@@ -327,46 +293,45 @@ function NewsletterSection() {
 
   return (
     <section ref={ref} className="px-6 pb-24">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5 }}
-          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-950 via-emerald-900 to-teal-900 px-8 py-14 md:px-16 md:py-18 text-center"
+          className="relative overflow-hidden bg-[#F7E7CE] p-10 md:p-16"
         >
-          {/* Ambient glow */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/15 rounded-full blur-[100px]" />
-          <div className="absolute bottom-0 left-0 w-72 h-72 bg-emerald-400/10 rounded-full blur-[120px]" />
-          {/* Dot pattern */}
+          {/* Dot texture */}
           <div
-            className="absolute inset-0 opacity-[0.06]"
+            className="absolute inset-0 pointer-events-none opacity-[0.04]"
             style={{
-              backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
-              backgroundSize: '32px 32px',
+              backgroundImage: 'radial-gradient(circle at 1px 1px, #102C26 1px, transparent 0)',
+              backgroundSize: '24px 24px',
             }}
           />
 
-          <div className="relative z-10">
-            <h2
-              className="text-3xl md:text-4xl font-extrabold text-white mb-4"
-              style={{ fontFamily: 'var(--font-headline)' }}
-            >
-              Stay in the{' '}
-              <span className="bg-gradient-to-r from-amber-300 to-amber-400 bg-clip-text text-transparent">
-                Loop
-              </span>
+          <div className="relative z-10 max-w-2xl mx-auto text-center">
+            <div className="flex items-center justify-center gap-3 mb-5">
+              <div className="w-6 h-px bg-[#102C26]/30" />
+              <span className="text-[#102C26]/50 text-[10px] font-bold uppercase tracking-[0.3em]">Newsletter</span>
+              <div className="w-6 h-px bg-[#102C26]/30" />
+            </div>
+
+            <h2 className="text-4xl md:text-5xl font-extrabold uppercase tracking-tighter leading-[0.9] text-[#102C26] mb-4">
+              Stay in the
+              <br />
+              <span className="text-[#102C26]/40">Loop</span>
             </h2>
-            <p className="text-emerald-100/70 mb-8 max-w-md mx-auto">
+            <p className="text-[#102C26]/55 text-sm mb-8 leading-relaxed">
               Get the latest articles, recipes, and halal living tips delivered to your inbox every week.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+            <div className="flex flex-col sm:flex-row gap-2 max-w-md mx-auto">
               <input
                 type="email"
                 placeholder="Your email address"
-                className="flex-1 px-5 py-3.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-white placeholder:text-emerald-200/50 focus:outline-none focus:ring-2 focus:ring-amber-400/40 focus:border-amber-400/40 transition-all text-sm"
+                className="flex-1 h-12 px-4 bg-[#102C26]/8 border border-[#102C26]/15 text-[#102C26] placeholder:text-[#102C26]/30 focus:outline-none focus:border-[#102C26]/40 transition-colors text-sm"
               />
-              <button className="px-7 py-3.5 bg-gradient-to-r from-amber-400 to-amber-500 text-emerald-950 font-bold text-sm rounded-full shadow-lg shadow-amber-500/20 hover:shadow-xl hover:shadow-amber-500/30 transition-all flex items-center justify-center gap-2">
+              <button className="h-12 px-6 bg-[#102C26] text-[#F7E7CE] font-extrabold uppercase tracking-tighter text-sm hover:bg-[#0A1C19] transition-colors flex items-center justify-center gap-2">
                 Subscribe
                 <ChevronRight className="w-4 h-4" />
               </button>

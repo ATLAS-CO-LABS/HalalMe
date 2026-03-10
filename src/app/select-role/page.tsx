@@ -1,92 +1,109 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
+import { motion } from "framer-motion";
 import {
-  Zap,
-  Globe,
-  ChefHat,
-  Users,
-  Plane,
-  ShoppingBag,
-  Gift,
-  Truck,
-  ArrowRight,
-  ShieldCheck,
-  Check,
+  Zap, Globe, ChefHat, Users, Plane, ShoppingBag, Gift,
+  Truck, ArrowRight, ShieldCheck, Check,
 } from "lucide-react";
 
 export default function SelectRolePage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-[#052e26] relative overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none bg-[#052e26]" />
-      <div className="absolute inset-0 pointer-events-none opacity-[0.02] bg-white/5" />
+    <div className="min-h-screen bg-[#102C26] relative overflow-hidden">
+      {/* Subtle dot texture */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-[0.015]"
+        style={{
+          backgroundImage: "radial-gradient(circle at 1px 1px, #F7E7CE 1px, transparent 0)",
+          backgroundSize: "32px 32px",
+        }}
+      />
 
       <div className="relative z-10 container mx-auto px-4 py-12 sm:py-16 md:py-20">
         <div className="mx-auto max-w-5xl">
-          {/* Header */}
-          <div className="mb-10 sm:mb-14 text-center px-4 animate-fade-in-up">
-            <Link href="/" className="inline-block mb-8">
-              <span
-                className="text-2xl sm:text-3xl font-bold text-white"
-                style={{ fontFamily: "var(--font-headline)" }}
-              >
-                Halal<span className="text-amber-400">Me</span>
+
+          {/* ── Header ─────────────────────────────────────────── */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="mb-12 sm:mb-16 text-center"
+          >
+            <Link href="/" className="inline-flex items-center gap-2.5 mb-10">
+              <Image src="/logo/logo.png" alt="HalalMe" width={30} height={30} className="object-contain" />
+              <span className="text-xl font-black text-[#F7E7CE] tracking-tight" style={{ fontFamily: "var(--font-logo)" }}>
+                HalalMe
               </span>
             </Link>
-            <h1
-              className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white leading-tight"
-              style={{ fontFamily: "var(--font-headline)" }}
-            >
-              How do you want to use{" "}
-              <span className="text-amber-300">
-                HalalMe?
+
+            <div className="flex items-center justify-center gap-3 mb-6">
+              <div className="w-8 h-px bg-[#F59E0B]" />
+              <span className="text-[#F59E0B] text-[10px] font-bold uppercase tracking-[0.3em]">
+                Get Started
               </span>
+              <div className="w-8 h-px bg-[#F59E0B]" />
+            </div>
+
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold uppercase tracking-tighter leading-[0.88] text-[#F7E7CE]">
+              How do you want
+              <br />
+              <span className="text-[#F7E7CE]/45">to use HalalMe?</span>
             </h1>
-            <p className="mt-4 text-lg sm:text-xl text-white/70 max-w-xl mx-auto">
+            <p className="mt-5 text-base text-[#F7E7CE]/45 max-w-md mx-auto leading-relaxed">
               Choose your path to get started with our platform
             </p>
-          </div>
+          </motion.div>
 
-          {/* Two Main Options */}
-          <div className="grid gap-6 sm:gap-8 md:grid-cols-2">
-            {/* Option 1: HalalMe Delivery */}
-            <div className="group relative rounded-3xl bg-white/[0.08] border border-white/15 p-5 sm:p-8 overflow-hidden animate-fade-in-up animation-delay-200 hover:bg-white/[0.11] transition-colors duration-300 shadow-[0_20px_60px_-35px_rgba(0,0,0,0.85)]">
+          {/* ── Two Cards ───────────────────────────────────────── */}
+          <div className="grid gap-px sm:gap-4 md:gap-6 md:grid-cols-2 bg-[#F7E7CE]/8 sm:bg-transparent">
+
+            {/* Card 1: HalalMe Delivery */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15, duration: 0.5 }}
+              className="relative bg-[#0A1C19] border border-[#F7E7CE]/8 p-6 sm:p-8 overflow-hidden group"
+            >
+              {/* Decorative bg number */}
+              <span aria-hidden="true" className="absolute -bottom-4 -right-4 text-[8rem] font-extrabold text-[#102C26] leading-none select-none pointer-events-none">
+                01
+              </span>
+
               <div className="relative z-10">
-                <div className="mb-6">
-                  <div className="mb-5 inline-flex rounded-2xl bg-amber-500 p-3.5 shadow-lg shadow-black/30">
-                    <Truck className="h-7 w-7 text-white" />
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 bg-[#F7E7CE]/8 border border-[#F7E7CE]/12 flex items-center justify-center">
+                    <Truck className="w-5 h-5 text-[#F7E7CE]/60" />
                   </div>
-                  <h2
-                    className="mb-2 text-xl sm:text-2xl font-bold text-white"
-                    style={{ fontFamily: "var(--font-headline)" }}
-                  >
-                    HalalMe Delivery
-                  </h2>
-                  <p className="text-sm sm:text-base text-white/65">
-                    Order halal food or join as a vendor/driver
-                  </p>
+                  <div>
+                    <p className="text-[10px] font-bold text-[#F59E0B] uppercase tracking-[0.25em] mb-0.5">Service</p>
+                    <h2 className="text-lg sm:text-xl font-extrabold uppercase tracking-tighter text-[#F7E7CE] leading-tight">
+                      HalalMe Delivery
+                    </h2>
+                  </div>
                 </div>
 
-                <div className="mb-6 space-y-3">
+                <p className="text-[#F7E7CE]/45 text-sm mb-6 leading-relaxed">
+                  Order halal food from verified restaurants, or join as a vendor or driver.
+                </p>
+
+                <ul className="space-y-2.5 mb-8">
                   {[
                     "Fast halal food delivery to your door",
                     "Dedicated delivery platform",
                     "Join as a vendor or driver",
                   ].map((text, i) => (
-                    <div key={i} className="flex items-start gap-3">
-                      <div className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full bg-amber-400/20 flex items-center justify-center">
-                        <Check className="w-3 h-3 text-amber-400" />
+                    <li key={i} className="flex items-start gap-2.5">
+                      <div className="mt-0.5 w-4 h-4 bg-[#F7E7CE]/6 border border-[#F7E7CE]/12 flex items-center justify-center shrink-0">
+                        <Check className="w-2.5 h-2.5 text-[#F7E7CE]/50" />
                       </div>
-                      <span className="text-sm text-white/75">
-                        {text}
-                      </span>
-                    </div>
+                      <span className="text-sm text-[#F7E7CE]/55">{text}</span>
+                    </li>
                   ))}
-                </div>
+                </ul>
 
                 <div className="space-y-3">
                   <a
@@ -94,136 +111,146 @@ export default function SelectRolePage() {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <Button className="w-full bg-amber-500 hover:bg-amber-600 text-[#052e26] font-bold text-sm sm:text-base rounded-xl h-12 shadow-lg shadow-black/25">
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="w-full h-12 bg-[#F7E7CE] text-[#102C26] font-extrabold uppercase tracking-tighter text-sm flex items-center justify-center gap-2 hover:bg-[#F7E7CE]/90 transition-colors"
+                    >
                       Order Food
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
+                      <ArrowRight className="w-4 h-4" />
+                    </motion.button>
                   </a>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-2">
                     <a
                       href="https://halalme.aidaform.com/merchant-registration"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      <Button
-                        variant="outline"
-                        className="w-full border-white/20 text-white hover:bg-white/10 hover:border-white/30 text-xs sm:text-sm rounded-xl h-11 bg-transparent"
-                      >
+                      <button className="w-full h-11 border border-[#F7E7CE]/15 text-[#F7E7CE]/55 text-xs font-bold uppercase tracking-tight hover:border-[#F7E7CE]/30 hover:text-[#F7E7CE]/80 transition-all">
                         Vendor Signup
-                      </Button>
+                      </button>
                     </a>
                     <a
                       href="https://halalme.aidaform.com/driver-registration"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      <Button
-                        variant="outline"
-                        className="w-full border-white/20 text-white hover:bg-white/10 hover:border-white/30 text-xs sm:text-sm rounded-xl h-11 bg-transparent"
-                      >
+                      <button className="w-full h-11 border border-[#F7E7CE]/15 text-[#F7E7CE]/55 text-xs font-bold uppercase tracking-tight hover:border-[#F7E7CE]/30 hover:text-[#F7E7CE]/80 transition-all">
                         Driver Signup
-                      </Button>
+                      </button>
                     </a>
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
 
-            {/* Option 2: HalalMe Ecosystem */}
-            <div className="group relative rounded-3xl bg-white/[0.08] border border-white/15 p-5 sm:p-8 overflow-hidden animate-fade-in-up animation-delay-400 hover:bg-white/[0.11] transition-colors duration-300 shadow-[0_20px_60px_-35px_rgba(0,0,0,0.85)]">
+            {/* Card 2: HalalMe Ecosystem */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.28, duration: 0.5 }}
+              className="relative bg-[#0A1C19] border border-[#F7E7CE]/8 p-6 sm:p-8 overflow-hidden"
+            >
               {/* Popular badge */}
               <div className="absolute top-4 right-4 z-20">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#065f46]/30 border border-[#065f46] px-3 py-1 text-xs font-semibold text-white/85">
-                  <span className="w-1.5 h-1.5 bg-white/90 rounded-full animate-pulse" />
+                <span className="inline-flex items-center gap-1.5 bg-[#F7E7CE]/8 border border-[#F7E7CE]/15 px-3 py-1 text-[10px] font-bold text-[#F7E7CE]/60 uppercase tracking-widest">
+                  <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
                   Popular
                 </span>
               </div>
 
+              {/* Decorative bg number */}
+              <span aria-hidden="true" className="absolute -bottom-4 -right-4 text-[8rem] font-extrabold text-[#102C26] leading-none select-none pointer-events-none">
+                02
+              </span>
+
               <div className="relative z-10">
-                <div className="mb-6">
-                  <div className="mb-5 inline-flex rounded-2xl bg-[#065f46] p-3.5 shadow-lg shadow-black/30">
-                    <Globe className="h-7 w-7 text-white" />
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 bg-[#F7E7CE]/8 border border-[#F7E7CE]/12 flex items-center justify-center">
+                    <Globe className="w-5 h-5 text-[#F7E7CE]/60" />
                   </div>
-                  <h2
-                    className="mb-2 text-xl sm:text-2xl font-bold text-white"
-                    style={{ fontFamily: "var(--font-headline)" }}
-                  >
-                    HalalMe Ecosystem
-                  </h2>
-                  <p className="text-sm sm:text-base text-white/65">
-                    Access all HalalMe services with one account
-                  </p>
+                  <div>
+                    <p className="text-[10px] font-bold text-[#F59E0B] uppercase tracking-[0.25em] mb-0.5">Platform</p>
+                    <h2 className="text-lg sm:text-xl font-extrabold uppercase tracking-tighter text-[#F7E7CE] leading-tight">
+                      HalalMe Ecosystem
+                    </h2>
+                  </div>
                 </div>
 
-                {/* Service mini-icons */}
-                <div className="mb-6 grid grid-cols-2 gap-2.5">
+                <p className="text-[#F7E7CE]/45 text-sm mb-6 leading-relaxed">
+                  Access all HalalMe services with one unified account.
+                </p>
+
+                {/* Service mini-grid */}
+                <div className="grid grid-cols-3 gap-px bg-[#F7E7CE]/8 mb-8">
                   {[
-                    { icon: ChefHat, label: "Kitchen", color: "text-pink-400", bg: "bg-pink-400/10" },
-                    { icon: Users, label: "Hub", color: "text-amber-400", bg: "bg-amber-400/10" },
-                    { icon: Plane, label: "Travel", color: "text-sky-400", bg: "bg-sky-400/10" },
-                    { icon: ShoppingBag, label: "Fresh", color: "text-lime-400", bg: "bg-lime-400/10" },
-                    { icon: Gift, label: "Rewards", color: "text-emerald-300", bg: "bg-emerald-300/10" },
-                    { icon: Zap, label: "& More", color: "text-emerald-200", bg: "bg-emerald-200/10" },
-                  ].map((item, i) => (
-                    <div
-                      key={i}
-                      className={`flex items-center gap-2.5 ${item.bg} rounded-xl px-3 py-2.5`}
-                    >
-                      <item.icon className={`w-4 h-4 ${item.color}`} />
-                      <span className="text-sm text-white/80 font-medium">
-                        {item.label}
-                      </span>
+                    { Icon: ChefHat,     label: "Kitchen"   },
+                    { Icon: Users,       label: "Hub"       },
+                    { Icon: Plane,       label: "Travel"    },
+                    { Icon: ShoppingBag, label: "Fresh"     },
+                    { Icon: Gift,        label: "Rewards"   },
+                    { Icon: Zap,         label: "& More"    },
+                  ].map(({ Icon, label }, i) => (
+                    <div key={i} className="bg-[#0A1C19] px-3 py-2.5 flex items-center gap-2">
+                      <Icon className="w-3.5 h-3.5 text-[#F7E7CE]/35 shrink-0" />
+                      <span className="text-[11px] text-[#F7E7CE]/50 font-medium">{label}</span>
                     </div>
                   ))}
                 </div>
 
-                <Button
+                <motion.button
                   onClick={() => router.push("/signup?role=ecosystem")}
-                  className="w-full bg-[#065f46] hover:bg-[#064e3b] text-white font-bold text-sm sm:text-base rounded-xl h-12 shadow-lg shadow-black/25"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full h-12 bg-[#F7E7CE] text-[#102C26] font-extrabold uppercase tracking-tighter text-sm flex items-center justify-center gap-2 hover:bg-[#F7E7CE]/90 transition-colors"
                 >
                   Join HalalMe Ecosystem
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
+                  <ArrowRight className="w-4 h-4" />
+                </motion.button>
               </div>
-            </div>
+            </motion.div>
           </div>
 
-          {/* Trust bar */}
-          <div className="mt-8 sm:mt-10 flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-white/60 text-xs sm:text-sm animate-fade-in-up animation-delay-600">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-white/80" />
-              <span>100% Halal Verified</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-1 h-1 bg-white/45 rounded-full" />
-              <span>50,000+ Users</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-1 h-1 bg-white/45 rounded-full" />
-              <span>6 Unified Services</span>
-            </div>
-          </div>
+          {/* ── Trust bar ───────────────────────────────────────── */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="mt-10 flex flex-wrap items-center justify-center gap-6 md:gap-8"
+          >
+            {[
+              { Icon: ShieldCheck, text: "100% Halal Verified" },
+              { text: "50,000+ Users" },
+              { text: "7 Unified Services" },
+            ].map((item, i) => (
+              <div key={i} className="flex items-center gap-2 text-[#F7E7CE]/30 text-xs uppercase tracking-wide">
+                {item.Icon && <item.Icon className="w-3.5 h-3.5" />}
+                {i > 0 && !item.Icon && <span className="w-1 h-1 bg-[#F7E7CE]/20 rounded-full" />}
+                <span>{item.text}</span>
+              </div>
+            ))}
+          </motion.div>
 
-          {/* Links */}
-          <div className="mt-6 sm:mt-8 text-center animate-fade-in-up animation-delay-700">
-            <p className="text-sm text-white/60">
+          {/* ── Footer links ────────────────────────────────────── */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="mt-6 text-center space-y-2"
+          >
+            <p className="text-sm text-[#F7E7CE]/35">
               Already have an account?{" "}
-              <Link
-                href="/login"
-                className="text-amber-400 hover:text-amber-300 font-medium transition-colors"
-              >
+              <Link href="/login" className="text-[#F7E7CE]/60 hover:text-[#F7E7CE] font-semibold transition-colors">
                 Sign in
               </Link>
             </p>
-            <p className="mt-2 text-sm text-white/50">
-              <Link
-                href="/"
-                className="hover:text-white/80 font-medium transition-colors"
-              >
-                &larr; Back to Home
+            <p>
+              <Link href="/" className="text-xs text-[#F7E7CE]/25 hover:text-[#F7E7CE]/50 transition-colors">
+                ← Back to Home
               </Link>
             </p>
-          </div>
+          </motion.div>
+
         </div>
       </div>
     </div>

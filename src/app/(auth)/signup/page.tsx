@@ -1,48 +1,57 @@
 import { Suspense } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import SignupForm from "@/components/auth/SignupForm";
 
 function SignupFormFallback() {
   return (
-    <div className="space-y-6 animate-pulse">
-      <div className="h-10 bg-white/10 rounded-xl" />
-      <div className="h-10 bg-white/10 rounded-xl" />
-      <div className="h-10 bg-white/10 rounded-xl" />
-      <div className="h-10 bg-white/10 rounded-xl" />
-      <div className="h-12 bg-white/10 rounded-xl" />
+    <div className="space-y-4 animate-pulse">
+      <div className="h-12 bg-[#F7E7CE]/5 border border-[#F7E7CE]/8" />
+      <div className="h-12 bg-[#F7E7CE]/5 border border-[#F7E7CE]/8" />
+      <div className="h-12 bg-[#F7E7CE]/5 border border-[#F7E7CE]/8" />
+      <div className="h-12 bg-[#F7E7CE]/5 border border-[#F7E7CE]/8" />
+      <div className="h-12 bg-[#F7E7CE]/8 border border-[#F7E7CE]/15" />
     </div>
   );
 }
 
 export default function SignupPage() {
   return (
-    <div className="rounded-3xl border border-white/15 bg-white/[0.08] backdrop-blur-md p-6 sm:p-8 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.75)]">
-      <div className="mb-6 text-center">
-        <div className="mx-auto mb-4 inline-flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[#0B7A5A] to-[#065F46] ring-1 ring-white/25 shadow-lg shadow-black/20">
-          <Image
-            src="/logo/logo.png"
-            alt="HalalMe logo"
-            width={30}
-            height={30}
-            className="object-contain"
-            priority
-          />
+    <div className="bg-[#0A1C19] border border-[#F7E7CE]/10 p-6 sm:p-8">
+      {/* Logo + heading */}
+      <div className="mb-8">
+        <div className="flex items-center gap-2.5 mb-6">
+          <Image src="/logo/logo.png" alt="HalalMe" width={28} height={28} className="object-contain" priority />
+          <div className="w-px h-5 bg-[#F7E7CE]/15" />
+          <span className="text-[10px] font-bold text-[#F59E0B] uppercase tracking-[0.3em]">
+            Create Account
+          </span>
         </div>
-        <h1
-          className="text-2xl sm:text-3xl font-extrabold text-white"
-          style={{ fontFamily: "var(--font-headline)" }}
-        >
-          Create an account
+
+        <h1 className="text-3xl sm:text-4xl font-extrabold uppercase tracking-tighter leading-[0.9] text-[#F7E7CE] mb-2">
+          Join
+          <br />
+          <span className="text-[#F7E7CE]/40">HalalMe</span>
         </h1>
-        <p className="mt-2 text-sm text-white/65">
-          Join HalalMe and start your halal lifestyle journey
+        <p className="text-[#F7E7CE]/45 text-sm mt-3">
+          Start your halal lifestyle journey today.
         </p>
       </div>
-      <div className="mb-6 h-px w-full bg-white/10" />
+
+      <div className="h-px w-full bg-[#F7E7CE]/8 mb-7" />
 
       <Suspense fallback={<SignupFormFallback />}>
         <SignupForm />
       </Suspense>
+
+      <div className="mt-6 pt-5 border-t border-[#F7E7CE]/8">
+        <p className="text-center text-xs text-[#F7E7CE]/30">
+          Already have an account?{" "}
+          <Link href="/login" className="text-[#F7E7CE]/60 hover:text-[#F7E7CE] font-semibold transition-colors">
+            Sign in
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }
