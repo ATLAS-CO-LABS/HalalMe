@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 
 export default function PostCardSkeleton() {
   return (
-    <div className="bg-gray-800 rounded-2xl border border-gray-700 overflow-hidden">
+    <div className="bg-[#111418] rounded-2xl border border-gray-800 overflow-hidden">
       {/* User Info Skeleton */}
       <div className="p-4 md:p-5 flex items-center gap-3">
         <div className="w-12 h-12 rounded-full bg-gray-700 animate-pulse" />
@@ -22,10 +22,10 @@ export default function PostCardSkeleton() {
       </div>
 
       {/* Image Skeleton */}
-      <div className="relative w-full aspect-[16/10] bg-gray-700 animate-pulse" />
+      <div className="relative w-full aspect-16/10 bg-gray-700 animate-pulse" />
 
       {/* Actions Skeleton */}
-      <div className="p-4 md:p-5 border-t border-gray-700">
+      <div className="p-4 md:p-5 border-t border-gray-800">
         <div className="flex items-center gap-6">
           <div className="h-8 bg-gray-700 rounded w-16 animate-pulse" />
           <div className="h-8 bg-gray-700 rounded w-16 animate-pulse" />

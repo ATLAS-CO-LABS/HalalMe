@@ -10,29 +10,34 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!isLoading && !user) {
-      // Redirect to login with the current path as redirect parameter
+    if (isLoading) return;
+
+    if (!user) {
       router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
+      return;
+    }
+
+    // Enforce profile completion — username is required
+    if (!user.username && pathname !== "/complete-profile") {
+      router.push("/complete-profile");
     }
   }, [user, isLoading, router, pathname]);
 
-  // Show loading state while checking auth
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-[#0A1C19]">
         <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-purple-600 border-t-transparent"></div>
-          <p className="mt-4 text-sm text-gray-600">Loading...</p>
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#F59E0B] border-t-transparent mx-auto" />
+          <p className="mt-4 text-sm text-[#F7E7CE]/50">Loading…</p>
         </div>
       </div>
     );
   }
 
-  // If no user, don't render children (will redirect in useEffect)
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
 
-  // User is authenticated, render the protected content
+  // Temporarily render nothing while redirecting to complete-profile
+  if (!user.username && pathname !== "/complete-profile") return null;
+
   return <>{children}</>;
 }

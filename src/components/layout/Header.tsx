@@ -27,6 +27,7 @@ export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
@@ -217,10 +218,10 @@ export default function Header() {
                   >
                     <div className="h-8 w-8 bg-[#F7E7CE]/15 border border-[#F7E7CE]/25 flex items-center justify-center">
                       <span className="text-xs font-bold text-[#F7E7CE]">
-                        {user.name.charAt(0).toUpperCase()}
+                        {(user.full_name ?? user.username ?? "U").charAt(0).toUpperCase()}
                       </span>
                     </div>
-                    <span className="max-w-24 truncate">{user.name}</span>
+                    <span className="max-w-24 truncate">{user.full_name ?? user.username}</span>
                     <svg
                       className={`h-4 w-4 text-[#F7E7CE]/40 transition-transform duration-200 ${userMenuOpen ? 'rotate-180' : ''}`}
                       fill="none" viewBox="0 0 24 24" stroke="currentColor"
@@ -255,15 +256,24 @@ export default function Header() {
                           </Link>
                           <hr className="my-1 border-[#F7E7CE]/8" />
                           <button
-                            onClick={() => { logout(); setUserMenuOpen(false); router.push('/'); }}
-                            className="flex w-full px-4 py-2.5 text-sm text-red-400 hover:bg-red-900/20 transition-colors"
+                            onClick={async () => { setIsLoggingOut(true); setUserMenuOpen(false); await logout(); setIsLoggingOut(false); router.push('/'); }}
+                            disabled={isLoggingOut}
+                            className="flex w-full px-4 py-2.5 text-sm text-red-400 hover:bg-red-900/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            Logout
+                            {isLoggingOut ? 'Logging out…' : 'Logout'}
                           </button>
                         </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
+                </div>
+              ) : isLoggingOut ? (
+                /* Avatar slot while signOut network call completes in background */
+                <div className="h-8 w-8 bg-[#F7E7CE]/10 border border-[#F7E7CE]/20 flex items-center justify-center">
+                  <svg className="h-4 w-4 text-[#F7E7CE]/40 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                  </svg>
                 </div>
               ) : (
                 <>
@@ -289,10 +299,17 @@ export default function Header() {
                 <Link href="/dashboard">
                   <div className="h-8 w-8 bg-[#F7E7CE]/15 border border-[#F7E7CE]/25 flex items-center justify-center">
                     <span className="text-xs font-bold text-[#F7E7CE]">
-                      {user.name.charAt(0).toUpperCase()}
+                      {(user.full_name ?? user.username ?? "U").charAt(0).toUpperCase()}
                     </span>
                   </div>
                 </Link>
+              ) : isLoggingOut ? (
+                <div className="h-8 w-8 bg-[#F7E7CE]/10 border border-[#F7E7CE]/20 flex items-center justify-center">
+                  <svg className="h-4 w-4 text-[#F7E7CE]/40 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                  </svg>
+                </div>
               ) : (
                 <button
                   onClick={() => router.push('/select-role')}
@@ -433,10 +450,10 @@ export default function Header() {
                   <div className="space-y-2">
                     <div className="flex items-center gap-3 px-2 py-2">
                       <div className="h-10 w-10 bg-[#F7E7CE]/15 border border-[#F7E7CE]/20 flex items-center justify-center shrink-0">
-                        <span className="text-sm font-bold text-[#F7E7CE]">{user.name.charAt(0).toUpperCase()}</span>
+                        <span className="text-sm font-bold text-[#F7E7CE]">{(user.full_name ?? user.username ?? "U").charAt(0).toUpperCase()}</span>
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-[#F7E7CE] truncate">{user.name}</p>
+                        <p className="text-sm font-semibold text-[#F7E7CE] truncate">{user.full_name ?? user.username}</p>
                         <p className="text-xs text-[#F7E7CE]/40 truncate">{user.email}</p>
                       </div>
                     </div>
@@ -449,12 +466,24 @@ export default function Header() {
                         Dashboard
                       </Link>
                       <button
-                        onClick={() => { logout(); setMobileMenuOpen(false); router.push('/'); }}
-                        className="flex-1 text-center text-sm font-semibold text-red-400 py-2.5 border border-red-900/40 hover:bg-red-900/20 transition-colors"
+                        onClick={async () => { setIsLoggingOut(true); setMobileMenuOpen(false); await logout(); setIsLoggingOut(false); router.push('/'); }}
+                        disabled={isLoggingOut}
+                        className="flex-1 text-center text-sm font-semibold text-red-400 py-2.5 border border-red-900/40 hover:bg-red-900/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        Logout
+                        {isLoggingOut ? 'Logging out…' : 'Logout'}
                       </button>
                     </div>
+                  </div>
+                ) : isLoggingOut ? (
+                  /* Signing-out state in mobile panel */
+                  <div className="flex items-center gap-3 px-2 py-2">
+                    <div className="h-10 w-10 bg-[#F7E7CE]/10 border border-[#F7E7CE]/15 flex items-center justify-center shrink-0">
+                      <svg className="h-5 w-5 text-[#F7E7CE]/40 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                      </svg>
+                    </div>
+                    <p className="text-sm text-[#F7E7CE]/40">Logging out…</p>
                   </div>
                 ) : (
                   <div className="space-y-2.5">

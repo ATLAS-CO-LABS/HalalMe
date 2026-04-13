@@ -1,65 +1,84 @@
 "use client";
 
-import { createContext, useEffect, useState } from "react";
-import type { AuthContextType, User } from "@/lib/auth/types";
-import {
-  mockLogin,
-  mockSignup,
-  mockLogout,
-  getMockUserFromStorage,
-  saveMockUserToStorage,
-} from "@/lib/auth/mockAuth";
+import { createContext, useEffect, useState, useCallback } from "react";
+import { authService } from "@/services/authService";
+import { minDelay } from "@/lib/minDelay";
+import type { Profile } from "@/types";
 
-export const AuthContext = createContext<AuthContextType | undefined>(
-  undefined
-);
+interface AuthContextType {
+  user: Profile | null;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  signup: (name: string, email: string, password: string) => Promise<{ requiresVerification: boolean }>;
+  logout: () => Promise<void>;
+  /** Re-fetches the profile from Supabase and updates context state. */
+  refreshUser: () => Promise<void>;
+}
+
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // On mount, check localStorage for existing user
   useEffect(() => {
-    const storedUser = getMockUserFromStorage();
-    if (storedUser) {
-      setUser(storedUser);
-    }
-    setIsLoading(false);
+    let active = true;
+
+    // Initial session check — minDelay prevents a <400ms flash of the loading state
+    minDelay(authService.refreshUser(), 400)
+      .then((profile) => { if (active) setUser(profile); })
+      .catch(() => { if (active) setUser(null); })
+      .finally(() => { if (active) setIsLoading(false); });
+
+    // Subscribe to all auth events: login, OTP verify, logout, token refresh
+    const { data: subscription } = authService.onAuthStateChange((profile) => {
+      if (!active) return;
+      setUser(profile);
+      setIsLoading(false);
+    });
+
+    return () => {
+      active = false;
+      subscription.subscription.unsubscribe();
+    };
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const user = await mockLogin(email, password);
-      setUser(user);
-      saveMockUserToStorage(user);
-    } catch (error) {
+      await minDelay(authService.login(email, password));
+      const profile = await authService.refreshUser();
+      setUser(profile);
+    } finally {
       setIsLoading(false);
-      throw error;
     }
-    setIsLoading(false);
-  };
+  }, []);
 
-  const signup = async (name: string, email: string, password: string) => {
-    setIsLoading(true);
-    try {
-      const user = await mockSignup(name, email, password);
-      setUser(user);
-      saveMockUserToStorage(user);
-    } catch (error) {
-      setIsLoading(false);
-      throw error;
+  const signup = useCallback(async (name: string, email: string, password: string) => {
+    const data = await authService.signup(name, email, password);
+    const requiresVerification = !data.session;
+    if (!requiresVerification) {
+      const profile = await authService.refreshUser();
+      setUser(profile);
     }
-    setIsLoading(false);
-  };
+    return { requiresVerification };
+  }, []);
 
-  const logout = () => {
-    mockLogout();
+  const refreshUser = useCallback(async () => {
+    const profile = await authService.refreshUser();
+    setUser(profile);
+  }, []);
+
+  const logout = useCallback(async () => {
     setUser(null);
-  };
+    setIsLoading(false);
+    // Clear per-user chat data so the next user starts fresh
+    try { sessionStorage.removeItem("kitchen-ai-chat"); } catch {}
+    await authService.logout();
+  }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, signup, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

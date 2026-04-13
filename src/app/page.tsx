@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import FlowingMenu from "@/components/navigation/FlowingMenu";
 import LoadingScreen from "@/components/loading/LoadingScreen";
+import { useAuth } from "@/hooks/useAuth";
 import {
   ShieldCheck,
   BookOpen,
@@ -109,6 +110,7 @@ export default function Home() {
 
 function HeroSection() {
   const [wordIndex, setWordIndex] = useState(0);
+  const { user } = useAuth();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -192,16 +194,18 @@ function HeroSection() {
             transition={{ delay: 0.72 }}
             className="mt-8 flex flex-wrap gap-4"
           >
-            <Link href="/select-role">
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                className="flex items-center gap-3 px-7 sm:px-8 py-3.5 sm:py-4 bg-[#F7E7CE] text-[#102C26] font-extrabold uppercase tracking-tighter text-sm sm:text-base"
-              >
-                Create Free Account
-                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
-              </motion.button>
-            </Link>
+            {!user && (
+              <Link href="/select-role">
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  className="flex items-center gap-3 px-7 sm:px-8 py-3.5 sm:py-4 bg-[#F7E7CE] text-[#102C26] font-extrabold uppercase tracking-tighter text-sm sm:text-base"
+                >
+                  Create Free Account
+                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                </motion.button>
+              </Link>
+            )}
             <a href="#how-it-works">
               <motion.button
                 whileHover={{ scale: 1.03, backgroundColor: "rgba(247,231,206,0.08)" }}
@@ -469,6 +473,7 @@ function HowItWorksSection() {
 function FinalCTA() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-50px" });
+  const { user } = useAuth();
 
   return (
     <section ref={ref} className="relative overflow-hidden bg-[#F7E7CE] py-28 md:py-36">
@@ -511,12 +516,14 @@ function FinalCTA() {
           transition={{ delay: 0.3 }}
           className="flex flex-col sm:flex-row gap-4 mb-16"
         >
-          <Link href="/select-role">
-            <button className="flex items-center gap-3 px-8 py-4 bg-[#102C26] text-[#F7E7CE] font-extrabold uppercase tracking-tighter text-base hover:bg-[#0A1C19] transition-colors">
-              Create Free Account
-              <ArrowRight className="w-5 h-5" />
-            </button>
-          </Link>
+          {!user && (
+            <Link href="/select-role">
+              <button className="flex items-center gap-3 px-8 py-4 bg-[#102C26] text-[#F7E7CE] font-extrabold uppercase tracking-tighter text-base hover:bg-[#0A1C19] transition-colors">
+                Create Free Account
+                <ArrowRight className="w-5 h-5" />
+              </button>
+            </Link>
+          )}
           <Link href="/contact">
             <button className="flex items-center gap-3 px-8 py-4 border-2 border-[#102C26] text-[#102C26] font-extrabold uppercase tracking-tighter text-base hover:bg-[#102C26] hover:text-[#F7E7CE] transition-colors">
               Contact Support

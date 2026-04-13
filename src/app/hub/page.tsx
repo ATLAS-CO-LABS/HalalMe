@@ -1,9 +1,11 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useRef } from "react";
+import { motion, useInView } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
 import {
   Users,
   Heart,
@@ -13,95 +15,151 @@ import {
   TrendingUp,
   Globe,
   ArrowRight,
+  Sparkles,
 } from "lucide-react";
+
+/* ─── Hub design tokens — dark + amber ───────────────── */
+const BG    = "#0B0D0F";   // near-black with neutral warmth
+const BG2   = "#111418";   // card sections
+const BG3   = "#0D1012";   // deepest (hero overlay)
+const AMBER = "#F59E0B";
 
 export default function HubLandingPage() {
   const router = useRouter();
+  const { user } = useAuth();
+
+  const statsRef    = useRef(null);
+  const cardsRef    = useRef(null);
+  const featuresRef = useRef(null);
+  const ctaRef      = useRef(null);
+
+  const statsInView    = useInView(statsRef,    { once: true });
+  const cardsInView    = useInView(cardsRef,    { once: true });
+  const featuresInView = useInView(featuresRef, { once: true });
+  const ctaInView      = useInView(ctaRef,      { once: true });
+
+  const whatYouCanDo = [
+    { Icon: Share2,        title: "Share Posts",      desc: "Upload food pictures, share recipes, and tell your cooking stories with the community.", num: "01" },
+    { Icon: Heart,         title: "Engage & Connect", desc: "Like, comment, and interact with posts from fellow food lovers around the world.",        num: "02" },
+    { Icon: MessageCircle, title: "Build Community",  desc: "Follow your favourite creators, earn followers, and grow your own food community.",       num: "03" },
+  ];
 
   const features = [
-    { icon: Users, title: "Join the Community", description: "Connect with food lovers from around the world" },
-    { icon: ChefHat, title: "Share Your Recipes", description: "Showcase your culinary creations to thousands" },
-    { icon: Heart, title: "Like & Comment", description: "Engage with posts and build connections" },
-    { icon: TrendingUp, title: "Discover Trending", description: "Find the most popular halal recipes daily" },
+    { Icon: Users,      num: "01", title: "Join the Community",  desc: "Connect with halal food lovers from around the world." },
+    { Icon: ChefHat,    num: "02", title: "Share Recipes",       desc: "Showcase your culinary creations to thousands of food enthusiasts." },
+    { Icon: TrendingUp, num: "03", title: "Discover Trending",   desc: "Find the most popular halal recipes and posts every single day." },
+    { Icon: Globe,      num: "04", title: "Global Reach",        desc: "A worldwide platform for the halal food community to connect." },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-950">
-      {/* Hero Section */}
-      <section className="relative h-screen min-h-[600px] max-h-[900px] flex items-center overflow-hidden">
+    <div className="min-h-screen" style={{ backgroundColor: BG }}>
+
+      {/* ─── Hero ─────────────────────────────────────────── */}
+      <section
+        className="relative h-screen min-h-[620px] max-h-[960px] flex items-center overflow-hidden"
+        style={{ backgroundColor: BG3 }}
+      >
         <div className="absolute inset-0 z-0">
           <Image
             src="https://images.unsplash.com/photo-1543269865-cbf427effbad?w=1920&auto=format&fit=crop&q=80"
             alt="Halal food community"
             fill
-            className="object-cover"
+            className="object-cover opacity-[0.18] scale-105"
             priority
             sizes="100vw"
           />
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `linear-gradient(to right, ${BG3} 40%, ${BG3}90 65%, transparent 100%)`,
+            }}
+          />
         </div>
-        <div className="absolute inset-0 z-[1] bg-gray-950/70" />
 
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12 pt-20">
-          <div className="max-w-3xl">
+        <div className="relative z-10 w-full max-w-[95vw] mx-auto px-6 md:px-10 pt-20">
+          <div className="max-w-4xl">
+
+            {/* Eyebrow */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="inline-flex items-center gap-2.5 bg-amber-500/15 border border-amber-400/25 backdrop-blur-md rounded-full px-5 py-2.5 mb-5 sm:mb-8"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 }}
+              className="flex items-center gap-3 mb-6 md:mb-8"
             >
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" />
-              <span className="text-amber-300 text-sm font-semibold tracking-wide">Welcome to HalalMe Hub</span>
+              <div className="w-8 h-px" style={{ backgroundColor: AMBER }} />
+              <span
+                className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em]"
+                style={{ color: AMBER }}
+              >
+                Your Halal Community
+              </span>
             </motion.div>
 
-            <motion.h1
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.3 }}
-              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-[1.05] mb-6 tracking-tight"
-              style={{ fontFamily: "var(--font-headline)" }}
-            >
-              Share. Connect.{" "}
-              <span className="relative inline-block">
-                <span className="text-amber-400">Inspire.</span>
-                <motion.span
-                  className="absolute -bottom-1 left-0 right-0 h-1 bg-amber-500 rounded-full origin-left"
-                  initial={{ scaleX: 0 }}
-                  animate={{ scaleX: 1 }}
-                  transition={{ duration: 0.8, delay: 1 }}
-                />
-              </span>
-            </motion.h1>
+            {/* H1 */}
+            <h1 className="font-extrabold uppercase tracking-tighter leading-[0.88]">
+              <motion.span
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.7 }}
+                className="block text-3xl sm:text-4xl md:text-5xl lg:text-6xl mb-1 text-white/40"
+              >
+                HalalMe
+              </motion.span>
+              <motion.span
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.32, duration: 0.7 }}
+                className="block text-[clamp(3rem,8vw,8rem)] text-white"
+              >
+                Hub.
+              </motion.span>
+              <motion.span
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.44, duration: 0.7 }}
+                className="block text-[clamp(2rem,4.5vw,4.5rem)]"
+                style={{ color: AMBER }}
+              >
+                Share. Inspire.
+              </motion.span>
+            </h1>
 
             <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.5 }}
-              className="text-base sm:text-lg md:text-xl text-gray-300/90 max-w-xl leading-relaxed mb-6 sm:mb-10"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              className="mt-6 md:mt-7 text-base md:text-lg max-w-md leading-relaxed text-white/50 font-normal"
               style={{ fontFamily: "var(--font-body)" }}
             >
-              Join thousands of food lovers sharing recipes, posting food pictures, and building a vibrant halal food community.
+              Join thousands of food lovers sharing recipes, posting food pictures,
+              and building a vibrant halal food community.
             </motion.p>
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.65 }}
-              className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 mb-12 sm:mb-14"
+              transition={{ delay: 0.72 }}
+              className="mt-8 flex flex-wrap gap-4"
             >
-              <motion.button
-                onClick={() => router.push("/select-role")}
-                whileHover={{ scale: 1.04, boxShadow: "0 20px 50px -12px rgba(245,158,11,0.5)" }}
-                whileTap={{ scale: 0.97 }}
-                className="w-full sm:w-auto px-8 py-4 md:px-10 md:py-5 bg-amber-500 text-gray-900 font-bold text-lg rounded-full shadow-xl shadow-amber-500/25 flex items-center justify-center gap-2.5"
-              >
-                Sign Up & Join Hub
-                <ArrowRight className="w-5 h-5" />
-              </motion.button>
+              {!user && (
+                <motion.button
+                  onClick={() => router.push("/select-role")}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  className="flex items-center gap-3 px-7 sm:px-8 py-3.5 sm:py-4 font-extrabold uppercase tracking-tighter text-sm sm:text-base"
+                  style={{ backgroundColor: AMBER, color: BG }}
+                >
+                  Join Hub
+                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                </motion.button>
+              )}
+
               <motion.button
                 onClick={() => router.push("/hub/feed")}
-                whileHover={{ scale: 1.04, backgroundColor: "rgba(255,255,255,0.12)" }}
+                whileHover={{ scale: 1.03, backgroundColor: "rgba(255,255,255,0.06)" }}
                 whileTap={{ scale: 0.97 }}
-                className="w-full sm:w-auto px-8 py-4 md:px-10 md:py-5 bg-white/8 border border-white/20 backdrop-blur-sm text-white font-bold text-lg rounded-full hover:border-white/40 transition-all"
+                className="flex items-center gap-3 px-7 sm:px-8 py-3.5 sm:py-4 border-2 font-extrabold uppercase tracking-tighter text-sm sm:text-base text-white transition-all"
+                style={{ borderColor: "rgba(255,255,255,0.18)" }}
               >
                 Explore Feed
               </motion.button>
@@ -110,187 +168,351 @@ export default function HubLandingPage() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.9 }}
-              className="flex flex-wrap gap-4 sm:gap-6 text-xs sm:text-sm"
+              transition={{ delay: 0.9 }}
+              className="mt-8 flex flex-wrap gap-6"
             >
               {[
-                { icon: Users, text: "10K+ Members" },
-                { icon: Globe, text: "Global Community" },
-                { icon: TrendingUp, text: "Daily Content" },
+                { Icon: Users,    text: "10K+ Members"       },
+                { Icon: Globe,    text: "Global Community"   },
+                { Icon: Sparkles, text: "Daily Content"      },
               ].map((item, i) => (
-                <div key={i} className="flex items-center gap-2 text-gray-400">
-                  <item.icon className="w-4 h-4 text-amber-400" />
-                  <span>{item.text}</span>
+                <div
+                  key={i}
+                  className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-white/35"
+                >
+                  <item.Icon className="w-4 h-4" style={{ color: AMBER }} />
+                  {item.text}
                 </div>
               ))}
             </motion.div>
           </div>
         </div>
 
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 animate-bounce">
-          <div className="w-6 h-10 border-2 border-white/20 rounded-full flex justify-center pt-2">
-            <div className="w-1.5 h-3 bg-amber-400 rounded-full" />
-          </div>
-        </div>
-      </section>
-
-      {/* Features Grid */}
-      <section className="px-4 md:px-6 py-16 md:py-20 bg-gray-950">
-        <div className="mx-auto max-w-6xl">
+        {/* Scroll dot */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-12"
+            animate={{ y: [0, 6, 0] }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+            className="w-6 h-10 border-2 border-white/15 rounded-full flex justify-center pt-2"
           >
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4" style={{ fontFamily: "var(--font-headline)" }}>
-              Why Join HalalMe <span className="text-amber-400">Hub?</span>
-            </h2>
-            <p className="text-lg md:text-xl text-gray-400" style={{ fontFamily: "var(--font-body)" }}>
-              More than just a platform — it&apos;s your food community
-            </p>
+            <div className="w-1.5 h-3 rounded-full" style={{ backgroundColor: AMBER }} />
           </motion.div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-            {features.map((feature, index) => {
-              const Icon = feature.icon;
-              return (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
-                  whileHover={{ y: -6 }}
-                  className="bg-gray-800 rounded-2xl p-6 border border-gray-700 hover:border-amber-500/40 transition-all shadow-sm hover:shadow-md"
-                >
-                  <div className="bg-amber-500 rounded-xl p-4 mb-4 inline-block shadow-md">
-                    <Icon className="w-8 h-8 text-gray-900" />
-                  </div>
-                  <h3 className="text-xl font-bold text-white mb-2" style={{ fontFamily: "var(--font-headline)" }}>
-                    {feature.title}
-                  </h3>
-                  <p className="text-gray-400" style={{ fontFamily: "var(--font-body)" }}>
-                    {feature.description}
-                  </p>
-                </motion.div>
-              );
-            })}
-          </div>
         </div>
       </section>
 
-      {/* What You Can Do Section */}
-      <section className="px-4 md:px-6 py-16 md:py-20 bg-gray-900">
-        <div className="mx-auto max-w-6xl">
+      {/* ─── Stats Strip ──────────────────────────────────── */}
+      <div
+        ref={statsRef}
+        className="grid grid-cols-2 md:grid-cols-4"
+        style={{ gap: "1px", backgroundColor: "rgba(255,255,255,0.05)" }}
+      >
+        {[
+          { value: "10K+", label: "Community Members" },
+          { value: "5K+",  label: "Recipes Shared"    },
+          { value: "500+", label: "Daily Posts"        },
+          { value: "50+",  label: "Countries"          },
+        ].map((s, i) => (
           <motion.div
+            key={i}
             initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-12"
+            animate={statsInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: i * 0.1, duration: 0.5 }}
+            className="py-10 md:py-14 px-8 md:px-12 text-center md:text-left"
+            style={{ backgroundColor: BG2 }}
           >
-            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4" style={{ fontFamily: "var(--font-headline)" }}>
-              What You <span className="text-amber-400">Can Do</span>
-            </h2>
-            <p className="text-lg text-gray-400" style={{ fontFamily: "var(--font-body)" }}>
-              Everything you need to share your culinary journey
-            </p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              { icon: Share2, title: "Share Posts", description: "Upload food pictures, share recipes, and tell your cooking stories with the community" },
-              { icon: Heart, title: "Engage & Connect", description: "Like, comment, and interact with posts from fellow food lovers around the world" },
-              { icon: MessageCircle, title: "Build Community", description: "Follow your favorite creators, get followers, and build your own food community" },
-            ].map((item, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: index * 0.2 }}
-                className="bg-gray-800 rounded-2xl p-8 border border-gray-700 hover:border-amber-500/40 transition-all text-center shadow-sm hover:shadow-md"
-              >
-                <div className="bg-amber-500 w-16 h-16 rounded-full mx-auto mb-6 flex items-center justify-center shadow-md">
-                  <item.icon className="w-8 h-8 text-gray-900" />
-                </div>
-                <h3 className="text-xl font-bold text-white mb-3" style={{ fontFamily: "var(--font-headline)" }}>
-                  {item.title}
-                </h3>
-                <p className="text-gray-400" style={{ fontFamily: "var(--font-body)" }}>
-                  {item.description}
-                </p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="px-4 md:px-6 py-16 bg-amber-500/5 border-y border-amber-500/10">
-        <div className="mx-auto max-w-5xl">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {[
-              { label: "Active Users", value: "10K+" },
-              { label: "Recipes Shared", value: "5K+" },
-              { label: "Daily Posts", value: "500+" },
-              { label: "Countries", value: "50+" },
-            ].map((stat, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="text-center"
-              >
-                <h3 className="text-3xl md:text-4xl font-bold text-white mb-2" style={{ fontFamily: "var(--font-headline)" }}>
-                  {stat.value}
-                </h3>
-                <p className="text-gray-400" style={{ fontFamily: "var(--font-body)" }}>{stat.label}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="px-4 md:px-6 py-16 md:py-20 bg-gray-950">
-        <div className="mx-auto max-w-4xl text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            <Globe className="w-16 h-16 text-amber-400 mx-auto mb-6" />
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4" style={{ fontFamily: "var(--font-headline)" }}>
-              Ready to <span className="text-amber-400">Join?</span>
-            </h2>
-            <p className="text-lg md:text-xl text-gray-400 mb-8" style={{ fontFamily: "var(--font-body)" }}>
-              Create your account and start sharing your culinary journey today.
-            </p>
-            <motion.button
-              onClick={() => router.push("/select-role")}
-              className="bg-amber-500 text-gray-900 px-10 py-5 rounded-full font-bold text-xl shadow-xl shadow-amber-500/20"
-              whileHover={{ scale: 1.05, boxShadow: "0 25px 50px -12px rgba(245,158,11,0.5)" }}
-              whileTap={{ scale: 0.95 }}
+            <div className="text-[3rem] md:text-[4.5rem] font-extrabold tracking-tighter leading-none text-white">
+              {s.value}
+            </div>
+            <div
+              className="text-[10px] md:text-xs uppercase tracking-[0.25em] mt-2 font-medium"
+              style={{ color: `${AMBER}80` }}
             >
-              Get Started Now
-            </motion.button>
+              {s.label}
+            </div>
           </motion.div>
+        ))}
+      </div>
+
+      {/* ─── What You Can Do ──────────────────────────────── */}
+      <section
+        ref={cardsRef}
+        className="py-24 md:py-32"
+        style={{ backgroundColor: BG }}
+      >
+        <div className="max-w-[95vw] mx-auto px-6 md:px-10 mb-14 md:mb-20">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={cardsInView ? { opacity: 1, x: 0 } : {}}
+            className="flex items-center gap-3 mb-6"
+          >
+            <div className="w-8 h-px" style={{ backgroundColor: AMBER }} />
+            <span
+              className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em]"
+              style={{ color: AMBER }}
+            >
+              What You Can Do
+            </span>
+          </motion.div>
+
+          <motion.h2
+            initial={{ opacity: 0, y: 30 }}
+            animate={cardsInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6 }}
+            className="text-4xl sm:text-5xl md:text-7xl font-extrabold uppercase tracking-tighter leading-[0.88] text-white"
+          >
+            Connect.
+            <br />
+            <span className="text-white/40">Build Together.</span>
+          </motion.h2>
+        </div>
+
+        <div
+          className="max-w-[95vw] mx-auto px-6 md:px-10 grid md:grid-cols-3"
+          style={{ gap: "1px", backgroundColor: "rgba(255,255,255,0.05)" }}
+        >
+          {whatYouCanDo.map((item, i) => {
+            const Icon = item.Icon;
+            return (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 30 }}
+                animate={cardsInView ? { opacity: 1, y: 0 } : {}}
+                transition={{ delay: i * 0.12, duration: 0.5 }}
+              >
+                <div
+                  className="group relative p-8 md:p-10 overflow-hidden cursor-default min-h-[300px] flex flex-col transition-colors duration-300"
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = AMBER)}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = BG2)}
+                  style={{
+                    backgroundColor: BG2,
+                    border: "1px solid rgba(255,255,255,0.05)",
+                  }}
+                >
+                  {/* Ghost number */}
+                  <span
+                    aria-hidden="true"
+                    className="absolute -top-6 -right-3 text-[8rem] md:text-[10rem] font-extrabold leading-none select-none pointer-events-none text-white/[0.03]"
+                  >
+                    {item.num}
+                  </span>
+                  <div className="relative z-10 flex flex-col flex-1">
+                    <Icon
+                      className="w-7 h-7 mb-8 shrink-0 transition-colors duration-300 group-hover:text-[#0B0D0F]"
+                      style={{ color: AMBER }}
+                    />
+                    <h3
+                      className="text-xl md:text-2xl font-extrabold uppercase tracking-tighter mb-4 text-white transition-colors duration-300 group-hover:text-[#0B0D0F]"
+                      style={{ fontFamily: "var(--font-headline)" }}
+                    >
+                      {item.title}
+                    </h3>
+                    <p
+                      className="leading-relaxed text-sm md:text-base text-white/50 transition-colors duration-300 group-hover:text-[#0B0D0F]/70 flex-1"
+                      style={{ fontFamily: "var(--font-body)" }}
+                    >
+                      {item.desc}
+                    </p>
+                    <div
+                      className="mt-8 flex items-center gap-2 text-sm font-extrabold uppercase tracking-tighter transition-colors duration-300 group-hover:text-[#0B0D0F]"
+                      style={{ color: AMBER }}
+                    >
+                      Get Started <ArrowRight className="w-4 h-4" />
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       </section>
 
-      {/* Back Links */}
-      <section className="px-4 md:px-6 pb-12 bg-gray-950">
-        <div className="mx-auto max-w-4xl text-center flex justify-center gap-6">
-          <Link href="/kitchen" className="text-gray-400 hover:text-amber-400 transition-colors text-sm font-semibold">← Kitchen</Link>
-          <Link href="/rewards" className="text-gray-400 hover:text-amber-400 transition-colors text-sm font-semibold">Rewards →</Link>
+      {/* ─── Why Hub ──────────────────────────────────────── */}
+      <section
+        ref={featuresRef}
+        className="py-24 md:py-32"
+        style={{ backgroundColor: BG2 }}
+      >
+        <div className="max-w-[95vw] mx-auto px-6 md:px-10 mb-14 md:mb-20">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={featuresInView ? { opacity: 1, x: 0 } : {}}
+            className="flex items-center gap-3 mb-6"
+          >
+            <div className="w-8 h-px" style={{ backgroundColor: AMBER }} />
+            <span
+              className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em]"
+              style={{ color: AMBER }}
+            >
+              Why HalalMe Hub
+            </span>
+          </motion.div>
+
+          <motion.h2
+            initial={{ opacity: 0, y: 30 }}
+            animate={featuresInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6 }}
+            className="text-4xl sm:text-5xl md:text-7xl font-extrabold uppercase tracking-tighter leading-[0.88] text-white"
+          >
+            Your Food.
+            <br />
+            <span className="text-white/40">Your Community.</span>
+          </motion.h2>
+        </div>
+
+        <div
+          className="max-w-[95vw] mx-auto px-6 md:px-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+          style={{ gap: "1px", backgroundColor: "rgba(255,255,255,0.05)" }}
+        >
+          {features.map((f, i) => {
+            const Icon = f.Icon;
+            return (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 30 }}
+                animate={featuresInView ? { opacity: 1, y: 0 } : {}}
+                transition={{ delay: i * 0.1, duration: 0.5 }}
+                className="group relative p-8 overflow-hidden transition-colors duration-300 cursor-default"
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#F59E0B")}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = BG3)}
+                style={{
+                  backgroundColor: BG3,
+                  border: "1px solid rgba(255,255,255,0.05)",
+                  minHeight: "220px",
+                }}
+              >
+                <span
+                  aria-hidden="true"
+                  className="absolute -top-6 -right-3 text-[7rem] font-extrabold leading-none select-none pointer-events-none text-white/[0.03]"
+                >
+                  {f.num}
+                </span>
+                <div className="relative z-10 flex flex-col" style={{ minHeight: "180px" }}>
+                  <Icon
+                    className="w-6 h-6 mb-6 transition-colors duration-300 group-hover:text-[#0B0D0F]"
+                    style={{ color: AMBER }}
+                  />
+                  <h3
+                    className="text-lg md:text-xl font-extrabold uppercase tracking-tighter mb-3 text-white transition-colors duration-300 group-hover:text-[#0B0D0F]"
+                    style={{ fontFamily: "var(--font-headline)" }}
+                  >
+                    {f.title}
+                  </h3>
+                  <p
+                    className="text-sm leading-relaxed text-white/50 transition-colors duration-300 group-hover:text-[#0B0D0F]/65"
+                    style={{ fontFamily: "var(--font-body)" }}
+                  >
+                    {f.desc}
+                  </p>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       </section>
+
+      {/* ─── Final CTA ────────────────────────────────────── */}
+      <section
+        ref={ctaRef}
+        className="relative overflow-hidden py-28 md:py-36"
+        style={{ backgroundColor: AMBER }}
+      >
+        <div className="relative z-10 max-w-[95vw] mx-auto px-6 md:px-10">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={ctaInView ? { opacity: 1 } : {}}
+            className="flex items-center gap-3 mb-8"
+          >
+            <div className="w-8 h-px bg-black/25" />
+            <span className="text-black/40 text-[10px] md:text-xs uppercase tracking-[0.3em] font-bold">
+              Ready to Join
+            </span>
+          </motion.div>
+
+          <motion.h2
+            initial={{ opacity: 0, y: 30 }}
+            animate={ctaInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: 0.1, duration: 0.6 }}
+            className="text-4xl sm:text-6xl md:text-7xl font-extrabold uppercase tracking-tighter leading-[0.88] text-[#0B0D0F] mb-10 max-w-4xl"
+          >
+            Start Sharing
+            <br />
+            Today.
+          </motion.h2>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={ctaInView ? { opacity: 1 } : {}}
+            transition={{ delay: 0.2 }}
+            className="text-base md:text-lg max-w-xl mb-12 leading-relaxed text-[#0B0D0F]/65"
+            style={{ fontFamily: "var(--font-body)" }}
+          >
+            Create your account and start building your halal food community today.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={ctaInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: 0.3 }}
+            className="flex flex-col sm:flex-row gap-4 mb-16"
+          >
+            <button
+              onClick={() => router.push("/select-role")}
+              className="flex items-center gap-3 px-8 py-4 bg-[#0B0D0F] text-white font-extrabold uppercase tracking-tighter text-base hover:bg-[#1a1e22] transition-colors"
+            >
+              Create Your Account
+              <ArrowRight className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => router.push("/hub/feed")}
+              className="flex items-center gap-3 px-8 py-4 border-2 border-[#0B0D0F]/30 text-[#0B0D0F] font-extrabold uppercase tracking-tighter text-base hover:bg-[#0B0D0F]/08 transition-colors"
+            >
+              Browse the Feed
+            </button>
+          </motion.div>
+
+          <div className="flex flex-wrap gap-6 md:gap-10">
+            {[
+              { Icon: Users,    text: "10K+ Community Members" },
+              { Icon: ChefHat, text: "5K+ Recipes Shared"      },
+              { Icon: Globe,   text: "50+ Countries"            },
+            ].map((item, i) => (
+              <div key={i} className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[#0B0D0F]/45">
+                <item.Icon className="w-4 h-4" />
+                {item.text}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Watermark */}
+        <div
+          aria-hidden="true"
+          className="absolute bottom-0 right-0 font-extrabold uppercase tracking-tighter leading-none text-[#0B0D0F]/08 select-none pointer-events-none translate-x-6 translate-y-6 text-[8rem] md:text-[14rem]"
+        >
+          Hub
+        </div>
+      </section>
+
+      {/* ─── Back links ───────────────────────────────────── */}
+      <div
+        className="px-6 py-8"
+        style={{ backgroundColor: BG, borderTop: "1px solid rgba(255,255,255,0.05)" }}
+      >
+        <div className="max-w-[95vw] mx-auto flex justify-between items-center">
+          <Link
+            href="/kitchen"
+            className="text-xs font-bold uppercase tracking-[0.2em] text-white/25 transition-colors hover:text-amber-400"
+          >
+            ← Kitchen
+          </Link>
+          <Link
+            href="/rewards"
+            className="text-xs font-bold uppercase tracking-[0.2em] text-white/25 transition-colors hover:text-amber-400"
+          >
+            Rewards →
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }

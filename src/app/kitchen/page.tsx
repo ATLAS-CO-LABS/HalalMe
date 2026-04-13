@@ -13,11 +13,14 @@ import {
   Sparkles,
   ArrowRight,
 } from 'lucide-react';
+import AQISection from './AQISection';
 
-/* ─── Dark fuchsia base ───── */
-const BG    = '#08060F';
-const BG2   = '#050408';
-const CREAM = '#F7E7CE';
+/* ─── Magenta base — matches AI assistant palette ───── */
+const BG      = '#0D0D14';
+const BG2     = '#09090F';
+const CREAM   = '#F7E7CE';
+const MAGENTA = '#F03E9E';
+const DEEP    = '#C41E73';
 
 export default function KitchenLandingPage() {
   const router = useRouter();
@@ -74,8 +77,8 @@ export default function KitchenLandingPage() {
               transition={{ delay: 0.1 }}
               className="flex items-center gap-3 mb-6 md:mb-8"
             >
-              <div className="w-8 h-px bg-fuchsia-500" />
-              <span className="text-fuchsia-400 text-[10px] md:text-xs font-bold uppercase tracking-[0.3em]">
+              <div className="w-8 h-px" style={{ backgroundColor: MAGENTA }} />
+              <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em]" style={{ color: MAGENTA }}>
                 Your Halal Cooking Companion
               </span>
             </motion.div>
@@ -104,7 +107,8 @@ export default function KitchenLandingPage() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.44, duration: 0.7 }}
-                className="block text-[clamp(2rem,5vw,5rem)] text-fuchsia-400"
+                className="block text-[clamp(2rem,5vw,5rem)]"
+                style={{ color: MAGENTA }}
               >
                 AI-Powered.
               </motion.span>
@@ -131,7 +135,8 @@ export default function KitchenLandingPage() {
                 onClick={() => router.push('/kitchen/ai-assistant')}
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
-                className="flex items-center gap-3 px-7 sm:px-8 py-3.5 sm:py-4 bg-fuchsia-600 text-white font-extrabold uppercase tracking-tighter text-sm sm:text-base"
+                className="flex items-center gap-3 px-7 sm:px-8 py-3.5 sm:py-4 text-white font-extrabold uppercase tracking-tighter text-sm sm:text-base"
+                style={{ backgroundColor: DEEP }}
               >
                 Start Cooking with AI
                 <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -168,7 +173,7 @@ export default function KitchenLandingPage() {
                   className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide"
                   style={{ color: `${CREAM}40` }}
                 >
-                  <item.Icon className="w-4 h-4 text-fuchsia-400" />
+                  <item.Icon className="w-4 h-4" style={{ color: MAGENTA }} />
                   {item.text}
                 </div>
               ))}
@@ -205,13 +210,16 @@ export default function KitchenLandingPage() {
             </div>
             <div
               className="text-[10px] md:text-xs uppercase tracking-[0.25em] mt-2 font-medium"
-              style={{ color: 'rgba(232,130,255,0.5)' }}
+              style={{ color: 'rgba(240,62,158,0.5)' }}
             >
               {s.label}
             </div>
           </motion.div>
         ))}
       </div>
+
+      {/* ─── AQI Promo ────────────────────────────────────── */}
+      <AQISection />
 
       {/* ─── Cards (What You Can Do) ───────────────────────── */}
       <section
@@ -225,8 +233,8 @@ export default function KitchenLandingPage() {
             animate={cardsInView ? { opacity: 1, x: 0 } : {}}
             className="flex items-center gap-3 mb-6"
           >
-            <div className="w-8 h-px bg-fuchsia-500" />
-            <span className="text-fuchsia-400 text-[10px] md:text-xs font-bold uppercase tracking-[0.3em]">
+            <div className="w-8 h-px" style={{ backgroundColor: MAGENTA }} />
+            <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em]" style={{ color: MAGENTA }}>
               What You Can Do
             </span>
           </motion.div>
@@ -255,7 +263,9 @@ export default function KitchenLandingPage() {
           >
             <Link href="/kitchen/ai-assistant">
               <div
-                className="group relative p-8 md:p-10 overflow-hidden cursor-pointer min-h-[340px] flex flex-col hover:bg-fuchsia-600 transition-colors duration-300"
+                className="group relative p-8 md:p-10 overflow-hidden cursor-pointer min-h-[340px] flex flex-col transition-colors duration-300"
+                onMouseEnter={e => (e.currentTarget.style.backgroundColor = DEEP)}
+                onMouseLeave={e => (e.currentTarget.style.backgroundColor = BG)}
                 style={{
                   backgroundColor: BG,
                   border: `1px solid ${CREAM}08`,
@@ -272,7 +282,7 @@ export default function KitchenLandingPage() {
                 <div className="relative z-10 flex flex-col flex-1">
                   <ChefHat
                     className="w-7 h-7 mb-8 flex-shrink-0 transition-colors duration-300 group-hover:text-white"
-                    style={{ color: '#d946ef' }}
+                    style={{ color: MAGENTA }}
                   />
                   <h3 className="text-xl md:text-2xl lg:text-3xl font-extrabold uppercase tracking-tighter mb-4 transition-colors duration-300 group-hover:text-white" style={{ color: CREAM }}>
                     AI Recipe Assistant
@@ -292,12 +302,12 @@ export default function KitchenLandingPage() {
                         className="flex items-start gap-3 text-sm transition-colors duration-300 group-hover:text-white/75"
                         style={{ color: `${CREAM}35` }}
                       >
-                        <span className="text-fuchsia-400 group-hover:text-white mt-0.5 font-bold">✓</span>
+                        <span className="group-hover:text-white mt-0.5 font-bold" style={{ color: MAGENTA }}>✓</span>
                         {item}
                       </div>
                     ))}
                   </div>
-                  <div className="mt-8 flex items-center gap-2 text-sm font-extrabold uppercase tracking-tighter transition-colors duration-300 text-fuchsia-400 group-hover:text-white">
+                  <div className="mt-8 flex items-center gap-2 text-sm font-extrabold uppercase tracking-tighter transition-colors duration-300 group-hover:text-white" style={{ color: MAGENTA }}>
                     Start Now <ArrowRight className="w-4 h-4" />
                   </div>
                 </div>
@@ -328,7 +338,7 @@ export default function KitchenLandingPage() {
                 </span>
                 <div className="relative z-10 flex flex-col flex-1">
                   <BookOpen
-                    className="w-7 h-7 mb-8 flex-shrink-0 transition-colors duration-300 group-hover:text-fuchsia-600"
+                    className="w-7 h-7 mb-8 flex-shrink-0 transition-colors duration-300 group-hover:text-[#C41E73]"
                     style={{ color: `${CREAM}60` }}
                   />
                   <h3
@@ -355,13 +365,13 @@ export default function KitchenLandingPage() {
                         className="flex items-start gap-3 text-sm transition-colors duration-300 group-hover:text-[#08060F]/60"
                         style={{ color: `${CREAM}35` }}
                       >
-                        <span className="text-fuchsia-400 group-hover:text-fuchsia-600 mt-0.5 font-bold">✓</span>
+                        <span className="mt-0.5 font-bold" style={{ color: MAGENTA }}>✓</span>
                         {item}
                       </div>
                     ))}
                   </div>
                   <div
-                    className="mt-8 flex items-center gap-2 text-sm font-extrabold uppercase tracking-tighter transition-colors duration-300 group-hover:text-fuchsia-600"
+                    className="mt-8 flex items-center gap-2 text-sm font-extrabold uppercase tracking-tighter transition-colors duration-300 group-hover:text-[#C41E73]"
                     style={{ color: `${CREAM}60` }}
                   >
                     Browse Now <ArrowRight className="w-4 h-4" />
@@ -385,8 +395,8 @@ export default function KitchenLandingPage() {
             animate={featuresInView ? { opacity: 1, x: 0 } : {}}
             className="flex items-center gap-3 mb-6"
           >
-            <div className="w-8 h-px bg-fuchsia-500" />
-            <span className="text-fuchsia-400 text-[10px] md:text-xs font-bold uppercase tracking-[0.3em]">
+            <div className="w-8 h-px" style={{ backgroundColor: MAGENTA }} />
+            <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em]" style={{ color: MAGENTA }}>
               Why HalalMe Kitchen
             </span>
           </motion.div>
@@ -431,8 +441,8 @@ export default function KitchenLandingPage() {
                 </span>
                 <div className="relative z-10 flex flex-col" style={{ minHeight: '180px' }}>
                   <Icon
-                    className="w-6 h-6 mb-6 transition-colors duration-300 group-hover:text-fuchsia-600"
-                    style={{ color: '#d946ef' }}
+                    className="w-6 h-6 mb-6 transition-colors duration-300 group-hover:text-[#C41E73]"
+                    style={{ color: MAGENTA }}
                   />
                   <h3
                     className="text-lg md:text-xl font-extrabold uppercase tracking-tighter mb-3 transition-colors duration-300 group-hover:text-[#08060F]"
@@ -456,7 +466,8 @@ export default function KitchenLandingPage() {
       {/* ─── Final CTA ────────────────────────────────────── */}
       <section
         ref={ctaRef}
-        className="relative overflow-hidden py-28 md:py-36 bg-fuchsia-700"
+        className="relative overflow-hidden py-28 md:py-36"
+        style={{ backgroundColor: DEEP }}
       >
         <div className="relative z-10 max-w-[95vw] mx-auto px-6 md:px-10">
           <motion.div
@@ -498,7 +509,8 @@ export default function KitchenLandingPage() {
           >
             <button
               onClick={() => router.push('/kitchen/ai-assistant')}
-              className="flex items-center gap-3 px-8 py-4 bg-white text-fuchsia-700 font-extrabold uppercase tracking-tighter text-base hover:bg-[#F7E7CE] transition-colors"
+              className="flex items-center gap-3 px-8 py-4 bg-white font-extrabold uppercase tracking-tighter text-base hover:bg-[#F7E7CE] transition-colors"
+              style={{ color: DEEP }}
             >
               Start Cooking with AI
               <ArrowRight className="w-5 h-5" />

@@ -32,12 +32,13 @@ export default function Avatar({
 }: AvatarProps) {
   return (
     <div
-      className={`relative ${sizeClasses[size]} rounded-full overflow-hidden bg-gradient-to-br from-[#FF8A1E] to-[#CC6A0F] flex items-center justify-center flex-shrink-0 ${className}`}
+      className={`relative ${sizeClasses[size]} rounded-full overflow-hidden flex items-center justify-center shrink-0 ${className}`}
+      style={{ background: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)" }}
     >
       {src ? (
         <Image src={src} alt={alt} fill className="object-cover" />
       ) : (
-        <User className={`${iconSizes[size]} text-white`} />
+        <User className={`${iconSizes[size]} text-[#102C26]`} />
       )}
     </div>
   );

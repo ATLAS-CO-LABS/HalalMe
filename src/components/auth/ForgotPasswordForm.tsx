@@ -3,70 +3,45 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { mockForgotPassword } from "@/lib/auth/mockAuth";
-import { Check, X } from "lucide-react";
+import { ArrowRight, X } from "lucide-react";
+import { authService, isRateLimitError } from "@/services/authService";
+import { startCooldown } from "@/lib/otpCooldown";
+
+const inputClass =
+  "w-full h-12 px-4 bg-[#102C26] border border-[#F7E7CE]/12 text-[#F7E7CE] placeholder:text-[#F7E7CE]/20 focus:outline-none focus:border-[#F7E7CE]/40 transition-colors text-sm disabled:opacity-50";
+
+const labelClass =
+  "block text-[10px] font-bold text-[#F7E7CE]/35 uppercase tracking-[0.22em] mb-1.5";
 
 export default function ForgotPasswordForm() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
-
+    const normalizedEmail = email.toLowerCase().trim();
     try {
-      await mockForgotPassword(email);
-      setSuccess(true);
-
-      setTimeout(() => {
-        router.push("/login");
-      }, 3000);
+      await authService.sendPasswordResetOtp(normalizedEmail);
+      startCooldown(normalizedEmail, "reset");
+      router.push(`/verify-otp?email=${encodeURIComponent(normalizedEmail)}&type=reset`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to send reset link");
-    } finally {
+      if (isRateLimitError(err)) {
+        setError("Too many requests. Please wait a minute before trying again.");
+      } else {
+        setError(err instanceof Error ? err.message : "Failed to send code");
+      }
       setIsLoading(false);
     }
   };
 
-  if (success) {
-    return (
-      <div className="space-y-4">
-        <div className="rounded-xl bg-emerald-400/10 border border-emerald-400/20 p-4 text-center">
-          <div className="flex justify-center mb-2">
-            <div className="w-8 h-8 rounded-full bg-emerald-400/20 flex items-center justify-center">
-              <Check className="w-4 h-4 text-emerald-400" />
-            </div>
-          </div>
-          <p className="text-sm text-emerald-300">
-            Password reset link has been sent to your email!
-          </p>
-          <p className="mt-2 text-xs text-emerald-200/50">
-            Redirecting to login page...
-          </p>
-        </div>
-        <div className="text-center">
-          <Link
-            href="/login"
-            className="text-sm text-amber-400 hover:text-amber-300 transition-colors"
-          >
-            Return to login
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      <div className="space-y-1.5">
-        <label htmlFor="email" className="text-sm font-medium text-emerald-100/80">
-          Email
-        </label>
+      <div>
+        <label htmlFor="email" className={labelClass}>Email address</label>
         <input
           id="email"
           type="email"
@@ -75,41 +50,41 @@ export default function ForgotPasswordForm() {
           onChange={(e) => setEmail(e.target.value)}
           required
           disabled={isLoading}
-          className="w-full h-11 px-4 rounded-xl bg-white/[0.08] border border-white/15 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400/50 transition-all disabled:opacity-50"
+          className={inputClass}
         />
-        <p className="text-xs text-emerald-200/40">
-          We&apos;ll send you a link to reset your password
+        <p className="text-[10px] text-[#F7E7CE]/25 mt-1.5 uppercase tracking-wide">
+          We&apos;ll send a 6-digit code to this address
         </p>
       </div>
 
       {error && (
-        <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-3 text-sm text-red-300 flex items-center gap-2">
-          <X className="w-4 h-4 flex-shrink-0" />
+        <div className="bg-red-900/20 border border-red-500/20 p-3 flex items-center gap-2 text-sm text-red-300">
+          <X className="w-4 h-4 shrink-0" />
           {error}
         </div>
       )}
 
-      <Button
+      <button
         type="submit"
-        className="w-full bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-white font-bold rounded-xl h-12 shadow-lg shadow-emerald-500/20 text-base"
         disabled={isLoading}
+        className="w-full h-12 bg-[#F7E7CE] text-[#102C26] font-extrabold uppercase tracking-tighter text-sm hover:bg-[#F7E7CE]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
       >
         {isLoading ? (
-          <span className="flex items-center gap-2">
-            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            Sending...
-          </span>
+          <>
+            <span className="w-4 h-4 border-2 border-[#102C26]/30 border-t-[#102C26] rounded-full animate-spin" />
+            Sending…
+          </>
         ) : (
-          "Send reset link"
+          <>
+            Send code
+            <ArrowRight className="w-4 h-4" />
+          </>
         )}
-      </Button>
+      </button>
 
-      <p className="text-center text-sm text-emerald-200/50">
+      <p className="text-center text-xs text-[#F7E7CE]/30">
         Remember your password?{" "}
-        <Link
-          href="/login"
-          className="text-amber-400 hover:text-amber-300 font-medium transition-colors"
-        >
+        <Link href="/login" className="text-[#F7E7CE]/60 hover:text-[#F7E7CE] font-semibold transition-colors">
           Sign in
         </Link>
       </p>

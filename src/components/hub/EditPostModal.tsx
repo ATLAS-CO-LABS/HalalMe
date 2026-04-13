@@ -1,17 +1,20 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Image as ImageIcon, Smile, MapPin } from "lucide-react";
-import Image from "next/image";
+import { X, Loader2 } from "lucide-react";
+import type { Profile } from "@/types";
 import Avatar from "./Avatar";
 
 interface EditPostModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (content: string, image?: string) => void;
+  /** Called with the updated content. Returns a Promise so the modal can
+   *  show a loading state. Only content editing is supported (media changes
+   *  are not supported by the backend updatePost endpoint). */
+  onSubmit: (content: string) => Promise<void>;
   initialContent: string;
-  initialImage?: string;
+  currentUser: Profile | null;
 }
 
 export default function EditPostModal({
@@ -19,62 +22,62 @@ export default function EditPostModal({
   onClose,
   onSubmit,
   initialContent,
-  initialImage,
+  currentUser,
 }: EditPostModalProps) {
   const [content, setContent] = useState(initialContent);
-  const [imagePreview, setImagePreview] = useState<string | null>(
-    initialImage || null
-  );
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
+  // Sync content when the modal opens with a new post
   useEffect(() => {
     if (isOpen) {
       setContent(initialContent);
-      setImagePreview(initialImage || null);
+      setError(null);
     }
-  }, [isOpen, initialContent, initialImage]);
+  }, [isOpen, initialContent]);
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleSubmit = () => {
-    if (content.trim()) {
-      onSubmit(content, imagePreview || undefined);
-      handleClose();
+  const handleSubmit = async () => {
+    if (!content.trim() || isSubmitting) return;
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      await onSubmit(content.trim());
+      onClose();
+    } catch {
+      setError("Failed to save changes. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleClose = () => {
+    if (isSubmitting) return;
     onClose();
   };
+
+  const displayName = currentUser?.full_name ?? currentUser?.username ?? "You";
+  const username = currentUser?.username ? `@${currentUser.username}` : null;
+  const avatarUrl = currentUser?.avatar_url ?? undefined;
 
   return (
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
             onClick={handleClose}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-black/60 z-50"
           />
 
-          {/* Modal */}
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              initial={{ opacity: 0, scale: 0.96, y: 12 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              exit={{ opacity: 0, scale: 0.96, y: 8 }}
+              transition={{ type: "tween", duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
               className="bg-gray-800 rounded-2xl border border-gray-700 w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
             >
               {/* Header */}
@@ -87,7 +90,8 @@ export default function EditPostModal({
                 </h2>
                 <motion.button
                   onClick={handleClose}
-                  className="text-gray-400 hover:text-white transition-colors"
+                  disabled={isSubmitting}
+                  className="text-gray-400 hover:text-white transition-colors disabled:opacity-50"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                 >
@@ -97,20 +101,22 @@ export default function EditPostModal({
 
               {/* User Info */}
               <div className="p-4 md:p-5 flex items-center gap-3 border-b border-gray-700">
-                <Avatar alt="You" size="lg" />
+                <Avatar src={avatarUrl} alt={displayName} size="lg" />
                 <div>
                   <h3
                     className="font-semibold text-white"
                     style={{ fontFamily: "var(--font-headline)" }}
                   >
-                    You
+                    {displayName}
                   </h3>
-                  <p
-                    className="text-gray-400 text-sm font-normal"
-                    style={{ fontFamily: "var(--font-body)" }}
-                  >
-                    @you
-                  </p>
+                  {username && (
+                    <p
+                      className="text-gray-400 text-sm font-normal"
+                      style={{ fontFamily: "var(--font-body)" }}
+                    >
+                      {username}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -120,96 +126,42 @@ export default function EditPostModal({
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   placeholder="What's on your mind?"
-                  className="w-full bg-transparent text-white placeholder-gray-500 text-base resize-none focus:outline-none min-h-[120px] font-normal"
+                  className="w-full bg-transparent text-white placeholder-gray-500 text-base resize-none focus:outline-none min-h-30 font-normal"
                   style={{ fontFamily: "var(--font-body)" }}
                   autoFocus
+                  disabled={isSubmitting}
                 />
-
-                {/* Image Preview */}
-                {imagePreview && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="relative mt-4 rounded-xl overflow-hidden"
-                  >
-                    <div className="relative w-full aspect-video">
-                      <Image
-                        src={imagePreview}
-                        alt="Preview"
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                    <motion.button
-                      onClick={() => setImagePreview(null)}
-                      className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white p-2 rounded-full hover:bg-black/80 transition-colors"
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                    >
-                      <X className="w-4 h-4" />
-                    </motion.button>
-                  </motion.div>
+                {error && (
+                  <p className="mt-3 text-red-400 text-sm font-normal">{error}</p>
                 )}
               </div>
 
               {/* Actions */}
               <div className="p-4 md:p-5 border-t border-gray-700">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageSelect}
-                      className="hidden"
-                    />
-                    <motion.button
-                      onClick={() => fileInputRef.current?.click()}
-                      className="text-gray-400 hover:text-[#FF8A1E] p-2 rounded-full hover:bg-gray-700 transition-colors"
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                    >
-                      <ImageIcon className="w-5 h-5" />
-                    </motion.button>
-                    <motion.button
-                      className="text-gray-400 hover:text-[#FF8A1E] p-2 rounded-full hover:bg-gray-700 transition-colors"
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                    >
-                      <Smile className="w-5 h-5" />
-                    </motion.button>
-                    <motion.button
-                      className="text-gray-400 hover:text-[#FF8A1E] p-2 rounded-full hover:bg-gray-700 transition-colors"
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                    >
-                      <MapPin className="w-5 h-5" />
-                    </motion.button>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <motion.button
-                      onClick={handleClose}
-                      className="px-4 py-2 rounded-full font-semibold text-gray-400 hover:text-white transition-colors"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      Cancel
-                    </motion.button>
-                    <motion.button
-                      onClick={handleSubmit}
-                      disabled={!content.trim()}
-                      className={`px-6 py-2.5 rounded-full font-semibold transition-all ${
-                        content.trim()
-                          ? "bg-gradient-to-br from-[#FF8A1E] to-[#CC6A0F] text-white hover:shadow-lg"
-                          : "bg-gray-700 text-gray-500 cursor-not-allowed"
-                      }`}
-                      whileHover={content.trim() ? { scale: 1.05 } : {}}
-                      whileTap={content.trim() ? { scale: 0.95 } : {}}
-                    >
-                      Save
-                    </motion.button>
-                  </div>
+                <div className="flex items-center justify-end gap-2">
+                  <motion.button
+                    onClick={handleClose}
+                    disabled={isSubmitting}
+                    className="px-4 py-2 rounded-full font-semibold text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    Cancel
+                  </motion.button>
+                  <motion.button
+                    onClick={handleSubmit}
+                    disabled={!content.trim() || isSubmitting}
+                    className={`flex items-center gap-2 px-6 py-2.5 rounded-full font-semibold transition-all ${
+                      content.trim() && !isSubmitting
+                        ? "bg-linear-to-br from-[#F59E0B] to-[#D97706] text-white hover:shadow-lg"
+                        : "bg-gray-700 text-gray-500 cursor-not-allowed"
+                    }`}
+                    whileHover={content.trim() && !isSubmitting ? { scale: 1.05 } : {}}
+                    whileTap={content.trim() && !isSubmitting ? { scale: 0.95 } : {}}
+                  >
+                    {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {isSubmitting ? "Saving..." : "Save"}
+                  </motion.button>
                 </div>
               </div>
             </motion.div>

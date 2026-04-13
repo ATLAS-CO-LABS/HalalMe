@@ -45,3 +45,6 @@ nul
 
 # Temp files
 tmpclaude*
+
+.vercel
+.env*.local

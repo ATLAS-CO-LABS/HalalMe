@@ -4,6 +4,9 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
+import { isRateLimitError } from "@/services/authService";
+import { startCooldown } from "@/lib/otpCooldown";
+import { minDelay } from "@/lib/minDelay";
 import { Eye, EyeOff, Check, X, ArrowRight } from "lucide-react";
 
 const inputClass =
@@ -16,7 +19,8 @@ export default function SignupForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { signup } = useAuth();
-  const role = searchParams.get("role");
+  const role     = searchParams.get("role");
+  const redirect = searchParams.get("redirect");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -47,11 +51,22 @@ export default function SignupForm() {
     if (passwordError) { setError(passwordError); return; }
     if (!agreeToTerms) { setError("You must agree to the terms and conditions"); return; }
     setIsLoading(true);
+    const normalizedEmail = email.toLowerCase().trim();
     try {
-      await signup(name, email, password);
-      router.push(role === "ecosystem" ? "/dashboard" : "/select-platform");
+      const { requiresVerification } = await minDelay(signup(name, normalizedEmail, password));
+      if (requiresVerification) {
+        startCooldown(normalizedEmail, "signup");
+        const otpUrl = `/verify-otp?email=${encodeURIComponent(normalizedEmail)}&type=signup${redirect ? `&redirect=${encodeURIComponent(redirect)}` : ""}`;
+        router.push(otpUrl);
+      } else {
+        router.push(redirect ?? (role === "ecosystem" ? "/dashboard" : "/select-role"));
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Signup failed");
+      if (isRateLimitError(err)) {
+        setError("Too many requests. Please wait a minute before trying again.");
+      } else {
+        setError(err instanceof Error ? err.message : "Signup failed");
+      }
     } finally {
       setIsLoading(false);
     }

@@ -8,76 +8,110 @@ import {
   Heart,
   MessageCircle,
   Share2,
+  Bookmark,
   ChefHat,
   BadgeCheck,
   MoreHorizontal,
   Edit2,
   Trash2,
+  Check,
+  X,
 } from "lucide-react";
-import { Post } from "@/data/hubMockData";
+import type { Post } from "@/types";
+import { formatRelativeTime } from "@/lib/relativeTime";
 import Avatar from "./Avatar";
 
 interface PostCardProps {
   post: Post;
-  onLike: (postId: string) => void;
-  onEdit?: (postId: string) => void;
+  currentUserId?: string;
+  onLike: (postId: string, currentIsLiked: boolean) => void;
+  onBookmark?: (postId: string, currentIsBookmarked: boolean) => void;
+  onEdit?: (post: Post) => void;
   onDelete?: (postId: string) => void;
   onUserClick?: (userId: string) => void;
-  isOwnPost?: boolean;
 }
 
 export default function PostCard({
   post,
+  currentUserId,
   onLike,
+  onBookmark,
   onEdit,
   onDelete,
   onUserClick,
-  isOwnPost = false,
 }: PostCardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const isRecipePost = post.type === "recipe";
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+
+  const isOwnPost = !!currentUserId && currentUserId === post.user_id;
+  const isRecipePost = post.post_type === "recipe";
+  const displayName = post.profiles?.full_name ?? post.profiles?.username ?? "Unknown";
+  const username = post.profiles?.username ? `@${post.profiles.username}` : null;
+  const avatarUrl = post.profiles?.avatar_url ?? undefined;
+  const isVerified = post.profiles?.is_verified ?? false;
+  const firstImage = post.media_urls?.[0] ?? null;
+
+  const handleShare = async () => {
+    const url = `${window.location.origin}/hub/post/${post.id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      // Fallback for browsers that block clipboard
+    }
+  };
+
+  const handleDeleteConfirm = () => {
+    onDelete?.(post.id);
+    setMenuOpen(false);
+    setConfirmingDelete(false);
+  };
 
   return (
     <motion.div
-      className="bg-gray-800 rounded-2xl border border-gray-700 overflow-hidden hover:border-gray-600 transition-colors"
+      className="bg-[#111418] rounded-2xl border border-gray-800 overflow-hidden hover:border-amber-500/30 transition-colors"
       whileHover={{ y: -2 }}
     >
       {/* User Info */}
       <div className="p-4 md:p-5 flex items-center gap-3">
         <div
-          onClick={() => onUserClick?.(post.user.id)}
-          className="cursor-pointer"
+          onClick={() => onUserClick?.(post.user_id)}
+          className="cursor-pointer shrink-0"
         >
-          <Avatar src={post.user.avatar} alt={post.user.name} size="lg" />
+          <Avatar src={avatarUrl} alt={displayName} size="lg" />
         </div>
+
         <div
-          className="flex-1 cursor-pointer"
-          onClick={() => onUserClick?.(post.user.id)}
+          className="flex-1 min-w-0 cursor-pointer"
+          onClick={() => onUserClick?.(post.user_id)}
         >
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 flex-wrap">
             <h3
-              className="font-semibold text-white text-base hover:text-[#FF8A1E] transition-colors"
+              className="font-semibold text-white text-base hover:text-[#F59E0B] transition-colors truncate"
               style={{ fontFamily: "var(--font-headline)" }}
             >
-              {post.user.name}
+              {displayName}
             </h3>
-            {post.user.isVerified && (
-              <BadgeCheck className="w-4 h-4 text-[#FF8A1E] fill-[#FF8A1E]" />
+            {isVerified && (
+              <BadgeCheck className="w-4 h-4 text-[#F59E0B] fill-[#F59E0B] shrink-0" />
             )}
           </div>
           <p
-            className="text-gray-400 text-sm font-normal"
+            className="text-gray-400 text-sm font-normal truncate"
             style={{ fontFamily: "var(--font-body)" }}
           >
-            {post.user.username} • {post.timestamp}
+            {username && <span>{username} • </span>}
+            {formatRelativeTime(post.created_at)}
           </p>
         </div>
 
-        {/* Three Dot Menu */}
+        {/* Three-dot menu — own posts only */}
         {isOwnPost && (
-          <div className="relative">
+          <div className="relative shrink-0">
             <motion.button
-              onClick={() => setMenuOpen(!menuOpen)}
+              onClick={() => {
+                setMenuOpen(!menuOpen);
+                setConfirmingDelete(false);
+              }}
               className="text-gray-400 hover:text-white p-2 rounded-full hover:bg-gray-700 transition-colors"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
@@ -88,31 +122,54 @@ export default function PostCard({
             <AnimatePresence>
               {menuOpen && (
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                  initial={{ opacity: 0, scale: 0.95, y: -8 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                  className="absolute right-0 mt-2 w-48 bg-gray-900 rounded-xl border border-gray-700 shadow-xl overflow-hidden z-10"
+                  exit={{ opacity: 0, scale: 0.95, y: -8 }}
+                  className="absolute right-0 mt-2 w-52 bg-[#0D1012] rounded-xl border border-gray-800 shadow-xl overflow-hidden z-10"
                 >
-                  <button
-                    onClick={() => {
-                      onEdit?.(post.id);
-                      setMenuOpen(false);
-                    }}
-                    className="flex items-center gap-3 w-full px-4 py-3 text-left text-white hover:bg-gray-800 transition-colors"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                    <span className="text-sm font-semibold">Edit Post</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      onDelete?.(post.id);
-                      setMenuOpen(false);
-                    }}
-                    className="flex items-center gap-3 w-full px-4 py-3 text-left text-red-500 hover:bg-gray-800 transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    <span className="text-sm font-semibold">Delete Post</span>
-                  </button>
+                  {!confirmingDelete ? (
+                    <>
+                      <button
+                        onClick={() => {
+                          onEdit?.(post);
+                          setMenuOpen(false);
+                        }}
+                        className="flex items-center gap-3 w-full px-4 py-3 text-left text-white hover:bg-gray-800/60 transition-colors"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                        <span className="text-sm font-semibold">Edit Post</span>
+                      </button>
+                      <button
+                        onClick={() => setConfirmingDelete(true)}
+                        className="flex items-center gap-3 w-full px-4 py-3 text-left text-red-500 hover:bg-gray-800/60 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        <span className="text-sm font-semibold">Delete Post</span>
+                      </button>
+                    </>
+                  ) : (
+                    <div className="p-4">
+                      <p className="text-white text-sm font-semibold mb-3">
+                        Delete this post?
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setConfirmingDelete(false)}
+                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-gray-800 text-gray-300 hover:text-white text-sm font-semibold transition-colors"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleDeleteConfirm}
+                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition-colors"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -130,101 +187,124 @@ export default function PostCard({
         </p>
       </div>
 
-      {/* Recipe Badge (if recipe post) */}
-      {isRecipePost && post.recipeTitle && (
+      {/* Recipe badge */}
+      {isRecipePost && post.recipe_id && (
         <div className="px-4 md:px-5 pb-4">
-          <Link href={`/kitchen/recipes/${post.recipeId}`}>
+          <Link href={`/kitchen/recipes/${post.recipe_id}`}>
             <motion.div
-              className="bg-gradient-to-br from-[#FF8A1E]/20 to-[#CC6A0F]/20 border border-[#FF8A1E]/30 rounded-xl p-4 hover:border-[#FF8A1E] transition-colors cursor-pointer"
+              className="bg-linear-to-br from-[#F59E0B]/20 to-[#D97706]/20 border border-[#F59E0B]/30 rounded-xl p-4 hover:border-[#F59E0B] transition-colors cursor-pointer"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
               <div className="flex items-center gap-3">
-                <div className="bg-[#FF8A1E] p-2 rounded-lg">
+                <div className="bg-[#F59E0B] p-2 rounded-lg shrink-0">
                   <ChefHat className="w-5 h-5 text-white" />
                 </div>
-                <div className="flex-1">
-                  <p className="text-[#FF8A1E] text-xs font-semibold uppercase tracking-wide mb-1">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[#F59E0B] text-xs font-semibold uppercase tracking-wide mb-0.5">
                     Recipe
                   </p>
-                  <h4
-                    className="text-white font-bold text-base"
-                    style={{ fontFamily: "var(--font-headline)" }}
+                  <p
+                    className="text-white text-sm font-normal truncate"
+                    style={{ fontFamily: "var(--font-body)" }}
                   >
-                    {post.recipeTitle}
-                  </h4>
+                    View linked recipe
+                  </p>
                 </div>
-                <div className="text-[#FF8A1E] text-sm font-semibold">
+                <span className="text-[#F59E0B] text-sm font-semibold shrink-0">
                   View →
-                </div>
+                </span>
               </div>
             </motion.div>
           </Link>
         </div>
       )}
 
-      {/* Post Image */}
-      {post.image && (
+      {/* Post image (first from media_urls) */}
+      {firstImage && (
         <Link href={`/hub/post/${post.id}`}>
-          <div className="relative w-full aspect-[16/10] bg-gray-700 cursor-pointer overflow-hidden group">
+          <div className="relative w-full aspect-16/10 bg-gray-700 cursor-pointer overflow-hidden group">
             <Image
-              src={post.image}
+              src={firstImage}
               alt="Post image"
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-300"
             />
+            {/* Multi-image indicator */}
+            {post.media_urls.length > 1 && (
+              <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm text-white text-xs font-semibold px-2 py-1 rounded-full">
+                1/{post.media_urls.length}
+              </div>
+            )}
           </div>
         </Link>
       )}
 
       {/* Actions */}
-      <div className="p-4 md:p-5 border-t border-gray-700">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-6">
+      <div className="p-4 md:p-5 border-t border-gray-800">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-5">
             <motion.button
-              onClick={() => onLike(post.id)}
-              className={`flex items-center gap-2 ${
-                post.isLiked ? "text-red-500" : "text-gray-400"
-              } hover:text-red-500 transition-colors`}
+              onClick={() => onLike(post.id, !!post.is_liked)}
+              className={`flex items-center gap-2 transition-colors ${
+                post.is_liked ? "text-red-500" : "text-gray-400 hover:text-red-500"
+              }`}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
             >
-              <Heart
-                className={`w-5 h-5 ${post.isLiked ? "fill-red-500" : ""}`}
-              />
-              <span className="text-sm font-semibold">{post.likes}</span>
+              <Heart className={`w-5 h-5 ${post.is_liked ? "fill-red-500" : ""}`} />
+              <span className="text-sm font-semibold">{post.like_count}</span>
             </motion.button>
 
             <Link href={`/hub/post/${post.id}`}>
               <motion.button
-                className="flex items-center gap-2 text-gray-400 hover:text-[#FF8A1E] transition-colors"
+                className="flex items-center gap-2 text-gray-400 hover:text-[#F59E0B] transition-colors"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
               >
                 <MessageCircle className="w-5 h-5" />
-                <span className="text-sm font-semibold">{post.comments}</span>
+                <span className="text-sm font-semibold">{post.comment_count}</span>
               </motion.button>
             </Link>
           </div>
 
-          <motion.button
-            className="text-gray-400 hover:text-[#FF8A1E] transition-colors"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            <Share2 className="w-5 h-5" />
-          </motion.button>
+          <div className="flex items-center gap-3">
+            {onBookmark && (
+              <motion.button
+                onClick={() => onBookmark(post.id, !!post.is_bookmarked)}
+                className={`transition-colors ${
+                  post.is_bookmarked
+                    ? "text-[#F59E0B]"
+                    : "text-gray-400 hover:text-[#F59E0B]"
+                }`}
+                title={post.is_bookmarked ? "Remove bookmark" : "Bookmark"}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <Bookmark className={`w-5 h-5 ${post.is_bookmarked ? "fill-[#F59E0B]" : ""}`} />
+              </motion.button>
+            )}
+            <motion.button
+              onClick={handleShare}
+              className="text-gray-400 hover:text-[#F59E0B] transition-colors"
+              title="Copy link"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <Share2 className="w-5 h-5" />
+            </motion.button>
+          </div>
         </div>
 
-        {/* Comment Preview */}
-        {post.comments > 0 && (
+        {/* Comment preview link */}
+        {post.comment_count > 0 && (
           <Link href={`/hub/post/${post.id}`}>
             <motion.div
               className="text-gray-400 hover:text-gray-300 text-sm cursor-pointer font-normal"
               style={{ fontFamily: "var(--font-body)" }}
               whileHover={{ x: 4 }}
             >
-              View all {post.comments} comments
+              View all {post.comment_count} comment{post.comment_count !== 1 ? "s" : ""}
             </motion.div>
           </Link>
         )}

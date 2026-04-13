@@ -517,8 +517,9 @@ main:has(.loading-header) {
 .growing-image-wrap {
   width: 100%;
   min-width: 1em;
-  height: 100%;
-  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .cover-image {

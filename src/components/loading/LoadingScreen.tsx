@@ -122,10 +122,10 @@ export default function LoadingScreen({ onLoadingComplete }: LoadingScreenProps)
               <div className="growing-image">
                 <div className="growing-image-wrap">
                   <Image
-                    className="cover-image"
                     src="/logo/logo.png"
                     alt="HalalMe Logo"
-                    fill
+                    width={80}
+                    height={80}
                     priority
                   />
                 </div>

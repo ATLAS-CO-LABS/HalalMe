@@ -133,7 +133,7 @@ export default function DashboardPage() {
               <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
                 <div>
                   <h1 className="text-4xl sm:text-5xl font-extrabold uppercase tracking-tighter leading-[0.88] text-[#F7E7CE]">
-                    {user?.name || "there"}
+                    {user?.full_name ?? user?.username ?? "there"}
                   </h1>
                   <p className="mt-2 text-sm text-[#F7E7CE]/40">
                     Your halal ecosystem dashboard
@@ -275,7 +275,7 @@ export default function DashboardPage() {
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="flex items-center gap-4 min-w-0">
                   <div className="w-10 h-10 bg-[#F7E7CE]/8 border border-[#F7E7CE]/12 flex items-center justify-center text-[#F7E7CE]/60 font-bold text-base shrink-0">
-                    {user?.name?.charAt(0)?.toUpperCase() || "U"}
+                    {(user?.full_name ?? user?.username)?.charAt(0)?.toUpperCase() ?? "U"}
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-bold text-[#F7E7CE]/70 truncate uppercase tracking-wide">
@@ -285,8 +285,8 @@ export default function DashboardPage() {
                       <Clock className="w-3 h-3 text-[#F7E7CE]/30 shrink-0" />
                       <p className="text-xs text-[#F7E7CE]/30">
                         Member since{" "}
-                        {user?.createdAt
-                          ? new Date(user.createdAt).toLocaleDateString("en-GB", { month: "short", year: "numeric" })
+                        {user?.created_at
+                          ? new Date(user.created_at).toLocaleDateString("en-GB", { month: "short", year: "numeric" })
                           : "Today"}
                       </p>
                     </div>
