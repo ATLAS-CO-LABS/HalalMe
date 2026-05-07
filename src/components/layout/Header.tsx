@@ -10,7 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 const serviceLinks = [
   { href: '/delivery', label: 'Delivery', desc: 'Halal food to your door'    },
   { href: '/kitchen',  label: 'Kitchen',  desc: 'Recipes & AI assistant'     },
-  { href: '/hub',      label: 'Hub',      desc: 'Community & sharing'        },
+  { href: '/hub',      label: 'Social',   desc: 'Community & sharing'        },
   { href: '/rewards',  label: 'Rewards',  desc: 'Give back, get rewarded'    },
 ];
 

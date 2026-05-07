@@ -31,7 +31,7 @@ const SERVICES = [
   },
   {
     num: "03",
-    name: "Hub",
+    name: "Social",
     tagline: "The halal social network",
     desc: "Connect with the global Muslim community. Share recipes, reviews, and halal finds.",
     link: "/hub",
@@ -189,7 +189,7 @@ export default function HorizontalServices() {
               </h2>
 
               {/* Tagline */}
-              <p className="text-[#F7E7CE]/35 text-[9px] md:text-[10px] uppercase tracking-[0.25em] mb-3 md:mb-4">
+              <p className="text-[#F7E7CE]/70 text-[9px] md:text-[10px] uppercase tracking-[0.25em] mb-3 md:mb-4">
                 {s.tagline}
               </p>
 

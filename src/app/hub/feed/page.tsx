@@ -538,7 +538,7 @@ function HubFeedContent({ isResumeTrigger = false }: { isResumeTrigger?: boolean
                 className="text-lg md:text-xl font-extrabold uppercase tracking-tight text-white"
                 style={{ fontFamily: "var(--font-headline)" }}
               >
-                HalalMe <span className="text-[#F59E0B]">Hub</span>
+                HalalMe <span className="text-[#F59E0B]">Social</span>
               </h1>
             </div>
 
@@ -572,7 +572,7 @@ function HubFeedContent({ isResumeTrigger = false }: { isResumeTrigger?: boolean
                   <Link href="/hub" onClick={() => setMobileMenuOpen(false)}>
                     <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white hover:bg-gray-800/80 transition-colors">
                       <Home className="w-5 h-5" />
-                      <span className="font-semibold">Hub Home</span>
+                      <span className="font-semibold">Social Home</span>
                     </div>
                   </Link>
                   <Link href="/kitchen" onClick={() => setMobileMenuOpen(false)}>
