@@ -319,7 +319,6 @@ export default function HubLandingPage() {
                       maskSize: "contain",
                       WebkitMaskRepeat: "no-repeat",
                       maskRepeat: "no-repeat",
-                      WebkitMaskMode: "alpha",
                       maskMode: "alpha",
                       WebkitMaskPosition: "center",
                       maskPosition: "center",
