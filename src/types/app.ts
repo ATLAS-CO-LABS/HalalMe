@@ -1586,8 +1586,9 @@ export interface UserBadge {
 export type PostType = "general" | "recipe" | "question" | "review";
 
 export interface AIMessage {
-  role:    "user" | "assistant";
-  content: string | Record<string, unknown>;
+  role:      "user" | "assistant";
+  content:   string | Record<string, unknown>;
+  timestamp?: string;
 }
 
 export interface AIAssistantResponse {
