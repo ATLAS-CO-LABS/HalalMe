@@ -702,7 +702,7 @@ function HubFeedContent({ isResumeTrigger = false }: { isResumeTrigger?: boolean
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.99 }}
                 >
-                  <Avatar src={u.avatar_url ?? undefined} alt={u.full_name} size="md" />
+                  <Avatar src={u.avatar_url ?? undefined} alt={u.full_name ?? ""} size="md" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
                       <span className="font-semibold text-white text-sm truncate">{u.full_name}</span>
