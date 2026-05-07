@@ -1585,6 +1585,33 @@ export interface UserBadge {
 
 export type PostType = "general" | "recipe" | "question" | "review";
 
+export interface AIMessage {
+  role:    "user" | "assistant";
+  content: string | Record<string, unknown>;
+}
+
+export interface AIAssistantResponse {
+  type:               "chat" | "recipe";
+  message:            string;
+  recipe:             {
+    title:          string;
+    description:    string;
+    cuisine:        string;
+    difficulty:     "easy" | "medium" | "hard";
+    prep_time_mins: number;
+    cook_time_mins: number;
+    servings:       number;
+    ingredients:    { name: string; amount: string; unit: string }[];
+    instructions:   { step: number; text: string }[];
+    tags:           string[];
+    nutrition:      { calories: number; protein: number; carbs: number; fat: number };
+  } | null;
+  recipe_id?:          string | null;
+  is_saved?:           boolean;
+  session_id?:         string | null;
+  requests_remaining?: number;
+}
+
 export interface UserSearchResult {
   id:          string;
   username:    string | null;
