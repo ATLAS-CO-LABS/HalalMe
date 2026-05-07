@@ -38,7 +38,7 @@ function HeroSection() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
-          className="text-5xl sm:text-6xl md:text-8xl lg:text-[clamp(4rem,10vw,10rem)] font-extrabold uppercase tracking-tighter leading-[0.88] text-[#F7E7CE]"
+          className="text-4xl sm:text-6xl md:text-8xl font-extrabold uppercase tracking-tighter leading-[0.88] text-[#F7E7CE]"
         >
           Help &amp;
           <br />
@@ -75,41 +75,72 @@ function FAQSection() {
     {
       category: 'General',
       questions: [
-        { q: 'What is HalalMe?',              a: 'HalalMe is a UK-focused halal ecosystem that brings together food delivery, recipes, community, charity, and travel services in one unified platform.' },
-        { q: 'Is HalalMe free to use?',       a: 'Yes! Creating an account and browsing services is completely free. You only pay when you place orders or use specific premium features.' },
+        { q: 'What is HalalMe?',                   a: 'HalalMe is a UK-focused halal lifestyle platform that brings together food delivery, AI-powered recipes, community, and charity rewards in one unified account.' },
+        { q: 'Is HalalMe free to use?',            a: 'Yes! Creating an account and browsing services is completely free. You only pay when you place orders through Delivery or donate through Rewards.' },
         { q: 'Which countries do you operate in?', a: 'We currently operate in the United Kingdom, with plans to expand to other regions in the future.' },
+        { q: 'How is HalalMe different from other food apps?', a: 'HalalMe is exclusively halal - every partner, recipe, and product is vetted. We also go beyond food, connecting delivery, recipes, community, and charity in one place.' },
+        { q: 'Are all services live?',             a: 'Delivery, Kitchen, Hub, and Rewards are live now. Additional services are in development and will be launched in future phases.' },
       ],
     },
     {
       category: 'Accounts & Login',
       questions: [
-        { q: 'How do I create an account?',                     a: 'Click the "Sign Up" button in the header, enter your email and password, and verify your email address to get started.' },
-        { q: 'Can I use one account for all HalalMe services?', a: 'Yes! One HalalMe account gives you access to all our services: Delivery, Kitchen, Fresh, Hub, Travel, and Rewards.' },
-        { q: "I forgot my password — what do I do?",            a: "Click \"Forgot Password\" on the login page, enter your email, and we'll send you a reset link." },
+        { q: 'How do I create an account?',                     a: 'Click the "Sign Up" button in the header, choose your account type, enter your email and password, and verify your email address to get started.' },
+        { q: 'Can I use one account for all HalalMe services?', a: 'Yes! One HalalMe account gives you access to all active services: Delivery, Kitchen, Hub, and Rewards - with more coming.' },
+        { q: 'I forgot my password - what do I do?',            a: 'Click "Forgot Password" on the login page, enter your email, and we\'ll send you a one-time password reset link.' },
+        { q: 'How do I update my profile information?',         a: 'Go to your Dashboard and click "Edit Profile" or navigate to the Settings page from the header.' },
+        { q: 'Can I delete my account?',                        a: 'Yes. Contact our support team at support@halalme.co.uk and we will process your account deletion request within 7 working days.' },
+        { q: 'Is my personal data safe?',                       a: 'Absolutely. We follow GDPR guidelines and never sell your data to third parties. See our Privacy Policy for full details.' },
       ],
     },
     {
-      category: 'Orders & Services',
+      category: 'Delivery',
       questions: [
-        { q: 'How does HalalMe Delivery work?', a: 'Browse verified halal restaurants, add items to your cart, and checkout. Your order will be prepared and delivered to your address.' },
-        { q: 'How do kitchens get approved?',   a: 'All kitchens undergo strict halal certification verification and quality checks before being listed on our platform.' },
-        { q: 'How do I earn or use rewards?',   a: 'Earn rewards through orders, community engagement, and charity donations. Use them for discounts or donate them to causes.' },
+        { q: 'How does HalalMe Delivery work?',         a: 'Browse verified halal restaurants near you, add items to your cart, and checkout. Your order will be prepared and delivered to your address.' },
+        { q: 'How are restaurants verified as halal?',  a: 'All restaurants must provide valid halal certification from a recognised body. Our team reviews and verifies each application before listing.' },
+        { q: 'What areas does delivery cover?',         a: 'We are currently expanding our delivery network across the UK. Check the Delivery page to see if your postcode is covered.' },
+        { q: 'Can I track my order?',                   a: 'Yes. Once your order is confirmed, you can track its status in real time from your account dashboard.' },
+        { q: 'What if my order is wrong or missing items?', a: 'Contact support immediately through the app or at support@halalme.co.uk with your order number and we will resolve it promptly.' },
+      ],
+    },
+    {
+      category: 'Kitchen & Recipes',
+      questions: [
+        { q: 'What is HalalMe Kitchen?',                   a: 'Kitchen is your halal recipe hub - browse thousands of verified halal recipes, generate AI-powered meal plans, and get step-by-step cooking guidance.' },
+        { q: 'How does the AI recipe assistant work?',     a: 'Our AI assistant uses your preferences, dietary requirements, and available ingredients to suggest personalised halal recipes and meal plans.' },
+        { q: 'Can I upload my own recipes?',               a: 'Yes! Signed-in users can upload and share their own halal recipes with the community from the Kitchen section.' },
+        { q: 'Are all recipes certified halal?',           a: 'All recipes on the platform are reviewed to ensure they use only halal ingredients. Community-uploaded recipes go through a moderation process.' },
+        { q: 'Can I save my favourite recipes?',           a: 'Yes. Hit the bookmark icon on any recipe to save it. Access all saved recipes from your Dashboard under "Saved Items".' },
+      ],
+    },
+    {
+      category: 'Hub & Community',
+      questions: [
+        { q: 'What is HalalMe Hub?',                      a: 'Hub is our halal community space where you can share posts, recipes, food experiences, and connect with Muslims around the world.' },
+        { q: 'How do I create a post on Hub?',            a: 'Sign in and click the "Create Post" button on the Hub page. You can add text, images, and tags to share with the community.' },
+        { q: 'Can I follow other users?',                  a: 'Yes. Visit any user\'s profile and click Follow. Their new posts will appear in your feed.' },
+        { q: 'How are posts moderated?',                   a: 'Our moderation team reviews flagged content. You can report any post or comment that violates our community guidelines.' },
+        { q: 'Is Hub free to use?',                        a: 'Yes, Hub is completely free. All you need is a HalalMe account to post, comment, follow, and engage with the community.' },
+      ],
+    },
+    {
+      category: 'Rewards & Charity',
+      questions: [
+        { q: 'How do I earn reward points?',              a: 'Earn points by placing orders through Delivery, engaging on Hub, saving recipes on Kitchen, and completing your profile.' },
+        { q: 'How do I use my reward points?',            a: 'Points can be redeemed for discounts on future orders, or donated to a verified Islamic charity of your choice through the Rewards page.' },
+        { q: 'Which charities are supported?',            a: 'We partner with verified UK-registered Islamic charities. You can browse and select from the full list on the Rewards page.' },
+        { q: 'Is my charity donation secure?',            a: 'Absolutely. All charity partners are verified organisations, and donations are processed through secure, transparent payment channels.' },
+        { q: 'Do reward points expire?',                  a: 'Points are valid for 12 months from the date they were earned. You will receive a reminder before any points are set to expire.' },
       ],
     },
     {
       category: 'Payments & Refunds',
       questions: [
-        { q: 'What payment methods are supported?', a: 'We accept all major credit/debit cards, Apple Pay, Google Pay, and PayPal.' },
-        { q: 'How do refunds work?',                a: 'Refunds are processed within 5-7 business days to your original payment method. Contact support for refund requests.' },
-        { q: 'Is my payment information secure?',   a: 'Yes! All payments are processed securely using industry-standard encryption and PCI-compliant payment gateways.' },
-      ],
-    },
-    {
-      category: 'Community & Rewards',
-      questions: [
-        { q: 'How does HalalMe Hub work?',        a: 'Hub is our community space where you can share recipes, post food experiences, and connect with other halal food lovers.' },
-        { q: 'How do donations & rewards work?',  a: 'You can donate to verified charities through our Rewards service and earn points that can be used for discounts or further donations.' },
-        { q: 'Is my charity donation secure?',    a: 'Absolutely. All charity partners are verified, and donations are processed through secure, transparent channels.' },
+        { q: 'What payment methods are supported?',  a: 'We accept all major credit and debit cards, Apple Pay, Google Pay, and PayPal.' },
+        { q: 'How do refunds work?',                 a: 'Refunds are processed within 5–7 business days to your original payment method. Contact support with your order number to request a refund.' },
+        { q: 'Is my payment information secure?',    a: 'Yes. All payments are processed through PCI-compliant, industry-standard encrypted payment gateways. We do not store your card details.' },
+        { q: 'Will I receive a receipt?',            a: 'Yes. A receipt is automatically emailed to your registered address after every successful transaction.' },
+        { q: 'Can I get a VAT invoice?',             a: 'Yes. Contact support@halalme.co.uk with your order details and we will issue a VAT invoice within 2 working days.' },
       ],
     },
   ];

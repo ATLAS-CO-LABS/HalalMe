@@ -5,13 +5,10 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 
 const services = [
-  { label: 'Delivery',    href: '/delivery'    },
-  { label: 'Fresh',       href: '/fresh'        },
-  { label: 'Kitchen',     href: '/kitchen'      },
-  { label: 'Hub',         href: '/hub'          },
-  { label: 'Travel',      href: '/travel'       },
-  { label: 'Rewards',     href: '/rewards'      },
-  { label: 'Marketplace', href: '/marketplace'  },
+  { label: 'Delivery', href: '/delivery' },
+  { label: 'Kitchen',  href: '/kitchen'  },
+  { label: 'Hub',      href: '/hub'      },
+  { label: 'Rewards',  href: '/rewards'  },
 ];
 
 const companyLinks = [
@@ -34,44 +31,24 @@ export default function Footer() {
   return (
     <footer className="relative bg-[#0A1C19]">
 
-      {/* ── Top CTA Band ─────────────────────────────────────── */}
-      <div className="bg-[#102C26] border-b border-[#F7E7CE]/8 px-6 py-14 md:py-16">
-        <div className="mx-auto max-w-[95vw] flex flex-col md:flex-row items-start md:items-center justify-between gap-10">
-          <div className="max-w-xl">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-6 h-px bg-[#F59E0B]" />
-              <p className="text-[#F59E0B] text-[10px] font-bold uppercase tracking-[0.3em]">
-                One platform. Everything Halal.
-              </p>
+      {/* ── Trust Strip ──────────────────────────────────────── */}
+      <div className="border-b border-[#F7E7CE]/8">
+        <div className="mx-auto max-w-[95vw] px-6 grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0 divide-[#F7E7CE]/8">
+          {[
+            { num: '01', title: 'Halal Certified',   body: 'Every partner and product is scholar-reviewed and certified.' },
+            { num: '02', title: 'Scholar Verified',  body: 'Our standards are set and audited by qualified Islamic scholars.' },
+            { num: '03', title: 'Community First',   body: 'Built by Muslims, for Muslims - recommendations from real people.' },
+            { num: '04', title: 'One Account',       body: 'Your profile, rewards, and history unified across all services.' },
+          ].map((item) => (
+            <div key={item.num} className="relative px-6 py-8 overflow-hidden">
+              <span aria-hidden="true" className="absolute -bottom-2 -right-1 text-[4rem] font-extrabold text-[#F7E7CE]/[0.04] leading-none select-none pointer-events-none">
+                {item.num}
+              </span>
+              <p className="text-[9px] font-bold text-[#F59E0B] uppercase tracking-[0.25em] mb-2">{item.num}</p>
+              <h3 className="text-sm font-extrabold uppercase tracking-tight text-[#F7E7CE]/80 mb-2">{item.title}</h3>
+              <p className="text-xs text-[#F7E7CE]/35 leading-relaxed">{item.body}</p>
             </div>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold uppercase tracking-tighter leading-[0.9] text-[#F7E7CE]">
-              Seven services.{' '}
-              <span className="text-[#F7E7CE]/45">One account.</span>
-            </h2>
-            <p className="text-[#F7E7CE]/45 text-sm mt-4 leading-relaxed">
-              Join thousands of Muslims living mindfully with HalalMe.
-            </p>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-3 shrink-0">
-            <Link href="/select-role">
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="px-7 py-3.5 bg-[#F7E7CE] text-[#102C26] font-bold uppercase tracking-tighter text-sm cursor-pointer whitespace-nowrap transition-opacity hover:opacity-90"
-              >
-                Create Free Account
-              </motion.div>
-            </Link>
-            <Link href="#how-it-works">
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="px-7 py-3.5 border border-[#F7E7CE]/20 text-[#F7E7CE]/70 font-semibold uppercase tracking-tighter text-sm cursor-pointer whitespace-nowrap hover:border-[#F7E7CE]/40 hover:text-[#F7E7CE] transition-all"
-              >
-                See How It Works
-              </motion.div>
-            </Link>
-          </div>
+          ))}
         </div>
       </div>
 
@@ -91,7 +68,7 @@ export default function Footer() {
               </span>
             </Link>
             <p className="text-[#F7E7CE]/45 text-sm leading-relaxed max-w-xs">
-              The complete Halal ecosystem — food, travel, community, and more. Built for Muslims, trusted worldwide.
+              The complete Halal ecosystem - food, travel, community, and more. Built for Muslims, trusted worldwide.
             </p>
             {/* Trust badge */}
             <div className="inline-flex items-center gap-2 bg-[#F7E7CE]/6 border border-[#F7E7CE]/12 px-4 py-2 w-fit">
@@ -143,18 +120,15 @@ export default function Footer() {
           {/* Services */}
           <div className="lg:col-span-3">
             <h3 className="text-[10px] font-bold text-[#F7E7CE]/30 uppercase tracking-[0.25em] mb-5">Our Services</h3>
-            <div className="flex flex-wrap gap-2">
+            <ul className="space-y-2.5">
               {services.map((s) => (
-                <Link key={s.href} href={s.href}>
-                  <motion.div
-                    whileHover={{ scale: 1.04, y: -1 }}
-                    className="inline-flex items-center px-3 py-1.5 bg-[#F7E7CE]/6 border border-[#F7E7CE]/10 text-xs font-semibold text-[#F7E7CE]/55 uppercase tracking-tight transition-all hover:bg-[#F7E7CE]/12 hover:text-[#F7E7CE] cursor-pointer"
-                  >
+                <li key={s.href}>
+                  <Link href={s.href} className="text-[#F7E7CE]/50 hover:text-[#F7E7CE] text-sm transition-colors">
                     {s.label}
-                  </motion.div>
-                </Link>
+                  </Link>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
 
           {/* Company links */}
@@ -199,8 +173,16 @@ export default function Footer() {
 
         </div>
 
+        {/* ── Disclaimer ───────────────────────────────────────── */}
+        <div className="mt-12 pt-8 border-t border-[#F7E7CE]/8">
+          <p className="text-[#F7E7CE]/25 text-[11px] leading-relaxed max-w-4xl">
+            <span className="font-semibold text-[#F7E7CE]/35 uppercase tracking-wide">Disclaimer: </span>
+            HalalMe endeavours to ensure all listed restaurants, products, and services meet halal standards. However, we cannot guarantee the halal status of every item at all times. Users are encouraged to verify independently where required. HalalMe is not a halal certification body. All charity donations are processed through verified third-party partners. HalalMe is not responsible for the actions of independent vendors or third-party service providers. By using our platform, you agree to our Terms of Service and Privacy Policy.
+          </p>
+        </div>
+
         {/* ── Bottom Bar ────────────────────────────────────────── */}
-        <div className="mt-12 pt-6 border-t border-[#F7E7CE]/8 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="mt-6 pt-6 border-t border-[#F7E7CE]/8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-[#F7E7CE]/25 text-xs">
             © {currentYear} HalalMe. Built with trust, technology &amp; purpose.
           </p>

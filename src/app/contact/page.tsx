@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { motion, useInView } from 'framer-motion';
-import { useRef, useState } from 'react';
-import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { motion, useInView } from "framer-motion";
+import { useRef, useState } from "react";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
 export default function ContactPage() {
   return (
@@ -38,7 +38,7 @@ function HeroSection() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
-          className="text-5xl sm:text-6xl md:text-8xl lg:text-[clamp(4rem,10vw,10rem)] font-extrabold uppercase tracking-tighter leading-[0.88] text-[#F7E7CE]"
+          className="text-4xl sm:text-6xl md:text-8xl font-extrabold uppercase tracking-tighter leading-[0.88] text-[#F7E7CE]"
         >
           Contact
           <br />
@@ -51,7 +51,8 @@ function HeroSection() {
           transition={{ delay: 0.4 }}
           className="mt-8 text-lg md:text-xl text-[#F7E7CE]/50 max-w-md leading-relaxed"
         >
-          We&apos;re here to help. Reach out for support, partnerships, or general inquiries.
+          We&apos;re here to help. Reach out for support, partnerships, or
+          general inquiries.
         </motion.p>
       </div>
 
@@ -70,27 +71,40 @@ function HeroSection() {
 function ContactFormSection() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.3 });
-  const [formData, setFormData] = useState({ fullName: '', email: '', subject: '', message: '' });
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    subject: "",
+    message: "",
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [submitStatus, setSubmitStatus] = useState<
+    "idle" | "success" | "error"
+  >("idle");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setTimeout(() => {
       setIsSubmitting(false);
-      setSubmitStatus('success');
-      setFormData({ fullName: '', email: '', subject: '', message: '' });
-      setTimeout(() => setSubmitStatus('idle'), 5000);
+      setSubmitStatus("success");
+      setFormData({ fullName: "", email: "", subject: "", message: "" });
+      setTimeout(() => setSubmitStatus("idle"), 5000);
     }, 1500);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const inputClass = "w-full px-4 py-3 bg-[#0A1C19] border border-[#F7E7CE]/12 text-[#F7E7CE] placeholder-[#F7E7CE]/20 focus:outline-none focus:border-[#F7E7CE]/40 transition-all text-sm";
-  const labelClass = "block text-xs font-bold text-[#F7E7CE]/45 uppercase tracking-[0.2em] mb-2";
+  const inputClass =
+    "w-full px-4 py-3.5 bg-[#0A1C19] border border-[#F7E7CE]/12 text-[#F7E7CE] placeholder-[#F7E7CE]/20 focus:outline-none focus:border-[#F7E7CE]/40 transition-all text-sm";
+  const labelClass =
+    "block text-xs font-bold text-[#F7E7CE]/45 uppercase tracking-[0.2em] mb-2";
 
   return (
     <section ref={ref} className="bg-[#102C26] px-6 py-24 md:py-32">
@@ -126,7 +140,8 @@ function ContactFormSection() {
               transition={{ delay: 0.2 }}
               className="text-[#F7E7CE]/45 text-sm md:text-base leading-relaxed max-w-sm"
             >
-              Fill in the form and we&apos;ll get back to you within 24 hours during business days.
+              Fill in the form and we&apos;ll get back to you within 24 hours
+              during business days.
             </motion.p>
           </div>
 
@@ -139,44 +154,81 @@ function ContactFormSection() {
             className="bg-[#0A1C19] border border-[#F7E7CE]/8 p-6 md:p-8 space-y-5"
           >
             <div>
-              <label htmlFor="fullName" className={labelClass}>Full Name *</label>
+              <label htmlFor="fullName" className={labelClass}>
+                Full Name *
+              </label>
               <input
-                type="text" id="fullName" name="fullName" required
-                value={formData.fullName} onChange={handleChange}
-                className={inputClass} placeholder="Enter your full name"
+                type="text"
+                id="fullName"
+                name="fullName"
+                required
+                value={formData.fullName}
+                onChange={handleChange}
+                className={inputClass}
+                placeholder="Enter your full name"
               />
             </div>
 
             <div>
-              <label htmlFor="email" className={labelClass}>Email Address *</label>
+              <label htmlFor="email" className={labelClass}>
+                Email Address *
+              </label>
               <input
-                type="email" id="email" name="email" required
-                value={formData.email} onChange={handleChange}
-                className={inputClass} placeholder="your.email@example.com"
+                type="email"
+                id="email"
+                name="email"
+                required
+                value={formData.email}
+                onChange={handleChange}
+                className={inputClass}
+                placeholder="your.email@example.com"
               />
             </div>
 
             <div>
-              <label htmlFor="subject" className={labelClass}>Subject *</label>
+              <label htmlFor="subject" className={labelClass}>
+                Subject *
+              </label>
               <select
-                id="subject" name="subject" required
-                value={formData.subject} onChange={handleChange}
+                id="subject"
+                name="subject"
+                required
+                value={formData.subject}
+                onChange={handleChange}
                 className={`${inputClass} cursor-pointer`}
               >
-                <option value="" className="bg-[#0A1C19]">Select a subject</option>
-                <option value="support" className="bg-[#0A1C19]">Support</option>
-                <option value="order" className="bg-[#0A1C19]">Order Issue</option>
-                <option value="partnership" className="bg-[#0A1C19]">Partnership</option>
-                <option value="charity" className="bg-[#0A1C19]">Charity / Rewards</option>
-                <option value="general" className="bg-[#0A1C19]">General Inquiry</option>
+                <option value="" className="bg-[#0A1C19]">
+                  Select a subject
+                </option>
+                <option value="support" className="bg-[#0A1C19]">
+                  Support
+                </option>
+                <option value="order" className="bg-[#0A1C19]">
+                  Order Issue
+                </option>
+                <option value="partnership" className="bg-[#0A1C19]">
+                  Partnership
+                </option>
+                <option value="charity" className="bg-[#0A1C19]">
+                  Charity / Rewards
+                </option>
+                <option value="general" className="bg-[#0A1C19]">
+                  General Inquiry
+                </option>
               </select>
             </div>
 
             <div>
-              <label htmlFor="message" className={labelClass}>Message *</label>
+              <label htmlFor="message" className={labelClass}>
+                Message *
+              </label>
               <textarea
-                id="message" name="message" required rows={5}
-                value={formData.message} onChange={handleChange}
+                id="message"
+                name="message"
+                required
+                rows={5}
+                value={formData.message}
+                onChange={handleChange}
                 className={`${inputClass} resize-none`}
                 placeholder="Tell us how we can help..."
               />
@@ -187,18 +239,18 @@ function ContactFormSection() {
               disabled={isSubmitting}
               className="w-full flex items-center justify-center gap-3 py-4 bg-[#F7E7CE] text-[#102C26] font-extrabold uppercase tracking-tighter text-base hover:bg-[#F7E7CE]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {isSubmitting ? 'Sending…' : 'Send Message'}
+              {isSubmitting ? "Sending…" : "Send Message"}
               {!isSubmitting && <ArrowRight className="w-4 h-4" />}
             </button>
 
-            {submitStatus === 'success' && (
+            {submitStatus === "success" && (
               <motion.div
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-[#102C26] border border-[#F7E7CE]/15 p-4"
               >
                 <p className="text-[#F7E7CE]/70 text-sm text-center font-semibold uppercase tracking-tight">
-                  Message sent — we&apos;ll get back to you soon.
+                  Message sent - we&apos;ll get back to you soon.
                 </p>
               </motion.div>
             )}
@@ -216,9 +268,24 @@ function SupportChannelsSection() {
   const isInView = useInView(ref, { once: true, amount: 0.3 });
 
   const channels = [
-    { num: '01', title: 'General Support',         email: 'support@halalme.co.uk',  desc: 'For account help, orders, and general questions'                  },
-    { num: '02', title: 'Business & Partnerships', email: 'partners@halalme.co.uk', desc: 'For restaurant partnerships and business inquiries'              },
-    { num: '03', title: 'Charity & Rewards',       email: 'rewards@halalme.co.uk',  desc: 'For charity partnerships and reward program questions'          },
+    {
+      num: "01",
+      title: "General Support",
+      email: "support@halalme.co.uk",
+      desc: "For account help, orders, and general questions",
+    },
+    {
+      num: "02",
+      title: "Business & Partnerships",
+      email: "partners@halalme.co.uk",
+      desc: "For restaurant partnerships and business inquiries",
+    },
+    {
+      num: "03",
+      title: "Charity & Rewards",
+      email: "rewards@halalme.co.uk",
+      desc: "For charity partnerships and reward program questions",
+    },
   ];
 
   return (
@@ -289,14 +356,23 @@ function BusinessInfoSection() {
   const isInView = useInView(ref, { once: true, amount: 0.3 });
 
   const info = [
-    { label: 'Company Name',       value: 'HalalMe Ltd'                                                                     },
-    { label: 'Country',            value: 'United Kingdom'                                                                   },
-    { label: 'Support Hours',      value: 'Mon–Fri: 9:00 AM – 6:00 PM GMT\nSat–Sun: 10:00 AM – 4:00 PM GMT'                },
-    { label: 'Response Time',      value: 'We aim to respond within 24 hours during business days'                           },
+    { label: "Company Name", value: "HalalMe Delivery Ltd" },
+    { label: "Country", value: "United Kingdom" },
+    {
+      label: "Support Hours",
+      value: "Mon–Fri: 9:00 AM – 6:00 PM GMT\nSat–Sun: 10:00 AM – 4:00 PM GMT",
+    },
+    {
+      label: "Response Time",
+      value: "We aim to respond within 24 hours during business days",
+    },
   ];
 
   return (
-    <section ref={ref} className="relative overflow-hidden bg-[#F7E7CE] py-24 md:py-32 px-6">
+    <section
+      ref={ref}
+      className="relative overflow-hidden bg-[#F7E7CE] py-24 md:py-32 px-6"
+    >
       <div className="max-w-[95vw] mx-auto relative z-10">
         <motion.div
           initial={{ opacity: 0 }}
@@ -347,8 +423,18 @@ function BusinessInfoSection() {
             href="/"
             className="inline-flex items-center gap-2 text-[#102C26]/50 hover:text-[#102C26] text-sm font-semibold uppercase tracking-wide transition-colors"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              />
             </svg>
             Back to Home
           </Link>

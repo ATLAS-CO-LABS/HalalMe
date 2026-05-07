@@ -41,7 +41,7 @@ function HeroSection() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
-          className="text-5xl sm:text-6xl md:text-8xl lg:text-[clamp(4rem,10vw,10rem)] font-extrabold uppercase tracking-tighter leading-[0.88] text-[#F7E7CE]"
+          className="text-4xl sm:text-6xl md:text-8xl font-extrabold uppercase tracking-tighter leading-[0.88] text-[#F7E7CE]"
         >
           About
           <br />
@@ -54,7 +54,7 @@ function HeroSection() {
           transition={{ delay: 0.4 }}
           className="mt-8 text-lg md:text-xl text-[#F7E7CE]/50 max-w-xl leading-relaxed"
         >
-          Building the leading halal lifestyle ecosystem — where food, community, and purpose meet.
+          Building the leading halal lifestyle ecosystem - where food, community, and purpose meet.
         </motion.p>
       </div>
 
@@ -107,7 +107,7 @@ function WhoWeAreSection() {
             transition={{ delay: 0.2, duration: 0.6 }}
             className="text-[#F7E7CE]/55 text-base md:text-lg leading-relaxed pt-2"
           >
-            HalalMe is a UK-focused halal ecosystem designed to make halal living easier, more transparent, and more rewarding — from food delivery to community and charity. We bring together everything you need for a complete halal lifestyle in one trusted platform.
+            HalalMe is a UK-focused halal ecosystem designed to make halal living easier, more transparent, and more rewarding - from food delivery to community and charity. We bring together everything you need for a complete halal lifestyle in one trusted platform.
           </motion.p>
         </div>
       </div>
@@ -122,13 +122,10 @@ function WhatWeOfferSection() {
   const isInView = useInView(ref, { once: true, amount: 0.2 });
 
   const services = [
-    { num: '01', name: 'Delivery',    desc: 'Halal food delivery from trusted partners'        },
-    { num: '02', name: 'Kitchen',     desc: 'Home-style kitchens & curated halal meals'        },
-    { num: '03', name: 'Fresh',       desc: 'Pre-made ready meals delivered fresh'            },
-    { num: '04', name: 'Hub',         desc: 'Community posts, recipes, and discussions'       },
-    { num: '05', name: 'Rewards',     desc: 'Charity, sadaqah & reward-based donations'       },
-    { num: '06', name: 'Travel',      desc: 'Online travel recommendations and flight booking' },
-    { num: '07', name: 'Marketplace', desc: 'Halal products & everyday essentials'            },
+    { num: '01', name: 'Delivery', desc: 'Halal food delivery from trusted, certified partners' },
+    { num: '02', name: 'Kitchen',  desc: 'AI-powered recipes and home-style halal meal guides'  },
+    { num: '03', name: 'Hub',      desc: 'Community posts, recipes, and halal discussions'      },
+    { num: '04', name: 'Rewards',  desc: 'Charity, sadaqah & reward-based donations'            },
   ];
 
   return (
@@ -194,10 +191,26 @@ function WhyDifferentSection() {
   const isInView = useInView(ref, { once: true, amount: 0.3 });
 
   const differences = [
-    '100% halal-focused ecosystem',
-    'Community-driven platform',
-    'Transparency & trust at every step',
-    'Purpose beyond profit — charity & rewards',
+    {
+      num: '01',
+      title: '100% Halal-Focused',
+      desc: 'Every restaurant, recipe, product, and partner on our platform is halal-vetted. We never list anything that does not meet our standards.',
+    },
+    {
+      num: '02',
+      title: 'Community-Driven',
+      desc: 'HalalMe is built by Muslims, for Muslims. Real reviews, shared recipes, and honest recommendations from people who live this lifestyle daily.',
+    },
+    {
+      num: '03',
+      title: 'Transparency & Trust',
+      desc: 'We are open about our certification process, our partners, and our practices. No hidden agendas - just a platform you can rely on.',
+    },
+    {
+      num: '04',
+      title: 'Purpose Beyond Profit',
+      desc: 'Every transaction earns points you can donate to verified Islamic charities. We believe a business should give back, not just take.',
+    },
   ];
 
   return (
@@ -214,38 +227,43 @@ function WhyDifferentSection() {
           </span>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 gap-12 md:gap-20 items-start">
-          <motion.h2
-            initial={{ opacity: 0, y: 30 }}
-            animate={isInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.6 }}
-            className="text-4xl sm:text-5xl md:text-6xl font-extrabold uppercase tracking-tighter leading-[0.88] text-[#F7E7CE]"
-          >
-            Why HalalMe
-            <br />
-            <span className="text-[#F7E7CE]/45">Is Different</span>
-          </motion.h2>
+        <motion.h2
+          initial={{ opacity: 0, y: 30 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6 }}
+          className="text-4xl sm:text-5xl md:text-6xl font-extrabold uppercase tracking-tighter leading-[0.88] text-[#F7E7CE] mb-14 md:mb-20"
+        >
+          Why HalalMe
+          <br />
+          <span className="text-[#F7E7CE]/45">Is Different</span>
+        </motion.h2>
 
-          <ul className="space-y-4 pt-2">
-            {differences.map((item, i) => (
-              <motion.li
-                key={i}
-                initial={{ opacity: 0, x: -20 }}
-                animate={isInView ? { opacity: 1, x: 0 } : {}}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="flex items-start gap-4 border-b border-[#F7E7CE]/8 pb-4 last:border-0 last:pb-0"
+        <div className="grid sm:grid-cols-2 gap-px bg-[#F7E7CE]/8">
+          {differences.map((item, i) => (
+            <motion.div
+              key={item.num}
+              initial={{ opacity: 0, y: 30 }}
+              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.5, delay: i * 0.1 }}
+              className="group relative bg-[#102C26] border border-[#F7E7CE]/8 p-8 md:p-10 overflow-hidden hover:bg-[#F7E7CE] transition-colors duration-300 cursor-default"
+            >
+              <span
+                aria-hidden="true"
+                className="absolute -top-4 -right-2 text-[6rem] font-extrabold text-[#0A1C19] group-hover:text-[#102C26]/15 leading-none select-none pointer-events-none transition-colors duration-300"
               >
-                <div className="flex-shrink-0 w-6 h-6 bg-[#F7E7CE]/8 border border-[#F7E7CE]/15 flex items-center justify-center mt-0.5">
-                  <svg className="w-3.5 h-3.5 text-[#F7E7CE]/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <span className="text-[#F7E7CE]/65 text-base md:text-lg leading-relaxed">
-                  {item}
-                </span>
-              </motion.li>
-            ))}
-          </ul>
+                {item.num}
+              </span>
+              <div className="relative z-10">
+                <p className="text-[#F59E0B] text-[10px] font-bold uppercase tracking-[0.25em] mb-4 group-hover:text-[#102C26]/50 transition-colors duration-300">{item.num}</p>
+                <h3 className="text-xl md:text-2xl font-extrabold uppercase tracking-tighter text-[#F7E7CE] group-hover:text-[#102C26] mb-3 transition-colors duration-300">
+                  {item.title}
+                </h3>
+                <p className="text-[#F7E7CE]/50 group-hover:text-[#102C26]/65 leading-relaxed text-sm md:text-base transition-colors duration-300">
+                  {item.desc}
+                </p>
+              </div>
+            </motion.div>
+          ))}
         </div>
       </div>
     </section>
@@ -260,7 +278,7 @@ function OurValuesSection() {
 
   const values = [
     { num: '01', Icon: ShieldCheck, title: 'Trust & Transparency',    desc: 'Every service is verified and halal-certified, ensuring complete transparency.'             },
-    { num: '02', Icon: Fingerprint, title: 'Community First',         desc: 'Built by the community, for the community — your voice matters in everything we do.'        },
+    { num: '02', Icon: Fingerprint, title: 'Community First',         desc: 'Built by the community, for the community - your voice matters in everything we do.'        },
     { num: '03', Icon: BookOpen,    title: 'Halal Integrity',         desc: '100% commitment to halal standards across all our services, no compromises.'               },
     { num: '04', Icon: ArrowRight,  title: 'Innovation with Purpose', desc: 'Using technology to make halal living easier, more rewarding, and more connected.'          },
   ];
@@ -361,7 +379,7 @@ function FutureVisionSection() {
           transition={{ delay: 0.25 }}
           className="text-[#F7E7CE]/55 text-base md:text-lg max-w-2xl leading-relaxed"
         >
-          We aim to become the leading halal lifestyle platform in the UK and beyond — empowering users, partners, and communities globally. Our vision is to create a world where accessing halal services is seamless, trustworthy, and rewarding.
+          We aim to become the leading halal lifestyle platform in the UK and beyond - empowering users, partners, and communities globally. Our vision is to create a world where accessing halal services is seamless, trustworthy, and rewarding.
         </motion.p>
       </div>
 
@@ -425,11 +443,6 @@ function CTASection() {
             <button className="flex items-center gap-3 px-8 py-4 bg-[#102C26] text-[#F7E7CE] font-extrabold uppercase tracking-tighter text-base hover:bg-[#0A1C19] transition-colors">
               Explore Services
               <ArrowRight className="w-5 h-5" />
-            </button>
-          </Link>
-          <Link href="/contact">
-            <button className="flex items-center gap-3 px-8 py-4 border-2 border-[#102C26] text-[#102C26] font-extrabold uppercase tracking-tighter text-base hover:bg-[#102C26] hover:text-[#F7E7CE] transition-colors">
-              Contact Us
             </button>
           </Link>
         </motion.div>

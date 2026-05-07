@@ -8,13 +8,10 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 
 const serviceLinks = [
-  { href: '/delivery',    label: 'Delivery',    desc: 'Halal food to your door'         },
-  { href: '/fresh',       label: 'Fresh',       desc: 'Chef-prepared meals'             },
-  { href: '/kitchen',     label: 'Kitchen',     desc: 'Recipes & AI assistant'          },
-  { href: '/hub',         label: 'Hub',         desc: 'Community & sharing'             },
-  { href: '/travel',      label: 'Travel',      desc: 'Flights, hotels & cars'          },
-  { href: '/rewards',     label: 'Rewards',     desc: 'Give back, get rewarded'         },
-  { href: '/marketplace', label: 'Marketplace', desc: 'Halal products & essentials'     },
+  { href: '/delivery', label: 'Delivery', desc: 'Halal food to your door'    },
+  { href: '/kitchen',  label: 'Kitchen',  desc: 'Recipes & AI assistant'     },
+  { href: '/hub',      label: 'Hub',      desc: 'Community & sharing'        },
+  { href: '/rewards',  label: 'Rewards',  desc: 'Give back, get rewarded'    },
 ];
 
 const infoLinks = [
@@ -371,7 +368,7 @@ export default function Header() {
                   className="mx-3 mt-3 mb-4 bg-[#0A1C19] border border-[#F7E7CE]/8 px-4 py-3"
                 >
                   <p className="text-[#F59E0B] text-[10px] font-bold uppercase tracking-widest mb-0.5">HalalMe</p>
-                  <p className="text-[#F7E7CE] text-sm font-bold leading-snug">Seven services.<br />One account.</p>
+                  <p className="text-[#F7E7CE] text-sm font-bold leading-snug">Four services.<br />One account.</p>
                 </motion.div>
 
                 {/* Services */}

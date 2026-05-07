@@ -4,7 +4,7 @@ import { useRef, useState, useEffect } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import FlowingMenu from "@/components/navigation/FlowingMenu";
+import HorizontalServices from "@/components/navigation/HorizontalServices";
 import LoadingScreen from "@/components/loading/LoadingScreen";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -14,7 +14,6 @@ import {
   LayoutGrid,
   Zap,
   ArrowRight,
-  Star,
   ChevronDown,
   Fingerprint,
 } from "lucide-react";
@@ -46,7 +45,7 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      {/* Primary bg is deep forest — visible green, not near-black */}
+      {/* Primary bg is deep forest - visible green, not near-black */}
       <div
         className={`min-h-screen bg-[#102C26] font-sans antialiased selection:bg-[#F7E7CE] selection:text-[#102C26] ${
           isLoading ? "overflow-hidden h-screen" : ""
@@ -55,7 +54,7 @@ export default function Home() {
         <HeroSection />
 
         <div className="relative z-10 mt-[100vh]">
-          {/* Champagne ticker — forest + champagne, no amber dominance */}
+          {/* Champagne ticker - forest + champagne, no amber dominance */}
           <ServiceTicker />
 
           {/* Stats on dark contrast bg */}
@@ -64,9 +63,9 @@ export default function Home() {
           {/* Features */}
           <FeaturesSection />
 
-          {/* Seven Services */}
-          <section className="bg-[#102C26] py-24 md:py-32 overflow-hidden">
-            <div className="max-w-[95vw] mx-auto px-6 md:px-10 mb-14 md:mb-20">
+          {/* Seven Services - header (outside pinned section so overflow-hidden doesn't break GSAP pin) */}
+          <div className="bg-[#102C26] pt-24 md:pt-32 pb-12 md:pb-16">
+            <div className="max-w-[95vw] mx-auto px-6 md:px-10">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-8 h-px bg-[#F59E0B]" />
                 <span className="text-[#F59E0B] text-[10px] md:text-xs uppercase tracking-[0.3em] font-bold">
@@ -74,29 +73,15 @@ export default function Home() {
                 </span>
               </div>
               <h2 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-extrabold uppercase tracking-tighter leading-[0.88] text-[#F7E7CE]">
-                Seven Services.
+                Four Services.
                 <br />
                 <span className="text-[#F7E7CE]/50">One Unified Account.</span>
               </h2>
             </div>
-            <FlowingMenu
-              items={[
-                { link: "/delivery",    text: "HalalMe Delivery",    image: "/images/services/halal01.jpg" },
-                { link: "/kitchen",     text: "HalalMe Kitchen",     image: "/images/services/halal05.jpg" },
-                { link: "/fresh",       text: "HalalMe Fresh",       image: "/images/services/halal02.jpg" },
-                { link: "/hub",         text: "HalalMe Hub",         image: "/images/services/halal03.jpg" },
-                { link: "/travel",      text: "HalalMe Travel",      image: "/images/services/halal04.jpg" },
-                { link: "/rewards",     text: "HalalMe Rewards",     image: "/images/services/halal01.jpg" },
-                { link: "/marketplace", text: "HalalMe Marketplace", image: "/images/services/halal03.jpg" },
-              ]}
-              speed={20}
-              textColor="#F7E7CE"
-              bgColor="transparent"
-              marqueeBgColor="#F7E7CE"
-              marqueeTextColor="#102C26"
-              borderColor="rgba(247,231,206,0.1)"
-            />
-          </section>
+          </div>
+
+          {/* Horizontal scroll - pinned by GSAP, must not be inside overflow-hidden */}
+          <HorizontalServices />
 
           <HowItWorksSection />
           <FinalCTA />
@@ -126,10 +111,15 @@ function HeroSection() {
           src="/images/hero/halal5.jpg"
           alt="Halal Lifestyle"
           fill
-          className="object-cover opacity-20 scale-105"
+          className="object-cover opacity-100 scale-105"
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#102C26] via-[#102C26]/92 to-[#102C26]/55" />
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `linear-gradient(to right, #102C26F5 0%, #102C26D0 30%, #102C2699 55%, #102C2622 100%)`,
+          }}
+        />
       </div>
 
       <div className="container mx-auto px-6 md:px-10 relative z-10 pt-20">
@@ -159,11 +149,11 @@ function HeroSection() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.32, duration: 0.7 }}
-              className="block text-[clamp(3rem,8vw,8rem)] text-[#F7E7CE]"
+              className="block text-[clamp(2.25rem,8vw,8rem)] text-[#F7E7CE]"
             >
-              Halal Living,
+              Halal Living
             </motion.span>
-            <span className="block text-[clamp(3rem,8vw,8rem)] min-h-[1em]">
+            <span className="block text-[clamp(2.25rem,8vw,8rem)] min-h-[1em]">
               <AnimatePresence mode="wait">
                 <motion.span
                   key={wordIndex}
@@ -208,7 +198,10 @@ function HeroSection() {
             )}
             <a href="#how-it-works">
               <motion.button
-                whileHover={{ scale: 1.03, backgroundColor: "rgba(247,231,206,0.08)" }}
+                whileHover={{
+                  scale: 1.03,
+                  backgroundColor: "rgba(247,231,206,0.08)",
+                }}
                 whileTap={{ scale: 0.97 }}
                 className="flex items-center gap-3 px-7 sm:px-8 py-3.5 sm:py-4 border-2 border-[#F7E7CE]/25 text-[#F7E7CE] font-extrabold uppercase tracking-tighter text-sm sm:text-base transition-all"
               >
@@ -223,17 +216,14 @@ function HeroSection() {
   );
 }
 
-/* ─── Service Ticker — champagne bg, forest text ───────────────────── */
+/* ─── Service Ticker - champagne bg, forest text ───────────────────── */
 
 function ServiceTicker() {
   const services = [
     "HalalMe Delivery",
     "HalalMe Kitchen",
-    "HalalMe Fresh",
     "HalalMe Hub",
-    "HalalMe Travel",
     "HalalMe Rewards",
-    "HalalMe Marketplace",
   ];
 
   return (
@@ -249,7 +239,10 @@ function ServiceTicker() {
       `}</style>
       <div
         className="hm-ticker-track flex whitespace-nowrap"
-        style={{ animation: "hm-ticker 28s linear infinite", width: "max-content" }}
+        style={{
+          animation: "hm-ticker 28s linear infinite",
+          width: "max-content",
+        }}
       >
         {[...services, ...services].map((s, i) => (
           <span
@@ -257,7 +250,9 @@ function ServiceTicker() {
             className="inline-flex items-center gap-8 md:gap-12 px-8 md:px-12 text-[#102C26] font-extrabold uppercase tracking-tighter text-base md:text-xl"
           >
             {s}
-            <span className="text-[#102C26]/25 text-sm" aria-hidden="true">✦</span>
+            <span className="text-[#102C26]/25 text-sm" aria-hidden="true">
+              ✦
+            </span>
           </span>
         ))}
       </div>
@@ -265,14 +260,14 @@ function ServiceTicker() {
   );
 }
 
-/* ─── Stats Strip — dark contrast, champagne numbers ──────────────── */
+/* ─── Stats Strip - dark contrast, champagne numbers ──────────────── */
 
 function StatsStrip() {
   const stats = [
-    { value: "50K+", label: "Active Users"  },
-    { value: "500+", label: "Halal Vendors" },
-    { value: "7",    label: "Services"      },
-    { value: "40+",  label: "Countries"     },
+    { value: "1K+", label: "Active Users" },
+    { value: "1000+", label: "Halal Vendors" },
+    { value: "4", label: "Services" },
+    { value: "40+", label: "Countries" },
   ];
 
   return (
@@ -294,7 +289,7 @@ function StatsStrip() {
   );
 }
 
-/* ─── Features — champagne hover inversion ─────────────────────────── */
+/* ─── Features - champagne hover inversion ─────────────────────────── */
 
 function FeaturesSection() {
   const ref = useRef(null);
@@ -346,7 +341,7 @@ function FeaturesSection() {
         </motion.h2>
       </div>
 
-      {/* gap-px hairline grid — hover inverts to champagne */}
+      {/* gap-px hairline grid - hover inverts to champagne */}
       <div className="max-w-[95vw] mx-auto px-6 md:px-10 grid md:grid-cols-3 gap-px bg-[#F7E7CE]/8">
         {features.map((f, i) => {
           const Icon = f.Icon;
@@ -382,7 +377,7 @@ function FeaturesSection() {
   );
 }
 
-/* ─── How It Works — champagne hover inversion ─────────────────────── */
+/* ─── How It Works - champagne hover inversion ─────────────────────── */
 
 function HowItWorksSection() {
   const ref = useRef(null);
@@ -398,7 +393,7 @@ function HowItWorksSection() {
     {
       num: "02",
       title: "Select Service",
-      desc: "Choose from Delivery, Kitchen, Fresh, Travel, Hub, Rewards, and Marketplace. All connected, all Halal certified.",
+      desc: "Choose from Delivery, Kitchen, Hub, and Rewards. All connected, all Halal certified.",
       Icon: LayoutGrid,
     },
     {
@@ -410,7 +405,11 @@ function HowItWorksSection() {
   ];
 
   return (
-    <section id="how-it-works" ref={ref} className="bg-[#0A1C19] py-24 md:py-32">
+    <section
+      id="how-it-works"
+      ref={ref}
+      className="bg-[#0A1C19] py-24 md:py-32"
+    >
       <div className="max-w-[95vw] mx-auto px-6 md:px-10 mb-14 md:mb-20">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
@@ -449,7 +448,7 @@ function HowItWorksSection() {
             >
               <div
                 aria-hidden="true"
-                className="text-[6rem] md:text-[8rem] lg:text-[9rem] font-extrabold leading-none tracking-tighter text-[#102C26] group-hover:text-[#0A1C19]/15 transition-colors duration-300 select-none mb-2"
+                className="text-[6rem] md:text-[8rem] lg:text-[9rem] font-extrabold leading-none tracking-tighter text-[#F7E7CE]/10 group-hover:text-[#0A1C19]/15 transition-colors duration-300 select-none mb-2"
               >
                 {step.num}
               </div>
@@ -468,7 +467,7 @@ function HowItWorksSection() {
   );
 }
 
-/* ─── Final CTA — champagne bg, forest text ────────────────────────── */
+/* ─── Final CTA - champagne bg, forest text ────────────────────────── */
 
 function FinalCTA() {
   const ref = useRef(null);
@@ -476,7 +475,10 @@ function FinalCTA() {
   const { user } = useAuth();
 
   return (
-    <section ref={ref} className="relative overflow-hidden bg-[#F7E7CE] py-28 md:py-36">
+    <section
+      ref={ref}
+      className="relative overflow-hidden bg-[#F7E7CE] py-28 md:py-36"
+    >
       <div className="relative z-10 max-w-[95vw] mx-auto px-6 md:px-10">
         <motion.div
           initial={{ opacity: 0 }}
@@ -524,9 +526,10 @@ function FinalCTA() {
               </button>
             </Link>
           )}
-          <Link href="/contact">
+          <Link href="/select-role">
             <button className="flex items-center gap-3 px-8 py-4 border-2 border-[#102C26] text-[#102C26] font-extrabold uppercase tracking-tighter text-base hover:bg-[#102C26] hover:text-[#F7E7CE] transition-colors">
-              Contact Support
+              Start Your Journey
+              <ArrowRight className="w-5 h-5" />
             </button>
           </Link>
         </motion.div>
@@ -537,19 +540,17 @@ function FinalCTA() {
           transition={{ delay: 0.4 }}
           className="flex flex-wrap gap-6 md:gap-10"
         >
-          {[
-            { Icon: ShieldCheck, text: "100% Halal Certified" },
-            { Icon: Star,        text: "4.9/5 User Rating"    },
-            { Icon: Zap,         text: "Instant Setup"        },
-          ].map((item, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-2 text-[#102C26]/50 text-xs md:text-sm font-semibold uppercase tracking-wide"
-            >
-              <item.Icon className="w-4 h-4" />
-              {item.text}
-            </div>
-          ))}
+          {[{ Icon: ShieldCheck, text: "100% Halal Certified" }].map(
+            (item, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-2 text-[#102C26]/50 text-xs md:text-sm font-semibold uppercase tracking-wide"
+              >
+                <item.Icon className="w-4 h-4" />
+                {item.text}
+              </div>
+            ),
+          )}
         </motion.div>
       </div>
 
