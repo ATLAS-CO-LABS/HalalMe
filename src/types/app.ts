@@ -1643,6 +1643,7 @@ export interface Post {
   recipe_id:     string | null;
   like_count:    number;
   comment_count: number;
+  view_count:    number;
   is_liked:      boolean;
   is_bookmarked: boolean;
   created_at:    string;

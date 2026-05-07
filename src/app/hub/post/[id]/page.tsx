@@ -169,7 +169,7 @@ function PostDetailContent({ id }: { id: string }) {
   // ---------------------------------------------------------------------------
   // Like comment (optimistic)
   // ---------------------------------------------------------------------------
-  const handleLikeComment = useCallback(async (commentId: string, parentId: string | null, wasLiked: boolean) => {
+  const handleLikeComment = useCallback(async (commentId: string, _parentId: string | null, wasLiked: boolean) => {
     if (!user) return;
 
     const toggle = (c: Comment): Comment => {
@@ -497,9 +497,9 @@ function PostDetailContent({ id }: { id: string }) {
           {firstImage && (
             <div className="relative w-full aspect-16/10 bg-gray-700">
               <Image src={firstImage} alt="Post image" fill className="object-cover" />
-              {post.media_urls.length > 1 && (
+              {(post.media_urls?.length ?? 0) > 1 && (
                 <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm text-white text-xs font-semibold px-2 py-1 rounded-full">
-                  1/{post.media_urls.length}
+                  1/{post.media_urls!.length}
                 </div>
               )}
             </div>
