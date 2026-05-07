@@ -1583,6 +1583,17 @@ export interface UserBadge {
   award_reason: string | null;
 }
 
+export type PostType = "general" | "recipe" | "question" | "review";
+
+export interface UserSearchResult {
+  id:          string;
+  username:    string | null;
+  full_name:   string | null;
+  avatar_url:  string | null;
+  is_verified: boolean | null;
+  bio:         string | null;
+}
+
 export interface Post {
   id:            string;
   user_id:       string;
