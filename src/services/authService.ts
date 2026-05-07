@@ -123,18 +123,4 @@ export const authService = {
     if (error) throw new Error(error.message);
   },
 
-  onAuthStateChange(callback: (user: Profile | null) => void) {
-    return supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (!session?.user) {
-        callback(null);
-        return;
-      }
-      try {
-        callback(await hydrateProfileFromSession());
-      } catch (error) {
-        console.warn("[auth] hydrate:", error instanceof Error ? error.message : error);
-        callback(null);
-      }
-    });
-  },
 };

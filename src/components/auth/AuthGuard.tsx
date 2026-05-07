@@ -17,7 +17,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // Enforce profile completion — username is required
+    // Enforce profile completion - username is required
     if (!user.username && pathname !== "/complete-profile") {
       router.push("/complete-profile");
     }

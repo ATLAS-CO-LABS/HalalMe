@@ -1,8 +1,16 @@
+import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import LoginForm from "@/components/auth/LoginForm";
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ redirect?: string }>;
+}) {
+  const { redirect } = await searchParams;
+  const backHref = redirect ?? "/";
+
   return (
     <div className="bg-[#0A1C19] border border-[#F7E7CE]/10 p-6 sm:p-8">
       {/* Logo + heading */}
@@ -27,13 +35,27 @@ export default function LoginPage() {
 
       <div className="h-px w-full bg-[#F7E7CE]/8 mb-7" />
 
-      <LoginForm />
+      <Suspense fallback={
+        <div className="h-48 flex items-center justify-center">
+          <span className="w-5 h-5 border-2 border-[#F7E7CE]/20 border-t-[#F7E7CE]/60 rounded-full animate-spin" />
+        </div>
+      }>
+        <LoginForm />
+      </Suspense>
 
-      <div className="mt-6 pt-5 border-t border-[#F7E7CE]/8">
+      <div className="mt-6 pt-5 border-t border-[#F7E7CE]/8 space-y-3">
         <p className="text-center text-xs text-[#F7E7CE]/30">
           New here?{" "}
           <Link href="/select-role" className="text-[#F7E7CE]/60 hover:text-[#F7E7CE] font-semibold transition-colors">
             Create a free account
+          </Link>
+        </p>
+        <p className="text-center text-xs">
+          <Link
+            href={backHref}
+            className="text-[#F7E7CE]/25 hover:text-[#F7E7CE]/50 transition-colors"
+          >
+            ← Continue browsing without signing in
           </Link>
         </p>
       </div>

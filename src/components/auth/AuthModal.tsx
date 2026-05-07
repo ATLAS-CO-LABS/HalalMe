@@ -6,11 +6,10 @@ import { X, Eye, EyeOff, ChefHat, ArrowRight, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import type { AuthGateModalProps } from "@/hooks/useAuthGate";
 
-// ── Palette (matches Kitchen AI dark theme) ────────────────────────
-const BG    = "#0D0A17";
-const CREAM = "#F7E7CE";
-const FX    = "#a21caf";
-const FX2   = "#a855f7";
+// ── Palette (matches platform teal theme) ─────────────────────────
+const BG     = "#0A1C19";
+const TEAL   = "#102C26";
+const CREAM  = "#F7E7CE";
 const BORDER = `${CREAM}12`;
 
 // ── Tiny field component ───────────────────────────────────────────
@@ -35,7 +34,7 @@ function Field({
     <div>
       <label
         className="block text-[10px] font-bold uppercase mb-1.5"
-        style={{ color: `${CREAM}45`, letterSpacing: "0.2em" }}
+        style={{ color: `${CREAM}59`, letterSpacing: "0.22em" }}
       >
         {label}
       </label>
@@ -46,14 +45,14 @@ function Field({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           disabled={disabled}
-          className="w-full h-11 px-3.5 text-sm outline-none transition-colors disabled:opacity-40"
+          className="w-full h-12 px-4 text-sm outline-none transition-colors disabled:opacity-50 placeholder:text-[#F7E7CE]/20"
           style={{
-            backgroundColor: `${CREAM}06`,
+            backgroundColor: TEAL,
             border: `1px solid ${BORDER}`,
             color: CREAM,
             fontFamily: "var(--font-body)",
           }}
-          onFocus={(e) => (e.currentTarget.style.borderColor = `${FX2}55`)}
+          onFocus={(e) => (e.currentTarget.style.borderColor = `${CREAM}66`)}
           onBlur={(e) => (e.currentTarget.style.borderColor = BORDER)}
         />
         {right && (
@@ -96,29 +95,37 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
         type={showPw ? "text" : "password"}
         value={password}
         onChange={setPassword}
-        placeholder="••••••••"
+        placeholder="Enter your password"
         disabled={loading}
         right={
           <button type="button" tabIndex={-1} onClick={() => setShowPw((v) => !v)}
-            style={{ color: `${CREAM}35` }}>
+            className="text-[#F7E7CE]/30 hover:text-[#F7E7CE]/60 transition-colors">
             {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         }
       />
 
       {error && (
-        <p className="text-[11px]" style={{ color: "#f87171" }}>{error}</p>
+        <div className="bg-red-900/20 border border-red-500/20 p-3 flex items-center gap-2 text-xs text-red-300">
+          <X className="w-3.5 h-3.5 shrink-0" />
+          {error}
+        </div>
       )}
 
       <button
         type="submit"
         disabled={loading || !email || !password}
-        className="w-full h-11 flex items-center justify-center gap-2 text-[11px] font-extrabold uppercase transition-opacity disabled:opacity-40"
-        style={{ backgroundColor: FX, color: "#fff", letterSpacing: "0.18em" }}
+        className="w-full h-12 flex items-center justify-center gap-2 text-[11px] font-extrabold uppercase transition-colors hover:bg-[#F7E7CE]/90 disabled:opacity-50 disabled:cursor-not-allowed"
+        style={{ backgroundColor: CREAM, color: TEAL, letterSpacing: "0.18em" }}
       >
-        {loading
-          ? <Loader2 className="w-4 h-4 animate-spin" />
-          : <><ArrowRight className="w-3.5 h-3.5" /> Sign In</>}
+        {loading ? (
+          <>
+            <span className="w-4 h-4 border-2 border-[#102C26]/30 border-t-[#102C26] rounded-full animate-spin" />
+            Signing in…
+          </>
+        ) : (
+          <>Sign In <ArrowRight className="w-3.5 h-3.5" /></>
+        )}
       </button>
     </form>
   );
@@ -127,22 +134,29 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
 // ── Signup tab ─────────────────────────────────────────────────────
 function SignupForm({ onSuccess }: { onSuccess: () => void }) {
   const { signup } = useAuth();
-  const [name, setName]         = useState("");
-  const [email, setEmail]       = useState("");
-  const [password, setPassword] = useState("");
-  const [showPw, setShowPw]     = useState(false);
-  const [error, setError]       = useState("");
-  const [loading, setLoading]   = useState(false);
+  const [name, setName]               = useState("");
+  const [email, setEmail]             = useState("");
+  const [password, setPassword]       = useState("");
+  const [confirmPw, setConfirmPw]     = useState("");
+  const [showPw, setShowPw]           = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [error, setError]             = useState("");
+  const [loading, setLoading]         = useState(false);
   const [verifyNeeded, setVerifyNeeded] = useState(false);
 
   const passwordOk =
     password.length >= 8 && /[A-Z]/.test(password) && /[0-9]/.test(password);
+  const passwordsMatch = password === confirmPw;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     if (!passwordOk) {
       setError("Password needs 8+ chars, 1 uppercase, 1 number");
+      return;
+    }
+    if (!passwordsMatch) {
+      setError("Passwords do not match");
       return;
     }
     setLoading(true);
@@ -163,7 +177,8 @@ function SignupForm({ onSuccess }: { onSuccess: () => void }) {
   if (verifyNeeded) {
     return (
       <div className="py-4 text-center space-y-3">
-        <div className="w-10 h-10 mx-auto flex items-center justify-center" style={{ backgroundColor: `${FX}25`, border: `1px solid ${FX}40` }}>
+        <div className="w-10 h-10 mx-auto flex items-center justify-center"
+          style={{ backgroundColor: `${TEAL}`, border: `1px solid ${CREAM}20` }}>
           <span className="text-xl">📧</span>
         </div>
         <p className="text-sm font-bold" style={{ color: CREAM }}>Check your email</p>
@@ -191,35 +206,57 @@ function SignupForm({ onSuccess }: { onSuccess: () => void }) {
           disabled={loading}
           right={
             <button type="button" tabIndex={-1} onClick={() => setShowPw((v) => !v)}
-              style={{ color: `${CREAM}35` }}>
+              className="text-[#F7E7CE]/30 hover:text-[#F7E7CE]/60 transition-colors">
               {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           }
         />
-        {/* password strength dots */}
         {password.length > 0 && (
           <div className="flex gap-1.5 mt-1.5">
             {[password.length >= 8, /[A-Z]/.test(password), /[0-9]/.test(password)].map((ok, i) => (
               <span key={i} className="h-1 flex-1 transition-colors"
-                style={{ backgroundColor: ok ? FX2 : `${CREAM}12` }} />
+                style={{ backgroundColor: ok ? `${CREAM}90` : `${CREAM}12` }} />
             ))}
           </div>
         )}
       </div>
 
+      <Field
+        label="Confirm Password"
+        type={showConfirm ? "text" : "password"}
+        value={confirmPw}
+        onChange={setConfirmPw}
+        placeholder="Re-enter your password"
+        disabled={loading}
+        right={
+          <button type="button" tabIndex={-1} onClick={() => setShowConfirm((v) => !v)}
+            className="text-[#F7E7CE]/30 hover:text-[#F7E7CE]/60 transition-colors">
+            {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        }
+      />
+
       {error && (
-        <p className="text-[11px]" style={{ color: "#f87171" }}>{error}</p>
+        <div className="bg-red-900/20 border border-red-500/20 p-3 flex items-center gap-2 text-xs text-red-300">
+          <X className="w-3.5 h-3.5 shrink-0" />
+          {error}
+        </div>
       )}
 
       <button
         type="submit"
-        disabled={loading || !name || !email || !password}
-        className="w-full h-11 flex items-center justify-center gap-2 text-[11px] font-extrabold uppercase transition-opacity disabled:opacity-40"
-        style={{ backgroundColor: FX, color: "#fff", letterSpacing: "0.18em" }}
+        disabled={loading || !name || !email || !password || !confirmPw}
+        className="w-full h-12 flex items-center justify-center gap-2 text-[11px] font-extrabold uppercase transition-colors hover:bg-[#F7E7CE]/90 disabled:opacity-50 disabled:cursor-not-allowed"
+        style={{ backgroundColor: CREAM, color: TEAL, letterSpacing: "0.18em" }}
       >
-        {loading
-          ? <Loader2 className="w-4 h-4 animate-spin" />
-          : <><ArrowRight className="w-3.5 h-3.5" /> Create Account</>}
+        {loading ? (
+          <>
+            <span className="w-4 h-4 border-2 border-[#102C26]/30 border-t-[#102C26] rounded-full animate-spin" />
+            Creating account…
+          </>
+        ) : (
+          <>Create Account <ArrowRight className="w-3.5 h-3.5" /></>
+        )}
       </button>
     </form>
   );
@@ -238,17 +275,18 @@ export function AuthModal({ isOpen, onClose, onSuccess, message }: AuthGateModal
             className="absolute inset-0"
             style={{ backgroundColor: "rgba(0,0,0,0.78)", backdropFilter: "blur(6px)" }}
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.12 }}
             onClick={onClose}
           />
 
           {/* Card */}
           <motion.div
-            className="relative w-full max-w-sm"
-            style={{ backgroundColor: BG, border: `1px solid ${CREAM}0F` }}
-            initial={{ opacity: 0, scale: 0.94, y: 12 }}
+            className="relative w-full max-w-sm overflow-y-auto max-h-[90vh]"
+            style={{ backgroundColor: BG, border: `1px solid ${CREAM}10` }}
+            initial={{ opacity: 0, scale: 0.96, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.94, y: 12 }}
-            transition={{ type: "spring", stiffness: 340, damping: 28 }}
+            exit={{ opacity: 0, scale: 0.96, y: 8 }}
+            transition={{ duration: 0.16, ease: [0.25, 0.1, 0.25, 1] }}
           >
             {/* Close */}
             <button
@@ -262,8 +300,9 @@ export function AuthModal({ isOpen, onClose, onSuccess, message }: AuthGateModal
             <div className="px-6 pt-6 pb-7">
               {/* Header */}
               <div className="flex items-center gap-2.5 mb-5">
-                <div className="w-8 h-8 flex items-center justify-center shrink-0" style={{ backgroundColor: FX }}>
-                  <ChefHat className="w-4 h-4 text-white" strokeWidth={1.5} />
+                <div className="w-8 h-8 flex items-center justify-center shrink-0"
+                  style={{ backgroundColor: TEAL, border: `1px solid ${CREAM}15` }}>
+                  <ChefHat className="w-4 h-4" style={{ color: CREAM }} strokeWidth={1.5} />
                 </div>
                 <div>
                   <p className="text-[10px] font-extrabold uppercase" style={{ color: `${CREAM}40`, letterSpacing: "0.22em" }}>
@@ -289,9 +328,9 @@ export function AuthModal({ isOpen, onClose, onSuccess, message }: AuthGateModal
                     onClick={() => setTab(t)}
                     className="flex-1 pb-2.5 text-[10px] font-extrabold uppercase transition-colors"
                     style={{
-                      color: tab === t ? FX2 : `${CREAM}30`,
+                      color: tab === t ? CREAM : `${CREAM}30`,
                       letterSpacing: "0.18em",
-                      borderBottom: `2px solid ${tab === t ? FX2 : "transparent"}`,
+                      borderBottom: `2px solid ${tab === t ? CREAM : "transparent"}`,
                       marginBottom: -1,
                     }}
                   >
@@ -304,28 +343,16 @@ export function AuthModal({ isOpen, onClose, onSuccess, message }: AuthGateModal
               <AnimatePresence mode="wait">
                 <motion.div
                   key={tab}
-                  initial={{ opacity: 0, x: tab === "signup" ? -10 : 10 }}
+                  initial={{ opacity: 0, x: tab === "signup" ? -8 : 8 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0 }}
-                  transition={{ duration: 0.15 }}
+                  transition={{ duration: 0.1 }}
                 >
                   {tab === "signin"
                     ? <LoginForm onSuccess={onSuccess ?? (() => {})} />
                     : <SignupForm onSuccess={onSuccess ?? (() => {})} />}
                 </motion.div>
               </AnimatePresence>
-
-              {/* Footer switch */}
-              <p className="mt-4 text-center text-[10px]" style={{ color: `${CREAM}28` }}>
-                {tab === "signup" ? "Already have an account? " : "Don't have an account? "}
-                <button
-                  onClick={() => setTab(tab === "signup" ? "signin" : "signup")}
-                  className="underline transition-opacity hover:opacity-80"
-                  style={{ color: `${CREAM}55` }}
-                >
-                  {tab === "signup" ? "Sign in" : "Sign up free"}
-                </button>
-              </p>
             </div>
           </motion.div>
         </div>

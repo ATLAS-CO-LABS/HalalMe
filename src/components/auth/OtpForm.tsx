@@ -12,7 +12,7 @@ interface OtpFormProps {
 }
 
 export default function OtpForm({ value, onChange, onSubmit, isLoading, error, length = 6 }: OtpFormProps) {
-  // Build an array of exactly `length` slots — never relies on padEnd with empty fill
+  // Build an array of exactly `length` slots - never relies on padEnd with empty fill
   const digits = Array.from({ length }, (_, i) => value[i] ?? "");
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
 

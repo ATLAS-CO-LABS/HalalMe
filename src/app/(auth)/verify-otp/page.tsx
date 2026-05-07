@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { authService, isRateLimitError } from "@/services/authService";
+import { useAuth } from "@/hooks/useAuth";
 import { startCooldown, getCooldownRemaining, COOLDOWN_SECONDS } from "@/lib/otpCooldown";
 import { minDelay } from "@/lib/minDelay";
 import OtpForm from "@/components/auth/OtpForm";
@@ -21,6 +22,7 @@ function maskEmail(email: string): string {
 function VerifyOtpContent() {
   const router = useRouter();
   const params = useSearchParams();
+  const { refreshUser } = useAuth();
 
   const rawEmail  = params.get("email") ?? "";
   const type      = (params.get("type") ?? "signup") as "signup" | "reset";
@@ -60,20 +62,25 @@ function VerifyOtpContent() {
     try {
       if (type === "signup") {
         await minDelay(authService.verifySignupOtp(email, otp));
+        // onAuthStateChange no longer runs, so manually sync the new session
+        // into AuthContext before navigating to the protected dashboard.
+        await refreshUser();
         router.push(redirect ?? "/dashboard");
       } else {
         await minDelay(authService.verifyPasswordResetOtp(email, otp));
+        // Same — reset-password page checks useAuth().user; sync first.
+        await refreshUser();
         router.push("/reset-password");
       }
     } catch (err) {
       if (isRateLimitError(err)) {
         setError("Too many attempts. Please wait a minute before trying again.");
       } else {
-        setError("Invalid or expired code — request a new one below.");
+        setError("Invalid or expired code - request a new one below.");
       }
       setIsVerifying(false);
     }
-  }, [email, otp, type, router, isVerifying]);
+  }, [email, otp, type, router, isVerifying, refreshUser, redirect]);
 
   const handleResend = useCallback(async () => {
     if (cooldown > 0 || isResending) return;

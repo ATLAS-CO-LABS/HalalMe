@@ -24,23 +24,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let active = true;
 
-    // Initial session check — minDelay prevents a <400ms flash of the loading state
+    // onAuthStateChange is intentionally not used: its async callback dead-locks
+    // the Supabase client after a tab switch when the user is logged in, causing
+    // all subsequent API calls to hang silently. Initial auth state is handled
+    // here via refreshUser(); login/logout/OTP flows call refreshUser() manually.
     minDelay(authService.refreshUser(), 400)
       .then((profile) => { if (active) setUser(profile); })
       .catch(() => { if (active) setUser(null); })
       .finally(() => { if (active) setIsLoading(false); });
 
-    // Subscribe to all auth events: login, OTP verify, logout, token refresh
-    const { data: subscription } = authService.onAuthStateChange((profile) => {
-      if (!active) return;
-      setUser(profile);
-      setIsLoading(false);
-    });
-
-    return () => {
-      active = false;
-      subscription.subscription.unsubscribe();
-    };
+    return () => { active = false; };
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {

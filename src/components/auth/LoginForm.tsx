@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { Eye, EyeOff, ArrowRight, X } from "lucide-react";
@@ -14,6 +14,7 @@ const labelClass =
 
 export default function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -27,7 +28,8 @@ export default function LoginForm() {
     setIsLoading(true);
     try {
       await login(email, password);
-      router.push("/dashboard");
+      const redirect = searchParams.get("redirect");
+      router.push(redirect || "/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {

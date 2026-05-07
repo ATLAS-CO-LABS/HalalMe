@@ -16,7 +16,7 @@ import { authGateAnalytics } from "@/lib/analytics/authGate";
 //
 // When the modal opens we persist the action's human-readable message so the
 // intent survives same-session navigations. We cannot serialise the closure
-// itself, so replaying the action across navigations is not attempted — only
+// itself, so replaying the action across navigations is not attempted - only
 // the intent label is kept for analytics / context.
 //
 // Scenario covered: user hits the gate → dismisses the modal → navigates to
@@ -31,7 +31,7 @@ function writeIntent(message: string | undefined): void {
   try {
     sessionStorage.setItem(INTENT_KEY, JSON.stringify({ message, ts: Date.now() }));
   } catch {
-    // Quota exceeded or SSR — non-fatal.
+    // Quota exceeded or SSR - non-fatal.
   }
 }
 
@@ -98,14 +98,14 @@ export function AuthGateProvider({ children }: { children: React.ReactNode }) {
   // Fires after the React commit phase, guaranteeing every component that
   // consumes useAuth() has already re-rendered with the new user value.
   // Action handlers that use the `userRef` pattern (see recipe/upload pages)
-  // will therefore read fresh user state — no setTimeout race.
+  // will therefore read fresh user state - no setTimeout race.
   useEffect(() => {
     if (!replayPending || !user) return;
 
     const action = pendingRef.current;
     if (!action) return;
 
-    // Replay lock — prevents re-entrant execution in the same in-flight window.
+    // Replay lock - prevents re-entrant execution in the same in-flight window.
     if (replayLockRef.current) return;
     replayLockRef.current = true;
 
@@ -121,7 +121,7 @@ export function AuthGateProvider({ children }: { children: React.ReactNode }) {
     } finally {
       replayLockRef.current = false;
     }
-    // Intentionally omitting `message` from deps — messageRef.current is used
+    // Intentionally omitting `message` from deps - messageRef.current is used
     // instead to avoid spurious re-runs if message changes for other reasons.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [replayPending, user]);
@@ -129,7 +129,7 @@ export function AuthGateProvider({ children }: { children: React.ReactNode }) {
   // ── requireAuth ───────────────────────────────────────────────────
   const requireAuth = useCallback(
     (action: () => void, msg?: string) => {
-      // Already authenticated — execute immediately, no modal needed.
+      // Already authenticated - execute immediately, no modal needed.
       if (user) {
         action();
         return;

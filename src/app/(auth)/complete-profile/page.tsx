@@ -119,7 +119,7 @@ export default function CompleteProfilePage() {
           Hey, {firstName}.
         </h1>
         <p className="mt-2 text-[#F7E7CE]/45 text-sm leading-relaxed">
-          Before you dive in — let's set up how the community sees you.
+          Before you dive in - let's set up how the community sees you.
         </p>
       </div>
 
@@ -200,7 +200,7 @@ export default function CompleteProfilePage() {
                     JPG, PNG or WebP · max 5 MB
                   </p>
                   <p className="text-xs text-[#F7E7CE]/20 italic">
-                    Optional — you can always add one later.
+                    Optional - you can always add one later.
                   </p>
                 </div>
               )}
@@ -217,7 +217,7 @@ export default function CompleteProfilePage() {
             Pick your username
           </h2>
           <p className="text-xs text-[#F7E7CE]/35 mb-5">
-            This is how people find you — make it yours.
+            This is how people find you - make it yours.
           </p>
 
           <div className="relative">
@@ -256,7 +256,7 @@ export default function CompleteProfilePage() {
             )}
             {!usernameError && availState === "taken" && (
               <p className="text-xs text-red-400">
-                That one's taken — try something a bit different.
+                That one's taken - try something a bit different.
               </p>
             )}
             {!usernameError && availState === "available" && (
@@ -292,7 +292,7 @@ export default function CompleteProfilePage() {
             </>
           ) : (
             <>
-              I&apos;m ready — let&apos;s go
+              I&apos;m ready - let&apos;s go
               <ArrowRight className="h-4 w-4" />
             </>
           )}
