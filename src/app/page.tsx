@@ -271,7 +271,13 @@ function StatsStrip() {
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-[#F7E7CE]/8">
+    <div
+      className="grid grid-cols-2 md:grid-cols-4 gap-px bg-[#F7E7CE]/8"
+      style={{
+        borderTop: "1px solid #F59E0B40",
+        borderBottom: "1px solid #F59E0B40",
+      }}
+    >
       {stats.map((s, i) => (
         <div
           key={i}
@@ -299,7 +305,7 @@ function FeaturesSection() {
     {
       num: "01",
       title: "One Identity",
-      desc: "Single sign-on for all 7 services. Your profile, preferences, and rewards sync seamlessly across the entire HalalMe ecosystem.",
+      desc: "Single sign-on for all 4 services. Your profile, preferences, and rewards sync seamlessly across the entire HalalMe ecosystem.",
       Icon: Fingerprint,
     },
     {
@@ -317,7 +323,14 @@ function FeaturesSection() {
   ];
 
   return (
-    <section ref={ref} className="bg-[#102C26] py-24 md:py-32">
+    <section
+      ref={ref}
+      className="bg-[#102C26] py-24 md:py-32"
+      style={{
+        borderTop: "1px solid #F59E0B50",
+        borderBottom: "1px solid #F59E0B50",
+      }}
+    >
       <div className="max-w-[95vw] mx-auto px-6 md:px-10 mb-14 md:mb-20">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
@@ -342,7 +355,15 @@ function FeaturesSection() {
       </div>
 
       {/* gap-px hairline grid - hover inverts to champagne */}
-      <div className="max-w-[95vw] mx-auto px-6 md:px-10 grid md:grid-cols-3 gap-px bg-[#F7E7CE]/8">
+      <div
+        className="max-w-[95vw] mx-auto px-6 md:px-10 grid md:grid-cols-3"
+        style={{
+          gap: "1px",
+          backgroundColor: "#F7E7CE",
+          borderLeft: "2px solid #F7E7CE",
+          borderRight: "2px solid #F7E7CE",
+        }}
+      >
         {features.map((f, i) => {
           const Icon = f.Icon;
           return (
@@ -355,7 +376,7 @@ function FeaturesSection() {
             >
               <span
                 aria-hidden="true"
-                className="absolute -top-6 -right-3 text-[8rem] md:text-[10rem] font-extrabold text-[#0A1C19] group-hover:text-[#102C26]/15 leading-none select-none pointer-events-none transition-colors duration-300"
+                className="absolute -top-6 -right-3 text-[8rem] md:text-[10rem] font-extrabold text-[#F7E7CE]/8 group-hover:text-[#102C26]/20 leading-none select-none pointer-events-none transition-colors duration-300"
               >
                 {f.num}
               </span>
@@ -409,6 +430,10 @@ function HowItWorksSection() {
       id="how-it-works"
       ref={ref}
       className="bg-[#0A1C19] py-24 md:py-32"
+      style={{
+        borderTop: "1px solid #F59E0B50",
+        borderBottom: "1px solid #F59E0B50",
+      }}
     >
       <div className="max-w-[95vw] mx-auto px-6 md:px-10 mb-14 md:mb-20">
         <motion.div
@@ -435,7 +460,15 @@ function HowItWorksSection() {
         </motion.h2>
       </div>
 
-      <div className="max-w-[95vw] mx-auto px-6 md:px-10 grid md:grid-cols-3 gap-px bg-[#F7E7CE]/8">
+      <div
+        className="max-w-[95vw] mx-auto px-6 md:px-10 grid md:grid-cols-3"
+        style={{
+          gap: "1px",
+          backgroundColor: "#F7E7CE",
+          borderLeft: "2px solid #F7E7CE",
+          borderRight: "2px solid #F7E7CE",
+        }}
+      >
         {steps.map((step, i) => {
           const Icon = step.Icon;
           return (
@@ -448,7 +481,7 @@ function HowItWorksSection() {
             >
               <div
                 aria-hidden="true"
-                className="text-[6rem] md:text-[8rem] lg:text-[9rem] font-extrabold leading-none tracking-tighter text-[#F7E7CE]/10 group-hover:text-[#0A1C19]/15 transition-colors duration-300 select-none mb-2"
+                className="text-[6rem] md:text-[8rem] lg:text-[9rem] font-extrabold leading-none tracking-tighter text-[#F7E7CE]/10 group-hover:text-[#102C26]/20 transition-colors duration-300 select-none mb-2"
               >
                 {step.num}
               </div>
@@ -478,6 +511,7 @@ function FinalCTA() {
     <section
       ref={ref}
       className="relative overflow-hidden bg-[#F7E7CE] py-28 md:py-36"
+      style={{ borderTop: "1px solid #F59E0B80" }}
     >
       <div className="relative z-10 max-w-[95vw] mx-auto px-6 md:px-10">
         <motion.div
