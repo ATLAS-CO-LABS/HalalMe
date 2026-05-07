@@ -1594,6 +1594,46 @@ export interface UserSearchResult {
   bio:         string | null;
 }
 
+export interface Comment {
+  id:         string;
+  post_id:    string;
+  user_id:    string;
+  parent_id:  string | null;
+  content:    string;
+  like_count: number;
+  created_at: string;
+  is_liked?:  boolean;
+  replies?:   Comment[];
+  profiles?: {
+    username:   string | null;
+    avatar_url: string | null;
+  } | null;
+}
+
+export interface Notification {
+  id:         string;
+  user_id:    string;
+  actor_id:   string;
+  type:       string;
+  post_id:    string | null;
+  comment_id: string | null;
+  is_read:    boolean;
+  created_at: string;
+  actor?: {
+    username:  string | null;
+    full_name: string | null;
+    avatar_url: string | null;
+  } | null;
+}
+
+export interface PaginatedResult<T> {
+  data:     T[];
+  count:    number;
+  page:     number;
+  pageSize: number;
+  hasMore:  boolean;
+}
+
 export interface Post {
   id:            string;
   user_id:       string;
