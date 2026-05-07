@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { gsap } from "gsap";
@@ -142,8 +142,39 @@ export default function HorizontalServices() {
 
               {/* Heading */}
               <h2 className="font-extrabold uppercase tracking-tighter leading-[0.88] mb-4 md:mb-5">
-                <span className="block text-[#F7E7CE]/35 text-base md:text-2xl lg:text-3xl mb-1">
-                  HalalMe
+                <span className="flex items-center gap-2 mb-2 normal-case">
+                  <span
+                    style={{
+                      position: "relative",
+                      width: 26,
+                      height: 26,
+                      flexShrink: 0,
+                      display: "inline-block",
+                    }}
+                  >
+                    <span
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        backgroundColor: s.accent,
+                        WebkitMaskImage: "url(/logo/logo.png)",
+                        maskImage: "url(/logo/logo.png)",
+                        WebkitMaskSize: "contain",
+                        maskSize: "contain",
+                        WebkitMaskRepeat: "no-repeat",
+                        maskRepeat: "no-repeat",
+                        maskMode: "alpha",
+                        WebkitMaskPosition: "center",
+                        maskPosition: "center",
+                      } as React.CSSProperties}
+                    />
+                  </span>
+                  <span
+                    className="text-base md:text-2xl lg:text-3xl font-black tracking-tight"
+                    style={{ fontFamily: "var(--font-logo)", color: "#F7E7CE" }}
+                  >
+                    HalalMe
+                  </span>
                 </span>
                 <span
                   className="block"
