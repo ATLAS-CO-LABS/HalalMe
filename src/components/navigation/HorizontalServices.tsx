@@ -17,7 +17,8 @@ const SERVICES = [
     desc: "Order from the best halal restaurants near you, delivered in minutes.",
     link: "/delivery",
     image: "/images/services/halal01.jpg",
-    accent: "#7C3AED",
+    accent: "#B96AF0",
+    logoColor: "#5E188F",
   },
   {
     num: "02",
@@ -156,7 +157,7 @@ export default function HorizontalServices() {
                       style={{
                         position: "absolute",
                         inset: 0,
-                        backgroundColor: s.accent,
+                        backgroundColor: s.logoColor ?? s.accent,
                         WebkitMaskImage: "url(/logo/logo.png)",
                         maskImage: "url(/logo/logo.png)",
                         WebkitMaskSize: "contain",
