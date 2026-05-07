@@ -490,7 +490,7 @@ export default function AIAssistantPage() {
             id: `${sid}-${i}`,
             role: m.role,
             content,
-            ts: new Date(m.timestamp),
+            ts: m.timestamp ? new Date(m.timestamp) : new Date(),
             responseType: isAssistant ? (isRecipeObj ? "recipe" : "chat") : undefined,
             recipe,
             aiMessage: isRecipeObj && recipe ? buildRecipeHistorySummary(recipe, `Here's your ${recipe.title}!`) : undefined,
@@ -551,7 +551,7 @@ export default function AIAssistantPage() {
         setSessionId(result.session_id);
         loadConvs();
       }
-      setRequestsLeft(result.requests_remaining);
+      setRequestsLeft(result.requests_remaining ?? null);
 
       const assistantMsg: Message = {
         id:           (Date.now() + 1).toString(),
