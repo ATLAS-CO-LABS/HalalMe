@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
@@ -224,11 +224,10 @@ function HeroSection() {
                     maskSize: "contain",
                     WebkitMaskRepeat: "no-repeat",
                     maskRepeat: "no-repeat",
-                    WebkitMaskMode: "alpha",
                     maskMode: "alpha",
                     WebkitMaskPosition: "center",
                     maskPosition: "center",
-                  }}
+                  } as React.CSSProperties}
                 />
               </div>
               <span
