@@ -29,7 +29,7 @@ const LIGHT_PURPLE = "#B96AF0";
 const DEEP = "#4A1270";
 const VIOLET = "#1E0E38";
 
-const DELIVERY_URL = "https://www.halalme.co.uk";
+const DELIVERY_URL = "https://delivery.halalme.co.uk";
 
 const restaurants = [
   {
@@ -1128,7 +1128,7 @@ function ForRestaurantsSection() {
               ))}
             </div>
 
-            <a href={DELIVERY_URL} target="_blank" rel="noopener noreferrer">
+            <a href="https://tally.so/r/EklXdA" target="_blank" rel="noopener noreferrer">
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
