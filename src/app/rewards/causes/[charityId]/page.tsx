@@ -73,7 +73,7 @@ function CharityDetailContent() {
     </div>
   );
 
-  const pct = Math.min((charity.raised_amount / charity.goal_amount) * 100, 100);
+  const pct = Math.min((charity.raised_amount / (charity.goal_amount || 1)) * 100, 100);
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: BG }}>
@@ -162,7 +162,7 @@ function CharityDetailContent() {
                   style={{ backgroundColor: `${CREAM}08` }}
                 >
                   {[
-                    { icon: Target, label: "Goal",   value: `£${charity.goal_amount.toLocaleString()}` },
+                    { icon: Target, label: "Goal",   value: `£${(charity.goal_amount ?? 0).toLocaleString()}` },
                     { icon: Heart,  label: "Raised", value: `£${charity.raised_amount.toLocaleString()}` },
                     { icon: Users,  label: "Donors", value: charity.donor_count.toLocaleString() },
                   ].map(({ icon: Icon, label, value }) => (
@@ -259,7 +259,7 @@ function CharityDetailContent() {
                     />
                   </div>
                   <p className="text-xs mt-2" style={{ color: `${CREAM}30` }}>
-                    Goal: £{charity.goal_amount.toLocaleString()}
+                    Goal: £{(charity.goal_amount ?? 0).toLocaleString()}
                   </p>
                 </div>
 

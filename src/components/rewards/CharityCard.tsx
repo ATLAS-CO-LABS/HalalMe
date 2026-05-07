@@ -17,7 +17,7 @@ interface CharityCardProps {
 }
 
 export default function CharityCard({ charity }: CharityCardProps) {
-  const pct = Math.min((charity.raised_amount / charity.goal_amount) * 100, 100);
+  const pct = Math.min((charity.raised_amount / (charity.goal_amount || 1)) * 100, 100);
 
   return (
     <Link href={`/rewards/causes/${charity.slug}`}>
@@ -78,7 +78,7 @@ export default function CharityCard({ charity }: CharityCardProps) {
                 £{charity.raised_amount.toLocaleString()}
               </span>
               <span style={{ color: `${CREAM}30` }}>
-                of £{charity.goal_amount.toLocaleString()}
+                of £{(charity.goal_amount ?? 0).toLocaleString()}
               </span>
             </div>
             <div className="h-1" style={{ backgroundColor: `${CREAM}10` }}>

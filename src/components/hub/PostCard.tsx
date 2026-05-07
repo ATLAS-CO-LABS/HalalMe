@@ -245,9 +245,9 @@ export default function PostCard({
               className="object-cover group-hover:scale-105 transition-transform duration-300"
             />
             {/* Multi-image indicator */}
-            {post.media_urls.length > 1 && (
+            {(post.media_urls?.length ?? 0) > 1 && (
               <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm text-white text-xs font-semibold px-2 py-1 rounded-full">
-                1/{post.media_urls.length}
+                1/{post.media_urls!.length}
               </div>
             )}
           </div>

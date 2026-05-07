@@ -37,6 +37,7 @@ function notificationText(n: Notification): string {
     case "comment":       return `${name} commented on your post`;
     case "reply":         return `${name} replied to your comment`;
     case "follow":        return `${name} started following you`;
+    default:              return `${name} interacted with you`;
   }
 }
 
@@ -240,7 +241,7 @@ export default function NotificationPanel({ userId }: NotificationPanelProps) {
                               size="sm"
                             />
                             <div className="absolute -bottom-1 -right-1 bg-[#111418] rounded-full p-0.5">
-                              {notificationIcon(n.type)}
+                              {notificationIcon(n.type as NotificationType)}
                             </div>
                           </div>
 

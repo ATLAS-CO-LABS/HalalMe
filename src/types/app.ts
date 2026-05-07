@@ -1529,6 +1529,7 @@ export interface Charity {
   name:                string;
   slug:                string;
   description:         string;
+  long_description:    string | null;
   category:            string;
   image_url:           string | null;
   raised_amount:       number;
@@ -1584,6 +1585,185 @@ export interface UserBadge {
 }
 
 export type PostType = "general" | "recipe" | "question" | "review";
+export type SearchType = "flight" | "hotel" | "car";
+
+export interface FlightSearchParams {
+  origin:        string;
+  destination:   string;
+  departDate:    string;
+  returnDate?:   string;
+  passengers:    number;
+  cabinClass?:   string;
+}
+
+export interface HotelSearchParams {
+  destination: string;
+  checkIn:     string;
+  checkOut:    string;
+  guests:      number;
+  rooms:       number;
+}
+
+export interface CarSearchParams {
+  pickupLocation:   string;
+  dropoffLocation?: string;
+  pickupDate:       string;
+  dropoffDate:      string;
+}
+
+export interface TravelSearch {
+  id:          string;
+  user_id:     string;
+  search_type: SearchType;
+  params:      FlightSearchParams | HotelSearchParams | CarSearchParams;
+  label:       string | null;
+  is_saved:    boolean;
+  created_at:  string;
+}
+
+export interface PriceAlert {
+  id:          string;
+  user_id:     string;
+  search_type: SearchType;
+  params:      FlightSearchParams | HotelSearchParams | CarSearchParams;
+  target_price: number;
+  is_active:   boolean;
+  created_at:  string;
+}
+
+export interface CityGuide {
+  id:           string;
+  slug:         string;
+  name:         string;
+  country:      string;
+  halal_score:  number;
+  is_published: boolean;
+  [key: string]: unknown;
+}
+export type NotificationType = "like_post" | "like_comment" | "comment" | "reply" | "follow";
+
+export interface Profile {
+  id:            string;
+  email?:        string;
+  full_name:     string;
+  username:      string | null;
+  avatar_url:    string | null;
+  bio:           string | null;
+  location:      string | null;
+  role:          string;
+  is_verified:   boolean;
+  reward_points: number;
+  reward_tier:   string;
+  created_at:    string;
+  updated_at:    string;
+}
+
+export interface Recipe {
+  id:               string;
+  user_id:          string;
+  title:            string;
+  description:      string | null;
+  cuisine:          string | null;
+  difficulty:       string | null;
+  prep_time_mins:   number | null;
+  cook_time_mins:   number | null;
+  servings:         number | null;
+  ingredients:      unknown;
+  instructions:     unknown;
+  tags:             string[] | null;
+  nutrition:        unknown | null;
+  image_url:        string | null;
+  is_ai_generated:  boolean;
+  is_halal_verified: boolean;
+  is_published:     boolean;
+  avg_rating:       number | null;
+  review_count:     number;
+  view_count:       number;
+  created_at:       string;
+  updated_at:       string;
+  profiles?: {
+    username:   string | null;
+    avatar_url: string | null;
+    is_verified: boolean;
+  } | null;
+  is_favorited?: boolean;
+}
+
+export interface RecipeReview {
+  id:         string;
+  recipe_id:  string;
+  user_id:    string;
+  rating:     number;
+  comment:    string | null;
+  created_at: string;
+  updated_at: string;
+  profiles?: {
+    username:   string | null;
+    avatar_url: string | null;
+  } | null;
+}
+
+export interface BlogPost {
+  id:           string;
+  slug:         string;
+  title:        string;
+  category:     string;
+  is_published: boolean;
+  is_featured:  boolean;
+  published_at: string | null;
+  view_count:   number;
+  profiles?: {
+    username:   string | null;
+    full_name:  string | null;
+    avatar_url: string | null;
+  } | null;
+  [key: string]: unknown;
+}
+
+export interface Meal {
+  id:          string;
+  name:        string;
+  description: string | null;
+  price:       number;
+  category:    string;
+  image_url:   string | null;
+  is_available: boolean;
+  is_popular:  boolean;
+  created_at:  string;
+}
+
+export interface OrderItem {
+  meal_id:    string;
+  meal_name:  string;
+  quantity:   number;
+  unit_price: number;
+  image_url:  string | null;
+}
+
+export interface DeliveryAddress {
+  street:   string;
+  city:     string;
+  postcode: string;
+  country:  string;
+  notes?:   string;
+}
+
+export interface Order {
+  id:               string;
+  user_id:          string;
+  items:            OrderItem[];
+  total_amount:     number;
+  delivery_address: DeliveryAddress;
+  notes:            string | null;
+  status:           string;
+  payment_status:   string;
+  created_at:       string;
+}
+
+export interface CartItem {
+  meal:     Meal;
+  quantity: number;
+}
 
 export interface AIMessage {
   role:      "user" | "assistant";
