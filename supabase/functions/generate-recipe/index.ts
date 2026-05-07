@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const RATE_LIMIT_REQUESTS_PER_HOUR = 10;
+const RATE_LIMIT_REQUESTS_PER_HOUR_DEFAULT = 10;
 const OPENAI_TIMEOUT_MS = 25000;
 const FUNCTION_TIMEOUT_MS = 30000;
 const MAX_HISTORY_ITEMS = 10;
@@ -278,6 +278,23 @@ async function handle(req: Request, signal: AbortSignal): Promise<Response> {
   console.log("[auth] user ok:", user.id);
   if (signal.aborted) return json({ error: "Request cancelled" }, 499);
 
+  // Look up the user's tier to apply the correct per-tier AI rate limit
+  const { data: profileRow } = await supabaseAdmin
+    .from("profiles")
+    .select("reward_tier")
+    .eq("id", user.id)
+    .single();
+
+  const userTier = profileRow?.reward_tier ?? "bronze";
+
+  const { data: tierRow } = await supabaseAdmin
+    .from("reward_tiers")
+    .select("ai_requests_per_hour")
+    .eq("name", userTier)
+    .single();
+
+  const rateLimitForUser = tierRow?.ai_requests_per_hour ?? RATE_LIMIT_REQUESTS_PER_HOUR_DEFAULT;
+
   const windowStart = new Date();
   windowStart.setMinutes(0, 0, 0);
 
@@ -288,10 +305,10 @@ async function handle(req: Request, signal: AbortSignal): Promise<Response> {
     .eq("window_start", windowStart.toISOString())
     .single();
 
-  if (!rateReadError && rateRow && rateRow.request_count >= RATE_LIMIT_REQUESTS_PER_HOUR) {
+  if (!rateReadError && rateRow && rateRow.request_count >= rateLimitForUser) {
     return json({
       error: "Rate limit exceeded",
-      message: `You can make up to ${RATE_LIMIT_REQUESTS_PER_HOUR} AI requests per hour.`,
+      message: `You can make up to ${rateLimitForUser} AI requests per hour.`,
       retry_after: "1 hour",
     }, 429);
   }
@@ -379,7 +396,7 @@ async function handle(req: Request, signal: AbortSignal): Promise<Response> {
     console.error("[rate-limit] upsert failed:", e);
   }
 
-  const requestsRemaining = RATE_LIMIT_REQUESTS_PER_HOUR - ((rateRow?.request_count ?? 0) + 1);
+  const requestsRemaining = rateLimitForUser - ((rateRow?.request_count ?? 0) + 1);
 
   if (envelope.type === "chat" || !recipe) {
     const newMessages = [

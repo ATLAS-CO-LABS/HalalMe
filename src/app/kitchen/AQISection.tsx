@@ -1,45 +1,178 @@
-'use client';
+"use client";
 
-import { motion, useInView } from 'framer-motion';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { useRef } from 'react';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { motion, useInView, AnimatePresence } from "framer-motion";
+import Image from "next/image";
+import { useRef, useEffect, useState } from "react";
+import { ArrowRight } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
+import { useAuthGate } from "@/hooks/useAuthGate";
 
-const BG      = '#0D0D14';
-const BG2     = '#09090F';
-const CREAM   = '#F7E7CE';
-const MAGENTA = '#F03E9E';
-const DEEP    = '#C41E73';
+const BG2 = "#161616";
+const CREAM = "#F7E7CE";
+const MAGENTA = "#F03E9E";
+const DEEP = "#C41E73";
 
-const DEMO = [
-  { role: 'user',      text: 'I have chicken and rice' },
-  { role: 'assistant', text: 'You can make Chicken Biryani. Want the recipe?' },
+const DEMO_SEQUENCES = [
+  [
+    {
+      role: "user",
+      text: "I have chicken, rice and some spices. What can I make?",
+    },
+    {
+      role: "assistant",
+      text: "Perfect combo! Try Chicken Biryani - aromatic, layered and 100% halal. Want the full recipe?",
+    },
+  ],
+  [
+    { role: "user", text: "What's a quick halal breakfast under 15 minutes?" },
+    {
+      role: "assistant",
+      text: "Egg paratha with mint chutney - ready in 12 mins. I'll walk you through every step.",
+    },
+  ],
+  [
+    { role: "user", text: "Can I substitute butter with something halal?" },
+    {
+      role: "assistant",
+      text: "Yes! Use ghee for richness, or coconut oil for baking. Both are halal and work beautifully.",
+    },
+  ],
 ];
 
+const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 export default function AQISection() {
-  const router  = useRouter();
-  const ref     = useRef(null);
-  const inView  = useInView(ref, { once: true, margin: '-80px' });
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-80px" });
+  const pausedRef = useRef(false);
+  const router = useRouter();
+  const { user } = useAuth();
+  const { requireAuth } = useAuthGate();
+
+  const [seqIdx, setSeqIdx] = useState(0);
+  const [userVisible, setUserVisible] = useState(false);
+  const [typing, setTyping] = useState(false);
+  const [aiqVisible, setAiqVisible] = useState(false);
+  const [inputPulse, setInputPulse] = useState(false);
+  const [query, setQuery] = useState("");
+
+  useEffect(() => {
+    pausedRef.current = query.length > 0;
+    if (query.length > 0) {
+      setUserVisible(false);
+      setTyping(false);
+      setAiqVisible(false);
+      setInputPulse(false);
+    }
+  }, [query]);
+
+  useEffect(() => {
+    if (!inView) return;
+    let cancelled = false;
+
+    const run = async () => {
+      while (!cancelled) {
+        // Pause while user is typing
+        while (pausedRef.current && !cancelled) {
+          await delay(200);
+        }
+        if (cancelled) break;
+
+        setUserVisible(false);
+        setTyping(false);
+        setAiqVisible(false);
+        setInputPulse(false);
+
+        await delay(500);
+        if (cancelled || pausedRef.current) continue;
+        setInputPulse(true);
+        await delay(600);
+        if (cancelled || pausedRef.current) continue;
+        setInputPulse(false);
+        setUserVisible(true);
+
+        await delay(900);
+        if (cancelled || pausedRef.current) continue;
+        setTyping(true);
+
+        await delay(1400);
+        if (cancelled || pausedRef.current) continue;
+        setTyping(false);
+        setAiqVisible(true);
+
+        await delay(2800);
+        if (cancelled) break;
+
+        setSeqIdx((i) => (i + 1) % DEMO_SEQUENCES.length);
+        await delay(400);
+      }
+    };
+
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [inView]);
+
+  const currentSeq = DEMO_SEQUENCES[seqIdx];
+
+  const handleSubmit = () => {
+    const text = query.trim();
+    if (!text) return;
+    sessionStorage.setItem("aqi_pending_message", text);
+    if (user) {
+      router.push("/kitchen/ai-assistant");
+    } else {
+      requireAuth(
+        () => router.push("/kitchen/ai-assistant"),
+        "Sign up to chat with AQI — your personal halal cooking assistant"
+      );
+    }
+  };
 
   return (
     <section
       ref={ref}
       className="relative overflow-hidden py-24 md:py-32"
-      style={{ backgroundColor: BG2 }}
+      style={{ backgroundColor: BG2, borderTop: `1px solid ${MAGENTA}50`, borderBottom: `1px solid ${MAGENTA}50` }}
     >
-      {/* Ambient glow */}
-      <div
+      {/* Animated background orbs */}
+      <motion.div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0"
+        className="pointer-events-none absolute"
         style={{
+          top: "-10%",
+          left: "-5%",
+          width: "55%",
+          height: "55%",
           background:
-            'radial-gradient(ellipse 60% 55% at 70% 50%, rgba(196,30,115,0.07) 0%, transparent 70%)',
+            "radial-gradient(circle, rgba(196,30,115,0.09) 0%, transparent 70%)",
+        }}
+        animate={{ scale: [1, 1.12, 1], opacity: [0.6, 1, 0.6] }}
+        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <motion.div
+        aria-hidden="true"
+        className="pointer-events-none absolute"
+        style={{
+          bottom: "-10%",
+          right: "-5%",
+          width: "50%",
+          height: "50%",
+          background:
+            "radial-gradient(circle, rgba(240,62,158,0.07) 0%, transparent 70%)",
+        }}
+        animate={{ scale: [1, 1.18, 1], opacity: [0.5, 0.9, 0.5] }}
+        transition={{
+          duration: 6,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: 1.5,
         }}
       />
 
       <div className="relative z-10 max-w-[95vw] mx-auto px-6 md:px-10">
-
         {/* Eyebrow */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
@@ -56,9 +189,7 @@ export default function AQISection() {
           </span>
         </motion.div>
 
-        {/* Two-column layout */}
         <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
-
           {/* ── Left: copy + CTA ── */}
           <div>
             <motion.h2
@@ -68,17 +199,20 @@ export default function AQISection() {
               className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold uppercase tracking-tighter leading-[0.9] mb-6"
               style={{ color: CREAM }}
             >
-              Meet AQI —{' '}
-              <span
+              Meet AQI -{" "}
+              <motion.span
                 style={{
-                  background: `linear-gradient(135deg, ${MAGENTA}, ${DEEP})`,
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
+                  background: `linear-gradient(135deg, ${MAGENTA}, ${DEEP}, ${MAGENTA})`,
+                  backgroundSize: "200% auto",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
                 }}
+                animate={{ backgroundPosition: ["0% center", "200% center"] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
               >
                 Your AI Kitchen
-              </span>{' '}
+              </motion.span>{" "}
               Assistant
             </motion.h2>
 
@@ -89,75 +223,84 @@ export default function AQISection() {
               className="text-sm md:text-base leading-relaxed mb-8 max-w-sm"
               style={{ color: `${CREAM}55` }}
             >
-              Cook smarter with AI-powered recipes, guidance, and suggestions.
+              Cook smarter with AI-powered recipes, guidance, and substitutions
+              - halal every time.
             </motion.p>
 
-            {/* Feature pills */}
+            {/* Feature pills with stagger */}
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={inView ? { opacity: 1 } : {}}
-              transition={{ delay: 0.3 }}
-              className="flex flex-wrap gap-2 mb-10"
+              initial="hidden"
+              animate={inView ? "show" : "hidden"}
+              variants={{
+                show: {
+                  transition: { staggerChildren: 0.1, delayChildren: 0.3 },
+                },
+              }}
+              className="flex flex-col gap-2 mb-10"
             >
               {[
-                { Icon: Sparkles, text: 'Recipe ideas from your fridge' },
-                { Icon: Sparkles, text: 'Step-by-step guidance' },
-                { Icon: Sparkles, text: 'Halal-verified every time' },
-              ].map((item, i) => (
-                <div
+                "Recipe ideas from your fridge",
+                "Step-by-step cooking guidance",
+                "Full Halal ingredient database",
+              ].map((text, i) => (
+                <motion.div
                   key={i}
-                  className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider"
-                  style={{
-                    background: 'rgba(240,62,158,0.06)',
-                    border: '1px solid rgba(240,62,158,0.15)',
-                    color: `${CREAM}55`,
+                  variants={{
+                    hidden: { opacity: 0, x: -16 },
+                    show: { opacity: 1, x: 0 },
                   }}
+                  className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-wider"
+                  style={{ color: `${CREAM}55` }}
                 >
-                  <item.Icon className="w-3 h-3" style={{ color: MAGENTA }} />
-                  {item.text}
-                </div>
+                  <motion.span
+                    className="w-1.5 h-1.5 shrink-0"
+                    style={{ backgroundColor: MAGENTA }}
+                    animate={{ scale: [1, 1.4, 1], opacity: [0.6, 1, 0.6] }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      delay: i * 0.4,
+                    }}
+                  />
+                  {text}
+                </motion.div>
               ))}
-            </motion.div>
-
-            {/* CTA */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={inView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: 0.38 }}
-            >
-              <motion.button
-                onClick={() => router.push('/kitchen/ai-assistant')}
-                whileHover={{ scale: 1.03, filter: 'brightness(1.1)' }}
-                whileTap={{ scale: 0.97 }}
-                className="group flex items-center gap-3 px-7 py-4 text-white font-extrabold uppercase tracking-tighter text-sm transition-all"
-                style={{
-                  background: `linear-gradient(135deg, ${DEEP}, ${MAGENTA})`,
-                }}
-              >
-                Try AQI
-                <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
-              </motion.button>
             </motion.div>
           </div>
 
-          {/* ── Right: chat demo ── */}
+          {/* ── Right: animated chat demo ── */}
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: 0.2, duration: 0.6 }}
           >
-            {/* Chat card */}
-            <div
+            <motion.div
               className="relative"
+              animate={
+                inView
+                  ? {
+                      boxShadow: [
+                        `0 0 0px rgba(240,62,158,0)`,
+                        `0 0 30px rgba(240,62,158,0.12)`,
+                        `0 0 0px rgba(240,62,158,0)`,
+                      ],
+                    }
+                  : {}
+              }
+              transition={{
+                duration: 3.5,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
               style={{
-                background: 'rgba(255,255,255,0.02)',
-                border: '1px solid rgba(240,62,158,0.14)',
+                background: "rgba(255,255,255,0.02)",
+                border: "1px solid rgba(240,62,158,0.14)",
               }}
             >
               {/* Window chrome */}
               <div
                 className="flex items-center gap-2.5 px-4 py-3"
-                style={{ borderBottom: '1px solid rgba(240,62,158,0.08)' }}
+                style={{ borderBottom: "1px solid rgba(240,62,158,0.08)" }}
               >
                 <Image
                   src="/logo/logo.png"
@@ -168,7 +311,7 @@ export default function AQISection() {
                 />
                 <span
                   className="text-[10px] font-black uppercase"
-                  style={{ color: CREAM, letterSpacing: '0.2em' }}
+                  style={{ color: CREAM, letterSpacing: "0.2em" }}
                 >
                   AQI
                 </span>
@@ -179,34 +322,121 @@ export default function AQISection() {
                   · AI Kitchen Assistant
                 </span>
                 <div className="flex items-center gap-1 ml-auto">
-                  <span
+                  <motion.span
                     className="w-1.5 h-1.5 rounded-full"
-                    style={{
-                      backgroundColor: '#4ade80',
-                      boxShadow: '0 0 4px #4ade80',
+                    style={{ backgroundColor: "#4ade80" }}
+                    animate={{
+                      boxShadow: [
+                        "0 0 2px #4ade80",
+                        "0 0 8px #4ade80",
+                        "0 0 2px #4ade80",
+                      ],
                     }}
+                    transition={{ duration: 1.8, repeat: Infinity }}
                   />
                   <span
                     className="text-[8px] font-bold uppercase"
-                    style={{ color: '#4ade8080', letterSpacing: '0.14em' }}
+                    style={{ color: "#4ade8080", letterSpacing: "0.14em" }}
                   >
                     Online
                   </span>
                 </div>
               </div>
 
-              {/* Messages */}
-              <div className="px-4 py-5 space-y-3">
-                {DEMO.map((msg, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={inView ? { opacity: 1, y: 0 } : {}}
-                    transition={{ delay: 0.45 + i * 0.15 }}
-                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div className="max-w-[78%]">
-                      {msg.role === 'assistant' && (
+              {/* Messages area */}
+              <div className="px-4 py-5 space-y-3 min-h-35">
+                <AnimatePresence mode="wait">
+                  {userVisible && (
+                    <motion.div
+                      key={`user-${seqIdx}`}
+                      initial={{ opacity: 0, y: 8, scale: 0.97 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.28 }}
+                      className="flex justify-end"
+                    >
+                      <div
+                        className="max-w-[78%] px-3.5 py-2.5 text-xs leading-relaxed"
+                        style={{
+                          background:
+                            "linear-gradient(135deg, #2A1020, #1E0A18)",
+                          border: "1px solid rgba(240,62,158,0.18)",
+                          color: CREAM,
+                        }}
+                      >
+                        {currentSeq[0].text}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Typing indicator */}
+                <AnimatePresence>
+                  {typing && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      className="flex justify-start"
+                    >
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <Image
+                          src="/logo/logo.png"
+                          alt="AQI"
+                          width={12}
+                          height={12}
+                          className="object-contain"
+                        />
+                        <span
+                          className="text-[8px] font-black uppercase"
+                          style={{
+                            color: `${MAGENTA}90`,
+                            letterSpacing: "0.22em",
+                          }}
+                        >
+                          AQI
+                        </span>
+                      </div>
+                      <div
+                        className="ml-2 px-3 py-2.5 flex items-center gap-1"
+                        style={{
+                          background: "rgba(28,8,18,0.85)",
+                          border: "1px solid rgba(240,62,158,0.10)",
+                          borderLeft: `3px solid ${MAGENTA}70`,
+                        }}
+                      >
+                        {[0, 1, 2].map((i) => (
+                          <motion.span
+                            key={i}
+                            className="block w-1.5 h-1.5"
+                            style={{ background: MAGENTA }}
+                            animate={{
+                              opacity: [0.2, 1, 0.2],
+                              scaleY: [0.5, 1, 0.5],
+                            }}
+                            transition={{
+                              duration: 0.8,
+                              repeat: Infinity,
+                              delay: i * 0.16,
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <AnimatePresence mode="wait">
+                  {aiqVisible && (
+                    <motion.div
+                      key={`aiq-${seqIdx}`}
+                      initial={{ opacity: 0, y: 8, scale: 0.97 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.3 }}
+                      className="flex justify-start"
+                    >
+                      <div className="max-w-[82%]">
                         <div className="flex items-center gap-1.5 mb-1.5">
                           <Image
                             src="/logo/logo.png"
@@ -217,65 +447,68 @@ export default function AQISection() {
                           />
                           <span
                             className="text-[8px] font-black uppercase"
-                            style={{ color: `${MAGENTA}90`, letterSpacing: '0.22em' }}
+                            style={{
+                              color: `${MAGENTA}90`,
+                              letterSpacing: "0.22em",
+                            }}
                           >
                             AQI
                           </span>
                         </div>
-                      )}
-                      <div
-                        className="px-3.5 py-2.5 text-xs leading-relaxed"
-                        style={
-                          msg.role === 'user'
-                            ? {
-                                background: 'linear-gradient(135deg, #1E0A18, #180A12)',
-                                border: '1px solid rgba(240,62,158,0.18)',
-                                color: CREAM,
-                              }
-                            : {
-                                background: 'rgba(28,8,18,0.85)',
-                                border: '1px solid rgba(240,62,158,0.10)',
-                                borderLeft: `3px solid ${MAGENTA}70`,
-                                color: `${CREAM}CC`,
-                              }
-                        }
-                      >
-                        {msg.text}
+                        <div
+                          className="px-3.5 py-2.5 text-xs leading-relaxed"
+                          style={{
+                            background: "rgba(28,8,18,0.85)",
+                            border: "1px solid rgba(240,62,158,0.10)",
+                            borderLeft: `3px solid ${MAGENTA}70`,
+                            color: `${CREAM}CC`,
+                          }}
+                        >
+                          {currentSeq[1].text}
+                        </div>
                       </div>
-                    </div>
-                  </motion.div>
-                ))}
-
-                {/* Input row hint */}
-                <div
-                  className="flex items-center gap-2 mt-4 px-2 py-2"
-                  style={{ border: '1px solid rgba(240,62,158,0.08)' }}
-                >
-                  <span
-                    className="flex-1 text-[10px]"
-                    style={{ color: `${CREAM}18` }}
-                  >
-                    Ask AQI anything…
-                  </span>
-                  <div
-                    className="w-6 h-6 flex items-center justify-center"
-                    style={{
-                      background: `linear-gradient(135deg, ${DEEP}, ${MAGENTA})`,
-                    }}
-                  >
-                    <ArrowRight className="w-3 h-3 text-white" />
-                  </div>
-                </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
-            </div>
 
-            {/* Ghost label beneath card */}
-            <p
-              className="mt-4 text-[10px] font-semibold uppercase tracking-widest text-center"
-              style={{ color: `${CREAM}18` }}
-            >
-              Live demo · Click "Try AQI" to start
-            </p>
+              {/* Input row — real functional input */}
+              <motion.div
+                className="flex items-center gap-2 mx-4 mb-4 px-3 py-2"
+                animate={
+                  inputPulse
+                    ? {
+                        borderColor: `rgba(240,62,158,0.5)`,
+                        boxShadow: "0 0 10px rgba(240,62,158,0.12)",
+                      }
+                    : {
+                        borderColor: "rgba(240,62,158,0.08)",
+                        boxShadow: "none",
+                      }
+                }
+                transition={{ duration: 0.3 }}
+                style={{ border: "1px solid rgba(240,62,158,0.08)" }}
+              >
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleSubmit(); }}
+                  placeholder="Ask AQI anything…"
+                  className="flex-1 bg-transparent outline-none text-[11px] min-w-0"
+                  style={{ color: query ? CREAM : `${CREAM}30`, caretColor: MAGENTA }}
+                />
+                <motion.button
+                  onClick={handleSubmit}
+                  className="w-6 h-6 flex items-center justify-center shrink-0"
+                  style={{ background: `linear-gradient(135deg, ${DEEP}, ${MAGENTA})` }}
+                  whileHover={{ scale: 1.08 }}
+                  whileTap={{ scale: 0.93 }}
+                >
+                  <ArrowRight className="w-3 h-3 text-white" />
+                </motion.button>
+              </motion.div>
+            </motion.div>
           </motion.div>
         </div>
       </div>

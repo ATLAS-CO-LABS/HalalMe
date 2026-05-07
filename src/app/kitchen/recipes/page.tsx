@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
@@ -12,9 +12,16 @@ import {
 import { recipeService } from "@/services/recipeService";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthGate } from "@/hooks/useAuthGate";
+import { useResumeKey } from "@/context/AppResumeContext";
 import type { Recipe } from "@/types";
 
-// Module-level cache — survives navigations within the same session
+const BG      = '#1C1C1C';
+const BG2     = '#161616';
+const CREAM   = '#F7E7CE';
+const MAGENTA = '#F03E9E';
+const DEEP    = '#C41E73';
+
+// Module-level cache - survives navigations within the same session
 let _recipesCache: Recipe[] = [];
 
 // ── Helpers ────────────────────────────────────────────────────────
@@ -29,7 +36,7 @@ function difficultyLabel(d: string) {
 }
 
 function cookTimeLabel(mins: number | null) {
-  if (!mins) return "—";
+  if (!mins) return "-";
   return mins >= 60 ? `${Math.floor(mins / 60)}h ${mins % 60 > 0 ? `${mins % 60}m` : ""}`.trim() : `${mins} min`;
 }
 
@@ -54,11 +61,16 @@ function RecipeCard({
     >
       <Link href={`/kitchen/recipes/${recipe.id}`}>
         <motion.div
-          className="bg-[#130F1F] rounded-2xl overflow-hidden border border-white/8 hover:border-fuchsia-500 transition-all cursor-pointer"
-          whileHover={{ y: -6, boxShadow: "0 20px 40px -12px rgba(217,70,239,0.25)" }}
+          className="overflow-hidden cursor-pointer transition-colors duration-300"
+          style={{ backgroundColor: BG2, border: `1px solid ${CREAM}08` }}
+          whileHover={{
+            y: -4,
+            borderColor: MAGENTA,
+            boxShadow: `0 16px 40px -12px ${MAGENTA}40`,
+          }}
         >
           {/* Image */}
-          <div className="relative h-44 bg-[#0C0918] overflow-hidden">
+          <div className="relative h-44 overflow-hidden" style={{ backgroundColor: '#080612' }}>
             {recipe.image_url ? (
               <Image
                 src={recipe.image_url}
@@ -66,8 +78,6 @@ function RecipeCard({
                 fill
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 className="object-cover group-hover:scale-105 transition-transform duration-300"
-                // First card is above the fold and the likely LCP element.
-                // priority removes lazy loading so the browser fetches it immediately.
                 priority={index === 0}
               />
             ) : (
@@ -79,12 +89,12 @@ function RecipeCard({
             {/* Badges */}
             <div className="absolute top-2 left-2 flex gap-1.5">
               {recipe.is_ai_generated && (
-                <span className="flex items-center gap-1 bg-fuchsia-600/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                <span className="flex items-center gap-1 text-white text-[10px] font-bold uppercase tracking-wide px-2 py-0.5" style={{ backgroundColor: MAGENTA }}>
                   <Sparkles className="w-2.5 h-2.5" /> AI
                 </span>
               )}
               {recipe.is_halal_verified && (
-                <span className="bg-emerald-600/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                <span className="text-white text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 bg-emerald-600/90">
                   ✓ Halal
                 </span>
               )}
@@ -92,39 +102,36 @@ function RecipeCard({
 
             {/* Rating */}
             {recipe.avg_rating && (
-              <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm rounded-full px-2.5 py-1 flex items-center gap-1">
+              <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm px-2.5 py-1 flex items-center gap-1">
                 <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
-                <span className="text-white text-xs font-semibold">{Number(recipe.avg_rating).toFixed(1)}</span>
+                <span className="text-white text-xs font-bold">{Number(recipe.avg_rating).toFixed(1)}</span>
               </div>
             )}
           </div>
 
           {/* Info */}
           <div className="p-4">
-            <h3
-              className="text-base font-bold text-white mb-1.5 line-clamp-1 group-hover:text-fuchsia-400 transition-colors"
-              style={{ fontFamily: "var(--font-headline)" }}
-            >
+            <h3 className="text-sm font-extrabold uppercase tracking-tighter mb-1.5 line-clamp-1 transition-colors duration-300 group-hover:opacity-80" style={{ color: CREAM }}>
               {recipe.title}
             </h3>
-            <p className="text-[#F7E7CE]/60 text-xs mb-3 line-clamp-2 font-normal" style={{ fontFamily: "var(--font-body)" }}>
+            <p className="text-xs mb-3 line-clamp-2 font-normal" style={{ color: `${CREAM}50` }}>
               {recipe.description}
             </p>
 
             <div className="flex items-center justify-between mb-2.5">
-              <div className="flex items-center gap-1.5 text-[#F7E7CE]/60 text-xs">
+              <div className="flex items-center gap-1.5 text-xs" style={{ color: `${CREAM}50` }}>
                 <Clock className="w-3.5 h-3.5" />
                 <span>{cookTimeLabel(recipe.cook_time_mins)}</span>
               </div>
-              <div className="flex items-center gap-1.5 text-[#F7E7CE]/60 text-xs">
+              <div className="flex items-center gap-1.5 text-xs" style={{ color: `${CREAM}50` }}>
                 <Users className="w-3.5 h-3.5" />
-                <span>{recipe.servings ?? "—"} servings</span>
+                <span>{recipe.servings ?? "-"} servings</span>
               </div>
             </div>
 
             <div className="flex items-center justify-between">
               {recipe.difficulty && (
-                <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${difficultyColor(recipe.difficulty)}`}>
+                <span className={`px-2.5 py-0.5 text-xs font-semibold ${difficultyColor(recipe.difficulty)}`}>
                   {difficultyLabel(recipe.difficulty)}
                 </span>
               )}
@@ -138,13 +145,16 @@ function RecipeCard({
                     className="rounded-full object-cover shrink-0"
                   />
                 ) : (
-                  <div className="w-[18px] h-[18px] rounded-full bg-linear-to-br from-fuchsia-600 to-pink-600 flex items-center justify-center shrink-0">
+                  <div
+                    className="w-[18px] h-[18px] rounded-full flex items-center justify-center shrink-0"
+                    style={{ background: `linear-gradient(135deg, ${MAGENTA}, ${DEEP})` }}
+                  >
                     <span className="text-[8px] font-bold text-white">
                       {(recipe.profiles?.username ?? "?").charAt(0).toUpperCase()}
                     </span>
                   </div>
                 )}
-                <span className="text-white/30 text-xs truncate" style={{ fontFamily: "var(--font-body)" }}>
+                <span className="text-xs truncate" style={{ color: `${CREAM}30` }}>
                   {recipe.profiles?.username ?? "Unknown"}
                 </span>
               </div>
@@ -153,13 +163,16 @@ function RecipeCard({
         </motion.div>
       </Link>
 
-      {/* Edit / Delete overlay — only rendered for My Recipes cards */}
+      {/* Edit / Delete overlay - only rendered for My Recipes cards */}
       {(onEdit || onDelete) && (
         <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10">
           {onEdit && (
             <button
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(); }}
-              className="w-8 h-8 bg-black/70 backdrop-blur-sm border border-white/20 rounded-lg flex items-center justify-center text-white hover:bg-fuchsia-600/80 hover:border-fuchsia-500 transition-colors"
+              className="w-8 h-8 bg-black/70 backdrop-blur-sm border flex items-center justify-center text-white transition-colors"
+              style={{ borderColor: `${CREAM}20` }}
+              onMouseEnter={e => { e.currentTarget.style.backgroundColor = `${MAGENTA}cc`; e.currentTarget.style.borderColor = MAGENTA; }}
+              onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.7)'; e.currentTarget.style.borderColor = `${CREAM}20`; }}
               title="Edit recipe"
             >
               <Pencil className="w-3.5 h-3.5" />
@@ -168,7 +181,8 @@ function RecipeCard({
           {onDelete && (
             <button
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(); }}
-              className="w-8 h-8 bg-black/70 backdrop-blur-sm border border-white/20 rounded-lg flex items-center justify-center text-white hover:bg-red-600/80 hover:border-red-500 transition-colors"
+              className="w-8 h-8 bg-black/70 backdrop-blur-sm border flex items-center justify-center text-white hover:bg-red-600/80 hover:border-red-500 transition-colors"
+              style={{ borderColor: `${CREAM}20` }}
               title="Delete recipe"
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -185,15 +199,18 @@ function EmptyState({ tab, onUpload }: { tab: Tab; onUpload: () => void }) {
   if (tab === "mine") {
     return (
       <div className="text-center py-20">
-        <Bookmark className="w-14 h-14 text-gray-600 mx-auto mb-4" />
-        <h3 className="text-xl font-bold text-white mb-2" style={{ fontFamily: "var(--font-headline)" }}>
+        <Bookmark className="w-14 h-14 mx-auto mb-4" style={{ color: `${CREAM}15` }} />
+        <h3 className="text-xl font-extrabold uppercase tracking-tighter mb-2" style={{ color: CREAM }}>
           No recipes yet
         </h3>
-        <p className="text-gray-400 text-sm mb-6">You haven&apos;t uploaded any recipes. Share your first halal creation!</p>
+        <p className="text-sm mb-6" style={{ color: `${CREAM}50` }}>
+          You haven&apos;t uploaded any recipes. Share your first halal creation!
+        </p>
         <motion.button
           onClick={onUpload}
-          className="inline-flex items-center gap-2 bg-linear-to-br from-fuchsia-600 to-pink-600 text-white px-5 py-2.5 rounded-full font-semibold text-sm"
-          whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
+          className="inline-flex items-center gap-2 text-white px-6 py-3 font-extrabold uppercase tracking-tighter text-sm"
+          style={{ backgroundColor: DEEP }}
+          whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
         >
           <Plus className="w-4 h-4" /> Upload your first recipe
         </motion.button>
@@ -203,21 +220,21 @@ function EmptyState({ tab, onUpload }: { tab: Tab; onUpload: () => void }) {
   if (tab === "saved") {
     return (
       <div className="text-center py-20">
-        <Bookmark className="w-14 h-14 text-gray-600 mx-auto mb-4" />
-        <h3 className="text-xl font-bold text-white mb-2" style={{ fontFamily: "var(--font-headline)" }}>
+        <Bookmark className="w-14 h-14 mx-auto mb-4" style={{ color: `${CREAM}15` }} />
+        <h3 className="text-xl font-extrabold uppercase tracking-tighter mb-2" style={{ color: CREAM }}>
           No saved recipes
         </h3>
-        <p className="text-gray-400 text-sm">Tap the bookmark icon on any recipe to save it here.</p>
+        <p className="text-sm" style={{ color: `${CREAM}50` }}>Tap the bookmark icon on any recipe to save it here.</p>
       </div>
     );
   }
   return (
     <div className="text-center py-20">
-      <ChefHat className="w-14 h-14 text-gray-600 mx-auto mb-4" />
-      <h3 className="text-xl font-bold text-white mb-2" style={{ fontFamily: "var(--font-headline)" }}>
+      <ChefHat className="w-14 h-14 mx-auto mb-4" style={{ color: `${CREAM}15` }} />
+      <h3 className="text-xl font-extrabold uppercase tracking-tighter mb-2" style={{ color: CREAM }}>
         No recipes found
       </h3>
-      <p className="text-gray-400 text-sm">Try adjusting your search or filters.</p>
+      <p className="text-sm" style={{ color: `${CREAM}50` }}>Try adjusting your search or filters.</p>
     </div>
   );
 }
@@ -231,13 +248,14 @@ export default function RecipesPage() {
   const { user } = useAuth();
   const { requireAuth } = useAuthGate();
   const router = useRouter();
+  const resumeKey = useResumeKey();
 
   const [activeTab, setActiveTab]         = useState<Tab>("all");
   const [searchQuery, setSearchQuery]     = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState("All");
   const [selectedCuisine, setSelectedCuisine]       = useState("All");
 
-  // Browse-all state — initialise from cache so back-navigation is instant
+  // Browse-all state - initialise from cache so back-navigation is instant
   const [allRecipes, setAllRecipes]       = useState<Recipe[]>(_recipesCache);
   const [allLoading, setAllLoading]       = useState(_recipesCache.length === 0);
   const [page, setPage]                   = useState(1);
@@ -254,21 +272,43 @@ export default function RecipesPage() {
   const [savedLoading, setSavedLoading]   = useState(false);
   const [savedLoaded, setSavedLoaded]     = useState(false);
 
+  // Keep a ref to the latest filter values so loadAllRecipes can be called
+  // from the resume effect without needing filters in its dependency array.
+  const filtersRef = useRef({ searchQuery, selectedDifficulty, selectedCuisine });
+  filtersRef.current = { searchQuery, selectedDifficulty, selectedCuisine };
+
   // ── Load browse-all from Supabase ─────────────────────────────
-  useEffect(() => {
+  const loadAllRecipes = useCallback(() => {
+    const { searchQuery: sq, selectedDifficulty: sd, selectedCuisine: sc } = filtersRef.current;
     setAllLoading(true);
     setPage(1);
     recipeService
       .getRecipes({
-        search: searchQuery || undefined,
-        difficulty: selectedDifficulty !== "All" ? selectedDifficulty.toLowerCase() : undefined,
-        cuisine: selectedCuisine !== "All" ? selectedCuisine : undefined,
+        search: sq || undefined,
+        difficulty: sd !== "All" ? sd.toLowerCase() : undefined,
+        cuisine: sc !== "All" ? sc : undefined,
         page: 1,
       })
       .then(({ data, hasMore: more }) => { _recipesCache = data; setAllRecipes(data); setHasMore(more); })
       .catch((err) => { console.error("[recipes] getRecipes error:", err); })
       .finally(() => setAllLoading(false));
-  }, [searchQuery, selectedDifficulty, selectedCuisine]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    loadAllRecipes();
+  }, [searchQuery, selectedDifficulty, selectedCuisine]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Refetch on app resume (BFCache / tab return / network restore) ──
+  useEffect(() => {
+    if (resumeKey === 0) return;
+    _recipesCache = [];
+    setMyLoaded(false);
+    setSavedLoaded(false);
+    if (activeTab === "all") {
+      loadAllRecipes();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resumeKey]);
 
   // ── Load more pages ───────────────────────────────────────────
   const handleLoadMore = useCallback(async () => {
@@ -351,7 +391,6 @@ export default function RecipesPage() {
   }, []);
 
   // ── Client-side filter for browse-all ─────────────────────────
-  // (server already filters by difficulty/cuisine/search, but keep for instant responsiveness)
   const filteredAll = allRecipes;
 
   // ── Client-side filter for my recipes ────────────────────────
@@ -368,27 +407,34 @@ export default function RecipesPage() {
   const displayed = activeTab === "all" ? filteredAll : activeTab === "mine" ? filteredMine : filteredSaved;
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#08060F' }}>
+    <div className="min-h-screen" style={{ backgroundColor: BG }}>
 
       {/* ── Header ──────────────────────────────────────────────── */}
-      <div className="bg-[#08060F]/95 backdrop-blur-lg border-b border-white/8 sticky top-0 z-10">
+      <div
+        className="backdrop-blur-lg border-b sticky top-0 z-10"
+        style={{ backgroundColor: `${BG}F5`, borderColor: `${CREAM}08` }}
+      >
         <div className="mx-auto max-w-7xl px-4 md:px-6 py-4 md:py-5">
 
           {/* Top row */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
             <div className="flex items-center gap-3 md:gap-4">
               <Link href="/kitchen">
-                <motion.button className="text-[#F7E7CE]/60 hover:text-white transition-colors"
-                  whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+                <motion.button
+                  className="transition-colors"
+                  style={{ color: `${CREAM}50` }}
+                  onMouseEnter={e => e.currentTarget.style.color = CREAM}
+                  onMouseLeave={e => e.currentTarget.style.color = `${CREAM}50`}
+                  whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
+                >
                   <ArrowLeft className="w-5 h-5 md:w-6 md:h-6" />
                 </motion.button>
               </Link>
               <div>
-                <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-white"
-                  style={{ fontFamily: "var(--font-headline)" }}>
+                <h1 className="text-xl md:text-2xl lg:text-3xl font-extrabold uppercase tracking-tighter" style={{ color: CREAM }}>
                   {activeTab === "mine" ? "My Recipes" : activeTab === "saved" ? "Saved Recipes" : "Explore Recipes"}
                 </h1>
-                <p className="text-[#F7E7CE]/60 mt-0.5 text-sm font-normal" style={{ fontFamily: "var(--font-body)" }}>
+                <p className="mt-0.5 text-sm font-normal" style={{ color: `${CREAM}45` }}>
                   {activeTab === "mine" ? "Manage your uploaded recipes" : activeTab === "saved" ? "Recipes you've bookmarked" : "Discover and share halal recipes"}
                 </p>
               </div>
@@ -398,15 +444,16 @@ export default function RecipesPage() {
                 () => router.push("/kitchen/recipes/upload"),
                 "Sign up to share your halal recipes",
               )}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-linear-to-br from-fuchsia-600 to-pink-600 text-white px-5 py-2.5 rounded-full font-semibold shadow-lg text-sm"
-              whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 text-white px-6 py-2.5 font-extrabold uppercase tracking-tighter text-sm"
+              style={{ backgroundColor: DEEP }}
+              whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
             >
               <Plus className="w-4 h-4" /> Upload Recipe
             </motion.button>
           </div>
 
-          {/* Tabs */}
-          <div className="flex gap-1 mb-4 bg-[#130F1F] p-1 rounded-xl w-fit">
+          {/* Tabs - underline style */}
+          <div className="flex mb-4 border-b" style={{ borderColor: `${CREAM}08` }}>
             {(["all", "mine", "saved"] as Tab[]).map((tab) => (
               <motion.button
                 key={tab}
@@ -419,60 +466,63 @@ export default function RecipesPage() {
                     setActiveTab(tab);
                   }
                 }}
-                className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all relative ${
-                  activeTab === tab ? "text-white" : "text-[#F7E7CE]/60 hover:text-white"
-                }`}
+                className="relative px-5 py-2.5 text-xs font-extrabold uppercase tracking-[0.15em] transition-colors"
+                style={{ color: activeTab === tab ? MAGENTA : `${CREAM}40` }}
                 whileTap={{ scale: 0.97 }}
               >
-                {activeTab === tab && (
-                  <motion.div
-                    layoutId="tab-indicator"
-                    className="absolute inset-0 bg-linear-to-br from-fuchsia-600 to-pink-600 rounded-lg"
-                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                  />
-                )}
-                <span className="relative z-10 flex items-center gap-1.5">
+                <span className="flex items-center gap-1.5">
                   {(tab === "mine" || tab === "saved") && !user && <Lock className="w-3 h-3" />}
                   {tab === "all" ? "Browse All" : tab === "mine" ? "My Recipes" : "Saved"}
                   {tab === "mine" && myLoaded && myRecipes.length > 0 && (
-                    <span className="bg-white/20 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                    <span className="text-[10px] px-1.5 py-0.5 font-bold" style={{ backgroundColor: `${MAGENTA}25`, color: MAGENTA }}>
                       {myRecipes.length}
                     </span>
                   )}
                   {tab === "saved" && savedLoaded && savedRecipes.length > 0 && (
-                    <span className="bg-white/20 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                    <span className="text-[10px] px-1.5 py-0.5 font-bold" style={{ backgroundColor: `${MAGENTA}25`, color: MAGENTA }}>
                       {savedRecipes.length}
                     </span>
                   )}
                 </span>
+                {activeTab === tab && (
+                  <motion.div
+                    layoutId="tab-underline"
+                    className="absolute bottom-0 left-0 right-0 h-[2px]"
+                    style={{ backgroundColor: MAGENTA }}
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  />
+                )}
               </motion.button>
             ))}
           </div>
 
           {/* Search + difficulty filters */}
-          <div className="flex flex-col md:flex-row gap-3">
+          <div className="flex flex-col md:flex-row gap-2">
             <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#F7E7CE]/40" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: `${CREAM}35` }} />
               <input
                 type="text"
                 placeholder="Search recipes…"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-[#0C0918] text-white text-sm rounded-full pl-11 pr-5 py-2.5 border border-white/8 focus:outline-none focus:border-fuchsia-500 transition-colors"
-                style={{ fontFamily: "var(--font-body)" }}
+                className="w-full text-white text-sm pl-11 pr-5 py-2.5 border focus:outline-none transition-colors"
+                style={{ backgroundColor: BG2, borderColor: `${CREAM}10`, caretColor: MAGENTA }}
+                onFocus={e => e.target.style.borderColor = MAGENTA}
+                onBlur={e => e.target.style.borderColor = `${CREAM}10`}
               />
             </div>
             {activeTab === "all" && (
-              <div className="flex gap-2 overflow-x-auto scrollbar-hide shrink-0">
+              <div className="flex gap-1 overflow-x-auto scrollbar-hide shrink-0">
                 {["All", "Easy", "Medium", "Hard"].map((d) => (
                   <motion.button
                     key={d}
                     onClick={() => setSelectedDifficulty(d)}
-                    className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap text-sm transition-all ${
+                    className="px-4 py-2 font-extrabold uppercase tracking-tighter whitespace-nowrap text-xs transition-all"
+                    style={
                       selectedDifficulty === d
-                        ? "bg-linear-to-br from-fuchsia-600 to-pink-600 text-white"
-                        : "bg-[#130F1F] text-[#F7E7CE]/60 border border-white/8"
-                    }`}
+                        ? { backgroundColor: MAGENTA, color: 'white' }
+                        : { backgroundColor: BG2, color: `${CREAM}45`, border: `1px solid ${CREAM}10` }
+                    }
                     whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
                   >
                     {d}
@@ -482,18 +532,19 @@ export default function RecipesPage() {
             )}
           </div>
 
-          {/* Cuisine filter — Browse All only */}
+          {/* Cuisine filter - Browse All only */}
           {activeTab === "all" && (
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide mt-3 pb-0.5">
+            <div className="flex gap-1 overflow-x-auto scrollbar-hide mt-2 pb-0.5">
               {CUISINES.map((c) => (
                 <motion.button
                   key={c}
                   onClick={() => setSelectedCuisine(c)}
-                  className={`px-4 py-2 rounded-full font-semibold whitespace-nowrap text-sm transition-all ${
+                  className="px-3 py-1.5 font-bold uppercase tracking-tighter whitespace-nowrap text-[10px] transition-all"
+                  style={
                     selectedCuisine === c
-                      ? "bg-linear-to-br from-fuchsia-600 to-pink-600 text-white"
-                      : "bg-[#130F1F] text-[#F7E7CE]/60 border border-white/8"
-                  }`}
+                      ? { backgroundColor: MAGENTA, color: 'white' }
+                      : { backgroundColor: BG2, color: `${CREAM}35`, border: `1px solid ${CREAM}08` }
+                  }
                   whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
                 >
                   {c}
@@ -511,11 +562,11 @@ export default function RecipesPage() {
         {(activeTab === "mine" || activeTab === "saved") && !user && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             className="text-center py-20">
-            <Lock className="w-12 h-12 text-white/20 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-white mb-2" style={{ fontFamily: "var(--font-headline)" }}>
+            <Lock className="w-12 h-12 mx-auto mb-4" style={{ color: `${CREAM}15` }} />
+            <h3 className="text-xl font-extrabold uppercase tracking-tighter mb-2" style={{ color: CREAM }}>
               Sign in to see your recipes
             </h3>
-            <p className="text-[#F7E7CE]/60 text-sm mb-6">
+            <p className="text-sm mb-6" style={{ color: `${CREAM}50` }}>
               Your uploaded and AI-generated recipes will appear here.
             </p>
             <motion.button
@@ -523,40 +574,47 @@ export default function RecipesPage() {
                 () => setActiveTab(activeTab),
                 activeTab === "mine" ? "Sign in to see your recipes" : "Sign in to view saved recipes",
               )}
-              className="inline-flex items-center gap-2 bg-linear-to-br from-fuchsia-600 to-pink-600 text-white px-5 py-2.5 rounded-full font-semibold text-sm"
-              whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
+              className="inline-flex items-center gap-2 text-white px-6 py-3 font-extrabold uppercase tracking-tighter text-sm"
+              style={{ backgroundColor: DEEP }}
+              whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
             >
               Sign In
             </motion.button>
           </motion.div>
         )}
 
-        {/* Loading skeleton — Browse All */}
+        {/* Loading skeleton - Browse All */}
         {allLoading && activeTab === "all" && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          <div
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+            style={{ gap: '1px', backgroundColor: `${CREAM}05` }}
+          >
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="bg-[#130F1F] rounded-2xl overflow-hidden border border-white/8 animate-pulse">
-                <div className="h-44 bg-[#0C0918]" />
+              <div key={i} className="overflow-hidden animate-pulse" style={{ backgroundColor: BG2 }}>
+                <div className="h-44" style={{ backgroundColor: '#080612' }} />
                 <div className="p-4 space-y-2">
-                  <div className="h-4 bg-[#0C0918] rounded w-3/4" />
-                  <div className="h-3 bg-[#0C0918] rounded w-full" />
-                  <div className="h-3 bg-[#0C0918] rounded w-1/2" />
+                  <div className="h-4 w-3/4" style={{ backgroundColor: '#080612' }} />
+                  <div className="h-3 w-full" style={{ backgroundColor: '#080612' }} />
+                  <div className="h-3 w-1/2" style={{ backgroundColor: '#080612' }} />
                 </div>
               </div>
             ))}
           </div>
         )}
 
-        {/* Loading skeleton — My Recipes / Saved */}
+        {/* Loading skeleton - My Recipes / Saved */}
         {((myLoading && activeTab === "mine") || (savedLoading && activeTab === "saved")) && user && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          <div
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+            style={{ gap: '1px', backgroundColor: `${CREAM}05` }}
+          >
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="bg-[#130F1F] rounded-2xl overflow-hidden border border-white/8 animate-pulse">
-                <div className="h-44 bg-[#0C0918]" />
+              <div key={i} className="overflow-hidden animate-pulse" style={{ backgroundColor: BG2 }}>
+                <div className="h-44" style={{ backgroundColor: '#080612' }} />
                 <div className="p-4 space-y-2">
-                  <div className="h-4 bg-[#0C0918] rounded w-3/4" />
-                  <div className="h-3 bg-[#0C0918] rounded w-full" />
-                  <div className="h-3 bg-[#0C0918] rounded w-1/2" />
+                  <div className="h-4 w-3/4" style={{ backgroundColor: '#080612' }} />
+                  <div className="h-3 w-full" style={{ backgroundColor: '#080612' }} />
+                  <div className="h-3 w-1/2" style={{ backgroundColor: '#080612' }} />
                 </div>
               </div>
             ))}
@@ -580,7 +638,10 @@ export default function RecipesPage() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                <div
+                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                  style={{ gap: '1px', backgroundColor: `${CREAM}05` }}
+                >
                   {displayed.map((recipe, i) => (
                     <RecipeCard
                       key={recipe.id}
@@ -592,17 +653,26 @@ export default function RecipesPage() {
                   ))}
                 </div>
 
-                {/* Load More — Browse All only */}
+                {/* Load More - Browse All only */}
                 {activeTab === "all" && hasMore && (
                   <div className="flex justify-center mt-10">
                     <motion.button
                       onClick={handleLoadMore}
                       disabled={loadingMore}
-                      className="flex items-center gap-2 bg-[#130F1F] border border-white/8 text-white px-8 py-3 rounded-full font-semibold text-sm hover:border-fuchsia-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
+                      className="flex items-center gap-2 border text-white px-8 py-3 font-extrabold uppercase tracking-tighter text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{ backgroundColor: BG2, borderColor: `${CREAM}10`, color: CREAM }}
+                      onMouseEnter={e => !loadingMore && (e.currentTarget.style.borderColor = MAGENTA)}
+                      onMouseLeave={e => (e.currentTarget.style.borderColor = `${CREAM}10`)}
+                      whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                     >
                       {loadingMore ? (
-                        <><span className="w-4 h-4 border-2 border-white/30 border-t-fuchsia-400 rounded-full animate-spin" /> Loading…</>
+                        <>
+                          <span
+                            className="w-4 h-4 border-2 rounded-full animate-spin"
+                            style={{ borderColor: `${CREAM}25`, borderTopColor: MAGENTA }}
+                          />
+                          Loading…
+                        </>
                       ) : (
                         "Load More Recipes"
                       )}

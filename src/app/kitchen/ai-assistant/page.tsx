@@ -17,8 +17,8 @@ import type { AIAssistantResponse, AIMessage } from "@/types";
 import AQIIntro from "./AQIIntro";
 
 // ── Palette ───────────────────────────────────────────────────────────
-const BG      = "#07040A";
-const BG_SIDE = "#080309";
+const BG      = "#1C1C1C";
+const BG_SIDE = "#161616";
 const CREAM   = "#F0DFC0";
 const GOLD    = "#C9973A";
 const VIOLET  = "#F03E9E";   // bright magenta
@@ -349,7 +349,7 @@ const CHAT_STORAGE_KEY = "kitchen-ai-chat";
 const WELCOME: Message = {
   id: "init",
   role: "assistant",
-  content: "Salam! I'm AQI — your halal cooking companion 👨‍🍳\n\nTell me what's in your fridge, ask about a dish, or just say hi. I'll suggest ideas, answer cooking questions, and generate a full recipe whenever you're ready.\n\nWhat are we cooking today?",
+  content: "Salam! I'm AQI - your halal cooking companion 👨‍🍳\n\nTell me what's in your fridge, ask about a dish, or just say hi. I'll suggest ideas, answer cooking questions, and generate a full recipe whenever you're ready.\n\nWhat are we cooking today?",
   ts: new Date(),
   responseType: "chat",
 };
@@ -409,6 +409,16 @@ export default function AIAssistantPage() {
   }, [user]);
 
   useEffect(() => { loadConvs(); }, [loadConvs]);
+
+  // Auto-send message typed in the AQI landing section before redirect
+  useEffect(() => {
+    if (!user || authLoading) return;
+    const pending = sessionStorage.getItem("aqi_pending_message");
+    if (!pending) return;
+    sessionStorage.removeItem("aqi_pending_message");
+    const t = setTimeout(() => doSubmit(pending), 300);
+    return () => clearTimeout(t);
+  }, [user, authLoading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const scrollDown = useCallback(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -608,7 +618,7 @@ export default function AIAssistantPage() {
   }
 
   // Non-authenticated users see the intro page
-  if (!user) return <AQIIntro />;
+  if (!user) return <AQIIntro onAuth={() => requireAuth(() => {}, "Sign up to chat with AQI — your personal halal cooking assistant")} />;
 
   return (
     <div className="fixed inset-0 flex overflow-hidden" style={{ backgroundColor: BG, color: CREAM, zIndex: 50 }}>
@@ -763,7 +773,7 @@ export default function AIAssistantPage() {
                   className="text-center mb-10"
                 >
                   <p className="text-sm" style={{ color: `${CREAM}40` }}>
-                    Halal recipes, ingredient ideas, cooking guidance — all in one place
+                    Halal recipes, ingredient ideas, cooking guidance - all in one place
                   </p>
                   {!user && (
                     <p className="text-xs mt-3" style={{ color: `${CREAM}28` }}>
@@ -853,11 +863,11 @@ export default function AIAssistantPage() {
                       <div className="max-w-[88%]">
                         <div
                           style={isUser ? {
-                            background: "linear-gradient(135deg, #1E0A18 0%, #180A12 100%)",
+                            background: "linear-gradient(135deg, #2A2A2A 0%, #222222 100%)",
                             border: "1px solid rgba(240,62,158,0.2)",
                             padding: "12px 16px",
                           } : {
-                            background: "rgba(28,8,18,0.85)",
+                            background: "rgba(38,38,38,0.95)",
                             border: "1px solid rgba(240,62,158,0.12)",
                             borderLeft: `3px solid ${VIOLET}70`,
                             padding: "12px 16px",
@@ -956,7 +966,7 @@ export default function AIAssistantPage() {
                   <div className="flex justify-start">
                     <div className="max-w-[88%]">
                       <div style={{
-                        background: "rgba(28,8,18,0.85)",
+                        background: "rgba(38,38,38,0.95)",
                         border: "1px solid rgba(240,62,158,0.12)",
                         borderLeft: `3px solid ${VIOLET}70`,
                         padding: "12px 16px",
@@ -985,7 +995,7 @@ export default function AIAssistantPage() {
                     </div>
                     <div className="inline-flex items-center gap-1.5 px-4 py-3"
                       style={{
-                        background: "rgba(28,8,18,0.85)",
+                        background: "rgba(38,38,38,0.95)",
                         borderLeft: "3px solid",
                         borderImage: `linear-gradient(180deg, ${FUCHSIA}, ${VIOLET}) 1`,
                         border: "1px solid rgba(240,62,158,0.1)",

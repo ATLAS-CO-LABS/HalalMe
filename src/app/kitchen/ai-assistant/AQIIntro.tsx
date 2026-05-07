@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import {
@@ -9,7 +8,7 @@ import {
 } from "lucide-react";
 
 // ── Palette (matches chat page) ───────────────────────────────────────
-const BG      = "#07040A";
+const BG      = "#1C1C1C";
 const CREAM   = "#F0DFC0";
 const GOLD    = "#C9973A";
 const MAGENTA = "#F03E9E";
@@ -20,13 +19,13 @@ const FEATURES = [
   {
     icon: <BookOpen className="w-5 h-5" />,
     title: "Recipe Generation",
-    desc: "Describe what you have or crave — AQI builds a full halal recipe with ingredients, steps, and nutrition.",
+    desc: "Describe what you have or crave - AQI builds a full halal recipe with ingredients, steps, and nutrition.",
     color: "#F03E9E",
   },
   {
     icon: <ChefHat className="w-5 h-5" />,
     title: "Cooking Guidance",
-    desc: "Ask any technique question — temperatures, timings, knife skills — and get clear chef-level answers instantly.",
+    desc: "Ask any technique question - temperatures, timings, knife skills - and get clear chef-level answers instantly.",
     color: "#C9973A",
   },
   {
@@ -38,7 +37,7 @@ const FEATURES = [
   {
     icon: <CalendarDays className="w-5 h-5" />,
     title: "Meal Planning",
-    desc: "Tell AQI your week, dietary goals, and family size — get a structured, halal-verified meal plan.",
+    desc: "Tell AQI your week, dietary goals, and family size - get a structured, halal-verified meal plan.",
     color: "#60a5fa",
   },
 ];
@@ -48,16 +47,13 @@ const DEMO = [
   { role: "user",      text: "I have chicken, rice, and some spices. What should I make?" },
   { role: "assistant", text: "Perfect combo! I can make you Chicken Biryani, a simple Chicken Pulao, or a quick stir-fried rice. Which one sounds good?" },
   { role: "user",      text: "Biryani please!" },
-  { role: "assistant", text: "Great choice! Here's a classic Chicken Biryani — aromatic, layered, and fully halal. I'll walk you through every step.", isRecipe: true },
+  { role: "assistant", text: "Great choice! Here's a classic Chicken Biryani - aromatic, layered, and fully halal. I'll walk you through every step.", isRecipe: true },
 ];
 
 const fade  = { hidden: { opacity: 0, y: 24 }, show: { opacity: 1, y: 0 } };
 const stagger = { show: { transition: { staggerChildren: 0.1 } } };
 
-export default function AQIIntro() {
-  const router = useRouter();
-
-  const goSignup = () => router.push("/signup?redirect=/kitchen/ai-assistant");
+export default function AQIIntro({ onAuth }: { onAuth: () => void }) {
 
   return (
     <div className="fixed inset-0 overflow-y-auto" style={{ backgroundColor: BG, color: CREAM, zIndex: 50 }}>
@@ -86,7 +82,7 @@ export default function AQIIntro() {
           </div>
         </div>
         <button
-          onClick={goSignup}
+          onClick={onAuth}
           className="flex items-center gap-2 px-4 py-2 text-xs font-black uppercase transition-all hover:brightness-110"
           style={{ background: `linear-gradient(135deg, ${DEEP}, ${MAGENTA})`, color: "#fff", letterSpacing: "0.18em" }}
         >
@@ -143,7 +139,7 @@ export default function AQIIntro() {
           className="text-sm sm:text-base max-w-xl mx-auto mb-10 leading-relaxed"
           style={{ color: `${CREAM}60` }}
         >
-          Chat naturally with AQI to generate halal recipes, get cooking help, find ingredient substitutes, and plan your meals — all in seconds.
+          Chat naturally with AQI to generate halal recipes, get cooking help, find ingredient substitutes, and plan your meals - all in seconds.
         </motion.p>
 
         {/* CTA buttons */}
@@ -152,7 +148,7 @@ export default function AQIIntro() {
           className="flex items-center justify-center gap-3 flex-wrap"
         >
           <button
-            onClick={goSignup}
+            onClick={onAuth}
             className="flex items-center gap-2.5 px-7 py-3.5 text-sm font-black uppercase transition-all hover:brightness-110 active:scale-98"
             style={{ background: `linear-gradient(135deg, ${DEEP}, ${MAGENTA})`, color: "#fff", letterSpacing: "0.18em" }}
           >
@@ -248,11 +244,11 @@ export default function AQIIntro() {
                     )}
                     <div className="px-3.5 py-2.5 text-xs leading-relaxed"
                       style={msg.role === "user" ? {
-                        background: "linear-gradient(135deg, #1E0A18, #180A12)",
+                        background: "linear-gradient(135deg, #2A2A2A, #222222)",
                         border: "1px solid rgba(240,62,158,0.18)",
                         color: CREAM,
                       } : {
-                        background: "rgba(28,8,18,0.85)",
+                        background: "rgba(38,38,38,0.95)",
                         border: "1px solid rgba(240,62,158,0.10)",
                         borderLeft: `3px solid ${MAGENTA}70`,
                         color: `${CREAM}CC`,
@@ -321,7 +317,7 @@ export default function AQIIntro() {
             </p>
 
             <button
-              onClick={goSignup}
+              onClick={onAuth}
               className="inline-flex items-center gap-3 px-8 py-4 text-sm font-black uppercase transition-all hover:brightness-110 active:scale-[0.98]"
               style={{ background: `linear-gradient(135deg, ${DEEP}, ${MAGENTA})`, color: "#fff", letterSpacing: "0.2em" }}
             >
@@ -332,7 +328,7 @@ export default function AQIIntro() {
 
             <p className="text-[9px] mt-4 uppercase" style={{ color: `${CREAM}20`, letterSpacing: "0.14em" }}>
               Already have an account?{" "}
-              <a href="/login" className="underline" style={{ color: `${CREAM}35` }}>Sign in</a>
+              <button onClick={onAuth} className="underline" style={{ color: `${CREAM}35` }}>Sign in</button>
             </p>
           </div>
         </motion.div>

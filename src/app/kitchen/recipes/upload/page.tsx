@@ -11,6 +11,13 @@ import {
 import { recipeService } from "@/services/recipeService";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthGate } from "@/hooks/useAuthGate";
+import AuthGuard from "@/components/auth/AuthGuard";
+
+const BG      = '#1C1C1C';
+const BG2     = '#161616';
+const CREAM   = '#F7E7CE';
+const MAGENTA = '#F03E9E';
+const DEEP    = '#C41E73';
 
 // ── Types ───────────────────────────────────────────────────────────
 interface IngredientRow {
@@ -30,13 +37,13 @@ interface RecipeForm {
   ingredients: IngredientRow[];
   instructions: string[];
   image: File | null;
-  existingImageUrl: string | null; // used in edit mode
+  existingImageUrl: string | null;
 }
 
 // ── Styles ──────────────────────────────────────────────────────────
 const fieldClass =
-  "w-full bg-[#0C0918] text-white rounded-xl px-4 py-3 border border-white/8 focus:outline-none focus:border-fuchsia-500 transition-colors text-sm font-normal";
-const labelClass = "block text-gray-300 font-semibold mb-2 text-sm";
+  "w-full text-white px-4 py-3 border focus:outline-none transition-colors text-sm font-normal";
+const labelClass = "block font-extrabold uppercase tracking-tighter mb-2 text-xs";
 
 const CUISINES = [
   "Middle Eastern", "South Asian", "Turkish", "Moroccan", "Lebanese",
@@ -60,15 +67,17 @@ function Notification({
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
-      className={`flex items-start gap-3 p-4 rounded-xl border ${
+      className="flex items-start gap-3 p-4 border"
+      style={
         isSuccess
-          ? "bg-emerald-900/20 border-emerald-500/20 text-emerald-300"
-          : "bg-red-900/20 border-red-500/20 text-red-300"
-      }`}
+          ? { backgroundColor: 'rgba(6,78,59,0.2)', borderColor: 'rgba(52,211,153,0.2)', color: 'rgb(110,231,183)' }
+          : { backgroundColor: 'rgba(127,29,29,0.2)', borderColor: 'rgba(248,113,113,0.2)', color: 'rgb(252,165,165)' }
+      }
     >
-      <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
-        isSuccess ? "bg-emerald-500/20" : "bg-red-500/20"
-      }`}>
+      <div
+        className="w-5 h-5 flex items-center justify-center shrink-0 mt-0.5"
+        style={{ backgroundColor: isSuccess ? 'rgba(52,211,153,0.2)' : 'rgba(248,113,113,0.2)' }}
+      >
         {isSuccess
           ? <Check className="w-3 h-3 text-emerald-400" />
           : <X className="w-3 h-3 text-red-400" />}
@@ -108,25 +117,26 @@ function normaliseInstructions(raw: unknown): string[] {
 // ═══════════════════════════════════════════════════════════════════
 export default function UploadRecipePage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#08060F' }}>
-        <Loader2 className="w-8 h-8 text-fuchsia-400 animate-spin" />
-      </div>
-    }>
-      <UploadRecipeInner />
-    </Suspense>
+    <AuthGuard>
+      <Suspense fallback={
+        <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: BG }}>
+          <Loader2 className="w-8 h-8 animate-spin" style={{ color: MAGENTA }} />
+        </div>
+      }>
+        <UploadRecipeInner />
+      </Suspense>
+    </AuthGuard>
   );
 }
 
 function UploadRecipeInner() {
   const router       = useRouter();
   const searchParams = useSearchParams();
-  const editId       = searchParams.get("edit"); // null = create mode
+  const editId       = searchParams.get("edit");
   const isEditMode   = !!editId;
 
   const { user } = useAuth();
   const { requireAuth } = useAuthGate();
-  // Stays current across renders so the doSubmit closure always gets fresh user.
   const userRef = useRef(user);
   userRef.current = user;
 
@@ -134,7 +144,7 @@ function UploadRecipeInner() {
   const [isSubmitting, setIsSubmitting]   = useState(false);
   const [notification, setNotification]   = useState<{ type: "success" | "error"; message: string } | null>(null);
 
-  const [ingredientRow, setIngredientRow]         = useState<IngredientRow>({ amount: "", unit: "", name: "" });
+  const [ingredientRow, setIngredientRow]           = useState<IngredientRow>({ amount: "", unit: "", name: "" });
   const [currentInstruction, setCurrentInstruction] = useState("");
 
   const [form, setForm] = useState<RecipeForm>({
@@ -239,7 +249,7 @@ function UploadRecipeInner() {
   // ── Submit ────────────────────────────────────────────────────────
   const doSubmit = useCallback(async () => {
     const currentUser = userRef.current;
-    if (!currentUser) return; // safety net — requireAuth guarantees this won't happen
+    if (!currentUser) return;
     setIsSubmitting(true);
     try {
       const recipeData = {
@@ -304,18 +314,29 @@ function UploadRecipeInner() {
   // ── Loading skeleton (edit mode only) ────────────────────────────
   if (loadingRecipe) {
     return (
-      <div className="min-h-screen py-6 md:py-8 flex items-center justify-center" style={{ backgroundColor: '#08060F' }}>
+      <div className="min-h-screen py-6 md:py-8 flex items-center justify-center" style={{ backgroundColor: BG }}>
         <div className="text-center">
-          <Loader2 className="w-8 h-8 text-fuchsia-400 animate-spin mx-auto mb-3" />
-          <p className="text-[#F7E7CE]/60 text-sm">Loading recipe…</p>
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3" style={{ color: MAGENTA }} />
+          <p className="text-sm" style={{ color: `${CREAM}50` }}>Loading recipe…</p>
         </div>
       </div>
     );
   }
 
+  // ── Input field styles (applied inline for theming) ──────────────
+  const fieldStyle = {
+    backgroundColor: BG2,
+    borderColor: `${CREAM}10`,
+    caretColor: MAGENTA,
+  };
+  const fieldFocus = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+    (e.target.style.borderColor = MAGENTA);
+  const fieldBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+    (e.target.style.borderColor = `${CREAM}10`);
+
   // ══════════════════════════════════════════════════════════════════
   return (
-    <div className="min-h-screen py-6 md:py-8" style={{ backgroundColor: '#08060F' }}>
+    <div className="min-h-screen py-6 md:py-8" style={{ backgroundColor: BG }}>
       <div className="mx-auto max-w-4xl px-4 md:px-6">
 
         {/* Header */}
@@ -323,20 +344,20 @@ function UploadRecipeInner() {
           <div className="flex items-center gap-3 md:gap-4 mb-3">
             <Link href="/kitchen/recipes">
               <motion.button
-                className="text-gray-400 hover:text-white transition-colors"
+                className="transition-colors"
+                style={{ color: `${CREAM}50` }}
+                onMouseEnter={e => e.currentTarget.style.color = CREAM}
+                onMouseLeave={e => e.currentTarget.style.color = `${CREAM}50`}
                 whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
               >
                 <ArrowLeft className="w-5 h-5 md:w-6 md:h-6" />
               </motion.button>
             </Link>
-            <h1
-              className="text-xl md:text-2xl lg:text-3xl font-bold text-white"
-              style={{ fontFamily: "var(--font-headline)" }}
-            >
+            <h1 className="text-xl md:text-2xl lg:text-3xl font-extrabold uppercase tracking-tighter" style={{ color: CREAM }}>
               {isEditMode ? "Edit Recipe" : "Upload Your Recipe"}
             </h1>
           </div>
-          <p className="text-sm text-[#F7E7CE]/60 font-normal ml-9 md:ml-10" style={{ fontFamily: "var(--font-body)" }}>
+          <p className="text-sm font-normal ml-9 md:ml-10" style={{ color: `${CREAM}45` }}>
             {isEditMode
               ? "Update your recipe details below"
               : "Share your halal culinary creation with the community"}
@@ -356,52 +377,65 @@ function UploadRecipeInner() {
           )}
         </AnimatePresence>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-px" style={{ backgroundColor: `${CREAM}05` }}>
 
           {/* ── Basic Info ──────────────────────────────────────── */}
           <motion.div
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-            className="bg-[#130F1F] rounded-2xl p-6 border border-white/8"
+            className="p-6"
+            style={{ backgroundColor: BG2 }}
           >
-            <h2 className="text-xl font-bold text-white mb-6" style={{ fontFamily: "var(--font-headline)" }}>
-              Basic Information
-            </h2>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-6 h-px" style={{ backgroundColor: MAGENTA }} />
+              <h2 className="text-sm font-extrabold uppercase tracking-[0.25em]" style={{ color: MAGENTA }}>
+                Basic Information
+              </h2>
+            </div>
 
             <div className="space-y-4">
               {/* Title */}
               <div>
-                <label className={labelClass}>Recipe Title *</label>
+                <label className={labelClass} style={{ color: `${CREAM}60` }}>Recipe Title *</label>
                 <input
                   type="text"
                   value={form.title}
                   onChange={(e) => set("title", e.target.value)}
                   placeholder="e.g., Chicken Biryani"
                   className={fieldClass}
+                  style={fieldStyle}
+                  onFocus={fieldFocus}
+                  onBlur={fieldBlur}
                   required
                 />
               </div>
 
               {/* Description */}
               <div>
-                <label className={labelClass}>Description *</label>
+                <label className={labelClass} style={{ color: `${CREAM}60` }}>Description *</label>
                 <textarea
                   value={form.description}
                   onChange={(e) => set("description", e.target.value)}
                   placeholder="Brief description of your recipe..."
                   rows={3}
                   className={`${fieldClass} resize-none`}
+                  style={fieldStyle}
+                  onFocus={fieldFocus}
+                  onBlur={fieldBlur}
                   required
                 />
               </div>
 
               {/* Cuisine */}
               <div>
-                <label className={labelClass}>Cuisine *</label>
+                <label className={labelClass} style={{ color: `${CREAM}60` }}>Cuisine *</label>
                 <div className="relative">
                   <select
                     value={form.cuisine}
                     onChange={(e) => set("cuisine", e.target.value)}
                     className={`${fieldClass} appearance-none pr-10`}
+                    style={fieldStyle}
+                    onFocus={fieldFocus}
+                    onBlur={fieldBlur}
                     required
                   >
                     <option value="">Select cuisine…</option>
@@ -414,9 +448,9 @@ function UploadRecipeInner() {
               </div>
 
               {/* Time + Servings + Difficulty */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
-                  <label className={labelClass}>Prep Time (mins)</label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-px" style={{ backgroundColor: `${CREAM}05` }}>
+                <div className="p-3" style={{ backgroundColor: BG2 }}>
+                  <label className={labelClass} style={{ color: `${CREAM}60` }}>Prep Time (mins)</label>
                   <input
                     type="number"
                     value={form.prep_time_mins}
@@ -424,10 +458,13 @@ function UploadRecipeInner() {
                     placeholder="15"
                     min="0"
                     className={fieldClass}
+                    style={fieldStyle}
+                    onFocus={fieldFocus}
+                    onBlur={fieldBlur}
                   />
                 </div>
-                <div>
-                  <label className={labelClass}>Cook Time (mins) *</label>
+                <div className="p-3" style={{ backgroundColor: BG2 }}>
+                  <label className={labelClass} style={{ color: `${CREAM}60` }}>Cook Time (mins) *</label>
                   <input
                     type="number"
                     value={form.cook_time_mins}
@@ -435,11 +472,14 @@ function UploadRecipeInner() {
                     placeholder="45"
                     min="1"
                     className={fieldClass}
+                    style={fieldStyle}
+                    onFocus={fieldFocus}
+                    onBlur={fieldBlur}
                     required
                   />
                 </div>
-                <div>
-                  <label className={labelClass}>Servings *</label>
+                <div className="p-3" style={{ backgroundColor: BG2 }}>
+                  <label className={labelClass} style={{ color: `${CREAM}60` }}>Servings *</label>
                   <input
                     type="number"
                     value={form.servings}
@@ -447,16 +487,22 @@ function UploadRecipeInner() {
                     placeholder="4"
                     min="1"
                     className={fieldClass}
+                    style={fieldStyle}
+                    onFocus={fieldFocus}
+                    onBlur={fieldBlur}
                     required
                   />
                 </div>
-                <div>
-                  <label className={labelClass}>Difficulty *</label>
+                <div className="p-3" style={{ backgroundColor: BG2 }}>
+                  <label className={labelClass} style={{ color: `${CREAM}60` }}>Difficulty *</label>
                   <div className="relative">
                     <select
                       value={form.difficulty}
                       onChange={(e) => set("difficulty", e.target.value as RecipeForm["difficulty"])}
                       className={`${fieldClass} appearance-none pr-10`}
+                      style={fieldStyle}
+                      onFocus={fieldFocus}
+                      onBlur={fieldBlur}
                       required
                     >
                       <option value="">Select…</option>
@@ -474,21 +520,28 @@ function UploadRecipeInner() {
           {/* ── Image ───────────────────────────────────────────── */}
           <motion.div
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-            className="bg-[#130F1F] rounded-2xl p-6 border border-white/8"
+            className="p-6"
+            style={{ backgroundColor: BG2 }}
           >
-            <h2 className="text-xl font-bold text-white mb-6" style={{ fontFamily: "var(--font-headline)" }}>
-              Recipe Image
-            </h2>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-6 h-px" style={{ backgroundColor: MAGENTA }} />
+              <h2 className="text-sm font-extrabold uppercase tracking-[0.25em]" style={{ color: MAGENTA }}>
+                Recipe Image
+              </h2>
+            </div>
             <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" id="image-upload" />
             <label
               htmlFor="image-upload"
-              className="flex flex-col items-center justify-center w-full h-44 bg-[#0C0918] border-2 border-dashed border-white/8 rounded-xl cursor-pointer hover:border-fuchsia-500 transition-colors"
+              className="flex flex-col items-center justify-center w-full h-44 border-2 border-dashed cursor-pointer transition-colors"
+              style={{ backgroundColor: BG, borderColor: `${CREAM}10` }}
+              onMouseEnter={e => (e.currentTarget.style.borderColor = MAGENTA)}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = `${CREAM}10`)}
             >
               {form.image ? (
                 <div className="text-center">
                   <Check className="w-10 h-10 text-emerald-400 mx-auto mb-2" />
-                  <p className="text-white font-semibold text-sm">{form.image.name}</p>
-                  <p className="text-[#F7E7CE]/60 text-xs mt-1">Click to change</p>
+                  <p className="font-extrabold uppercase tracking-tight text-sm" style={{ color: CREAM }}>{form.image.name}</p>
+                  <p className="text-xs mt-1" style={{ color: `${CREAM}40` }}>Click to change</p>
                 </div>
               ) : form.existingImageUrl ? (
                 <div className="text-center">
@@ -496,15 +549,15 @@ function UploadRecipeInner() {
                   <img
                     src={form.existingImageUrl}
                     alt="Current"
-                    className="w-20 h-20 object-cover rounded-lg mx-auto mb-2 opacity-80"
+                    className="w-20 h-20 object-cover mx-auto mb-2 opacity-80"
                   />
-                  <p className="text-[#F7E7CE]/60 text-xs">Current image — click to replace</p>
+                  <p className="text-xs" style={{ color: `${CREAM}40` }}>Current image - click to replace</p>
                 </div>
               ) : (
                 <div className="text-center">
                   <ImageIcon className="w-10 h-10 text-gray-500 mx-auto mb-2" />
-                  <p className="text-white font-semibold text-sm">Upload Recipe Image</p>
-                  <p className="text-[#F7E7CE]/60 text-xs mt-1">PNG, JPG — max 5 MB (optional)</p>
+                  <p className="font-extrabold uppercase tracking-tight text-sm" style={{ color: CREAM }}>Upload Recipe Image</p>
+                  <p className="text-xs mt-1" style={{ color: `${CREAM}35` }}>PNG, JPG - max 5 MB (optional)</p>
                 </div>
               )}
             </label>
@@ -513,17 +566,21 @@ function UploadRecipeInner() {
           {/* ── Ingredients ─────────────────────────────────────── */}
           <motion.div
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-            className="bg-[#130F1F] rounded-2xl p-6 border border-white/8"
+            className="p-6"
+            style={{ backgroundColor: BG2 }}
           >
-            <h2 className="text-xl font-bold text-white mb-2" style={{ fontFamily: "var(--font-headline)" }}>
-              Ingredients *
-            </h2>
-            <p className="text-[#F7E7CE]/60 text-xs mb-5" style={{ fontFamily: "var(--font-body)" }}>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-6 h-px" style={{ backgroundColor: MAGENTA }} />
+              <h2 className="text-sm font-extrabold uppercase tracking-[0.25em]" style={{ color: MAGENTA }}>
+                Ingredients *
+              </h2>
+            </div>
+            <p className="text-xs mb-5 ml-9" style={{ color: `${CREAM}40` }}>
               Enter amount, unit (optional), and ingredient name
             </p>
 
             {/* Input row */}
-            <div className="grid grid-cols-[80px_110px_1fr_auto] gap-2 mb-4">
+            <div className="grid grid-cols-[80px_110px_1fr_auto] gap-1 mb-3">
               <input
                 type="text"
                 value={ingredientRow.amount}
@@ -531,12 +588,18 @@ function UploadRecipeInner() {
                 onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addIngredient())}
                 placeholder="2"
                 className={`${fieldClass} text-center`}
+                style={fieldStyle}
+                onFocus={fieldFocus}
+                onBlur={fieldBlur}
               />
               <div className="relative">
                 <select
                   value={ingredientRow.unit}
                   onChange={(e) => setIngredientRow((r) => ({ ...r, unit: e.target.value }))}
                   className={`${fieldClass} appearance-none pr-7`}
+                  style={fieldStyle}
+                  onFocus={fieldFocus}
+                  onBlur={fieldBlur}
                 >
                   {COMMON_UNITS.map((u) => (
                     <option key={u} value={u}>{u || "unit"}</option>
@@ -551,11 +614,17 @@ function UploadRecipeInner() {
                 onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addIngredient())}
                 placeholder="e.g., basmati rice"
                 className={fieldClass}
+                style={fieldStyle}
+                onFocus={fieldFocus}
+                onBlur={fieldBlur}
               />
               <motion.button
                 type="button"
                 onClick={addIngredient}
-                className="h-11.5 w-11.5 bg-linear-to-br from-fuchsia-600 to-pink-600 text-white rounded-xl flex items-center justify-center"
+                className="w-11 flex items-center justify-center text-white transition-colors"
+                style={{ backgroundColor: DEEP }}
+                onMouseEnter={e => (e.currentTarget.style.backgroundColor = MAGENTA)}
+                onMouseLeave={e => (e.currentTarget.style.backgroundColor = DEEP)}
                 whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
               >
                 <Plus className="w-5 h-5" />
@@ -570,9 +639,10 @@ function UploadRecipeInner() {
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 10 }}
-                  className="flex items-center justify-between bg-[#0C0918] rounded-lg px-4 py-2.5 border border-white/8 mb-2"
+                  className="flex items-center justify-between px-4 py-2.5 border mb-1"
+                  style={{ backgroundColor: BG, borderColor: `${CREAM}08` }}
                 >
-                  <span className="text-gray-300 text-sm font-normal" style={{ fontFamily: "var(--font-body)" }}>
+                  <span className="text-sm font-normal" style={{ color: `${CREAM}75` }}>
                     {[ing.amount, ing.unit, ing.name].filter(Boolean).join(" ")}
                   </span>
                   <button type="button" onClick={() => removeIngredient(i)}
@@ -587,13 +657,17 @@ function UploadRecipeInner() {
           {/* ── Instructions ────────────────────────────────────── */}
           <motion.div
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
-            className="bg-[#130F1F] rounded-2xl p-6 border border-white/8"
+            className="p-6"
+            style={{ backgroundColor: BG2 }}
           >
-            <h2 className="text-xl font-bold text-white mb-6" style={{ fontFamily: "var(--font-headline)" }}>
-              Instructions *
-            </h2>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-6 h-px" style={{ backgroundColor: MAGENTA }} />
+              <h2 className="text-sm font-extrabold uppercase tracking-[0.25em]" style={{ color: MAGENTA }}>
+                Instructions *
+              </h2>
+            </div>
 
-            <div className="flex gap-2 mb-4">
+            <div className="flex gap-1 mb-3">
               <textarea
                 value={currentInstruction}
                 onChange={(e) => setCurrentInstruction(e.target.value)}
@@ -601,11 +675,17 @@ function UploadRecipeInner() {
                 placeholder="Describe this cooking step… (Ctrl+Enter to add)"
                 rows={2}
                 className={`${fieldClass} flex-1 resize-none`}
+                style={fieldStyle}
+                onFocus={fieldFocus}
+                onBlur={fieldBlur}
               />
               <motion.button
                 type="button"
                 onClick={addInstruction}
-                className="bg-linear-to-br from-fuchsia-600 to-pink-600 text-white rounded-xl px-5 font-semibold self-start h-11.5 flex items-center"
+                className="text-white px-5 font-extrabold uppercase tracking-tighter self-start h-11.5 flex items-center"
+                style={{ backgroundColor: DEEP }}
+                onMouseEnter={e => (e.currentTarget.style.backgroundColor = MAGENTA)}
+                onMouseLeave={e => (e.currentTarget.style.backgroundColor = DEEP)}
                 whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
               >
                 <Plus className="w-5 h-5" />
@@ -619,12 +699,16 @@ function UploadRecipeInner() {
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 10 }}
-                  className="flex gap-3 bg-[#0C0918] rounded-lg p-4 border border-white/8 mb-2"
+                  className="flex gap-3 p-4 border mb-1"
+                  style={{ backgroundColor: BG, borderColor: `${CREAM}08` }}
                 >
-                  <div className="w-7 h-7 bg-fuchsia-500 rounded-full flex items-center justify-center font-bold text-white text-sm shrink-0">
+                  <div
+                    className="w-7 h-7 flex items-center justify-center font-extrabold text-white text-sm shrink-0"
+                    style={{ backgroundColor: MAGENTA }}
+                  >
                     {i + 1}
                   </div>
-                  <p className="flex-1 text-gray-300 text-sm font-normal" style={{ fontFamily: "var(--font-body)" }}>
+                  <p className="flex-1 text-sm font-normal" style={{ color: `${CREAM}75` }}>
                     {step}
                   </p>
                   <button type="button" onClick={() => removeInstruction(i)}
@@ -640,13 +724,14 @@ function UploadRecipeInner() {
           <motion.button
             type="submit"
             disabled={isSubmitting}
-            className={`w-full rounded-2xl px-8 py-4 font-bold text-lg flex items-center justify-center gap-3 shadow-xl transition-all ${
+            className="w-full px-8 py-4 font-extrabold uppercase tracking-tighter text-base flex items-center justify-center gap-3 transition-all"
+            style={
               isSubmitting
-                ? "bg-[#130F1F] text-[#F7E7CE]/60 cursor-not-allowed"
-                : "bg-linear-to-br from-fuchsia-600 to-pink-600 text-white"
-            }`}
-            whileHover={!isSubmitting ? { scale: 1.02 } : {}}
-            whileTap={!isSubmitting ? { scale: 0.98 } : {}}
+                ? { backgroundColor: BG2, color: `${CREAM}40`, cursor: 'not-allowed' }
+                : { backgroundColor: DEEP, color: 'white' }
+            }
+            whileHover={!isSubmitting ? { scale: 1.01 } : {}}
+            whileTap={!isSubmitting ? { scale: 0.99 } : {}}
           >
             {isSubmitting ? (
               <><Loader2 className="w-6 h-6 animate-spin" /> {isEditMode ? "Saving…" : "Uploading…"}</>
