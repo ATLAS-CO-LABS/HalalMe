@@ -5,12 +5,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import {
-  Zap,
   Globe,
   ChefHat,
   Users,
-  Plane,
-  ShoppingBag,
   Gift,
   Truck,
   ArrowRight,
@@ -120,15 +117,26 @@ export default function SelectRolePage() {
                   Access all HalalMe services with one unified account.
                 </p>
 
+                {/* Feature bullets */}
+                <div className="flex flex-col gap-2 mb-4">
+                  {[
+                    "AI-powered halal recipe assistant",
+                    "Social hub for the halal community",
+                    "Earn rewards by donating to causes",
+                  ].map((text, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <Check className="w-3 h-3 text-[#F59E0B] shrink-0" />
+                      <span className="text-[11px] text-[#F7E7CE]/55">{text}</span>
+                    </div>
+                  ))}
+                </div>
+
                 {/* Service mini-grid */}
                 <div className="grid grid-cols-3 gap-px bg-[#F7E7CE]/8 mb-5">
                   {[
                     { Icon: ChefHat, label: "Kitchen" },
                     { Icon: Users, label: "Hub" },
-                    { Icon: Plane, label: "Travel" },
-                    { Icon: ShoppingBag, label: "Fresh" },
                     { Icon: Gift, label: "Rewards" },
-                    { Icon: Zap, label: "& More" },
                   ].map(({ Icon, label }, i) => (
                     <div
                       key={i}
@@ -189,20 +197,18 @@ export default function SelectRolePage() {
                   vendor or driver.
                 </p>
 
-                <ul className="space-y-1.5 mb-5">
+                <div className="flex flex-col gap-2 mb-5">
                   {[
                     "Fast halal food delivery to your door",
                     "Dedicated delivery platform",
                     "Join as a vendor or driver",
                   ].map((text, i) => (
-                    <li key={i} className="flex items-start gap-2">
-                      <div className="mt-0.5 w-3.5 h-3.5 bg-[#F7E7CE]/6 border border-[#F7E7CE]/12 flex items-center justify-center shrink-0">
-                        <Check className="w-2 h-2 text-[#F7E7CE]/50" />
-                      </div>
-                      <span className="text-xs text-[#F7E7CE]/55">{text}</span>
-                    </li>
+                    <div key={i} className="flex items-center gap-2">
+                      <Check className="w-3 h-3 text-[#F59E0B] shrink-0" />
+                      <span className="text-[11px] text-[#F7E7CE]/55">{text}</span>
+                    </div>
                   ))}
-                </ul>
+                </div>
 
                 <div className="space-y-2">
                   <a

@@ -539,13 +539,19 @@ export default function RewardsLandingPage() {
             </span>
           </div>
           <h2
-            className="text-4xl sm:text-5xl md:text-7xl font-extrabold uppercase tracking-tighter leading-[0.88]"
+            className="text-4xl sm:text-5xl md:text-7xl font-extrabold uppercase tracking-tighter leading-[0.88] mb-6"
             style={{ color: CREAM }}
           >
             Contribution
             <br />
             <span style={{ color: `${CREAM}65` }}>Levels.</span>
           </h2>
+          <p
+            className="max-w-xl text-sm md:text-base leading-relaxed"
+            style={{ color: `${CREAM}55`, fontFamily: "var(--font-body)" }}
+          >
+            The more you give, the higher your status. Each tier is unlocked by your total lifetime donations and reflects your commitment to the community. Higher tiers unlock more AI requests per hour and exclusive platform benefits.
+          </p>
         </div>
 
         <div className="max-w-[95vw] mx-auto px-6 md:px-10 mb-10">
@@ -589,33 +595,46 @@ export default function RewardsLandingPage() {
               transition={{ delay: i * 0.1, duration: 0.5 }}
             >
               <div
-                className="group p-6 md:p-10 flex flex-col items-center text-center min-h-[180px] md:min-h-[220px] justify-center transition-colors duration-300 cursor-default"
+                className="group p-6 md:p-10 flex flex-col items-center text-center transition-colors duration-300 cursor-default"
                 onMouseEnter={(e) =>
-                  (e.currentTarget.style.backgroundColor = tier.hover)
+                  (e.currentTarget.style.backgroundColor = `${tier.bg}18`)
                 }
                 onMouseLeave={(e) =>
                   (e.currentTarget.style.backgroundColor = BG2)
                 }
-                style={{ backgroundColor: BG2, border: `1px solid ${CREAM}05` }}
+                style={{ backgroundColor: BG2, border: `1px solid ${CREAM}05`, borderTop: `2px solid ${tier.bg}` }}
               >
-                <div
-                  className="w-14 h-14 rounded-full mb-5 flex items-center justify-center"
-                  style={{ backgroundColor: tier.bg }}
-                >
-                  <Star className="w-7 h-7 text-white" />
+                {/* Hexagon badge */}
+                <div className="relative mb-6 mt-2">
+                  {/* Outer ring */}
+                  <div
+                    className="w-20 h-20 flex items-center justify-center"
+                    style={{
+                      clipPath: "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)",
+                      backgroundColor: `${tier.bg}30`,
+                    }}
+                  >
+                    {/* Inner hex */}
+                    <div
+                      className="w-16 h-16 flex items-center justify-center"
+                      style={{
+                        clipPath: "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)",
+                        background: `linear-gradient(135deg, ${tier.bg}, ${tier.hover})`,
+                      }}
+                    >
+                      <Star className="w-6 h-6 text-white drop-shadow" fill="white" />
+                    </div>
+                  </div>
                 </div>
                 <h3
-                  className="text-xl font-extrabold uppercase tracking-tighter mb-1 transition-colors duration-300 group-hover:text-white"
-                  style={{ color: CREAM, fontFamily: "var(--font-headline)" }}
+                  className="text-xl font-extrabold uppercase tracking-tighter mb-1"
+                  style={{ color: tier.bg, fontFamily: "var(--font-headline)" }}
                 >
                   {tier.level}
                 </h3>
                 <p
                   className="text-sm transition-colors duration-300 group-hover:text-white/70"
-                  style={{
-                    color: `${CREAM}65`,
-                    fontFamily: "var(--font-body)",
-                  }}
+                  style={{ color: `${CREAM}65`, fontFamily: "var(--font-body)" }}
                 >
                   {tier.req} donated
                 </p>

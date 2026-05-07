@@ -1077,7 +1077,7 @@ function ForRestaurantsSection() {
         className="absolute -top-4 -right-6 md:-top-10 md:-right-10 text-[10rem] md:text-[18rem] font-extrabold leading-none select-none pointer-events-none z-0"
         style={{ color: "#0F0620" }}
       >
-        06
+        02
       </span>
 
       <ContainerScroll
@@ -1174,7 +1174,7 @@ function DeliveryExperienceSection() {
         className="absolute -top-4 -left-4 md:-top-10 md:-left-6 text-[10rem] md:text-[18rem] font-extrabold leading-none select-none pointer-events-none"
         style={{ color: "#130626" }}
       >
-        05
+        01
       </span>
 
       <div className="relative max-w-[95vw] mx-auto px-6 md:px-10 mb-14 md:mb-20">
