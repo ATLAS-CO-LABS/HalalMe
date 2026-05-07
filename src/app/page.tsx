@@ -222,7 +222,7 @@ function ServiceTicker() {
   const services = [
     "HalalMe Delivery",
     "HalalMe Kitchen",
-    "HalalMe Hub",
+    "HalalMe Social",
     "HalalMe Rewards",
   ];
 
