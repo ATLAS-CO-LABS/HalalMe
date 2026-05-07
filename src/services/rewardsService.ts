@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import type { Charity, Donation, RewardTransaction } from "@/types";
+import type { Charity, Donation, RewardTransaction } from "@/types/app";
 
 export const rewardsService = {
   // ---------------------------------------------------------------------------
@@ -64,7 +64,7 @@ export const rewardsService = {
         user_id: userId,
         charity_id: charityId,
         amount,
-        currency: options?.currency ?? "USD",
+        currency: options?.currency ?? "GBP",
         message: options?.message ?? null,
         is_anonymous: options?.is_anonymous ?? false,
         status: "pending",

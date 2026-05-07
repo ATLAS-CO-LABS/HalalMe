@@ -1,166 +1,216 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import Link from "next/link";
 import { Search, Filter, Heart, ArrowLeft } from "lucide-react";
 import Header from "@/components/layout/Header";
 import CharityCard from "@/components/rewards/CharityCard";
-import { charities, categories } from "@/data/charities";
+import { rewardsService } from "@/services/rewardsService";
+import type { Charity } from "@/types/app";
+import AuthGuard from "@/components/auth/AuthGuard";
+
+const BG    = "#0F1F17";
+const BG2   = "#162B20";
+const CREAM = "#F7E7CE";
+const TEAL  = "#14B8A6";
 
 export default function CausesPage() {
-  const [selectedCategory, setSelectedCategory] = useState("All");
-  const [searchQuery, setSearchQuery] = useState("");
+  return <AuthGuard><CausesContent /></AuthGuard>;
+}
 
-  const filteredCharities = charities.filter((charity) => {
-    const matchesCategory =
-      selectedCategory === "All" || charity.category === selectedCategory;
-    const matchesSearch =
-      charity.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      charity.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+function CausesContent() {
+  const [charities, setCharities]       = useState<Charity[]>([]);
+  const [categories, setCategories]     = useState<string[]>(["All"]);
+  const [loading, setLoading]           = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [searchQuery, setSearchQuery]   = useState("");
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const [data, cats] = await Promise.all([
+          rewardsService.getCharities(),
+          rewardsService.getCategories(),
+        ]);
+        setCharities(data);
+        setCategories(["All", ...cats]);
+      } catch (err) {
+        console.error("Failed to load charities:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
+
+  const filteredCharities = charities.filter((c) => {
+    const matchesCat    = selectedCategory === "All" || c.category === selectedCategory;
+    const matchesSearch = c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          c.description.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCat && matchesSearch;
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-emerald-950 to-gray-900">
+    <div className="min-h-screen" style={{ backgroundColor: BG }}>
       <Header />
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden pt-24 pb-8 md:pt-32 md:pb-12 px-4 md:px-6">
-        <div className="absolute inset-0">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-600 rounded-full filter blur-3xl opacity-10"></div>
-          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-teal-600 rounded-full filter blur-3xl opacity-10"></div>
+      {/* ─── Hero ─────────────────────────────────────────── */}
+      <section className="relative pt-24 pb-12 md:pt-32 md:pb-16 px-6 md:px-10 overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="/images/page sections/rewards4.png"
+            alt="Browse causes"
+            fill
+            className="object-cover"
+            sizes="100vw"
+            priority
+          />
+          <div className="absolute inset-0" style={{ background: `linear-gradient(to right, ${BG}D0 0%, ${BG}70 45%, transparent 80%)` }} />
         </div>
-
-        <div className="mx-auto max-w-6xl relative z-10">
+        <div className="relative z-10 max-w-[95vw] mx-auto">
           <Link
             href="/rewards"
-            className="inline-flex items-center gap-2 text-emerald-400 hover:text-emerald-300 mb-6 transition-colors"
+            className="inline-flex items-center gap-2 mb-10 font-semibold text-sm uppercase tracking-wider transition-colors"
+            style={{ color: `${CREAM}40` }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = TEAL)}
+            onMouseLeave={(e) => (e.currentTarget.style.color = `${CREAM}40`)}
           >
             <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm font-semibold">Back to Rewards</span>
+            Back to Rewards
           </Link>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-8 h-px" style={{ backgroundColor: TEAL }} />
+            <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em]" style={{ color: TEAL }}>
+              Verified Causes
+            </span>
+          </div>
+
+          <h1
+            className="font-extrabold uppercase tracking-tighter leading-[0.88] text-4xl sm:text-5xl md:text-7xl mb-4"
+            style={{ color: CREAM, fontFamily: "var(--font-headline)" }}
           >
-            <h1
-              className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white mb-4"
-              style={{ fontFamily: "var(--font-headline)" }}
-            >
-              Choose a{" "}
-              <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
-                Cause
-              </span>
-            </h1>
-            <p
-              className="text-lg text-gray-400 max-w-2xl font-normal"
-              style={{ fontFamily: "var(--font-body)" }}
-            >
-              Browse through our verified charity causes and make a donation
-              that makes a difference.
-            </p>
-          </motion.div>
+            Choose a{" "}
+            <span style={{ color: TEAL }}>Charity.</span>
+          </h1>
+          <p
+            className="text-base max-w-xl leading-relaxed font-normal"
+            style={{ color: `${CREAM}50`, fontFamily: "var(--font-body)" }}
+          >
+            Browse through our verified charity causes and make a donation that makes a difference.
+          </p>
         </div>
       </section>
 
-      {/* Search and Filter Section */}
-      <section className="px-4 md:px-6 pb-8">
-        <div className="mx-auto max-w-6xl">
+      {/* ─── Search + Filter ──────────────────────────────── */}
+      <section className="px-6 md:px-10 pb-8" style={{ backgroundColor: BG2 }}>
+        <div className="max-w-[95vw] mx-auto pt-8">
           <div className="flex flex-col md:flex-row gap-4 mb-8">
-            {/* Search Bar */}
-            <div className="relative flex-grow">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
+            <div className="relative flex-1">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: `${CREAM}30` }} />
               <input
                 type="text"
                 placeholder="Search causes..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-gray-800 border border-gray-700 rounded-xl pl-12 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition-colors"
-                style={{ fontFamily: "var(--font-body)" }}
+                className="w-full pl-12 pr-4 py-3 text-sm focus:outline-none transition-colors"
+                style={{
+                  backgroundColor: BG,
+                  border: `1px solid ${CREAM}12`,
+                  color: CREAM,
+                  fontFamily: "var(--font-body)",
+                }}
+                onFocus={(e) => (e.currentTarget.style.borderColor = TEAL)}
+                onBlur={(e) => (e.currentTarget.style.borderColor = `${CREAM}12`)}
               />
             </div>
 
-            {/* Category Filter Dropdown (Mobile) */}
+            {/* Mobile dropdown */}
             <div className="md:hidden relative">
-              <Filter className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
+              <Filter className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: `${CREAM}30` }} />
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full bg-gray-800 border border-gray-700 rounded-xl pl-12 pr-4 py-3 text-white appearance-none focus:outline-none focus:border-emerald-500 transition-colors"
-                style={{ fontFamily: "var(--font-body)" }}
+                className="w-full pl-12 pr-4 py-3 text-sm appearance-none focus:outline-none"
+                style={{
+                  backgroundColor: BG,
+                  border: `1px solid ${CREAM}12`,
+                  color: CREAM,
+                  fontFamily: "var(--font-body)",
+                }}
               >
-                {categories.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
+                {categories.map((c) => (
+                  <option key={c} value={c} style={{ backgroundColor: BG2 }}>{c}</option>
                 ))}
               </select>
             </div>
           </div>
 
-          {/* Category Pills (Desktop) */}
-          <div className="hidden md:flex flex-wrap gap-3 mb-8">
-            {categories.map((category) => (
+          {/* Category pills - desktop */}
+          <div className="hidden md:flex flex-wrap gap-2 mb-6">
+            {categories.map((cat) => (
               <motion.button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
-                className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
-                  selectedCategory === category
-                    ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white"
-                    : "bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700 border border-gray-700"
-                }`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className="px-4 py-1.5 text-xs font-bold uppercase tracking-wider transition-all"
+                style={{
+                  backgroundColor: selectedCategory === cat ? TEAL : "transparent",
+                  color: selectedCategory === cat ? "#fff" : `${CREAM}50`,
+                  border: `1px solid ${selectedCategory === cat ? TEAL : `${CREAM}15`}`,
+                }}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
               >
-                {category}
+                {cat}
               </motion.button>
             ))}
           </div>
 
-          {/* Results Count */}
-          <p className="text-gray-500 text-sm mb-6">
-            Showing {filteredCharities.length} cause
-            {filteredCharities.length !== 1 ? "s" : ""}
+          <p
+            className="text-xs font-semibold uppercase tracking-wider"
+            style={{ color: `${CREAM}30` }}
+          >
+            {loading
+              ? "Loading causes..."
+              : `${filteredCharities.length} cause${filteredCharities.length !== 1 ? "s" : ""} found`}
           </p>
         </div>
       </section>
 
-      {/* Charity Grid */}
-      <section className="px-4 md:px-6 pb-16">
-        <div className="mx-auto max-w-6xl">
-          {filteredCharities.length > 0 ? (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* ─── Grid ─────────────────────────────────────────── */}
+      <section className="px-6 md:px-10 py-12" style={{ backgroundColor: BG }}>
+        <div className="max-w-[95vw] mx-auto">
+          {loading ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px" style={{ backgroundColor: `${CREAM}08` }}>
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="h-80 animate-pulse" style={{ backgroundColor: BG2 }} />
+              ))}
+            </div>
+          ) : filteredCharities.length > 0 ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px" style={{ backgroundColor: `${CREAM}08` }}>
               {filteredCharities.map((charity, index) => (
                 <motion.div
                   key={charity.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: index * 0.1 }}
+                  transition={{ duration: 0.4, delay: index * 0.06 }}
                 >
                   <CharityCard charity={charity} />
                 </motion.div>
               ))}
             </div>
           ) : (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-16"
-            >
-              <Heart className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-24">
+              <Heart className="w-14 h-14 mx-auto mb-4" style={{ color: `${CREAM}15` }} />
               <h3
-                className="text-xl font-bold text-white mb-2"
-                style={{ fontFamily: "var(--font-headline)" }}
+                className="text-xl font-extrabold uppercase tracking-tighter mb-2"
+                style={{ color: CREAM, fontFamily: "var(--font-headline)" }}
               >
-                No causes found
+                No Causes Found
               </h3>
-              <p
-                className="text-gray-400 font-normal"
-                style={{ fontFamily: "var(--font-body)" }}
-              >
+              <p className="text-sm font-normal" style={{ color: `${CREAM}40`, fontFamily: "var(--font-body)" }}>
                 Try adjusting your search or filter criteria.
               </p>
             </motion.div>

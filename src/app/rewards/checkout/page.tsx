@@ -1,399 +1,374 @@
 "use client";
 
-import { useState, Suspense } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useState, useEffect, useRef, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { loadStripe } from "@stripe/stripe-js";
+import {
+  Elements,
+  PaymentElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
 import {
   ArrowLeft,
-  Heart,
-  CreditCard,
   Lock,
-  CheckCircle,
   Gift,
+  Shield,
+  CheckCircle,
+  ChevronDown,
 } from "lucide-react";
 import Header from "@/components/layout/Header";
-import { getCharityById } from "@/data/charities";
+
+const BG    = "#0F1F17";
+const BG2   = "#162B20";
+const CREAM = "#F7E7CE";
+const TEAL  = "#14B8A6";
+const DEEP  = "#0D9488";
+
+const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+  ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
+  : null;
+
+const stripeAppearance = {
+  theme: "night" as const,
+  variables: {
+    colorPrimary:     TEAL,
+    colorBackground:  "#0F1F17",
+    colorText:        "#F7E7CE",
+    colorDanger:      "#F87171",
+    fontFamily:       "var(--font-body)",
+    borderRadius:     "0px",
+  },
+  rules: {
+    ".Input": {
+      border:          `1px solid rgba(247,231,206,0.12)`,
+      backgroundColor: BG,
+      color:           "#F7E7CE",
+    },
+    ".Input:focus": {
+      border:    `1px solid ${TEAL}`,
+      boxShadow: "none",
+    },
+    ".Label": {
+      color:          `rgba(247,231,206,0.5)`,
+      textTransform:  "uppercase",
+      letterSpacing:  "0.12em",
+      fontSize:       "10px",
+      fontWeight:     "700",
+    },
+  },
+};
+
+interface IntentData {
+  donation_id:      string;
+  client_secret:    string | null;
+  amount:           number;
+  currency:         string;
+  platform_fee:     number;
+  net_amount:       number;
+  points_preview:   number;
+  charity_name:     string;
+  charity_category: string | null;
+  error?:           string;
+}
+
+function PaymentForm({
+  intentData,
+  onError,
+}: {
+  intentData: IntentData;
+  onError: (msg: string) => void;
+}) {
+  const stripe   = useStripe();
+  const elements = useElements();
+  const [processing, setProcessing] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!stripe || !elements) return;
+    setProcessing(true);
+
+    const { error } = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        return_url: `${window.location.origin}/rewards/success`,
+      },
+    });
+
+    if (error) {
+      onError(error.message ?? "Payment failed. Please try again.");
+      setProcessing(false);
+    }
+    // Stripe redirects on success - no need to handle here
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <PaymentElement options={{ layout: "tabs" }} />
+
+      <motion.button
+        type="submit"
+        disabled={!stripe || !elements || processing}
+        className="w-full py-4 font-extrabold uppercase tracking-tighter text-sm text-white disabled:opacity-40"
+        style={{ backgroundColor: DEEP }}
+        whileHover={{ scale: 1.01 }}
+        whileTap={{ scale: 0.99 }}
+      >
+        {processing ? (
+          <span className="flex items-center justify-center gap-2">
+            <span
+              className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin"
+              style={{ borderColor: "rgba(255,255,255,0.4)", borderTopColor: "transparent" }}
+            />
+            Processing...
+          </span>
+        ) : (
+          `Donate £${intentData.amount.toFixed(2)}`
+        )}
+      </motion.button>
+
+      <div className="flex items-center gap-2 text-xs" style={{ color: `${CREAM}35` }}>
+        <Lock className="w-3 h-3 shrink-0" />
+        Secured by Stripe · 256-bit SSL
+      </div>
+    </form>
+  );
+}
 
 function CheckoutContent() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const charityId = searchParams.get("charityId");
-  const amount = searchParams.get("amount");
+  const searchParams   = useSearchParams();
+  const charityId      = searchParams.get("charityId");
+  const amountParam    = searchParams.get("amount");
+  const donationAmount = amountParam ? parseInt(amountParam, 10) : 0;
 
-  const charity = charityId ? getCharityById(charityId) : null;
-  const donationAmount = amount ? parseInt(amount, 10) : 0;
-  const platformFee = Math.round(donationAmount * 0.05 * 100) / 100;
-  const totalAmount = donationAmount;
-  const pointsEarned = donationAmount * 10;
+  const [intentData, setIntentData] = useState<IntentData | null>(null);
+  const [error,      setError]      = useState<string | null>(null);
+  const [summaryOpen, setSummaryOpen] = useState(false);
+  const intentCreated = useRef(false);
 
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [formData, setFormData] = useState({
-    email: "",
-    cardNumber: "",
-    expiry: "",
-    cvc: "",
-    name: "",
-  });
+  useEffect(() => {
+    if (!charityId || !donationAmount) return;
+    if (intentCreated.current) return;
+    intentCreated.current = true;
+    fetch("/api/donations/create-intent", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ charity_id: charityId, amount: donationAmount }),
+    })
+      .then((r) => r.json())
+      .then((data: IntentData) => {
+        if (data.error) setError(data.error ?? "Could not initialise payment.");
+        else            setIntentData(data);
+      })
+      .catch(() => setError("Could not initialise payment."));
+  }, [charityId, donationAmount]);
 
-  if (!charity || !donationAmount) {
+  const platformFee  = intentData?.platform_fee ?? Math.round(donationAmount * 0.05 * 100) / 100;
+  const pointsEarned = intentData?.points_preview ?? null;
+
+  if (!charityId || !donationAmount) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-emerald-950 to-gray-900">
-        <Header />
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center">
-            <Heart className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-            <h2
-              className="text-2xl font-bold text-white mb-2"
-              style={{ fontFamily: "var(--font-headline)" }}
-            >
-              Invalid checkout
-            </h2>
-            <p
-              className="text-gray-400 mb-6 font-normal"
-              style={{ fontFamily: "var(--font-body)" }}
-            >
-              Please select a cause and donation amount first.
-            </p>
-            <Link
-              href="/rewards/causes"
-              className="text-emerald-400 hover:text-emerald-300 font-semibold"
-            >
-              ← Browse causes
-            </Link>
-          </div>
-        </div>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4" style={{ backgroundColor: BG }}>
+        <p className="font-bold uppercase tracking-tighter" style={{ color: CREAM }}>
+          Invalid checkout
+        </p>
+        <Link
+          href="/rewards/causes"
+          className="text-xs font-bold uppercase tracking-[0.2em] transition-opacity hover:opacity-60"
+          style={{ color: TEAL }}
+        >
+          ← Browse Causes
+        </Link>
       </div>
     );
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    let formattedValue = value;
-
-    if (name === "cardNumber") {
-      formattedValue = value
-        .replace(/\s/g, "")
-        .replace(/(\d{4})/g, "$1 ")
-        .trim()
-        .slice(0, 19);
-    } else if (name === "expiry") {
-      formattedValue = value
-        .replace(/\D/g, "")
-        .replace(/(\d{2})(\d)/, "$1/$2")
-        .slice(0, 5);
-    } else if (name === "cvc") {
-      formattedValue = value.replace(/\D/g, "").slice(0, 4);
-    }
-
-    setFormData((prev) => ({ ...prev, [name]: formattedValue }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsProcessing(true);
-
-    // Simulate payment processing
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    router.push(
-      `/rewards/success?charityId=${charityId}&amount=${donationAmount}&points=${pointsEarned}`
-    );
-  };
-
-  const isFormValid =
-    formData.email &&
-    formData.cardNumber.length >= 19 &&
-    formData.expiry.length === 5 &&
-    formData.cvc.length >= 3 &&
-    formData.name;
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-emerald-950 to-gray-900">
+    <div className="min-h-screen" style={{ backgroundColor: BG }}>
       <Header />
 
-      {/* Back Link */}
-      <section className="pt-24 md:pt-32 px-4 md:px-6">
-        <div className="mx-auto max-w-3xl">
+      <section className="pt-24 md:pt-32 px-6 md:px-10 pb-20">
+        <div className="max-w-[95vw] mx-auto">
           <Link
             href={`/rewards/causes/${charityId}`}
-            className="inline-flex items-center gap-2 text-emerald-400 hover:text-emerald-300 mb-6 transition-colors"
+            className="inline-flex items-center gap-2 mb-10 font-semibold text-sm uppercase tracking-wider transition-colors"
+            style={{ color: `${CREAM}40` }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = TEAL)}
+            onMouseLeave={(e) => (e.currentTarget.style.color = `${CREAM}40`)}
           >
             <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm font-semibold">Back to cause</span>
+            Back to cause
           </Link>
-        </div>
-      </section>
 
-      {/* Checkout Content */}
-      <section className="px-4 md:px-6 pb-16">
-        <div className="mx-auto max-w-3xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+          {/* Eyebrow + Heading */}
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-8 h-px" style={{ backgroundColor: TEAL }} />
+            <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em]" style={{ color: TEAL }}>
+              Secure Checkout
+            </span>
+          </div>
+          <h1
+            className="text-4xl sm:text-5xl md:text-7xl font-extrabold uppercase tracking-tighter leading-[0.88] mb-10"
+            style={{ color: CREAM, fontFamily: "var(--font-headline)" }}
           >
-            <h1
-              className="text-3xl md:text-4xl font-extrabold text-white mb-2"
-              style={{ fontFamily: "var(--font-headline)" }}
-            >
-              Complete Your Donation
-            </h1>
-            <p
-              className="text-gray-400 mb-8 font-normal"
-              style={{ fontFamily: "var(--font-body)" }}
-            >
-              You&apos;re donating to {charity.name}
-            </p>
+            Complete Your<br />
+            <span style={{ color: `${CREAM}40` }}>Donation.</span>
+          </h1>
 
-            <div className="grid lg:grid-cols-5 gap-8">
-              {/* Payment Form */}
-              <div className="lg:col-span-3">
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  {/* Email */}
-                  <div>
-                    <label
-                      className="block text-white font-semibold mb-2"
-                      style={{ fontFamily: "var(--font-headline)" }}
-                    >
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      placeholder="your@email.com"
-                      required
-                      className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition-colors"
-                      style={{ fontFamily: "var(--font-body)" }}
-                    />
-                  </div>
+          {/* Grid: form + summary */}
+          <div className="grid lg:grid-cols-5 gap-px" style={{ backgroundColor: `${CREAM}08` }}>
 
-                  {/* Card Details */}
-                  <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700">
-                    <div className="flex items-center gap-2 mb-4">
-                      <CreditCard className="w-5 h-5 text-emerald-400" />
-                      <span
-                        className="text-white font-semibold"
-                        style={{ fontFamily: "var(--font-headline)" }}
-                      >
-                        Card Details
-                      </span>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div>
-                        <label
-                          className="block text-gray-400 text-sm mb-2"
-                          style={{ fontFamily: "var(--font-body)" }}
-                        >
-                          Cardholder Name
-                        </label>
-                        <input
-                          type="text"
-                          name="name"
-                          value={formData.name}
-                          onChange={handleInputChange}
-                          placeholder="John Doe"
-                          required
-                          className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition-colors"
-                          style={{ fontFamily: "var(--font-body)" }}
-                        />
-                      </div>
-
-                      <div>
-                        <label
-                          className="block text-gray-400 text-sm mb-2"
-                          style={{ fontFamily: "var(--font-body)" }}
-                        >
-                          Card Number
-                        </label>
-                        <input
-                          type="text"
-                          name="cardNumber"
-                          value={formData.cardNumber}
-                          onChange={handleInputChange}
-                          placeholder="1234 5678 9012 3456"
-                          required
-                          className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition-colors"
-                          style={{ fontFamily: "var(--font-body)" }}
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label
-                            className="block text-gray-400 text-sm mb-2"
-                            style={{ fontFamily: "var(--font-body)" }}
-                          >
-                            Expiry Date
-                          </label>
-                          <input
-                            type="text"
-                            name="expiry"
-                            value={formData.expiry}
-                            onChange={handleInputChange}
-                            placeholder="MM/YY"
-                            required
-                            className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition-colors"
-                            style={{ fontFamily: "var(--font-body)" }}
-                          />
-                        </div>
-                        <div>
-                          <label
-                            className="block text-gray-400 text-sm mb-2"
-                            style={{ fontFamily: "var(--font-body)" }}
-                          >
-                            CVC
-                          </label>
-                          <input
-                            type="text"
-                            name="cvc"
-                            value={formData.cvc}
-                            onChange={handleInputChange}
-                            placeholder="123"
-                            required
-                            className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition-colors"
-                            style={{ fontFamily: "var(--font-body)" }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Security Notice */}
-                  <div className="flex items-center gap-2 text-gray-500 text-sm">
-                    <Lock className="w-4 h-4" />
-                    <span style={{ fontFamily: "var(--font-body)" }}>
-                      Your payment is secure and encrypted
-                    </span>
-                  </div>
-
-                  {/* Submit Button */}
-                  <motion.button
-                    type="submit"
-                    disabled={!isFormValid || isProcessing}
-                    className={`w-full py-4 rounded-xl font-bold text-lg transition-all ${
-                      isFormValid && !isProcessing
-                        ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-500 hover:to-teal-500"
-                        : "bg-gray-700 text-gray-500 cursor-not-allowed"
-                    }`}
-                    whileHover={isFormValid && !isProcessing ? { scale: 1.02 } : {}}
-                    whileTap={isFormValid && !isProcessing ? { scale: 0.98 } : {}}
-                  >
-                    {isProcessing ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <svg
-                          className="animate-spin h-5 w-5"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                            fill="none"
-                          />
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          />
-                        </svg>
-                        Processing...
-                      </span>
-                    ) : (
-                      `Donate £${totalAmount}`
-                    )}
-                  </motion.button>
-                </form>
+            {/* ── Payment form ─────────────────── */}
+            <div className="lg:col-span-3 p-6 md:p-8" style={{ backgroundColor: BG2 }}>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-6 h-px" style={{ backgroundColor: TEAL }} />
+                <span className="text-[10px] font-bold uppercase tracking-[0.3em]" style={{ color: TEAL }}>
+                  Payment Details
+                </span>
               </div>
 
-              {/* Order Summary */}
-              <div className="lg:col-span-2">
-                <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 sticky top-24">
-                  <h3
-                    className="text-xl font-bold text-white mb-4"
-                    style={{ fontFamily: "var(--font-headline)" }}
+              {error && (
+                <div
+                  className="mb-6 p-4 text-sm border"
+                  style={{ borderColor: "#F87171", backgroundColor: "rgba(69,10,10,0.2)", color: "#F87171" }}
+                >
+                  {error}
+                </div>
+              )}
+
+              {!intentData && !error && (
+                <div className="flex items-center gap-3 py-8" style={{ color: `${CREAM}35` }}>
+                  <span
+                    className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin shrink-0"
+                    style={{ borderColor: TEAL, borderTopColor: "transparent" }}
+                  />
+                  <span className="text-sm">Initialising payment…</span>
+                </div>
+              )}
+
+              {intentData && stripePromise && intentData.client_secret && (
+                <Elements
+                  stripe={stripePromise}
+                  options={{ clientSecret: intentData.client_secret, appearance: stripeAppearance }}
+                >
+                  <PaymentForm intentData={intentData} onError={setError} />
+                </Elements>
+              )}
+
+              {intentData && !intentData.client_secret && (
+                <div
+                  className="p-4 border text-sm"
+                  style={{ borderColor: `${CREAM}12`, color: `${CREAM}40` }}
+                >
+                  Stripe is not configured. Payment processing requires Stripe keys in production.
+                </div>
+              )}
+            </div>
+
+            {/* ── Order summary ─────────────────── */}
+            <div className="lg:col-span-2" style={{ backgroundColor: BG2 }}>
+
+              {/* Charity */}
+              <div className="p-6 md:p-8 border-b" style={{ borderColor: `${CREAM}08` }}>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-6 h-px" style={{ backgroundColor: TEAL }} />
+                  <span className="text-[10px] font-bold uppercase tracking-[0.3em]" style={{ color: TEAL }}>
+                    Donating to
+                  </span>
+                </div>
+                <p
+                  className="text-lg font-extrabold uppercase tracking-tighter leading-[0.88]"
+                  style={{ color: CREAM, fontFamily: "var(--font-headline)" }}
+                >
+                  {intentData?.charity_name ?? "-"}
+                </p>
+                <p className="text-[10px] uppercase tracking-[0.2em] mt-2 font-medium" style={{ color: `${CREAM}35` }}>{intentData?.charity_category ?? ""}</p>
+              </div>
+
+              {/* Breakdown */}
+              <div className="p-6 md:p-8 border-b" style={{ borderColor: `${CREAM}08` }}>
+                <button
+                  onClick={() => setSummaryOpen(!summaryOpen)}
+                  className="w-full flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.3em] mb-0"
+                  style={{ color: `${CREAM}40` }}
+                >
+                  Summary
+                  <ChevronDown
+                    className="w-4 h-4 transition-transform duration-200"
+                    style={{
+                      color:     `${CREAM}30`,
+                      transform: summaryOpen ? "rotate(180deg)" : "rotate(0deg)",
+                    }}
+                  />
+                </button>
+
+                {summaryOpen && (
+                  <div className="mt-4 space-y-2" style={{ fontFamily: "var(--font-body)" }}>
+                    <div className="flex justify-between text-sm" style={{ color: `${CREAM}45` }}>
+                      <span className="font-normal">Donation</span>
+                      <span className="font-bold tracking-tighter">£{donationAmount.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm" style={{ color: `${CREAM}30` }}>
+                      <span className="font-normal">Platform fee (5%)</span>
+                      <span className="font-bold tracking-tighter">£{platformFee.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm" style={{ color: `${CREAM}25` }}>
+                      <span className="font-normal">To charity</span>
+                      <span className="font-bold tracking-tighter">£{(donationAmount - platformFee).toFixed(2)}</span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-end justify-between mt-6 pt-4" style={{ borderTop: `1px solid ${CREAM}08` }}>
+                  <span className="text-[10px] font-bold uppercase tracking-[0.3em]" style={{ color: `${CREAM}40` }}>
+                    Total
+                  </span>
+                  <span
+                    className="text-4xl font-extrabold tracking-tighter leading-none"
+                    style={{ color: CREAM, fontFamily: "var(--font-headline)" }}
                   >
-                    Donation Summary
-                  </h3>
-
-                  {/* Charity Info */}
-                  <div className="flex items-start gap-3 mb-6 pb-6 border-b border-gray-700">
-                    <div className="w-12 h-12 bg-gradient-to-br from-emerald-600/30 to-teal-600/30 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Heart className="w-6 h-6 text-emerald-400" />
-                    </div>
-                    <div>
-                      <p className="text-white font-semibold">{charity.name}</p>
-                      <p className="text-gray-400 text-sm">
-                        {charity.category}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Amount Breakdown */}
-                  <div className="space-y-3 mb-6">
-                    <div className="flex justify-between text-gray-400">
-                      <span>Donation amount</span>
-                      <span>£{donationAmount.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-gray-400">
-                      <span>Platform fee (5%)</span>
-                      <span>£{platformFee.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-gray-500 text-sm">
-                      <span>To charity</span>
-                      <span>
-                        £{(donationAmount - platformFee).toFixed(2)}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Total */}
-                  <div className="flex justify-between text-white font-bold text-lg pt-4 border-t border-gray-700 mb-6">
-                    <span>Total</span>
-                    <span>£{totalAmount.toFixed(2)}</span>
-                  </div>
-
-                  {/* Rewards Preview */}
-                  <div className="bg-emerald-900/30 rounded-xl p-4 border border-emerald-700">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Gift className="w-5 h-5 text-emerald-400" />
-                      <span className="text-emerald-400 font-semibold">
-                        Rewards You&apos;ll Earn
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-400">Points</span>
-                      <span className="text-emerald-300 font-bold">
-                        +{pointsEarned}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Trust Badges */}
-                  <div className="mt-6 pt-6 border-t border-gray-700 space-y-2">
-                    <div className="flex items-center gap-2 text-gray-500 text-sm">
-                      <CheckCircle className="w-4 h-4 text-emerald-400" />
-                      <span>Verified charity partner</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-500 text-sm">
-                      <CheckCircle className="w-4 h-4 text-emerald-400" />
-                      <span>Tax receipt available</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-500 text-sm">
-                      <CheckCircle className="w-4 h-4 text-emerald-400" />
-                      <span>Secure SSL encryption</span>
-                    </div>
-                  </div>
+                    £{donationAmount.toFixed(2)}
+                  </span>
                 </div>
               </div>
+
+              {/* Points preview */}
+              <div className="p-6 md:p-8 border-b" style={{ borderColor: `${CREAM}08` }}>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-6 h-px" style={{ backgroundColor: TEAL }} />
+                  <Gift className="w-3.5 h-3.5" style={{ color: TEAL }} />
+                  <span className="text-[10px] font-bold uppercase tracking-[0.3em]" style={{ color: TEAL }}>
+                    Rewards Preview
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-normal" style={{ color: `${CREAM}45`, fontFamily: "var(--font-body)" }}>Points earned</span>
+                  <span
+                    className="text-xl font-extrabold tracking-tighter"
+                    style={{ color: TEAL, fontFamily: "var(--font-headline)" }}
+                  >
+                    {pointsEarned !== null ? `+${pointsEarned} pts` : "…"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Trust signals */}
+              <div className="p-6 md:p-8 space-y-3">
+                {[
+                  { icon: Shield,       text: "Verified charity partner" },
+                  { icon: CheckCircle,  text: "Tax receipt available"    },
+                  { icon: Lock,         text: "256-bit SSL encryption"   },
+                ].map(({ icon: Icon, text }, i) => (
+                  <div key={i} className="flex items-center gap-2" style={{ color: `${CREAM}28` }}>
+                    <Icon className="w-3.5 h-3.5 shrink-0" style={{ color: `${CREAM}35` }} />
+                    <span className="text-xs font-normal" style={{ fontFamily: "var(--font-body)" }}>{text}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
     </div>
@@ -404,8 +379,11 @@ export default function CheckoutPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-emerald-950 to-gray-900 flex items-center justify-center">
-          <div className="text-white">Loading...</div>
+        <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: BG }}>
+          <span
+            className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin"
+            style={{ borderColor: TEAL, borderTopColor: "transparent" }}
+          />
         </div>
       }
     >

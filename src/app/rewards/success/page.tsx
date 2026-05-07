@@ -1,234 +1,286 @@
 "use client";
 
-import { Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import Link from "next/link";
 import {
   CheckCircle,
   Heart,
   Gift,
-  Star,
-  Share2,
   ArrowRight,
+  Share2,
+  AlertCircle,
 } from "lucide-react";
 import Header from "@/components/layout/Header";
-import { getCharityById } from "@/data/charities";
+import type { Donation, Charity } from "@/types/app";
+
+const BG    = "#0F1F17";
+const BG2   = "#162B20";
+const CREAM = "#F7E7CE";
+const TEAL  = "#14B8A6";
+const DEEP  = "#0D9488";
+
+type DonationWithCharity = Donation & {
+  charities?: Pick<Charity, "name" | "slug" | "category" | "image_url">;
+};
 
 function SuccessContent() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
+  const searchParams  = useSearchParams();
+  const router        = useRouter();
 
-  const charityId = searchParams.get("charityId");
-  const amount = searchParams.get("amount");
-  const points = searchParams.get("points");
+  const paymentIntent   = searchParams.get("payment_intent");
+  const redirectStatus  = searchParams.get("redirect_status");
 
-  const charity = charityId ? getCharityById(charityId) : null;
-  const donationAmount = amount ? parseInt(amount, 10) : 0;
-  const pointsEarned = points ? parseInt(points, 10) : 0;
+  // Fallback for legacy / dev flows
+  const fallbackAmount = searchParams.get("amount");
+  const fallbackPoints = searchParams.get("points");
 
-  if (!charity || !donationAmount) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-emerald-950 to-gray-900">
-        <Header />
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center">
-            <Heart className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-            <h2
-              className="text-2xl font-bold text-white mb-2"
-              style={{ fontFamily: "var(--font-headline)" }}
-            >
-              Something went wrong
-            </h2>
-            <p
-              className="text-gray-400 mb-6 font-normal"
-              style={{ fontFamily: "var(--font-body)" }}
-            >
-              We couldn&apos;t find your donation details.
-            </p>
-            <Link
-              href="/rewards/causes"
-              className="text-emerald-400 hover:text-emerald-300 font-semibold"
-            >
-              ← Browse causes
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const [donation,  setDonation]  = useState<DonationWithCharity | null>(null);
+  const [loading,   setLoading]   = useState(true);
+  const [error,     setError]     = useState<string | null>(null);
+
+  useEffect(() => {
+    async function run() {
+      if (!paymentIntent) {
+        setLoading(false);
+        return;
+      }
+
+      if (redirectStatus !== "succeeded") {
+        setError("Payment was not completed. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // 1. Confirm server-side (idempotent)
+        const confirmRes  = await fetch("/api/donations/confirm", {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body:    JSON.stringify({ payment_intent_id: paymentIntent }),
+        });
+        const confirmData = await confirmRes.json();
+
+        if (!confirmData.success && !confirmData.already_completed) {
+          setError(confirmData.error ?? "Could not confirm your donation.");
+        }
+
+        // 2. Fetch donation record
+        const donRes  = await fetch(`/api/donations/by-payment-intent?pi=${paymentIntent}`);
+        const donData = await donRes.json();
+        if (donData.donation) setDonation(donData.donation as DonationWithCharity);
+      } catch {
+        setError("Something went wrong. Your payment may still have processed - check your email for a receipt.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    run();
+  }, [paymentIntent, redirectStatus]);
+
+  const donationAmount = donation?.amount       ?? (fallbackAmount ? parseInt(fallbackAmount, 10) : 0);
+  const pointsEarned   = donation?.points_earned ?? (fallbackPoints ? parseInt(fallbackPoints, 10) : 0);
+  const charityName    = donation?.charities?.name ?? "your chosen charity";
+  const currency       = donation?.currency ?? "GBP";
+  const symbol         = currency === "GBP" ? "£" : "$";
+
+  if (loading) return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4" style={{ backgroundColor: BG }}>
+      <span
+        className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin"
+        style={{ borderColor: TEAL, borderTopColor: "transparent" }}
+      />
+      <p className="text-sm" style={{ color: `${CREAM}40` }}>Confirming your donation…</p>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-emerald-950 to-gray-900">
+    <div className="min-h-screen" style={{ backgroundColor: BG }}>
       <Header />
 
-      {/* Success Content */}
-      <section className="pt-24 md:pt-32 px-4 md:px-6 pb-16">
-        <div className="mx-auto max-w-2xl text-center">
-          {/* Success Animation */}
+      <section className="pt-24 md:pt-32 px-6 md:px-10 pb-20">
+        <div className="mx-auto max-w-2xl">
+
+          {/* Error banner */}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-8 p-4 border flex items-start gap-3"
+              style={{ borderColor: "#F87171", backgroundColor: "rgba(69,10,10,0.2)" }}
+            >
+              <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+              <p className="text-sm text-red-400">{error}</p>
+            </motion.div>
+          )}
+
+          {/* Success mark */}
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            transition={{
-              type: "spring",
-              stiffness: 200,
-              damping: 15,
-              delay: 0.2,
-            }}
-            className="mb-8"
+            transition={{ type: "spring", stiffness: 220, damping: 16, delay: 0.1 }}
+            className="flex justify-center mb-10"
           >
-            <div className="relative inline-block">
-              <motion.div
-                className="w-24 h-24 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-full flex items-center justify-center"
-                animate={{
-                  boxShadow: [
-                    "0 0 0 0 rgba(16, 185, 129, 0.4)",
-                    "0 0 0 20px rgba(16, 185, 129, 0)",
-                  ],
-                }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-              >
-                <CheckCircle className="w-12 h-12 text-white" />
-              </motion.div>
-            </div>
+            <motion.div
+              className="w-20 h-20 flex items-center justify-center"
+              style={{ backgroundColor: DEEP }}
+              animate={{
+                boxShadow: [
+                  "0 0 0 0 rgba(13,148,136,0.45)",
+                  "0 0 0 28px rgba(13,148,136,0)",
+                ],
+              }}
+              transition={{ duration: 1.8, repeat: Infinity }}
+            >
+              <CheckCircle className="w-10 h-10 text-white" />
+            </motion.div>
           </motion.div>
 
-          {/* Thank You Message */}
+          {/* Heading */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
+            transition={{ delay: 0.3, duration: 0.6 }}
+            className="text-center mb-10"
           >
+            <div className="flex items-center justify-center gap-3 mb-5">
+              <div className="w-8 h-px" style={{ backgroundColor: TEAL }} />
+              <span className="text-[10px] font-bold uppercase tracking-[0.3em]" style={{ color: TEAL }}>
+                Donation Confirmed
+              </span>
+              <div className="w-8 h-px" style={{ backgroundColor: TEAL }} />
+            </div>
+
             <h1
-              className="text-3xl md:text-4xl font-extrabold text-white mb-4"
-              style={{ fontFamily: "var(--font-headline)" }}
+              className="text-4xl sm:text-5xl md:text-6xl font-extrabold uppercase tracking-tighter leading-[0.88] mb-5"
+              style={{ color: CREAM, fontFamily: "var(--font-headline)" }}
             >
-              Thank You for Your Donation!
+              Thank You for<br />
+              <span style={{ color: TEAL }}>Your Giving.</span>
             </h1>
             <p
-              className="text-lg text-gray-400 mb-8 font-normal"
-              style={{ fontFamily: "var(--font-body)" }}
+              className="text-base leading-relaxed"
+              style={{ color: `${CREAM}50`, fontFamily: "var(--font-body)" }}
             >
-              Your generosity is making a real difference. May Allah reward you
-              for your kindness.
+              May Allah reward you for your generosity. Your donation to{" "}
+              <span style={{ color: CREAM }}>{charityName}</span>{" "}
+              is making a real difference.
             </p>
           </motion.div>
 
-          {/* Donation Summary Card */}
+          {/* Banner image */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.38, duration: 0.7 }}
+            className="relative w-full h-44 md:h-56 mb-8 overflow-hidden"
+          >
+            <Image
+              src="/images/page sections/rewards7.png"
+              alt="Thank you for giving"
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 672px"
+            />
+            <div className="absolute inset-0" style={{ background: `linear-gradient(to bottom, ${BG}60 0%, transparent 40%, ${BG}80 100%)` }} />
+          </motion.div>
+
+          {/* Stats */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
-            className="bg-gray-800 rounded-2xl p-6 md:p-8 border border-gray-700 mb-8"
+            transition={{ delay: 0.45, duration: 0.6 }}
+            className="mb-8 grid grid-cols-2 gap-px"
+            style={{ backgroundColor: `${CREAM}08` }}
           >
-            <div className="flex items-center justify-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-gradient-to-br from-emerald-600/30 to-teal-600/30 rounded-lg flex items-center justify-center">
-                <Heart className="w-6 h-6 text-emerald-400" />
-              </div>
-              <div className="text-left">
-                <p className="text-white font-semibold">{charity.name}</p>
-                <p className="text-gray-400 text-sm">{charity.category}</p>
-              </div>
-            </div>
-
-            <div className="text-center mb-6">
-              <p className="text-gray-400 text-sm mb-1">You donated</p>
+            <div className="py-10 px-8 text-center" style={{ backgroundColor: BG2 }}>
+              <Heart className="w-5 h-5 mx-auto mb-4" style={{ color: "#EC4899" }} />
               <p
-                className="text-4xl md:text-5xl font-extrabold text-emerald-400"
-                style={{ fontFamily: "var(--font-headline)" }}
+                className="text-[2.5rem] font-extrabold tracking-tighter leading-none"
+                style={{ color: CREAM, fontFamily: "var(--font-headline)" }}
               >
-                £{donationAmount}
+                {symbol}{donationAmount}
+              </p>
+              <p
+                className="text-[10px] uppercase tracking-[0.25em] mt-2 font-medium"
+                style={{ color: `${CREAM}35` }}
+              >
+                Donated
               </p>
             </div>
 
-            {/* Rewards Earned */}
-            <div className="bg-emerald-900/30 rounded-xl p-4 border border-emerald-700">
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <Gift className="w-5 h-5 text-emerald-400" />
-                <span
-                  className="text-emerald-400 font-semibold"
-                  style={{ fontFamily: "var(--font-headline)" }}
-                >
-                  Rewards Earned
-                </span>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-white">
-                    +{pointsEarned}
-                  </p>
-                  <p className="text-gray-400 text-sm">Points</p>
-                </div>
-                <div className="text-center">
-                  <div className="flex items-center justify-center gap-1">
-                    <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
-                    <p className="text-2xl font-bold text-white">+1</p>
-                  </div>
-                  <p className="text-gray-400 text-sm">Donation</p>
-                </div>
-              </div>
+            <div className="py-10 px-8 text-center" style={{ backgroundColor: BG2 }}>
+              <Gift className="w-5 h-5 mx-auto mb-4" style={{ color: TEAL }} />
+              <p
+                className="text-[2.5rem] font-extrabold tracking-tighter leading-none"
+                style={{ color: TEAL, fontFamily: "var(--font-headline)" }}
+              >
+                +{pointsEarned}
+              </p>
+              <p
+                className="text-[10px] uppercase tracking-[0.25em] mt-2 font-medium"
+                style={{ color: `${CREAM}35` }}
+              >
+                Points Earned
+              </p>
             </div>
           </motion.div>
 
-          {/* Share Section */}
+          {/* Actions */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.8 }}
-            className="mb-8"
+            transition={{ delay: 0.6, duration: 0.6 }}
+            className="flex flex-col sm:flex-row gap-3 mb-8"
           >
-            <p
-              className="text-gray-400 mb-4 font-normal"
-              style={{ fontFamily: "var(--font-body)" }}
-            >
-              Inspire others to give by sharing your donation
-            </p>
-            <motion.button
-              className="inline-flex items-center gap-2 bg-gray-800 text-white px-6 py-3 rounded-full font-semibold border border-gray-700 hover:border-emerald-500 transition-all"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Share2 className="w-5 h-5" />
-              Share My Donation
-            </motion.button>
-          </motion.div>
-
-          {/* Action Buttons */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 1 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4"
-          >
-            <motion.button
-              onClick={() => router.push("/rewards/causes")}
-              className="w-full sm:w-auto bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-8 py-4 rounded-full font-bold text-lg"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              Donate Again
-            </motion.button>
             <motion.button
               onClick={() => router.push("/rewards/my-rewards")}
-              className="w-full sm:w-auto bg-gray-800 text-white px-8 py-4 rounded-full font-bold text-lg border border-gray-700 hover:border-emerald-500 transition-all flex items-center justify-center gap-2"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              className="flex-1 flex items-center justify-center gap-2 py-4 font-extrabold uppercase tracking-tighter text-sm text-white"
+              style={{ backgroundColor: DEEP }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
-              View My Rewards
-              <ArrowRight className="w-5 h-5" />
+              View My Rewards <ArrowRight className="w-4 h-4" />
+            </motion.button>
+
+            <motion.button
+              onClick={() => router.push("/rewards/causes")}
+              className="flex-1 flex items-center justify-center gap-2 py-4 border font-extrabold uppercase tracking-tighter text-sm transition-all"
+              style={{ borderColor: `${CREAM}18`, color: CREAM }}
+              whileHover={{ scale: 1.02, backgroundColor: "rgba(247,231,206,0.04)" }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Heart className="w-4 h-4" /> Donate Again
             </motion.button>
           </motion.div>
 
-          {/* Receipt Notice */}
-          <motion.p
+          {/* Share */}
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 1.2 }}
-            className="text-gray-500 text-sm mt-8 font-normal"
-            style={{ fontFamily: "var(--font-body)" }}
+            transition={{ delay: 0.8 }}
+            className="text-center space-y-4"
           >
-            A receipt has been sent to your email address.
-          </motion.p>
+            <motion.button
+              className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] transition-opacity hover:opacity-60"
+              style={{ color: `${CREAM}30` }}
+              whileHover={{ scale: 1.04 }}
+            >
+              <Share2 className="w-3.5 h-3.5" />
+              Share your donation
+            </motion.button>
+
+            <p
+              className="text-xs block"
+              style={{ color: `${CREAM}20`, fontFamily: "var(--font-body)" }}
+            >
+              A receipt has been sent to your email address.
+            </p>
+          </motion.div>
+
         </div>
       </section>
     </div>
@@ -239,8 +291,11 @@ export default function SuccessPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-emerald-950 to-gray-900 flex items-center justify-center">
-          <div className="text-white">Loading...</div>
+        <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: BG }}>
+          <span
+            className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin"
+            style={{ borderColor: TEAL, borderTopColor: "transparent" }}
+          />
         </div>
       }
     >

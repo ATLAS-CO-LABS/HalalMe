@@ -1,7 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
-import Link from "next/link";
+import { motion, useInView } from "framer-motion";
+import { useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
@@ -15,101 +15,162 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
+/* ─── Rewards design tokens - dark emerald ────────────────── */
+const BG = "#0F1F17"; // dark green, lifted from near-black
+const BG2 = "#162B20"; // card sections
+const CREAM = "#F7E7CE";
+const TEAL = "#14B8A6";
+const DEEP = "#0D9488"; // teal-600 - solid button bg
+
 export default function RewardsLandingPage() {
   const router = useRouter();
 
+  const statsRef = useRef(null);
+  const cardsRef = useRef(null);
+  const featuresRef = useRef(null);
+  const ctaRef = useRef(null);
+
+  const statsInView = useInView(statsRef, { once: true });
+  const cardsInView = useInView(cardsRef, { once: true });
+  const featuresRef2 = useInView(featuresRef, { once: true });
+  const ctaInView = useInView(ctaRef, { once: true });
+
   const features = [
     {
+      num: "01",
       icon: HandHeart,
       title: "Give Sadaqah",
-      description: "Support meaningful causes and earn rewards",
+      desc: "Support meaningful causes and earn rewards with every donation you make.",
     },
     {
+      num: "02",
       icon: Gift,
       title: "Earn Rewards",
-      description: "Get points, badges, and exclusive benefits",
+      desc: "Get points, badges, and exclusive benefits within the HalalMe ecosystem.",
     },
     {
+      num: "03",
       icon: Star,
       title: "Level Up",
-      description: "Unlock Bronze, Silver, Gold, and Platinum status",
+      desc: "Unlock Bronze, Silver, Gold, and Platinum status as you give more.",
     },
     {
+      num: "04",
       icon: TrendingUp,
       title: "Track Impact",
-      description: "See how your donations make a difference",
+      desc: "See exactly how your donations are making a difference in real lives.",
     },
-  ];
-
-  const impactStats = [
-    { label: "Total Donated", value: "£50K+" },
-    { label: "Causes Supported", value: "25+" },
-    { label: "Active Donors", value: "2K+" },
-    { label: "Countries Reached", value: "30+" },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-950">
-      {/* Hero Section */}
-      <section className="relative h-screen min-h-[600px] max-h-[900px] flex items-center overflow-hidden">
-        {/* Background Image */}
+    <div className="min-h-screen" style={{ backgroundColor: BG }}>
+      {/* ─── Hero ────────────────────────────────────────── */}
+      <section
+        className="relative mt-16 min-h-[calc(100svh-4rem)] flex items-center overflow-hidden py-12 md:py-16"
+        style={{ backgroundColor: BG, borderBottom: `1px solid ${TEAL}50` }}
+      >
         <div className="absolute inset-0 z-0">
           <Image
-            src="https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=1920&auto=format&fit=crop&q=80"
+            src="/images/services/halal04.png"
             alt="Charity and giving"
             fill
-            className="object-cover"
+            className="object-cover opacity-100 object-center"
             priority
             sizes="100vw"
           />
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `linear-gradient(to right, ${BG}F5 0%, ${BG}D0 30%, ${BG}99 55%, ${BG}22 100%)`,
+            }}
+          />
         </div>
 
-        {/* Overlay */}
-        <div className="absolute inset-0 z-[1] bg-gray-950/70" />
-
-        {/* Content */}
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12 pt-20">
-          <div className="max-w-3xl">
-            {/* Badge */}
+        <div className="relative z-10 w-full max-w-[95vw] mx-auto px-6 md:px-10">
+          <div className="max-w-4xl">
+            {/* Eyebrow */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="inline-flex items-center gap-2.5 bg-teal-500/15 border border-teal-400/25 backdrop-blur-md rounded-full px-5 py-2.5 mb-5 sm:mb-8"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 }}
+              className="flex items-center gap-3 mb-6 md:mb-8"
             >
-              <span className="w-2.5 h-2.5 rounded-full bg-teal-400 animate-pulse" />
-              <span className="text-teal-300 text-sm font-semibold tracking-wide">
+              <div className="w-8 h-px" style={{ backgroundColor: TEAL }} />
+              <span
+                className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em]"
+                style={{ color: TEAL }}
+              >
                 Donate Good. Feel Good. Get Rewarded.
               </span>
             </motion.div>
 
-            {/* Headline */}
-            <motion.h1
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.3 }}
-              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-[1.05] mb-6 tracking-tight"
-              style={{ fontFamily: "var(--font-headline)" }}
-            >
-              HalalMe{" "}
-              <span className="relative inline-block">
-                <span className="text-teal-400">Rewards</span>
-                <motion.span
-                  className="absolute -bottom-1 left-0 right-0 h-1 bg-teal-500 rounded-full origin-left"
-                  initial={{ scaleX: 0 }}
-                  animate={{ scaleX: 1 }}
-                  transition={{ duration: 0.8, delay: 1 }}
-                />
-              </span>
-            </motion.h1>
+            {/* H1 */}
+            <h1 className="font-extrabold uppercase tracking-tighter leading-[0.88]">
+              <motion.span
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.7 }}
+                className="flex items-center gap-3 mb-3 normal-case"
+              >
+                <div
+                  style={{
+                    position: "relative",
+                    width: 44,
+                    height: 44,
+                    flexShrink: 0,
+                  }}
+                >
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      backgroundColor: TEAL,
+                      WebkitMaskImage: "url(/logo/logo.png)",
+                      maskImage: "url(/logo/logo.png)",
+                      WebkitMaskSize: "contain",
+                      maskSize: "contain",
+                      WebkitMaskRepeat: "no-repeat",
+                      maskRepeat: "no-repeat",
+                      WebkitMaskMode: "alpha",
+                      maskMode: "alpha",
+                      WebkitMaskPosition: "center",
+                      maskPosition: "center",
+                    }}
+                  />
+                </div>
+                <span
+                  className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight"
+                  style={{ fontFamily: "var(--font-logo)", color: CREAM }}
+                >
+                  HalalMe
+                </span>
+              </motion.span>
+              <motion.span
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.32, duration: 0.7 }}
+                className="block text-[clamp(2.25rem,8vw,8rem)]"
+                style={{ color: TEAL }}
+              >
+                Rewards
+              </motion.span>
+              <motion.span
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.44, duration: 0.7 }}
+                className="block text-[clamp(1.5rem,4.5vw,4.5rem)]"
+                style={{ color: CREAM }}
+              >
+                Give. Earn. Grow.
+              </motion.span>
+            </h1>
 
-            {/* Subtitle */}
             <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.5 }}
-              className="text-base sm:text-lg md:text-xl text-gray-300/90 max-w-xl leading-relaxed mb-6 sm:mb-10"
-              style={{ fontFamily: "var(--font-body)" }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              className="mt-6 md:mt-7 text-base md:text-lg max-w-md leading-relaxed font-normal"
+              style={{ color: `${CREAM}75`, fontFamily: "var(--font-body)" }}
             >
               Give charity, earn rewards, and make a real impact. Support causes
               you care about while unlocking exclusive benefits within HalalMe.
@@ -119,29 +180,31 @@ export default function RewardsLandingPage() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.65 }}
-              className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 mb-12 sm:mb-14"
+              transition={{ delay: 0.72 }}
+              className="mt-8 flex flex-wrap gap-4"
             >
               <motion.button
                 onClick={() => router.push("/rewards/causes")}
-                whileHover={{ scale: 1.04, boxShadow: "0 20px 50px -12px rgba(20,184,166,0.5)" }}
+                whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
-                className="group relative w-full sm:w-auto px-8 py-4 md:px-10 md:py-5 bg-teal-500 text-white font-bold text-lg rounded-full shadow-xl shadow-teal-500/25 overflow-hidden"
+                className="flex items-center gap-3 px-7 sm:px-8 py-3.5 sm:py-4 font-extrabold uppercase tracking-tighter text-sm sm:text-base text-white"
+                style={{ backgroundColor: DEEP }}
               >
-                <span className="relative z-10 flex items-center justify-center gap-2.5">
-                  Start Donating
-                  <ArrowRight className="w-5 h-5" />
-                </span>
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                Start Donating
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
               </motion.button>
 
               <motion.button
                 onClick={() => router.push("/rewards/my-rewards")}
-                whileHover={{ scale: 1.04, backgroundColor: "rgba(255,255,255,0.12)" }}
+                whileHover={{
+                  scale: 1.03,
+                  backgroundColor: "rgba(247,231,206,0.06)",
+                }}
                 whileTap={{ scale: 0.97 }}
-                className="w-full sm:w-auto px-8 py-4 md:px-10 md:py-5 bg-white/8 border border-white/20 backdrop-blur-sm text-white font-bold text-lg rounded-full hover:border-white/40 transition-all"
+                className="flex items-center gap-3 px-7 sm:px-8 py-3.5 sm:py-4 border-2 font-extrabold uppercase tracking-tighter text-sm sm:text-base transition-all"
+                style={{ borderColor: `${CREAM}25`, color: CREAM }}
               >
-                View My Rewards
+                My Rewards
               </motion.button>
             </motion.div>
 
@@ -149,360 +212,485 @@ export default function RewardsLandingPage() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.9 }}
-              className="flex flex-wrap gap-4 sm:gap-6 text-xs sm:text-sm"
+              transition={{ delay: 0.9 }}
+              className="mt-8 flex flex-wrap gap-6"
             >
               {[
-                { icon: ShieldCheck, text: "Verified Causes", color: "text-teal-400" },
-                { icon: HandHeart, text: "£50K+ Donated", color: "text-teal-400" },
-                { icon: Gift, text: "Instant Rewards", color: "text-teal-400" },
+                { icon: ShieldCheck, text: "Verified Causes" },
+                { icon: HandHeart, text: "£50K+ Donated" },
+                { icon: Gift, text: "Instant Rewards" },
               ].map((item, i) => (
-                <div key={i} className="flex items-center gap-2 text-gray-400">
-                  <item.icon className={`w-4 h-4 ${item.color}`} />
-                  <span>{item.text}</span>
+                <div
+                  key={i}
+                  className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide"
+                  style={{ color: `${CREAM}65` }}
+                >
+                  <item.icon className="w-4 h-4" style={{ color: TEAL }} />
+                  {item.text}
                 </div>
               ))}
             </motion.div>
           </div>
         </div>
-
-        {/* Scroll hint */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 animate-bounce">
-          <div className="w-6 h-10 border-2 border-white/20 rounded-full flex justify-center pt-2">
-            <div className="w-1.5 h-3 bg-teal-400 rounded-full" />
-          </div>
-        </div>
       </section>
 
-      {/* How It Works Section */}
-      <section className="px-4 md:px-6 py-16 md:py-20 bg-gray-900">
-        <div className="mx-auto max-w-5xl">
+      {/* ─── Stats Strip ──────────────────────────────────── */}
+      <div
+        ref={statsRef}
+        className="grid grid-cols-2 md:grid-cols-4"
+        style={{
+          gap: "1px",
+          backgroundColor: `${TEAL}50`,
+          borderTop: `1px solid ${TEAL}50`,
+          borderBottom: `1px solid ${TEAL}50`,
+        }}
+      >
+        {[
+          { value: "£50K+", label: "Total Donated" },
+          { value: "25+", label: "Causes Supported" },
+          { value: "2K+", label: "Active Donors" },
+          { value: "30+", label: "Countries Reached" },
+        ].map((s, i) => (
           <motion.div
+            key={i}
             initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-12"
+            animate={statsInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: i * 0.1, duration: 0.5 }}
+            className="py-10 md:py-14 px-8 md:px-12 text-center md:text-left"
+            style={{ backgroundColor: BG2 }}
           >
-            <h2
-              className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4"
-              style={{ fontFamily: "var(--font-headline)" }}
+            <div
+              className="text-[3rem] md:text-[4.5rem] font-extrabold tracking-tighter leading-none"
+              style={{ color: CREAM }}
+            >
+              {s.value}
+            </div>
+            <div
+              className="text-[10px] md:text-xs uppercase tracking-[0.25em] mt-2 font-medium"
+              style={{ color: TEAL }}
+            >
+              {s.label}
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* ─── How It Works ─────────────────────────────────── */}
+      <section
+        ref={cardsRef}
+        className="py-24 md:py-32"
+        style={{
+          backgroundColor: BG,
+          borderTop: `1px solid ${TEAL}50`,
+          borderBottom: `1px solid ${TEAL}50`,
+        }}
+      >
+        <div className="max-w-[95vw] mx-auto px-6 md:px-10 mb-14 md:mb-20">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={cardsInView ? { opacity: 1, x: 0 } : {}}
+            className="flex items-center gap-3 mb-6"
+          >
+            <div className="w-8 h-px" style={{ backgroundColor: TEAL }} />
+            <span
+              className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em]"
+              style={{ color: TEAL }}
             >
               How It Works
-            </h2>
-            <p
-              className="text-lg md:text-xl text-gray-400 font-normal"
-              style={{ fontFamily: "var(--font-body)" }}
-            >
-              Simple steps to give and get rewarded
-            </p>
+            </span>
           </motion.div>
+          <motion.h2
+            initial={{ opacity: 0, y: 30 }}
+            animate={cardsInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6 }}
+            className="text-4xl sm:text-5xl md:text-7xl font-extrabold uppercase tracking-tighter leading-[0.88]"
+            style={{ color: CREAM }}
+          >
+            Give.
+            <br />
+            <span style={{ color: `${CREAM}65` }}>Earn. Grow.</span>
+          </motion.h2>
+        </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                step: "1",
-                title: "Choose a Cause",
-                description:
-                  "Browse through verified charity causes and select one that resonates with you",
-                icon: Heart,
-              },
-              {
-                step: "2",
-                title: "Make a Donation",
-                description:
-                  "Donate any amount — £5, £10, £20, or a custom amount of your choice",
-                icon: HandHeart,
-              },
-              {
-                step: "3",
-                title: "Earn Rewards",
-                description:
-                  "Receive points, unlock badges, and level up your contribution status",
-                icon: Gift,
-              },
-            ].map((item, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: index * 0.2 }}
-                className="relative"
-              >
-                <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-8 border border-gray-700 hover:border-teal-500 transition-all h-full">
-                  <div className="absolute -top-4 left-8 bg-teal-500 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg">
-                    {item.step}
-                  </div>
-                  <div className="mt-4">
-                    <item.icon className="w-12 h-12 text-teal-400 mb-4" />
-                    <h3
-                      className="text-xl font-bold text-white mb-3"
-                      style={{ fontFamily: "var(--font-headline)" }}
-                    >
-                      {item.title}
-                    </h3>
-                    <p
-                      className="text-gray-400 font-normal"
-                      style={{ fontFamily: "var(--font-body)" }}
-                    >
-                      {item.description}
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+        <div className="max-w-[95vw] mx-auto px-6 md:px-10 mb-10">
+          <div className="relative w-full h-52 md:h-72 overflow-hidden">
+            <Image
+              src="/images/page sections/rewards2.png"
+              alt="Giving and earning rewards"
+              fill
+              className="object-cover"
+              sizes="95vw"
+            />
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `linear-gradient(to right, ${BG}60 0%, transparent 60%)`,
+              }}
+            />
           </div>
         </div>
-      </section>
 
-      {/* Features Grid */}
-      <section className="px-4 md:px-6 py-16 md:py-20">
-        <div className="mx-auto max-w-6xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-12"
-          >
-            <h2
-              className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4"
-              style={{ fontFamily: "var(--font-headline)" }}
+        <div
+          className="max-w-[95vw] mx-auto px-6 md:px-10 grid md:grid-cols-3"
+          style={{ gap: "1px", backgroundColor: `${TEAL}50` }}
+        >
+          {[
+            {
+              num: "01",
+              title: "Choose a Cause",
+              icon: Heart,
+              desc: "Browse through verified charity causes and select one that resonates with you.",
+            },
+            {
+              num: "02",
+              title: "Make a Donation",
+              icon: HandHeart,
+              desc: "Donate any amount - £5, £10, £20, or a custom amount of your choice.",
+            },
+            {
+              num: "03",
+              title: "Earn Rewards",
+              icon: Gift,
+              desc: "Receive points, unlock badges, and level up your contribution status.",
+            },
+          ].map((item, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 30 }}
+              animate={cardsInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ delay: i * 0.12, duration: 0.5 }}
             >
-              Why Give Through HalalMe?
-            </h2>
-            <p
-              className="text-lg md:text-xl text-gray-400 font-normal"
-              style={{ fontFamily: "var(--font-body)" }}
-            >
-              Charity that rewards you for doing good
-            </p>
-          </motion.div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-            {features.map((feature, index) => {
-              const Icon = feature.icon;
-              return (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
-                  whileHover={{ y: -8 }}
-                  className="bg-gray-800 rounded-2xl p-6 border border-gray-700 hover:border-teal-500 transition-all"
+              <div
+                className="group relative p-8 md:p-10 overflow-hidden cursor-default min-h-[200px] md:min-h-[300px] flex flex-col transition-colors duration-300"
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.backgroundColor = DEEP)
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.backgroundColor = BG2)
+                }
+                style={{ backgroundColor: BG2, border: `1px solid ${TEAL}50` }}
+              >
+                <span
+                  aria-hidden="true"
+                  className="absolute -top-6 -right-3 text-[8rem] md:text-[10rem] font-extrabold leading-none select-none pointer-events-none"
+                  style={{ color: "#0A1A10" }}
                 >
-                  <div className="bg-teal-500 rounded-xl p-4 mb-4 inline-block">
-                    <Icon className="w-8 h-8 text-white" />
-                  </div>
+                  {item.num}
+                </span>
+                <div className="relative z-10 flex flex-col flex-1">
+                  <item.icon
+                    className="w-7 h-7 mb-8 shrink-0 transition-colors duration-300 group-hover:text-white"
+                    style={{ color: TEAL }}
+                  />
                   <h3
-                    className="text-xl font-bold text-white mb-2"
-                    style={{ fontFamily: "var(--font-headline)" }}
+                    className="text-xl md:text-2xl font-extrabold uppercase tracking-tighter mb-4 transition-colors duration-300 group-hover:text-white"
+                    style={{ color: CREAM, fontFamily: "var(--font-headline)" }}
                   >
-                    {feature.title}
+                    {item.title}
                   </h3>
                   <p
-                    className="text-gray-400 font-normal"
-                    style={{ fontFamily: "var(--font-body)" }}
+                    className="leading-relaxed text-sm md:text-base transition-colors duration-300 group-hover:text-white/80 flex-1"
+                    style={{
+                      color: `${CREAM}75`,
+                      fontFamily: "var(--font-body)",
+                    }}
                   >
-                    {feature.description}
+                    {item.desc}
                   </p>
-                </motion.div>
-              );
-            })}
-          </div>
+                  <div
+                    className="mt-8 flex items-center gap-2 text-sm font-extrabold uppercase tracking-tighter transition-colors duration-300 group-hover:text-white"
+                    style={{ color: TEAL }}
+                  >
+                    Get Started <ArrowRight className="w-4 h-4" />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ))}
         </div>
       </section>
 
-      {/* Impact Stats Section */}
-      <section className="px-4 md:px-6 py-16 md:py-20 bg-teal-500/5 border-y border-teal-500/10">
-        <div className="mx-auto max-w-5xl">
+      {/* ─── Features ─────────────────────────────────────── */}
+      <section
+        ref={featuresRef}
+        className="py-24 md:py-32"
+        style={{
+          backgroundColor: BG2,
+          borderTop: `1px solid ${TEAL}50`,
+          borderBottom: `1px solid ${TEAL}50`,
+        }}
+      >
+        <div className="max-w-[95vw] mx-auto px-6 md:px-10 mb-14 md:mb-20">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-12"
+            initial={{ opacity: 0, x: -20 }}
+            animate={featuresRef2 ? { opacity: 1, x: 0 } : {}}
+            className="flex items-center gap-3 mb-6"
           >
-            <h2
-              className="text-3xl sm:text-4xl font-bold text-white mb-4"
-              style={{ fontFamily: "var(--font-headline)" }}
+            <div className="w-8 h-px" style={{ backgroundColor: TEAL }} />
+            <span
+              className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em]"
+              style={{ color: TEAL }}
             >
-              Our Collective Impact
-            </h2>
-            <p
-              className="text-lg text-gray-400 font-normal"
-              style={{ fontFamily: "var(--font-body)" }}
-            >
-              Together, the HalalMe community is making a difference
-            </p>
+              Why HalalMe Rewards
+            </span>
           </motion.div>
+          <motion.h2
+            initial={{ opacity: 0, y: 30 }}
+            animate={featuresRef2 ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6 }}
+            className="text-4xl sm:text-5xl md:text-7xl font-extrabold uppercase tracking-tighter leading-[0.88]"
+            style={{ color: CREAM }}
+          >
+            Charity That
+            <br />
+            <span style={{ color: `${CREAM}65` }}>Rewards You.</span>
+          </motion.h2>
+        </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {impactStats.map((stat, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="text-center"
+        <div className="max-w-[95vw] mx-auto px-6 md:px-10 mb-10">
+          <div className="relative w-full h-52 md:h-72 overflow-hidden">
+            <Image
+              src="/images/page sections/rewards1.png"
+              alt="Why HalalMe Rewards"
+              fill
+              className="object-cover"
+              sizes="95vw"
+            />
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `linear-gradient(to left, ${BG2}70 0%, transparent 60%)`,
+              }}
+            />
+          </div>
+        </div>
+
+        <div
+          className="max-w-[95vw] mx-auto px-6 md:px-10 grid md:grid-cols-2"
+          style={{ gap: "1px", backgroundColor: `${TEAL}50` }}
+        >
+          {features.map((item, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 30 }}
+              animate={featuresRef2 ? { opacity: 1, y: 0 } : {}}
+              transition={{ delay: i * 0.1, duration: 0.5 }}
+            >
+              <div
+                className="group relative p-8 md:p-10 overflow-hidden cursor-default min-h-[200px] md:min-h-[260px] flex flex-col transition-colors duration-300"
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.backgroundColor = TEAL)
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.backgroundColor = BG)
+                }
+                style={{ backgroundColor: BG, border: `1px solid ${TEAL}50` }}
               >
-                <h3
-                  className="text-3xl md:text-4xl font-bold text-white mb-2"
-                  style={{ fontFamily: "var(--font-headline)" }}
+                <span
+                  aria-hidden="true"
+                  className="absolute -top-6 -right-3 text-[8rem] md:text-[10rem] font-extrabold leading-none select-none pointer-events-none"
+                  style={{ color: "#0A1A10" }}
                 >
-                  {stat.value}
-                </h3>
-                <p
-                  className="text-gray-400 font-normal"
-                  style={{ fontFamily: "var(--font-body)" }}
-                >
-                  {stat.label}
-                </p>
-              </motion.div>
-            ))}
-          </div>
+                  {item.num}
+                </span>
+                <div className="relative z-10 flex flex-col flex-1">
+                  <item.icon
+                    className="w-7 h-7 mb-6 shrink-0 transition-colors duration-300 group-hover:text-white"
+                    style={{ color: TEAL }}
+                  />
+                  <h3
+                    className="text-xl md:text-2xl font-extrabold uppercase tracking-tighter mb-3 transition-colors duration-300 group-hover:text-white"
+                    style={{ color: CREAM, fontFamily: "var(--font-headline)" }}
+                  >
+                    {item.title}
+                  </h3>
+                  <p
+                    className="leading-relaxed text-sm transition-colors duration-300 group-hover:text-white/80"
+                    style={{
+                      color: `${CREAM}75`,
+                      fontFamily: "var(--font-body)",
+                    }}
+                  >
+                    {item.desc}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          ))}
         </div>
       </section>
 
-      {/* Rewards Tiers Preview */}
-      <section className="px-4 md:px-6 py-16 md:py-20">
-        <div className="mx-auto max-w-5xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-12"
+      {/* ─── Tiers ────────────────────────────────────────── */}
+      <section
+        className="py-24 md:py-32"
+        style={{
+          backgroundColor: BG,
+          borderTop: `1px solid ${TEAL}50`,
+          borderBottom: `1px solid ${TEAL}50`,
+        }}
+      >
+        <div className="max-w-[95vw] mx-auto px-6 md:px-10 mb-14 md:mb-20">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-8 h-px" style={{ backgroundColor: TEAL }} />
+            <span
+              className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em]"
+              style={{ color: TEAL }}
+            >
+              Status Levels
+            </span>
+          </div>
+          <h2
+            className="text-4xl sm:text-5xl md:text-7xl font-extrabold uppercase tracking-tighter leading-[0.88]"
+            style={{ color: CREAM }}
           >
-            <h2
-              className="text-3xl sm:text-4xl font-bold text-white mb-4"
-              style={{ fontFamily: "var(--font-headline)" }}
-            >
-              Contribution Levels
-            </h2>
-            <p
-              className="text-lg text-gray-400 font-normal"
-              style={{ fontFamily: "var(--font-body)" }}
-            >
-              The more you give, the more you unlock
-            </p>
-          </motion.div>
+            Contribution
+            <br />
+            <span style={{ color: `${CREAM}65` }}>Levels.</span>
+          </h2>
+        </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              {
-                level: "Bronze",
-                requirement: "£25+",
-                bg: "bg-amber-700",
-                borderColor: "border-amber-600",
-              },
-              {
-                level: "Silver",
-                requirement: "£100+",
-                bg: "bg-gray-400",
-                borderColor: "border-gray-400",
-              },
-              {
-                level: "Gold",
-                requirement: "£500+",
-                bg: "bg-yellow-500",
-                borderColor: "border-yellow-500",
-              },
-              {
-                level: "Platinum",
-                requirement: "£1000+",
-                bg: "bg-cyan-400",
-                borderColor: "border-cyan-400",
-              },
-            ].map((tier, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                whileHover={{ y: -4, scale: 1.02 }}
-                className={`bg-gray-800/50 rounded-2xl p-6 border-2 ${tier.borderColor} text-center`}
+        <div className="max-w-[95vw] mx-auto px-6 md:px-10 mb-10">
+          <div className="relative w-full h-52 md:h-72 overflow-hidden">
+            <Image
+              src="/images/page sections/rewards3.png"
+              alt="Contribution levels"
+              fill
+              className="object-cover"
+              sizes="95vw"
+            />
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `linear-gradient(to bottom, transparent 40%, ${BG}CC 100%)`,
+              }}
+            />
+          </div>
+        </div>
+
+        <div
+          className="max-w-[95vw] mx-auto px-6 md:px-10 grid grid-cols-2 md:grid-cols-4"
+          style={{ gap: "1px", backgroundColor: `${CREAM}08` }}
+        >
+          {[
+            { level: "Bronze", req: "£25+", bg: "#B87333", hover: "#CD8B4A" },
+            { level: "Silver", req: "£100+", bg: "#9EA3A8", hover: "#C0C0C0" },
+            { level: "Gold", req: "£500+", bg: "#D4AF37", hover: "#FFD700" },
+            {
+              level: "Platinum",
+              req: "£1000+",
+              bg: "#8B8FA8",
+              hover: "#A8ADBE",
+            },
+          ].map((tier, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1, duration: 0.5 }}
+            >
+              <div
+                className="group p-6 md:p-10 flex flex-col items-center text-center min-h-[180px] md:min-h-[220px] justify-center transition-colors duration-300 cursor-default"
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.backgroundColor = tier.hover)
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.backgroundColor = BG2)
+                }
+                style={{ backgroundColor: BG2, border: `1px solid ${CREAM}05` }}
               >
                 <div
-                  className={`${tier.bg} w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center`}
+                  className="w-14 h-14 rounded-full mb-5 flex items-center justify-center"
+                  style={{ backgroundColor: tier.bg }}
                 >
-                  <Star className="w-8 h-8 text-white" />
+                  <Star className="w-7 h-7 text-white" />
                 </div>
                 <h3
-                  className="text-xl font-bold text-white mb-2"
-                  style={{ fontFamily: "var(--font-headline)" }}
+                  className="text-xl font-extrabold uppercase tracking-tighter mb-1 transition-colors duration-300 group-hover:text-white"
+                  style={{ color: CREAM, fontFamily: "var(--font-headline)" }}
                 >
                   {tier.level}
                 </h3>
                 <p
-                  className="text-gray-400 font-normal"
-                  style={{ fontFamily: "var(--font-body)" }}
+                  className="text-sm transition-colors duration-300 group-hover:text-white/70"
+                  style={{
+                    color: `${CREAM}65`,
+                    fontFamily: "var(--font-body)",
+                  }}
                 >
-                  {tier.requirement} donated
+                  {tier.req} donated
                 </p>
-              </motion.div>
-            ))}
-          </div>
+              </div>
+            </motion.div>
+          ))}
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="px-4 md:px-6 py-16 md:py-20 bg-gray-900">
-        <div className="mx-auto max-w-4xl text-center">
+      {/* ─── CTA ──────────────────────────────────────────── */}
+      <section
+        ref={ctaRef}
+        className="relative overflow-hidden py-24 md:py-32"
+        style={{ backgroundColor: TEAL }}
+      >
+        <div className="max-w-[95vw] mx-auto px-6 md:px-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            animate={ctaInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6 }}
           >
-            <Globe className="w-16 h-16 text-teal-400 mx-auto mb-6" />
-            <h2
-              className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6"
-              style={{ fontFamily: "var(--font-headline)" }}
-            >
-              Ready to Make a Difference?
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-8 h-px bg-white/40" />
+              <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em] text-white/60">
+                Get Started
+              </span>
+            </div>
+            <h2 className="text-4xl sm:text-5xl md:text-7xl font-extrabold uppercase tracking-tighter leading-[0.88] mb-8 text-white">
+              Ready to Make
+              <br />
+              <span className="text-white/60">a Difference?</span>
             </h2>
             <p
-              className="text-lg md:text-xl text-gray-400 mb-8 font-normal"
+              className="text-base md:text-lg max-w-xl leading-relaxed mb-10 font-normal text-white/70"
               style={{ fontFamily: "var(--font-body)" }}
             >
               Start your giving journey today and earn rewards while supporting
-              causes that matter.
+              causes that matter to you and your community.
             </p>
-            <motion.button
-              onClick={() => router.push("/rewards/causes")}
-              className="bg-teal-500 text-white px-10 py-5 rounded-full font-bold text-xl shadow-2xl shadow-teal-500/20"
-              whileHover={{
-                scale: 1.05,
-                boxShadow: "0 25px 50px -12px rgba(20, 184, 166, 0.5)",
-              }}
-              whileTap={{ scale: 0.95 }}
-            >
-              Browse Causes
-            </motion.button>
+            <div className="flex flex-wrap gap-4">
+              <motion.button
+                onClick={() => router.push("/rewards/causes")}
+                className="flex items-center gap-3 px-8 py-4 font-extrabold uppercase tracking-tighter text-base text-white"
+                style={{ backgroundColor: BG }}
+                whileHover={{
+                  scale: 1.03,
+                  boxShadow: `0 20px 50px -12px rgba(0,0,0,0.3)`,
+                }}
+                whileTap={{ scale: 0.97 }}
+              >
+                Browse Causes <ArrowRight className="w-5 h-5" />
+              </motion.button>
+              <motion.button
+                onClick={() => router.push("/rewards/my-rewards")}
+                className="flex items-center gap-3 px-8 py-4 border-2 font-extrabold uppercase tracking-tighter text-base transition-all"
+                style={{ borderColor: `rgba(255,255,255,0.4)`, color: "white" }}
+                whileHover={{
+                  scale: 1.03,
+                  backgroundColor: "rgba(255,255,255,0.1)",
+                }}
+                whileTap={{ scale: 0.97 }}
+              >
+                <Globe className="w-5 h-5" /> My Rewards
+              </motion.button>
+            </div>
           </motion.div>
         </div>
-      </section>
 
-      {/* Back Links */}
-      <section className="px-4 md:px-6 pb-16">
-        <div className="mx-auto max-w-4xl text-center flex justify-center gap-6">
-          <Link
-            href="/kitchen"
-            className="text-gray-400 hover:text-teal-400 transition-colors text-sm font-semibold"
-          >
-            ← Kitchen
-          </Link>
-          <Link
-            href="/hub"
-            className="text-gray-400 hover:text-teal-400 transition-colors text-sm font-semibold"
-          >
-            Hub →
-          </Link>
+        {/* Watermark */}
+        <div
+          aria-hidden="true"
+          className="absolute bottom-0 right-0 font-extrabold uppercase tracking-tighter leading-none text-white/10 select-none pointer-events-none translate-x-6 translate-y-6 text-[8rem] md:text-[14rem]"
+        >
+          Rewards
         </div>
       </section>
     </div>
