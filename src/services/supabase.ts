@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/auth-helpers-nextjs";
 
 export const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://placeholder.supabase.co";
 export const supabaseAnonKey =
@@ -10,14 +11,11 @@ export const supabaseConfigured =
   !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
   !!(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY);
 
-// Auth client — persists session, used for writes and authenticated reads.
-// lock: no-op bypasses navigator.locks so tab-switching never aborts a token
-// refresh and Kitchen writes never time out waiting for the lock to release.
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+// Auth client — uses createBrowserClient so the session is stored in cookies,
+// making it readable by server-side route handlers via createServerClient.
+// lock: no-op bypasses navigator.locks so tab-switching never aborts a token refresh.
+export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
     lock: async (_name, _acquireTimeout, fn) => fn(),
   },
 });

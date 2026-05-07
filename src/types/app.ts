@@ -1,438 +1,1605 @@
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[];
+
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.1";
+  };
+  graphql_public: {
+    Tables: {
+      [_ in never]: never;
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json;
+          operationName?: string;
+          query?: string;
+          variables?: Json;
+        };
+        Returns: Json;
+      };
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
+  };
+  public: {
+    Tables: {
+      ai_chat_sessions: {
+        Row: {
+          created_at: string;
+          id: string;
+          ingredients: string[] | null;
+          messages: Json;
+          recipe_id: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          ingredients?: string[] | null;
+          messages?: Json;
+          recipe_id?: string | null;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          ingredients?: string[] | null;
+          messages?: Json;
+          recipe_id?: string | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ai_chat_sessions_recipe_id_fkey";
+            columns: ["recipe_id"];
+            isOneToOne: false;
+            referencedRelation: "recipes";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ai_chat_sessions_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      ai_request_counts: {
+        Row: {
+          request_count: number;
+          user_id: string;
+          window_start: string;
+        };
+        Insert: {
+          request_count?: number;
+          user_id: string;
+          window_start?: string;
+        };
+        Update: {
+          request_count?: number;
+          user_id?: string;
+          window_start?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ai_request_counts_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      charities: {
+        Row: {
+          category: string;
+          charity_type: string | null;
+          contact_email: string | null;
+          contact_phone: string | null;
+          country: string;
+          created_at: string;
+          currency: string;
+          description: string;
+          document_paths: Json;
+          donor_count: number;
+          goal_amount: number;
+          id: string;
+          image_url: string | null;
+          is_active: boolean;
+          is_featured: boolean;
+          is_zakat_eligible: boolean;
+          legal_name: string | null;
+          long_description: string | null;
+          minimum_donation: number;
+          name: string;
+          platform_fee_pct: number;
+          raised_amount: number;
+          registration_number: string | null;
+          rejection_reason: string | null;
+          slug: string;
+          stripe_account_id: string | null;
+          stripe_charges_enabled: boolean;
+          stripe_country: string | null;
+          stripe_default_currency: string | null;
+          stripe_last_synced_at: string | null;
+          stripe_onboarding_sent_at: string | null;
+          stripe_onboarding_status: string;
+          stripe_onboarding_url: string | null;
+          stripe_onboarding_url_expires_at: string | null;
+          stripe_payouts_enabled: boolean;
+          submitted_by: string | null;
+          updated_at: string;
+          verification_status: string;
+          verified_at: string | null;
+          verified_by: string | null;
+          website_url: string | null;
+        };
+        Insert: {
+          category: string;
+          charity_type?: string | null;
+          contact_email?: string | null;
+          contact_phone?: string | null;
+          country?: string;
+          created_at?: string;
+          currency?: string;
+          description: string;
+          document_paths?: Json;
+          donor_count?: number;
+          goal_amount: number;
+          id?: string;
+          image_url?: string | null;
+          is_active?: boolean;
+          is_featured?: boolean;
+          is_zakat_eligible?: boolean;
+          legal_name?: string | null;
+          long_description?: string | null;
+          minimum_donation?: number;
+          name: string;
+          platform_fee_pct?: number;
+          raised_amount?: number;
+          registration_number?: string | null;
+          rejection_reason?: string | null;
+          slug: string;
+          stripe_account_id?: string | null;
+          stripe_charges_enabled?: boolean;
+          stripe_country?: string | null;
+          stripe_default_currency?: string | null;
+          stripe_last_synced_at?: string | null;
+          stripe_onboarding_sent_at?: string | null;
+          stripe_onboarding_status?: string;
+          stripe_onboarding_url?: string | null;
+          stripe_onboarding_url_expires_at?: string | null;
+          stripe_payouts_enabled?: boolean;
+          submitted_by?: string | null;
+          updated_at?: string;
+          verification_status?: string;
+          verified_at?: string | null;
+          verified_by?: string | null;
+          website_url?: string | null;
+        };
+        Update: {
+          category?: string;
+          charity_type?: string | null;
+          contact_email?: string | null;
+          contact_phone?: string | null;
+          country?: string;
+          created_at?: string;
+          currency?: string;
+          description?: string;
+          document_paths?: Json;
+          donor_count?: number;
+          goal_amount?: number;
+          id?: string;
+          image_url?: string | null;
+          is_active?: boolean;
+          is_featured?: boolean;
+          is_zakat_eligible?: boolean;
+          legal_name?: string | null;
+          long_description?: string | null;
+          minimum_donation?: number;
+          name?: string;
+          platform_fee_pct?: number;
+          raised_amount?: number;
+          registration_number?: string | null;
+          rejection_reason?: string | null;
+          slug?: string;
+          stripe_account_id?: string | null;
+          stripe_charges_enabled?: boolean;
+          stripe_country?: string | null;
+          stripe_default_currency?: string | null;
+          stripe_last_synced_at?: string | null;
+          stripe_onboarding_sent_at?: string | null;
+          stripe_onboarding_status?: string;
+          stripe_onboarding_url?: string | null;
+          stripe_onboarding_url_expires_at?: string | null;
+          stripe_payouts_enabled?: boolean;
+          submitted_by?: string | null;
+          updated_at?: string;
+          verification_status?: string;
+          verified_at?: string | null;
+          verified_by?: string | null;
+          website_url?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "charities_submitted_by_fkey";
+            columns: ["submitted_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "charities_verified_by_fkey";
+            columns: ["verified_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      charity_applications: {
+        Row: {
+          applicant_user_id: string;
+          category: string;
+          charity_id: string | null;
+          charity_type: string;
+          contact_email: string;
+          contact_phone: string | null;
+          country: string;
+          created_at: string;
+          description: string;
+          display_name: string;
+          document_paths: Json;
+          id: string;
+          is_zakat_eligible: boolean;
+          legal_name: string;
+          registration_number: string;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          reviewer_notes: string | null;
+          status: string;
+          updated_at: string;
+          website_url: string | null;
+        };
+        Insert: {
+          applicant_user_id: string;
+          category: string;
+          charity_id?: string | null;
+          charity_type: string;
+          contact_email: string;
+          contact_phone?: string | null;
+          country: string;
+          created_at?: string;
+          description: string;
+          display_name: string;
+          document_paths?: Json;
+          id?: string;
+          is_zakat_eligible?: boolean;
+          legal_name: string;
+          registration_number: string;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          reviewer_notes?: string | null;
+          status?: string;
+          updated_at?: string;
+          website_url?: string | null;
+        };
+        Update: {
+          applicant_user_id?: string;
+          category?: string;
+          charity_id?: string | null;
+          charity_type?: string;
+          contact_email?: string;
+          contact_phone?: string | null;
+          country?: string;
+          created_at?: string;
+          description?: string;
+          display_name?: string;
+          document_paths?: Json;
+          id?: string;
+          is_zakat_eligible?: boolean;
+          legal_name?: string;
+          registration_number?: string;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          reviewer_notes?: string | null;
+          status?: string;
+          updated_at?: string;
+          website_url?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "charity_applications_applicant_user_id_fkey";
+            columns: ["applicant_user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "charity_applications_charity_id_fkey";
+            columns: ["charity_id"];
+            isOneToOne: false;
+            referencedRelation: "charities";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "charity_applications_charity_id_fkey";
+            columns: ["charity_id"];
+            isOneToOne: false;
+            referencedRelation: "charity_stripe_status";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "charity_applications_reviewed_by_fkey";
+            columns: ["reviewed_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      comment_likes: {
+        Row: {
+          comment_id: string;
+          created_at: string;
+          user_id: string;
+        };
+        Insert: {
+          comment_id: string;
+          created_at?: string;
+          user_id: string;
+        };
+        Update: {
+          comment_id?: string;
+          created_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "comment_likes_comment_id_fkey";
+            columns: ["comment_id"];
+            isOneToOne: false;
+            referencedRelation: "comments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "comment_likes_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      comments: {
+        Row: {
+          content: string;
+          created_at: string;
+          id: string;
+          like_count: number;
+          parent_id: string | null;
+          post_id: string;
+          user_id: string;
+        };
+        Insert: {
+          content: string;
+          created_at?: string;
+          id?: string;
+          like_count?: number;
+          parent_id?: string | null;
+          post_id: string;
+          user_id: string;
+        };
+        Update: {
+          content?: string;
+          created_at?: string;
+          id?: string;
+          like_count?: number;
+          parent_id?: string | null;
+          post_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "comments_parent_id_fkey";
+            columns: ["parent_id"];
+            isOneToOne: false;
+            referencedRelation: "comments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "comments_post_id_fkey";
+            columns: ["post_id"];
+            isOneToOne: false;
+            referencedRelation: "following_posts_view";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "comments_post_id_fkey";
+            columns: ["post_id"];
+            isOneToOne: false;
+            referencedRelation: "posts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "comments_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      donations: {
+        Row: {
+          amount: number;
+          application_fee_amount: number | null;
+          charity_id: string;
+          created_at: string;
+          currency: string;
+          id: string;
+          idempotency_key: string;
+          ip_address: unknown;
+          is_anonymous: boolean;
+          message: string | null;
+          net_amount: number | null;
+          payment_intent_id: string | null;
+          payment_method_type: string | null;
+          payment_provider: string;
+          payment_ref: string | null;
+          platform_fee_amount: number | null;
+          points_earned: number;
+          receipt_sent_at: string | null;
+          receipt_url: string | null;
+          refund_ref: string | null;
+          refunded_at: string | null;
+          risk_score: number;
+          status: string;
+          stripe_charge_id: string | null;
+          stripe_fee_amount: number | null;
+          stripe_transfer_id: string | null;
+          updated_at: string;
+          user_agent: string | null;
+          user_id: string;
+        };
+        Insert: {
+          amount: number;
+          application_fee_amount?: number | null;
+          charity_id: string;
+          created_at?: string;
+          currency?: string;
+          id?: string;
+          idempotency_key: string;
+          ip_address?: unknown;
+          is_anonymous?: boolean;
+          message?: string | null;
+          net_amount?: number | null;
+          payment_intent_id?: string | null;
+          payment_method_type?: string | null;
+          payment_provider?: string;
+          payment_ref?: string | null;
+          platform_fee_amount?: number | null;
+          points_earned?: number;
+          receipt_sent_at?: string | null;
+          receipt_url?: string | null;
+          refund_ref?: string | null;
+          refunded_at?: string | null;
+          risk_score?: number;
+          status?: string;
+          stripe_charge_id?: string | null;
+          stripe_fee_amount?: number | null;
+          stripe_transfer_id?: string | null;
+          updated_at?: string;
+          user_agent?: string | null;
+          user_id: string;
+        };
+        Update: {
+          amount?: number;
+          application_fee_amount?: number | null;
+          charity_id?: string;
+          created_at?: string;
+          currency?: string;
+          id?: string;
+          idempotency_key?: string;
+          ip_address?: unknown;
+          is_anonymous?: boolean;
+          message?: string | null;
+          net_amount?: number | null;
+          payment_intent_id?: string | null;
+          payment_method_type?: string | null;
+          payment_provider?: string;
+          payment_ref?: string | null;
+          platform_fee_amount?: number | null;
+          points_earned?: number;
+          receipt_sent_at?: string | null;
+          receipt_url?: string | null;
+          refund_ref?: string | null;
+          refunded_at?: string | null;
+          risk_score?: number;
+          status?: string;
+          stripe_charge_id?: string | null;
+          stripe_fee_amount?: number | null;
+          stripe_transfer_id?: string | null;
+          updated_at?: string;
+          user_agent?: string | null;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "donations_charity_id_fkey";
+            columns: ["charity_id"];
+            isOneToOne: false;
+            referencedRelation: "charities";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "donations_charity_id_fkey";
+            columns: ["charity_id"];
+            isOneToOne: false;
+            referencedRelation: "charity_stripe_status";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "donations_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      follows: {
+        Row: {
+          created_at: string;
+          follower_id: string;
+          following_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          follower_id: string;
+          following_id: string;
+        };
+        Update: {
+          created_at?: string;
+          follower_id?: string;
+          following_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "follows_follower_id_fkey";
+            columns: ["follower_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "follows_following_id_fkey";
+            columns: ["following_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      notifications: {
+        Row: {
+          actor_id: string;
+          comment_id: string | null;
+          created_at: string;
+          id: string;
+          is_read: boolean;
+          post_id: string | null;
+          type: string;
+          user_id: string;
+        };
+        Insert: {
+          actor_id: string;
+          comment_id?: string | null;
+          created_at?: string;
+          id?: string;
+          is_read?: boolean;
+          post_id?: string | null;
+          type: string;
+          user_id: string;
+        };
+        Update: {
+          actor_id?: string;
+          comment_id?: string | null;
+          created_at?: string;
+          id?: string;
+          is_read?: boolean;
+          post_id?: string | null;
+          type?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "notifications_actor_id_fkey";
+            columns: ["actor_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "notifications_comment_id_fkey";
+            columns: ["comment_id"];
+            isOneToOne: false;
+            referencedRelation: "comments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "notifications_post_id_fkey";
+            columns: ["post_id"];
+            isOneToOne: false;
+            referencedRelation: "following_posts_view";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "notifications_post_id_fkey";
+            columns: ["post_id"];
+            isOneToOne: false;
+            referencedRelation: "posts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "notifications_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      post_bookmarks: {
+        Row: {
+          created_at: string;
+          post_id: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          post_id: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          post_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "post_bookmarks_post_id_fkey";
+            columns: ["post_id"];
+            isOneToOne: false;
+            referencedRelation: "following_posts_view";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "post_bookmarks_post_id_fkey";
+            columns: ["post_id"];
+            isOneToOne: false;
+            referencedRelation: "posts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "post_bookmarks_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      post_likes: {
+        Row: {
+          created_at: string;
+          post_id: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          post_id: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          post_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "post_likes_post_id_fkey";
+            columns: ["post_id"];
+            isOneToOne: false;
+            referencedRelation: "following_posts_view";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "post_likes_post_id_fkey";
+            columns: ["post_id"];
+            isOneToOne: false;
+            referencedRelation: "posts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "post_likes_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      posts: {
+        Row: {
+          comment_count: number;
+          content: string;
+          created_at: string;
+          id: string;
+          is_published: boolean;
+          like_count: number;
+          media_urls: string[] | null;
+          post_type: string;
+          recipe_id: string | null;
+          updated_at: string;
+          user_id: string;
+          view_count: number;
+        };
+        Insert: {
+          comment_count?: number;
+          content: string;
+          created_at?: string;
+          id?: string;
+          is_published?: boolean;
+          like_count?: number;
+          media_urls?: string[] | null;
+          post_type?: string;
+          recipe_id?: string | null;
+          updated_at?: string;
+          user_id: string;
+          view_count?: number;
+        };
+        Update: {
+          comment_count?: number;
+          content?: string;
+          created_at?: string;
+          id?: string;
+          is_published?: boolean;
+          like_count?: number;
+          media_urls?: string[] | null;
+          post_type?: string;
+          recipe_id?: string | null;
+          updated_at?: string;
+          user_id?: string;
+          view_count?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "posts_recipe_id_fkey";
+            columns: ["recipe_id"];
+            isOneToOne: false;
+            referencedRelation: "recipes";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "posts_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      profiles: {
+        Row: {
+          avatar_url: string | null;
+          bio: string | null;
+          created_at: string;
+          full_name: string;
+          id: string;
+          is_verified: boolean;
+          location: string | null;
+          reward_points: number;
+          reward_tier: string;
+          role: string;
+          updated_at: string;
+          username: string | null;
+        };
+        Insert: {
+          avatar_url?: string | null;
+          bio?: string | null;
+          created_at?: string;
+          full_name: string;
+          id: string;
+          is_verified?: boolean;
+          location?: string | null;
+          reward_points?: number;
+          reward_tier?: string;
+          role?: string;
+          updated_at?: string;
+          username?: string | null;
+        };
+        Update: {
+          avatar_url?: string | null;
+          bio?: string | null;
+          created_at?: string;
+          full_name?: string;
+          id?: string;
+          is_verified?: boolean;
+          location?: string | null;
+          reward_points?: number;
+          reward_tier?: string;
+          role?: string;
+          updated_at?: string;
+          username?: string | null;
+        };
+        Relationships: [];
+      };
+      recipe_favorites: {
+        Row: {
+          created_at: string;
+          recipe_id: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          recipe_id: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          recipe_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "recipe_favorites_recipe_id_fkey";
+            columns: ["recipe_id"];
+            isOneToOne: false;
+            referencedRelation: "recipes";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "recipe_favorites_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      recipe_reviews: {
+        Row: {
+          comment: string | null;
+          created_at: string;
+          id: string;
+          rating: number;
+          recipe_id: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          comment?: string | null;
+          created_at?: string;
+          id?: string;
+          rating: number;
+          recipe_id: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          comment?: string | null;
+          created_at?: string;
+          id?: string;
+          rating?: number;
+          recipe_id?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "recipe_reviews_recipe_id_fkey";
+            columns: ["recipe_id"];
+            isOneToOne: false;
+            referencedRelation: "recipes";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "recipe_reviews_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      recipes: {
+        Row: {
+          avg_rating: number | null;
+          cook_time_mins: number | null;
+          created_at: string;
+          cuisine: string | null;
+          description: string | null;
+          difficulty: string | null;
+          id: string;
+          image_url: string | null;
+          ingredients: Json;
+          instructions: Json;
+          is_ai_generated: boolean;
+          is_halal_verified: boolean;
+          is_published: boolean;
+          nutrition: Json | null;
+          prep_time_mins: number | null;
+          review_count: number;
+          servings: number | null;
+          tags: string[] | null;
+          title: string;
+          updated_at: string;
+          user_id: string;
+          view_count: number;
+        };
+        Insert: {
+          avg_rating?: number | null;
+          cook_time_mins?: number | null;
+          created_at?: string;
+          cuisine?: string | null;
+          description?: string | null;
+          difficulty?: string | null;
+          id?: string;
+          image_url?: string | null;
+          ingredients?: Json;
+          instructions?: Json;
+          is_ai_generated?: boolean;
+          is_halal_verified?: boolean;
+          is_published?: boolean;
+          nutrition?: Json | null;
+          prep_time_mins?: number | null;
+          review_count?: number;
+          servings?: number | null;
+          tags?: string[] | null;
+          title: string;
+          updated_at?: string;
+          user_id: string;
+          view_count?: number;
+        };
+        Update: {
+          avg_rating?: number | null;
+          cook_time_mins?: number | null;
+          created_at?: string;
+          cuisine?: string | null;
+          description?: string | null;
+          difficulty?: string | null;
+          id?: string;
+          image_url?: string | null;
+          ingredients?: Json;
+          instructions?: Json;
+          is_ai_generated?: boolean;
+          is_halal_verified?: boolean;
+          is_published?: boolean;
+          nutrition?: Json | null;
+          prep_time_mins?: number | null;
+          review_count?: number;
+          servings?: number | null;
+          tags?: string[] | null;
+          title?: string;
+          updated_at?: string;
+          user_id?: string;
+          view_count?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "recipes_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      reward_rules: {
+        Row: {
+          action: string;
+          created_at: string;
+          id: string;
+          is_active: boolean;
+          label: string;
+          max_lifetime: number | null;
+          max_per_day: number | null;
+          points_per_unit: number;
+          unit: string;
+          updated_at: string;
+          valid_from: string;
+          valid_until: string | null;
+        };
+        Insert: {
+          action: string;
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          label: string;
+          max_lifetime?: number | null;
+          max_per_day?: number | null;
+          points_per_unit: number;
+          unit?: string;
+          updated_at?: string;
+          valid_from?: string;
+          valid_until?: string | null;
+        };
+        Update: {
+          action?: string;
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          label?: string;
+          max_lifetime?: number | null;
+          max_per_day?: number | null;
+          points_per_unit?: number;
+          unit?: string;
+          updated_at?: string;
+          valid_from?: string;
+          valid_until?: string | null;
+        };
+        Relationships: [];
+      };
+      reward_tiers: {
+        Row: {
+          ai_requests_per_hour: number;
+          color: string;
+          min_points: number;
+          name: string;
+          sort_order: number;
+        };
+        Insert: {
+          ai_requests_per_hour?: number;
+          color: string;
+          min_points: number;
+          name: string;
+          sort_order: number;
+        };
+        Update: {
+          ai_requests_per_hour?: number;
+          color?: string;
+          min_points?: number;
+          name?: string;
+          sort_order?: number;
+        };
+        Relationships: [];
+      };
+      reward_transactions: {
+        Row: {
+          action: string;
+          created_at: string;
+          created_date: string;
+          description: string | null;
+          expires_at: string | null;
+          id: string;
+          is_expired: boolean;
+          points: number;
+          redeemed_at: string | null;
+          redemption_ref: string | null;
+          reference_id: string | null;
+          source_donation_id: string | null;
+          user_id: string;
+        };
+        Insert: {
+          action: string;
+          created_at?: string;
+          created_date?: string;
+          description?: string | null;
+          expires_at?: string | null;
+          id?: string;
+          is_expired?: boolean;
+          points: number;
+          redeemed_at?: string | null;
+          redemption_ref?: string | null;
+          reference_id?: string | null;
+          source_donation_id?: string | null;
+          user_id: string;
+        };
+        Update: {
+          action?: string;
+          created_at?: string;
+          created_date?: string;
+          description?: string | null;
+          expires_at?: string | null;
+          id?: string;
+          is_expired?: boolean;
+          points?: number;
+          redeemed_at?: string | null;
+          redemption_ref?: string | null;
+          reference_id?: string | null;
+          source_donation_id?: string | null;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "reward_transactions_source_donation_id_fkey";
+            columns: ["source_donation_id"];
+            isOneToOne: false;
+            referencedRelation: "donations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "reward_transactions_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      stripe_connect_events: {
+        Row: {
+          charity_id: string | null;
+          created_at: string;
+          event_id: string;
+          event_type: string;
+          id: string;
+          payload: Json;
+          processed_at: string | null;
+          processing_error: string | null;
+          stripe_account_id: string | null;
+        };
+        Insert: {
+          charity_id?: string | null;
+          created_at?: string;
+          event_id: string;
+          event_type: string;
+          id?: string;
+          payload: Json;
+          processed_at?: string | null;
+          processing_error?: string | null;
+          stripe_account_id?: string | null;
+        };
+        Update: {
+          charity_id?: string | null;
+          created_at?: string;
+          event_id?: string;
+          event_type?: string;
+          id?: string;
+          payload?: Json;
+          processed_at?: string | null;
+          processing_error?: string | null;
+          stripe_account_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "stripe_connect_events_charity_id_fkey";
+            columns: ["charity_id"];
+            isOneToOne: false;
+            referencedRelation: "charities";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "stripe_connect_events_charity_id_fkey";
+            columns: ["charity_id"];
+            isOneToOne: false;
+            referencedRelation: "charity_stripe_status";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      user_badges: {
+        Row: {
+          award_reason: string | null;
+          awarded_at: string;
+          badge_slug: string;
+          id: string;
+          user_id: string;
+        };
+        Insert: {
+          award_reason?: string | null;
+          awarded_at?: string;
+          badge_slug: string;
+          id?: string;
+          user_id: string;
+        };
+        Update: {
+          award_reason?: string | null;
+          awarded_at?: string;
+          badge_slug?: string;
+          id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "user_badges_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      webhook_events: {
+        Row: {
+          created_at: string;
+          event_id: string;
+          event_type: string;
+          id: string;
+          payload: Json;
+          processed_at: string | null;
+          processing_error: string | null;
+          provider: string;
+        };
+        Insert: {
+          created_at?: string;
+          event_id: string;
+          event_type: string;
+          id?: string;
+          payload: Json;
+          processed_at?: string | null;
+          processing_error?: string | null;
+          provider?: string;
+        };
+        Update: {
+          created_at?: string;
+          event_id?: string;
+          event_type?: string;
+          id?: string;
+          payload?: Json;
+          processed_at?: string | null;
+          processing_error?: string | null;
+          provider?: string;
+        };
+        Relationships: [];
+      };
+    };
+    Views: {
+      charity_stripe_status: {
+        Row: {
+          can_accept_donations: boolean | null;
+          connect_status: string | null;
+          id: string | null;
+          name: string | null;
+          slug: string | null;
+          stripe_account_id: string | null;
+          stripe_charges_enabled: boolean | null;
+          stripe_last_synced_at: string | null;
+          stripe_onboarding_sent_at: string | null;
+          stripe_onboarding_status: string | null;
+          stripe_payouts_enabled: boolean | null;
+          verification_status: string | null;
+        };
+        Insert: {
+          can_accept_donations?: never;
+          connect_status?: never;
+          id?: string | null;
+          name?: string | null;
+          slug?: string | null;
+          stripe_account_id?: string | null;
+          stripe_charges_enabled?: boolean | null;
+          stripe_last_synced_at?: string | null;
+          stripe_onboarding_sent_at?: string | null;
+          stripe_onboarding_status?: string | null;
+          stripe_payouts_enabled?: boolean | null;
+          verification_status?: string | null;
+        };
+        Update: {
+          can_accept_donations?: never;
+          connect_status?: never;
+          id?: string | null;
+          name?: string | null;
+          slug?: string | null;
+          stripe_account_id?: string | null;
+          stripe_charges_enabled?: boolean | null;
+          stripe_last_synced_at?: string | null;
+          stripe_onboarding_sent_at?: string | null;
+          stripe_onboarding_status?: string | null;
+          stripe_payouts_enabled?: boolean | null;
+          verification_status?: string | null;
+        };
+        Relationships: [];
+      };
+      following_posts_view: {
+        Row: {
+          comment_count: number | null;
+          content: string | null;
+          created_at: string | null;
+          follower_id: string | null;
+          id: string | null;
+          is_published: boolean | null;
+          like_count: number | null;
+          media_urls: string[] | null;
+          post_type: string | null;
+          profiles: Json | null;
+          recipe_id: string | null;
+          updated_at: string | null;
+          user_id: string | null;
+          view_count: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "follows_follower_id_fkey";
+            columns: ["follower_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "posts_recipe_id_fkey";
+            columns: ["recipe_id"];
+            isOneToOne: false;
+            referencedRelation: "recipes";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "posts_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+    };
+    Functions: {
+      award_badge: {
+        Args: { p_badge_slug: string; p_reason?: string; p_user_id: string };
+        Returns: undefined;
+      };
+      check_and_award_badges:
+        | { Args: { p_user_id: string }; Returns: undefined }
+        | {
+            Args: {
+              p_extra_amount?: number;
+              p_extra_count?: number;
+              p_user_id: string;
+            };
+            Returns: undefined;
+          };
+      decrement_reward_points: {
+        Args: { p_points: number; p_user_id: string };
+        Returns: undefined;
+      };
+      increment_post_view: { Args: { p_post_id: string }; Returns: undefined };
+      recalculate_user_rewards: { Args: { p_user_id: string }; Returns: Json };
+      release_flagged_rewards: {
+        Args: { p_donation_id: string };
+        Returns: Json;
+      };
+      show_limit: { Args: never; Returns: number };
+      show_trgm: { Args: { "": string }; Returns: string[] };
+      unaccent: { Args: { "": string }; Returns: string };
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
+  };
+};
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">;
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<
+  keyof Database,
+  "public"
+>];
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R;
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R;
+      }
+      ? R
+      : never
+    : never;
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I;
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I;
+      }
+      ? I
+      : never
+    : never;
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U;
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U;
+      }
+      ? U
+      : never
+    : never;
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never;
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never;
+
+export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
+  public: {
+    Enums: {},
+  },
+} as const;
+
 // =============================================================================
-// Application-level types — kept separate from the Supabase-generated index.ts
-// so they survive a `supabase gen types` regeneration.
-// Re-exported via src/types/index.ts — all existing `from "@/types"` imports work.
+// Hand-written app types
 // =============================================================================
-
-import type { Tables } from "@/types";
-
-// ---------------------------------------------------------------------------
-// Auth & Profiles
-// ---------------------------------------------------------------------------
-export type UserRole = "user" | "admin";
-export type RewardTier = "bronze" | "silver" | "gold" | "platinum";
-
-// Extends the DB row with `email` which lives in auth.users, not profiles table
-export type Profile = Tables<"profiles"> & { email: string };
-
-// ---------------------------------------------------------------------------
-// Kitchen
-// ---------------------------------------------------------------------------
-export type Difficulty = "easy" | "medium" | "hard";
-
-export interface RecipeIngredient {
-  name: string;
-  amount: string;
-  unit: string;
-}
-
-export interface RecipeStep {
-  step: number;
-  text: string;
-}
-
-export interface RecipeNutrition {
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-}
-
-export interface Recipe {
-  id: string;
-  user_id: string;
-  title: string;
-  description: string | null;
-  instructions: RecipeStep[];
-  ingredients: RecipeIngredient[];
-  cuisine: string | null;
-  difficulty: Difficulty | null;
-  prep_time_mins: number | null;
-  cook_time_mins: number | null;
-  servings: number | null;
-  image_url: string | null;
-  is_ai_generated: boolean;
-  is_published: boolean;
-  is_halal_verified: boolean;
-  tags: string[];
-  nutrition: RecipeNutrition | null;
-  view_count: number;
-  avg_rating: number | null;
-  review_count: number;
-  created_at: string;
-  updated_at: string;
-  // Joined fields
-  profiles?: Pick<Profile, "username" | "avatar_url" | "is_verified">;
-}
-
-export interface RecipeReview {
-  id: string;
-  recipe_id: string;
-  user_id: string;
-  rating: number;
-  comment: string | null;
-  created_at: string;
-  updated_at: string;
-  profiles?: Pick<Profile, "username" | "avatar_url">;
-}
-
-export interface RecipeFavorite {
-  user_id: string;
-  recipe_id: string;
-  created_at: string;
-}
-
-export interface AIMessage {
-  role: "user" | "assistant";
-  content: string | Record<string, unknown>;
-  timestamp: string;
-}
-
-export interface AIChatSession {
-  id: string;
-  user_id: string;
-  messages: AIMessage[];
-  ingredients: string[] | null;
-  recipe_id: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-export type AIResponseType = "chat" | "recipe";
-
-/**
- * Unified response from the generate-recipe edge function.
- * type="chat"   — conversational reply, no recipe data
- * type="recipe" — full recipe generated; recipe + save info present
- */
-export interface AIAssistantResponse {
-  type: AIResponseType;
-  /** Human-readable text for both modes. For recipes this is a brief intro line. */
-  message: string;
-  recipe?: Omit<Recipe, "id" | "user_id" | "is_published" | "is_halal_verified" | "view_count" | "avg_rating" | "review_count" | "created_at" | "updated_at">;
-  recipe_id?: string | null;
-  is_saved?: boolean;
-  session_id?: string | null;
-  requests_remaining: number;
-}
-
-// ---------------------------------------------------------------------------
-// Hub
-// ---------------------------------------------------------------------------
-export type PostType = "general" | "recipe" | "question" | "review";
-
-export interface Post {
-  id: string;
-  user_id: string;
-  content: string;
-  media_urls: string[];
-  post_type: PostType;
-  recipe_id: string | null;
-  is_published: boolean;
-  like_count: number;
-  comment_count: number;
-  view_count: number;
-  created_at: string;
-  updated_at: string;
-  profiles?: Pick<Profile, "username" | "full_name" | "avatar_url" | "is_verified">;
-  is_liked?: boolean;
-  is_bookmarked?: boolean;
-}
-
-export type NotificationType = "like_post" | "comment" | "reply" | "follow" | "like_comment";
-
-export interface Notification {
-  id: string;
-  user_id: string;
-  actor_id: string;
-  type: NotificationType;
-  post_id: string | null;
-  comment_id: string | null;
-  is_read: boolean;
-  created_at: string;
-  actor?: Pick<Profile, "username" | "full_name" | "avatar_url">;
-}
-
-export interface Comment {
-  id: string;
-  post_id: string;
-  user_id: string;
-  parent_id: string | null;
-  content: string;
-  like_count: number;
-  created_at: string;
-  profiles?: Pick<Profile, "username" | "avatar_url">;
-  is_liked?: boolean;
-  replies?: Comment[];
-}
-
-export interface Follow {
-  follower_id: string;
-  following_id: string;
-  created_at: string;
-}
-
-// ---------------------------------------------------------------------------
-// Rewards
-// ---------------------------------------------------------------------------
-export type DonationStatus = "pending" | "completed" | "failed" | "refunded";
-export type RewardAction =
-  | "donation"
-  | "recipe_upload"
-  | "review"
-  | "daily_login"
-  | "referral"
-  | "spent";
 
 export interface Charity {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-  long_description: string | null;
-  category: string;
-  image_url: string | null;
-  goal_amount: number;
-  raised_amount: number;
-  donor_count: number;
-  is_featured: boolean;
-  is_active: boolean;
-  created_at: string;
+  id:                  string;
+  name:                string;
+  slug:                string;
+  description:         string;
+  category:            string;
+  image_url:           string | null;
+  raised_amount:       number;
+  donor_count:         number;
+  goal_amount:         number | null;
+  currency:            string;
+  minimum_donation:    number;
+  platform_fee_pct:    number;
+  is_active:           boolean;
+  is_featured:         boolean;
+  verification_status: string;
+  stripe_account_id:   string | null;
+  stripe_charges_enabled: boolean;
+  created_at:          string;
 }
 
 export interface Donation {
-  id: string;
-  user_id: string;
-  charity_id: string;
-  amount: number;
-  currency: string;
-  payment_ref: string | null;
-  status: DonationStatus;
-  points_earned: number;
-  message: string | null;
-  is_anonymous: boolean;
-  created_at: string;
-  updated_at: string;
-  charities?: Pick<Charity, "name" | "slug" | "image_url">;
+  id:                  string;
+  user_id:             string;
+  charity_id:          string;
+  amount:              number;
+  currency:            string;
+  status:              "pending" | "completed" | "failed" | "refunded";
+  points_earned:       number;
+  message:             string | null;
+  is_anonymous:        boolean;
+  payment_intent_id:   string | null;
+  payment_ref:         string | null;
+  payment_method_type: string | null;
+  risk_score:          number;
+  created_at:          string;
+  updated_at:          string;
+  charities?:          { name: string; slug: string; image_url: string | null } | null;
 }
 
 export interface RewardTransaction {
-  id: string;
-  user_id: string;
-  points: number;
-  action: RewardAction;
-  reference_id: string | null;
-  description: string | null;
-  created_at: string;
+  id:                 string;
+  user_id:            string;
+  points:             number;
+  action:             string;
+  description:        string | null;
+  source_donation_id: string | null;
+  expires_at:         string | null;
+  created_at:         string;
 }
 
-// ---------------------------------------------------------------------------
-// Fresh
-// ---------------------------------------------------------------------------
-export type OrderStatus =
-  | "pending"
-  | "confirmed"
-  | "preparing"
-  | "out_for_delivery"
-  | "delivered"
-  | "cancelled";
-
-export type PaymentStatus = "pending" | "paid" | "refunded";
-
-export interface Meal {
-  id: string;
-  name: string;
-  description: string;
-  long_description: string | null;
-  price: number;
-  image_url: string | null;
-  category: string;
-  calories: number | null;
-  protein: number | null;
-  carbs: number | null;
-  fat: number | null;
-  prep_time: string | null;
-  servings: number | null;
-  ingredients: string[];
-  allergens: string[];
-  is_popular: boolean;
-  is_new: boolean;
-  is_available: boolean;
-  created_at: string;
-  updated_at: string;
+export interface UserBadge {
+  id:           string;
+  user_id:      string;
+  badge_slug:   string;
+  awarded_at:   string;
+  award_reason: string | null;
 }
 
-export interface CartItem {
-  meal: Meal;
-  quantity: number;
-}
-
-export interface OrderItem {
-  meal_id: string;
-  meal_name: string;
-  quantity: number;
-  unit_price: number;
-  image_url: string | null;
-}
-
-export interface DeliveryAddress {
-  street: string;
-  city: string;
-  postcode: string;
-  country: string;
-  notes?: string;
-}
-
-export interface Order {
-  id: string;
-  user_id: string;
-  items: OrderItem[];
-  total_amount: number;
-  delivery_address: DeliveryAddress;
-  status: OrderStatus;
-  payment_ref: string | null;
-  payment_status: PaymentStatus;
-  notes: string | null;
-  estimated_delivery: string | null;
-  delivered_at: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-// ---------------------------------------------------------------------------
-// Travel
-// ---------------------------------------------------------------------------
-export type SearchType = "flight" | "hotel" | "car";
-
-export interface FlightSearchParams {
-  origin: string;
-  destination: string;
-  depart_date: string;
-  return_date?: string;
-  passengers: number;
-  cabin_class: "economy" | "premium_economy" | "business" | "first";
-  trip_type: "roundtrip" | "oneway";
-}
-
-export interface HotelSearchParams {
-  destination: string;
-  check_in: string;
-  check_out: string;
-  guests: number;
-  rooms: number;
-}
-
-export interface CarSearchParams {
-  pickup_location: string;
-  dropoff_location: string;
-  pickup_date: string;
-  dropoff_date: string;
-  pickup_time?: string;
-  dropoff_time?: string;
-}
-
-export interface TravelSearch {
-  id: string;
-  user_id: string;
-  search_type: SearchType;
-  params: FlightSearchParams | HotelSearchParams | CarSearchParams;
-  label: string | null;
-  is_saved: boolean;
-  created_at: string;
-}
-
-export interface PriceAlert {
-  id: string;
-  user_id: string;
-  search_type: SearchType;
-  params: FlightSearchParams | HotelSearchParams | CarSearchParams;
-  target_price: number;
-  current_price: number | null;
-  is_active: boolean;
-  triggered_at: string | null;
-  created_at: string;
-}
-
-export interface HalalInfo {
-  mosques_count: number;
-  halal_restaurants_count: string;
-  prayer_facilities_available: boolean;
-  muslim_population_percent: number;
-  tips: string[];
-}
-
-export interface CityGuide {
-  id: string;
-  slug: string;
-  name: string;
-  country: string;
-  hero_image_url: string | null;
-  description: string | null;
-  halal_score: number | null;
-  overview: string | null;
-  best_time_to_visit: string | null;
-  language: string | null;
-  currency: string | null;
-  timezone: string | null;
-  halal_info: HalalInfo | null;
-  attractions: Record<string, unknown>[] | null;
-  mosques: Record<string, unknown>[] | null;
-  halal_restaurants: Record<string, unknown>[] | null;
-  travel_tips: string[];
-  flight_price_from: number | null;
-  hotel_price_from: number | null;
-  is_published: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-// ---------------------------------------------------------------------------
-// Blog
-// ---------------------------------------------------------------------------
-export interface BlogPost {
-  id: string;
-  slug: string;
-  title: string;
-  excerpt: string | null;
-  content: string;
-  category: string;
-  image_url: string | null;
-  author_id: string | null;
-  tags: string[];
-  is_featured: boolean;
-  is_published: boolean;
-  read_time: string | null;
-  view_count: number;
-  published_at: string | null;
-  created_at: string;
-  updated_at: string;
-  profiles?: Pick<Profile, "username" | "full_name" | "avatar_url">;
-}
-
-// ---------------------------------------------------------------------------
-// Hub — search
-// ---------------------------------------------------------------------------
-export interface UserSearchResult {
-  id: string;
-  username: string | null;
-  full_name: string;
-  avatar_url: string | null;
-  is_verified: boolean;
-  bio: string | null;
-}
-
-// ---------------------------------------------------------------------------
-// Shared / Utility
-// ---------------------------------------------------------------------------
-export interface PaginatedResult<T> {
-  data: T[];
-  count: number;
-  page: number;
-  pageSize: number;
-  hasMore: boolean;
-}
-
-export interface ServiceError {
-  message: string;
-  code?: string;
+export interface Post {
+  id:            string;
+  user_id:       string;
+  post_type:     string;
+  content:       string;
+  media_urls:    string[] | null;
+  recipe_id:     string | null;
+  like_count:    number;
+  comment_count: number;
+  is_liked:      boolean;
+  is_bookmarked: boolean;
+  created_at:    string;
+  updated_at:    string;
+  profiles?: {
+    username:    string | null;
+    full_name:   string | null;
+    avatar_url:  string | null;
+    is_verified: boolean | null;
+  } | null;
 }

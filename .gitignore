@@ -48,3 +48,14 @@ tmpclaude*
 
 .vercel
 .env*.local
+
+# Claude Code tooling
+.agents/
+.claude/skills/
+skills-lock.json
+
+# IDE
+.vscode/
+
+# Docs (local only)
+docs/
