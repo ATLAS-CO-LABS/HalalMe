@@ -1,9 +1,10 @@
-'use client';
+"use client";
 
-import { useRef } from 'react';
-import { motion, useInView } from 'framer-motion';
-import Link from 'next/link';
-import Image from 'next/image';
+import { useRef, useState, useEffect } from "react";
+import { motion, useInView, AnimatePresence } from "framer-motion";
+import Link from "next/link";
+import Image from "next/image";
+import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 import {
   Bike,
   Store,
@@ -14,54 +15,141 @@ import {
   ArrowRight,
   Clock,
   BadgePercent,
-  Flame,
-  Heart,
   Timer,
   Radio,
   Tag,
-} from 'lucide-react';
+} from "lucide-react";
 
-/* Delivery color: crimson */
-const CRIMSON = '#DC2626';
+const BG = "#1E0E38";
+const BG2 = "#160A2A";
+const CREAM = "#F7E7CE";
+const GOLD = "#D4AF37";
+const PURPLE = "#5E188F";
+const LIGHT_PURPLE = "#B96AF0";
+const DEEP = "#4A1270";
+const VIOLET = "#1E0E38";
 
-const DELIVERY_URL = 'https://www.halalme.co.uk';
+const DELIVERY_URL = "https://www.halalme.co.uk";
 
 const restaurants = [
-  { id: 1, name: 'Kebab Kingdom', cuisine: 'Turkish & Middle Eastern', rating: 4.9, deliveryTime: '20-30 min', deliveryFee: 'Free', image: 'https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=600&auto=format&fit=crop&q=80', popular: true },
-  { id: 2, name: 'Spice Route', cuisine: 'Indian & Pakistani', rating: 4.8, deliveryTime: '25-35 min', deliveryFee: '£1.49', image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=600&auto=format&fit=crop&q=80', popular: true },
-  { id: 3, name: 'Shawarma House', cuisine: 'Lebanese', rating: 4.7, deliveryTime: '15-25 min', deliveryFee: 'Free', image: 'https://images.unsplash.com/photo-1529006557810-274b9b2fc783?w=600&auto=format&fit=crop&q=80', popular: false },
-  { id: 4, name: 'Naan Stop', cuisine: 'Tandoori & Grill', rating: 4.9, deliveryTime: '20-30 min', deliveryFee: '£0.99', image: 'https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?w=600&auto=format&fit=crop&q=80', popular: true },
-  { id: 5, name: 'Falafel Factory', cuisine: 'Mediterranean', rating: 4.6, deliveryTime: '15-20 min', deliveryFee: 'Free', image: 'https://images.unsplash.com/photo-1540914124281-342587941389?w=600&auto=format&fit=crop&q=80', popular: false },
-  { id: 6, name: 'Biryani Brothers', cuisine: 'South Asian', rating: 4.8, deliveryTime: '30-40 min', deliveryFee: '£1.99', image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=600&auto=format&fit=crop&q=80', popular: true },
+  {
+    id: 1,
+    name: "Kebab Kingdom",
+    cuisine: "Turkish & Middle Eastern",
+    rating: 4.9,
+    deliveryTime: "20-30 min",
+    deliveryFee: "Free",
+    image:
+      "https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=600&auto=format&fit=crop&q=80",
+    popular: true,
+  },
+  {
+    id: 2,
+    name: "Spice Route",
+    cuisine: "Indian & Pakistani",
+    rating: 4.8,
+    deliveryTime: "25-35 min",
+    deliveryFee: "£1.49",
+    image:
+      "https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=600&auto=format&fit=crop&q=80",
+    popular: true,
+  },
+  {
+    id: 3,
+    name: "Shawarma House",
+    cuisine: "Lebanese",
+    rating: 4.7,
+    deliveryTime: "15-25 min",
+    deliveryFee: "Free",
+    image:
+      "https://images.unsplash.com/photo-1529006557810-274b9b2fc783?w=600&auto=format&fit=crop&q=80",
+    popular: false,
+  },
+  {
+    id: 4,
+    name: "Naan Stop",
+    cuisine: "Tandoori & Grill",
+    rating: 4.9,
+    deliveryTime: "20-30 min",
+    deliveryFee: "£0.99",
+    image:
+      "https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?w=600&auto=format&fit=crop&q=80",
+    popular: true,
+  },
+  {
+    id: 5,
+    name: "Falafel Factory",
+    cuisine: "Mediterranean",
+    rating: 4.6,
+    deliveryTime: "15-20 min",
+    deliveryFee: "Free",
+    image:
+      "https://images.unsplash.com/photo-1540914124281-342587941389?w=600&auto=format&fit=crop&q=80",
+    popular: false,
+  },
+  {
+    id: 6,
+    name: "Biryani Brothers",
+    cuisine: "South Asian",
+    rating: 4.8,
+    deliveryTime: "30-40 min",
+    deliveryFee: "£1.99",
+    image:
+      "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=600&auto=format&fit=crop&q=80",
+    popular: true,
+  },
 ];
 
 export default function DeliveryLandingPage() {
   return (
-    <div className="min-h-screen bg-gray-950 overflow-x-hidden pt-16">
+    <div
+      className="min-h-screen overflow-x-hidden pt-16"
+      style={{ backgroundColor: BG }}
+    >
       <PromoBar />
       <HeroSection />
+      <StatsStrip />
       <HowItWorksSection />
       <RestaurantsSection />
       <WhyDeliverySection />
-      <StatsSection />
+      <DeliveryExperienceSection />
+      <ForRestaurantsSection />
       <PromoBanner />
+      <PoweredBySection />
       <FinalCTA />
+      <BottomNav />
     </div>
   );
 }
 
 /* ───────────────────────── Promo Ticker ───────────────────────── */
 function PromoBar() {
-  const tickerText = '£10 OFF YOUR FIRST ORDER  \u00B7  100% HALAL CERTIFIED  \u00B7  FREE DELIVERY OVER £25  \u00B7  500+ RESTAURANTS  \u00B7  30 MIN AVG DELIVERY  \u00B7  ';
+  const tickerText =
+    "£10 OFF YOUR FIRST ORDER  ·  100% HALAL CERTIFIED  ·  FREE DELIVERY OVER £25  ·  500+ RESTAURANTS  ·  30-60 MIN AVG DELIVERY  ·  ";
   return (
-    <div className="bg-red-600 overflow-hidden">
-      <div className="flex whitespace-nowrap py-2.5" style={{ animation: 'ticker 18s linear infinite' }}>
+    <div className="overflow-hidden" style={{ backgroundColor: PURPLE }}>
+      <div
+        className="flex whitespace-nowrap py-2.5"
+        style={{ animation: "ticker 18s linear infinite" }}
+      >
         {Array.from({ length: 4 }).map((_, i) => (
-          <span key={i} className="text-sm font-bold text-white mx-4 tracking-wide">{tickerText}</span>
+          <span
+            key={i}
+            className="text-sm font-bold text-white mx-4 tracking-wide"
+          >
+            {tickerText}
+          </span>
         ))}
       </div>
       <style jsx>{`
-        @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        @keyframes ticker {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
+        }
       `}</style>
     </div>
   );
@@ -70,181 +158,351 @@ function PromoBar() {
 /* ───────────────────────── Hero ───────────────────────── */
 function HeroSection() {
   return (
-    <section className="relative h-screen min-h-[640px] max-h-[920px] flex items-center overflow-hidden">
+    <section
+      className="relative h-screen min-h-[600px] flex items-center overflow-hidden"
+      style={{ backgroundColor: BG, borderBottom: `1px solid ${PURPLE}50` }}
+    >
       <div className="absolute inset-0 z-0">
         <Image
-          src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=1920&auto=format&fit=crop&q=80"
+          src="/images/services/halal01.jpg"
           alt="Halal food delivery"
           fill
-          className="object-cover"
+          className="object-cover opacity-100 scale-105"
           priority
           sizes="100vw"
         />
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `linear-gradient(to right, ${BG}F5 0%, ${BG}E0 30%, ${BG}99 55%, ${BG}22 100%)`,
+          }}
+        />
       </div>
-      <div className="absolute inset-0 z-[1] bg-gray-950/70" />
 
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12 pt-20">
-        <div className="max-w-3xl">
+      <div className="relative z-10 w-full max-w-[95vw] mx-auto px-6 md:px-10 pt-20">
+        <div className="max-w-5xl">
+          {/* Eyebrow */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="inline-flex items-center gap-2.5 bg-red-500/15 border border-red-400/25 backdrop-blur-md rounded-full px-5 py-2.5 mb-5 sm:mb-8"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.1 }}
+            className="flex items-center gap-3 mb-6 md:mb-8"
           >
-            <span className="w-2.5 h-2.5 rounded-full bg-red-400 animate-pulse" />
-            <span className="text-red-300 text-sm font-semibold tracking-wide">Halal Delivery at Your Doorstep</span>
+            <div className="w-8 h-px" style={{ backgroundColor: GOLD }} />
+            <span
+              className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em]"
+              style={{ color: GOLD }}
+            >
+              Halal Delivery at Your Doorstep
+            </span>
           </motion.div>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.3 }}
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-[1.05] mb-6 tracking-tight"
-            style={{ fontFamily: 'var(--font-headline)' }}
-          >
-            HalalMe{' '}
-            <span className="relative inline-block">
-              <span className="text-red-500">Delivery</span>
-              <motion.span
-                className="absolute -bottom-1 left-0 right-0 h-1 bg-red-500 rounded-full origin-left"
-                initial={{ scaleX: 0 }}
-                animate={{ scaleX: 1 }}
-                transition={{ duration: 0.8, delay: 1 }}
-              />
-            </span>
-          </motion.h1>
+          {/* H1 */}
+          <h1 className="font-extrabold uppercase tracking-tighter leading-[0.88]">
+            <motion.span
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.7 }}
+              className="flex items-center gap-3 mb-3 normal-case"
+            >
+              <div
+                style={{
+                  position: "relative",
+                  width: 44,
+                  height: 44,
+                  flexShrink: 0,
+                }}
+              >
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    backgroundColor: PURPLE,
+                    WebkitMaskImage: "url(/logo/logo.png)",
+                    maskImage: "url(/logo/logo.png)",
+                    WebkitMaskSize: "contain",
+                    maskSize: "contain",
+                    WebkitMaskRepeat: "no-repeat",
+                    maskRepeat: "no-repeat",
+                    WebkitMaskMode: "alpha",
+                    maskMode: "alpha",
+                    WebkitMaskPosition: "center",
+                    maskPosition: "center",
+                  }}
+                />
+              </div>
+              <span
+                className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight"
+                style={{ fontFamily: "var(--font-logo)", color: CREAM }}
+              >
+                HalalMe
+              </span>
+            </motion.span>
+            <motion.span
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.32, duration: 0.7 }}
+              className="block text-[clamp(2.25rem,8vw,8rem)]"
+              style={{ color: LIGHT_PURPLE }}
+            >
+              Delivery
+            </motion.span>
+            <motion.span
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.44, duration: 0.7 }}
+              className="block text-[clamp(1.5rem,5vw,5rem)]"
+              style={{ color: LIGHT_PURPLE }}
+            ></motion.span>
+            <motion.span
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.56, duration: 0.7 }}
+              className="block text-[clamp(1.25rem,4vw,4rem)]"
+              style={{ color: CREAM }}
+            >
+              100% Halal. Delivered Fast.
+            </motion.span>
+          </h1>
 
           <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
-            className="text-base sm:text-lg md:text-xl text-gray-300/90 max-w-xl leading-relaxed mb-6 sm:mb-10"
-            style={{ fontFamily: 'var(--font-body)' }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="mt-6 md:mt-7 text-base md:text-lg max-w-md leading-relaxed"
+            style={{ color: `${CREAM}75` }}
           >
-            Craving something delicious? Order from 500+ certified halal restaurants and get it delivered hot to your door in 30 minutes.
+            “Craving Something Delicious?” Order fresh, halal-certified meals
+            from thousands of your favorite local restaurants.
           </motion.p>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.65 }}
-            className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 mb-12 sm:mb-14"
+            transition={{ delay: 0.72 }}
+            className="mt-8 flex flex-wrap gap-4"
           >
             <a href={DELIVERY_URL} target="_blank" rel="noopener noreferrer">
               <motion.button
-                whileHover={{ scale: 1.04, boxShadow: '0 20px 50px -12px rgba(220,38,38,0.5)' }}
+                whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
-                className="w-full sm:w-auto px-8 py-4 md:px-10 md:py-5 bg-red-600 text-white font-bold text-lg rounded-full shadow-xl shadow-red-600/25 flex items-center justify-center gap-2.5"
+                className="flex items-center gap-3 px-7 sm:px-8 py-3.5 sm:py-4 text-white font-extrabold uppercase tracking-tighter text-sm sm:text-base"
+                style={{ backgroundColor: DEEP }}
               >
                 Order Now
-                <ArrowRight className="w-5 h-5" />
-              </motion.button>
-            </a>
-            <a href={DELIVERY_URL} target="_blank" rel="noopener noreferrer">
-              <motion.button
-                whileHover={{ scale: 1.04, backgroundColor: 'rgba(255,255,255,0.12)' }}
-                whileTap={{ scale: 0.97 }}
-                className="w-full sm:w-auto px-8 py-4 md:px-10 md:py-5 bg-white/8 border border-white/20 backdrop-blur-sm text-white font-bold text-lg rounded-full hover:border-white/40 transition-all"
-              >
-                View Restaurants
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
               </motion.button>
             </a>
           </motion.div>
 
+          {/* Trust badges */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.9 }}
-            className="flex flex-wrap gap-4 sm:gap-6 text-xs sm:text-sm"
+            transition={{ delay: 0.9 }}
+            className="mt-8 flex flex-wrap gap-6"
           >
             {[
-              { icon: ShieldCheck, text: '100% Halal' },
-              { icon: Timer, text: '30-min Delivery' },
-              { icon: Store, text: '500+ Restaurants' },
+              { icon: ShieldCheck, text: "100% Halal" },
+              { icon: Timer, text: "30-60 Min Delivery" },
+              { icon: Store, text: "500+ Restaurants" },
             ].map((item, i) => (
-              <div key={i} className="flex items-center gap-2 text-gray-400">
-                <item.icon className="w-4 h-4 text-red-400" />
-                <span>{item.text}</span>
+              <div
+                key={i}
+                className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide"
+                style={{ color: `${CREAM}65` }}
+              >
+                <item.icon className="w-4 h-4" style={{ color: PURPLE }} />
+                {item.text}
               </div>
             ))}
           </motion.div>
-        </div>
-      </div>
-
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 animate-bounce">
-        <div className="w-6 h-10 border-2 border-white/20 rounded-full flex justify-center pt-2">
-          <div className="w-1.5 h-3 bg-red-400 rounded-full" />
         </div>
       </div>
     </section>
   );
 }
 
+/* ───────────────────────── Stats Strip ───────────────────────── */
+function StatsStrip() {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true });
+
+  return (
+    <div
+      ref={ref}
+      className="grid grid-cols-2 md:grid-cols-4"
+      style={{
+        gap: "1px",
+        backgroundColor: `${PURPLE}50`,
+        borderTop: `1px solid ${PURPLE}50`,
+        borderBottom: `1px solid ${PURPLE}50`,
+      }}
+    >
+      {[
+        { value: "500+", label: "Restaurants", icon: Store },
+        { value: "50K+", label: "Orders Delivered", icon: ShoppingBag },
+        { value: "30-60m", label: "Avg Delivery", icon: Timer },
+        { value: "4.8", label: "Star Rating", icon: Star },
+      ].map((s, i) => {
+        const Icon = s.icon;
+        return (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 20 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: i * 0.1, duration: 0.5 }}
+            className="py-10 md:py-14 px-8 md:px-12 text-center md:text-left"
+            style={{ backgroundColor: BG2 }}
+          >
+            <Icon
+              className="w-5 h-5 mb-3 mx-auto md:mx-0"
+              style={{ color: `rgba(180,100,220,0.85)` }}
+            />
+            <div
+              className="text-[3rem] md:text-[4.5rem] font-extrabold tracking-tighter leading-none"
+              style={{ color: CREAM }}
+            >
+              {s.value}
+            </div>
+            <div
+              className="text-[10px] md:text-xs uppercase tracking-[0.25em] mt-2 font-medium"
+              style={{ color: `rgba(180,100,220,0.85)` }}
+            >
+              {s.label}
+            </div>
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+}
+
 /* ───────────────────────── How It Works ───────────────────────── */
 function HowItWorksSection() {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: '-80px' });
+  const isInView = useInView(ref, { once: true, margin: "-80px" });
 
   const steps = [
-    { num: '01', icon: Store, title: 'Browse Restaurants', desc: 'Explore 500+ certified halal restaurants near you. Filter by cuisine, rating, or delivery time.' },
-    { num: '02', icon: ShoppingBag, title: 'Place Your Order', desc: 'Build your perfect meal, customise to your liking, and check out in seconds. Simple as that.' },
-    { num: '03', icon: Bike, title: 'Fast Delivery', desc: 'Track your order in real-time as our riders bring your food hot and fresh to your doorstep.' },
+    {
+      num: "01",
+      icon: Store,
+      title: "Browse Restaurants",
+      desc: "Explore 500+ certified halal restaurants near you. Filter by cuisine, rating, or delivery time.",
+    },
+    {
+      num: "02",
+      icon: ShoppingBag,
+      title: "Place Your Order",
+      desc: "Build your perfect meal, customise to your liking, and check out in seconds. Simple as that.",
+    },
+    {
+      num: "03",
+      icon: Bike,
+      title: "Fast Delivery",
+      desc: "Track your order in real-time as our riders bring your food hot and fresh to your doorstep.",
+    },
   ];
 
   return (
-    <section id="how-it-works" ref={ref} className="relative py-20 bg-gray-950 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-10">
+    <section
+      ref={ref}
+      className="py-24 md:py-32"
+      style={{
+        backgroundColor: BG,
+        borderTop: `1px solid ${PURPLE}50`,
+        borderBottom: `1px solid ${PURPLE}50`,
+      }}
+    >
+      <div className="max-w-[95vw] mx-auto px-6 md:px-10 mb-14 md:mb-20">
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, x: -20 }}
+          animate={isInView ? { opacity: 1, x: 0 } : {}}
+          className="flex items-center gap-3 mb-6"
+        >
+          <div className="w-8 h-px" style={{ backgroundColor: GOLD }} />
+          <span
+            className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em]"
+            style={{ color: GOLD }}
+          >
+            How It Works
+          </span>
+        </motion.div>
+        <motion.h2
+          initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          className="text-4xl sm:text-5xl md:text-7xl font-extrabold uppercase tracking-tighter leading-[0.88]"
+          style={{ color: CREAM }}
         >
-          <span className="inline-flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-2 rounded-full text-sm font-semibold mb-6">
-            <Clock className="w-4 h-4" />
-            Quick & Easy
-          </span>
-          <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-4 tracking-tight" style={{ fontFamily: 'var(--font-headline)' }}>
-            How It <span className="text-red-500">Works</span>
-          </h2>
-          <p className="text-lg text-gray-400 max-w-xl mx-auto" style={{ fontFamily: 'var(--font-body)' }}>
-            From craving to delivery in three simple steps.
-          </p>
-        </motion.div>
+          Three Steps
+          <br />
+          <span style={{ color: `${CREAM}75` }}>Browse. Order. Deliver.</span>
+        </motion.h2>
+      </div>
 
-        <div className="relative">
-          <div className="hidden md:block absolute top-12 left-[16.67%] right-[16.67%] h-px bg-red-500/30" />
-          <div className="grid md:grid-cols-3 gap-10 md:gap-8">
-            {steps.map((step, i) => {
-              const Icon = step.icon;
-              return (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 40 }}
-                  animate={isInView ? { opacity: 1, y: 0 } : {}}
-                  transition={{ delay: 0.2 + i * 0.15, duration: 0.55 }}
-                  className="relative text-center group"
+      <div
+        className="max-w-[95vw] mx-auto px-6 md:px-10 grid md:grid-cols-3"
+        style={{
+          gap: "1px",
+          backgroundColor: `${PURPLE}50`,
+          borderLeft: `2px solid ${PURPLE}80`,
+          borderRight: `2px solid ${PURPLE}80`,
+        }}
+      >
+        {steps.map((step, i) => {
+          const Icon = step.icon;
+          return (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 30 }}
+              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ delay: 0.1 + i * 0.12, duration: 0.5 }}
+              className="group relative p-8 md:p-10 overflow-hidden transition-colors duration-300"
+              style={{
+                backgroundColor: BG,
+                border: `1px solid ${CREAM}08`,
+                minHeight: "280px",
+              }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.backgroundColor = DEEP)
+              }
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = BG)}
+            >
+              <span
+                aria-hidden="true"
+                className="absolute -top-6 -right-3 text-[8rem] md:text-[10rem] font-extrabold leading-none select-none pointer-events-none"
+                style={{ color: "#180830" }}
+              >
+                {step.num}
+              </span>
+              <div className="relative z-10 flex flex-col">
+                <Icon
+                  className="w-7 h-7 mb-8 transition-colors duration-300 group-hover:text-white"
+                  style={{ color: PURPLE }}
+                />
+                <h3
+                  className="text-xl md:text-2xl font-extrabold uppercase tracking-tighter mb-4 transition-colors duration-300 group-hover:text-white"
+                  style={{ color: CREAM }}
                 >
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={isInView ? { scale: 1 } : {}}
-                    transition={{ delay: 0.4 + i * 0.15, type: 'spring', stiffness: 180 }}
-                    className="relative mx-auto mb-6"
-                  >
-                    <div className="w-24 h-24 rounded-3xl bg-red-600 flex items-center justify-center shadow-lg shadow-red-600/20 mx-auto group-hover:shadow-red-600/40 transition-shadow duration-500 group-hover:scale-105 transform-gpu">
-                      <Icon className="w-10 h-10 text-white" />
-                    </div>
-                    <div className="absolute -top-3 -right-3 w-9 h-9 rounded-xl bg-gray-900 border border-gray-700 flex items-center justify-center shadow-lg">
-                      <span className="text-xs font-bold text-red-400">{step.num}</span>
-                    </div>
-                  </motion.div>
-                  <h3 className="text-2xl font-bold text-white mb-3" style={{ fontFamily: 'var(--font-headline)' }}>{step.title}</h3>
-                  <p className="text-gray-400 leading-relaxed max-w-xs mx-auto" style={{ fontFamily: 'var(--font-body)' }}>{step.desc}</p>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
+                  {step.title}
+                </h3>
+                <p
+                  className="text-sm md:text-base leading-relaxed transition-colors duration-300 group-hover:text-white/75"
+                  style={{ color: `${CREAM}75` }}
+                >
+                  {step.desc}
+                </p>
+                <div
+                  className="mt-6 flex items-center gap-2 text-sm font-extrabold uppercase tracking-tighter transition-colors duration-300 group-hover:text-white"
+                  style={{ color: PURPLE }}
+                >
+                  <ArrowRight className="w-4 h-4" />
+                </div>
+              </div>
+            </motion.div>
+          );
+        })}
       </div>
     </section>
   );
@@ -253,107 +511,183 @@ function HowItWorksSection() {
 /* ─────────────────── Partner Restaurants ─────────────────── */
 function RestaurantsSection() {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: '-60px' });
+  const isInView = useInView(ref, { once: true, margin: "-60px" });
 
   return (
-    <section ref={ref} className="relative py-20 bg-gray-900 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-10">
+    <section
+      ref={ref}
+      className="py-24 md:py-32"
+      style={{
+        backgroundColor: BG2,
+        borderTop: `1px solid ${PURPLE}50`,
+        borderBottom: `1px solid ${PURPLE}50`,
+      }}
+    >
+      <div className="max-w-[95vw] mx-auto px-6 md:px-10 mb-14 md:mb-20">
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-          className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12"
+          initial={{ opacity: 0, x: -20 }}
+          animate={isInView ? { opacity: 1, x: 0 } : {}}
+          className="flex items-center gap-3 mb-6"
         >
-          <div>
-            <span className="inline-flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-2 rounded-full text-sm font-semibold mb-4">
-              <Flame className="w-4 h-4" />
-              Top Rated
-            </span>
-            <h2 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight" style={{ fontFamily: 'var(--font-headline)' }}>
-              Partner <span className="text-red-500">Restaurants</span>
-            </h2>
-          </div>
+          <div className="w-8 h-px" style={{ backgroundColor: GOLD }} />
+          <span
+            className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em]"
+            style={{ color: GOLD }}
+          >
+            Top Rated
+          </span>
+        </motion.div>
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <motion.h2
+            initial={{ opacity: 0, y: 30 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6 }}
+            className="text-4xl sm:text-5xl md:text-7xl font-extrabold uppercase tracking-tighter leading-[0.88]"
+            style={{ color: CREAM }}
+          >
+            Partner
+            <br />
+            <span style={{ color: `${CREAM}75` }}>Restaurants.</span>
+          </motion.h2>
           <a href={DELIVERY_URL} target="_blank" rel="noopener noreferrer">
             <motion.button
-              whileHover={{ scale: 1.04 }}
+              whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
-              className="text-red-400 font-bold flex items-center gap-2 hover:text-red-300 transition-colors text-lg"
+              className="flex items-center gap-2 text-sm font-extrabold uppercase tracking-tighter transition-opacity hover:opacity-70"
+              style={{ color: PURPLE }}
             >
-              View All
-              <ArrowRight className="w-5 h-5" />
+              View All <ArrowRight className="w-4 h-4" />
             </motion.button>
           </a>
-        </motion.div>
-
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {restaurants.map((r, i) => (
-            <motion.div
-              key={r.id}
-              initial={{ opacity: 0, y: 30 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: 0.12 + i * 0.08, duration: 0.5 }}
-            >
-              <a href={DELIVERY_URL} target="_blank" rel="noopener noreferrer">
-                <motion.div
-                  whileHover={{ y: -6 }}
-                  className="group bg-gray-950 rounded-2xl overflow-hidden border border-gray-800 hover:border-red-500/50 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-lg hover:shadow-red-500/10"
-                >
-                  <div className="relative h-48 overflow-hidden">
-                    <div
-                      className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
-                      style={{ backgroundImage: `url(${r.image})`, backgroundColor: '#1f2937' }}
-                    />
-                    {r.popular && (
-                      <div className="absolute top-3 left-3 z-20">
-                        <span className="bg-red-600 text-white text-xs font-bold px-3 py-1.5 rounded-full">Popular</span>
-                      </div>
-                    )}
-                    <div className="absolute top-3 right-3 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="w-9 h-9 bg-gray-900/60 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/10">
-                        <Heart className="w-4 h-4 text-white" />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-5">
-                    <div className="flex items-start justify-between gap-2 mb-1.5">
-                      <h3 className="text-lg font-bold text-white group-hover:text-red-300 transition-colors line-clamp-1">{r.name}</h3>
-                      <div className="flex items-center gap-1 bg-red-500/15 px-2 py-0.5 rounded-full shrink-0">
-                        <Star className="w-3.5 h-3.5 text-red-400 fill-red-400" />
-                        <span className="text-red-300 text-sm font-bold">{r.rating}</span>
-                      </div>
-                    </div>
-                    <p className="text-gray-500 text-sm mb-4">{r.cuisine}</p>
-                    <div className="flex items-center justify-between text-xs text-gray-500">
-                      <div className="flex items-center gap-3">
-                        <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{r.deliveryTime}</span>
-                        <span className="flex items-center gap-1"><Bike className="w-3 h-3" />{r.deliveryFee}</span>
-                      </div>
-                      <ArrowRight className="w-4 h-4 text-gray-600 group-hover:text-red-400 group-hover:translate-x-1 transition-all" />
-                    </div>
-                  </div>
-                </motion.div>
-              </a>
-            </motion.div>
-          ))}
         </div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ delay: 0.7, duration: 0.5 }}
-          className="text-center mt-12"
-        >
-          <a href={DELIVERY_URL} target="_blank" rel="noopener noreferrer">
-            <motion.button
-              whileHover={{ scale: 1.04, boxShadow: '0 20px 50px -12px rgba(220,38,38,0.35)' }}
-              whileTap={{ scale: 0.97 }}
-              className="px-10 py-4 bg-red-600 text-white font-bold text-lg rounded-full shadow-lg shadow-red-600/20"
-            >
-              Explore All Restaurants
-            </motion.button>
-          </a>
-        </motion.div>
       </div>
+
+      <div
+        className="max-w-[95vw] mx-auto px-6 md:px-10 grid sm:grid-cols-2 lg:grid-cols-3"
+        style={{
+          gap: "1px",
+          backgroundColor: `${PURPLE}50`,
+          borderLeft: `2px solid ${PURPLE}80`,
+          borderRight: `2px solid ${PURPLE}80`,
+        }}
+      >
+        {restaurants.map((r, i) => (
+          <motion.div
+            key={r.id}
+            initial={{ opacity: 0, y: 30 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: 0.1 + i * 0.08, duration: 0.5 }}
+          >
+            <a href={DELIVERY_URL} target="_blank" rel="noopener noreferrer">
+              <div
+                className="group relative overflow-hidden cursor-pointer transition-colors duration-300"
+                style={{ backgroundColor: BG2, border: `1px solid ${CREAM}08` }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.backgroundColor = "#0F0620")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.backgroundColor = BG2)
+                }
+              >
+                <div className="relative h-40 sm:h-52 overflow-hidden">
+                  <div
+                    className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
+                    style={{
+                      backgroundImage: `url(${r.image})`,
+                      backgroundColor: "#1a0d2e",
+                    }}
+                  />
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      background: `linear-gradient(to top, ${BG2} 0%, transparent 60%)`,
+                    }}
+                  />
+                  {r.popular && (
+                    <div className="absolute top-3 left-3 z-20">
+                      <span
+                        className="text-white text-xs font-bold px-3 py-1.5 uppercase tracking-widest"
+                        style={{ backgroundColor: PURPLE }}
+                      >
+                        Popular
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="p-6">
+                  <div className="flex items-start justify-between gap-2 mb-1.5">
+                    <h3
+                      className="text-lg font-extrabold uppercase tracking-tight transition-colors duration-300 group-hover:opacity-70"
+                      style={{ color: CREAM }}
+                    >
+                      {r.name}
+                    </h3>
+                    <div
+                      className="flex items-center gap-1 px-2 py-0.5 shrink-0"
+                      style={{ backgroundColor: `${PURPLE}26` }}
+                    >
+                      <Star
+                        className="w-3.5 h-3.5"
+                        style={{ color: PURPLE, fill: PURPLE }}
+                      />
+                      <span
+                        className="text-sm font-bold"
+                        style={{ color: `${CREAM}CC` }}
+                      >
+                        {r.rating}
+                      </span>
+                    </div>
+                  </div>
+                  <p
+                    className="text-sm mb-4 uppercase tracking-wide font-medium"
+                    style={{ color: `${CREAM}65` }}
+                  >
+                    {r.cuisine}
+                  </p>
+                  <div
+                    className="flex items-center justify-between text-xs"
+                    style={{ color: `${CREAM}65` }}
+                  >
+                    <div className="flex items-center gap-3 font-semibold uppercase tracking-wide">
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {r.deliveryTime}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Bike className="w-3 h-3" />
+                        {r.deliveryFee}
+                      </span>
+                    </div>
+                    <ArrowRight
+                      className="w-4 h-4 group-hover:translate-x-1 transition-transform"
+                      style={{ color: PURPLE }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </a>
+          </motion.div>
+        ))}
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={isInView ? { opacity: 1, y: 0 } : {}}
+        transition={{ delay: 0.7, duration: 0.5 }}
+        className="max-w-[95vw] mx-auto px-6 md:px-10 mt-12"
+      >
+        <a href={DELIVERY_URL} target="_blank" rel="noopener noreferrer">
+          <motion.button
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            className="flex items-center gap-3 px-8 py-4 text-white font-extrabold uppercase tracking-tighter text-sm"
+            style={{ backgroundColor: DEEP }}
+          >
+            Explore All Restaurants
+            <ArrowRight className="w-4 h-4" />
+          </motion.button>
+        </a>
+      </motion.div>
     </section>
   );
 }
@@ -361,103 +695,127 @@ function RestaurantsSection() {
 /* ──────────────────── Why HalalMe Delivery ──────────────────── */
 function WhyDeliverySection() {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: '-80px' });
+  const isInView = useInView(ref, { once: true, margin: "-80px" });
 
   const benefits = [
-    { icon: ShieldCheck, title: '100% Halal Certified', desc: 'Every restaurant on our platform is verified halal. We audit regularly so you can order with complete confidence.' },
-    { icon: Zap, title: 'Lightning Fast', desc: 'Average delivery in just 30 minutes. Our rider network ensures your food arrives hot and fresh, every time.' },
-    { icon: Radio, title: 'Live Order Tracking', desc: 'Track your order every step of the way — from kitchen to your door. Real-time updates, no guessing.' },
-    { icon: Tag, title: 'Exclusive Deals', desc: 'Unlock special offers, loyalty rewards, and first-order discounts. Save more with every order you place.' },
+    {
+      num: "01",
+      icon: ShieldCheck,
+      title: "100% Halal Certified",
+      desc: "Every restaurant on our platform is verified halal. We audit regularly so you can order with complete confidence.",
+    },
+    {
+      num: "02",
+      icon: Zap,
+      title: "Lightning Fast",
+      desc: "Average delivery in just 30-60 minutes. Our rider network ensures your food arrives hot and fresh, every time.",
+    },
+    {
+      num: "03",
+      icon: Radio,
+      title: "Live Tracking",
+      desc: "Track your order every step of the way - from kitchen to your door. Real-time updates, no guessing.",
+    },
+    {
+      num: "04",
+      icon: Tag,
+      title: "Exclusive Deals",
+      desc: "Unlock special offers, loyalty rewards, and first-order discounts. Save more with every order you place.",
+    },
   ];
 
   return (
-    <section ref={ref} className="relative py-20 bg-gray-950 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-10">
+    <section
+      ref={ref}
+      className="py-24 md:py-32"
+      style={{
+        backgroundColor: BG,
+        borderTop: `1px solid ${PURPLE}50`,
+        borderBottom: `1px solid ${PURPLE}50`,
+      }}
+    >
+      <div className="max-w-[95vw] mx-auto px-6 md:px-10 mb-14 md:mb-20">
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-12"
+          initial={{ opacity: 0, x: -20 }}
+          animate={isInView ? { opacity: 1, x: 0 } : {}}
+          className="flex items-center gap-3 mb-6"
         >
-          <span className="inline-flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-2 rounded-full text-sm font-semibold mb-4">
-            <Heart className="w-4 h-4" />
+          <div className="w-8 h-px" style={{ backgroundColor: GOLD }} />
+          <span
+            className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em]"
+            style={{ color: GOLD }}
+          >
             Why Choose Us
           </span>
-          <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-4 tracking-tight" style={{ fontFamily: 'var(--font-headline)' }}>
-            Why <span className="text-red-500">HalalMe Delivery</span>
-          </h2>
-          <p className="text-lg text-gray-400 max-w-xl mx-auto" style={{ fontFamily: 'var(--font-body)' }}>
-            The only delivery platform built from the ground up for the halal community. No compromises — ever.
-          </p>
         </motion.div>
-
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {benefits.map((b, i) => {
-            const Icon = b.icon;
-            return (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 30 }}
-                animate={isInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ delay: 0.15 + i * 0.1, duration: 0.5 }}
-                whileHover={{ y: -6, transition: { duration: 0.3 } }}
-                className="group"
-              >
-                <div className="bg-gray-900 border border-gray-800 group-hover:border-red-500/30 rounded-2xl p-7 transition-all duration-300 shadow-sm hover:shadow-md">
-                  <div className="w-14 h-14 rounded-xl bg-red-600 flex items-center justify-center mb-5 shadow-md group-hover:scale-110 transition-transform duration-300">
-                    <Icon className="w-7 h-7 text-white" />
-                  </div>
-                  <h3 className="text-xl font-bold text-white mb-3 group-hover:text-red-300 transition-colors" style={{ fontFamily: 'var(--font-headline)' }}>
-                    {b.title}
-                  </h3>
-                  <p className="text-gray-500 text-sm leading-relaxed" style={{ fontFamily: 'var(--font-body)' }}>{b.desc}</p>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
+        <motion.h2
+          initial={{ opacity: 0, y: 30 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6 }}
+          className="text-4xl sm:text-5xl md:text-7xl font-extrabold uppercase tracking-tighter leading-[0.88]"
+          style={{ color: CREAM }}
+        >
+          Built for the
+          <br />
+          <span style={{ color: `${CREAM}75` }}>Halal Community.</span>
+        </motion.h2>
       </div>
-    </section>
-  );
-}
 
-/* ──────────────────────── Stats ──────────────────────── */
-function StatsSection() {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: '-60px' });
-
-  const stats = [
-    { value: '500+', label: 'Restaurants', icon: Store },
-    { value: '50K+', label: 'Orders Delivered', icon: ShoppingBag },
-    { value: '30min', label: 'Avg Delivery', icon: Timer },
-    { value: '4.8', label: 'Star Rating', icon: Star },
-  ];
-
-  return (
-    <section ref={ref} className="relative py-16 bg-red-500/5 border-y border-red-500/10 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-10">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-          {stats.map((s, i) => {
-            const Icon = s.icon;
-            return (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 24 }}
-                animate={isInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ delay: 0.1 + i * 0.1, duration: 0.5 }}
-                className="text-center"
+      <div
+        className="max-w-[95vw] mx-auto px-6 md:px-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+        style={{
+          gap: "1px",
+          backgroundColor: `${PURPLE}50`,
+          borderLeft: `2px solid ${PURPLE}80`,
+          borderRight: `2px solid ${PURPLE}80`,
+        }}
+      >
+        {benefits.map((b, i) => {
+          const Icon = b.icon;
+          return (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 30 }}
+              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ delay: i * 0.1, duration: 0.5 }}
+              className="group relative p-8 overflow-hidden hover:bg-[#F7E7CE] transition-colors duration-300 cursor-default"
+              style={{
+                backgroundColor: BG,
+                border: `1px solid ${CREAM}08`,
+                minHeight: "220px",
+              }}
+            >
+              <span
+                aria-hidden="true"
+                className="absolute -top-6 -right-3 text-[7rem] font-extrabold leading-none select-none pointer-events-none transition-colors duration-300"
+                style={{ color: "#130626" }}
               >
-                <Icon className="w-6 h-6 text-red-400 mx-auto mb-3" />
-                <div className="text-4xl md:text-5xl font-extrabold text-white mb-2 tracking-tight" style={{ fontFamily: 'var(--font-headline)' }}>
-                  {s.value}
-                </div>
-                <div className="text-gray-500 text-sm font-medium uppercase tracking-wider" style={{ fontFamily: 'var(--font-body)' }}>
-                  {s.label}
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
+                {b.num}
+              </span>
+              <div
+                className="relative z-10 flex flex-col"
+                style={{ minHeight: "180px" }}
+              >
+                <Icon
+                  className="w-6 h-6 mb-6 transition-colors duration-300 group-hover:text-[#4A1270]"
+                  style={{ color: PURPLE }}
+                />
+                <h3
+                  className="text-lg md:text-xl font-extrabold uppercase tracking-tighter mb-3 transition-colors duration-300 group-hover:text-[#08060F]"
+                  style={{ color: CREAM }}
+                >
+                  {b.title}
+                </h3>
+                <p
+                  className="text-sm leading-relaxed transition-colors duration-300 group-hover:text-[#08060F]/65"
+                  style={{ color: `${CREAM}75` }}
+                >
+                  {b.desc}
+                </p>
+              </div>
+            </motion.div>
+          );
+        })}
       </div>
     </section>
   );
@@ -466,39 +824,53 @@ function StatsSection() {
 /* ─────────────────────── Promo Banner ─────────────────────── */
 function PromoBanner() {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: '-40px' });
+  const isInView = useInView(ref, { once: true, margin: "-40px" });
 
   return (
-    <section ref={ref} className="py-12 px-6 md:px-12">
+    <section ref={ref} className="py-8 px-6 md:px-10">
       <motion.div
-        initial={{ opacity: 0, scale: 0.96 }}
-        animate={isInView ? { opacity: 1, scale: 1 } : {}}
+        initial={{ opacity: 0, y: 20 }}
+        animate={isInView ? { opacity: 1, y: 0 } : {}}
         transition={{ duration: 0.6 }}
-        className="max-w-7xl mx-auto relative overflow-hidden rounded-3xl bg-red-600 shadow-xl shadow-red-600/20"
+        className="max-w-[95vw] mx-auto relative overflow-hidden"
+        style={{ backgroundColor: PURPLE }}
       >
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8 px-8 md:px-14 py-10 md:py-12">
           <div className="flex items-center gap-5">
-            <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center shrink-0">
-              <BadgePercent className="w-8 h-8 text-white" />
+            <div
+              className="w-14 h-14 flex items-center justify-center shrink-0"
+              style={{ backgroundColor: "rgba(255,255,255,0.15)" }}
+            >
+              <BadgePercent className="w-7 h-7 text-white" />
             </div>
             <div>
-              <h3 className="text-2xl md:text-3xl font-extrabold text-white mb-1" style={{ fontFamily: 'var(--font-headline)' }}>
+              <h3 className="text-2xl md:text-3xl font-extrabold uppercase tracking-tighter text-white mb-1">
                 Get £10 Off Your First Order
               </h3>
-              <p className="text-white/80 text-base" style={{ fontFamily: 'var(--font-body)' }}>
-                Use code <span className="font-bold text-white">HALAL10</span> at checkout. Certified halal food, delivered for less.
+              <p className="text-white/70 text-base">
+                Use code <span className="font-bold text-white">HALAL10</span>{" "}
+                at checkout. Certified halal food, delivered for less.
               </p>
             </div>
           </div>
           <a href={DELIVERY_URL} target="_blank" rel="noopener noreferrer">
             <motion.button
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
-              className="px-8 py-4 bg-gray-900 text-red-400 font-bold text-lg rounded-full hover:bg-gray-800 transition-colors whitespace-nowrap shadow-xl"
+              className="px-8 py-4 font-extrabold uppercase tracking-tighter text-sm hover:opacity-90 transition-opacity whitespace-nowrap"
+              style={{ backgroundColor: BG, color: PURPLE }}
             >
               Claim Offer
             </motion.button>
           </a>
+        </div>
+
+        {/* Watermark */}
+        <div
+          aria-hidden="true"
+          className="absolute bottom-0 right-0 font-extrabold uppercase tracking-tighter leading-none text-white/5 select-none pointer-events-none translate-x-6 translate-y-6 text-[8rem] md:text-[14rem]"
+        >
+          HALAL10
         </div>
       </motion.div>
     </section>
@@ -508,75 +880,475 @@ function PromoBanner() {
 /* ───────────────────────── Final CTA ───────────────────────── */
 function FinalCTA() {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: '-50px' });
+  const isInView = useInView(ref, { once: true, margin: "-50px" });
 
   return (
-    <section ref={ref} className="relative py-20 bg-gray-950 overflow-hidden">
-      <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.5 }}
-          animate={isInView ? { opacity: 1, scale: 1 } : {}}
-          transition={{ duration: 0.5, type: 'spring' }}
-          className="mb-6"
-        >
-          <div className="w-20 h-20 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto">
-            <Bike className="w-10 h-10 text-red-400" />
-          </div>
-        </motion.div>
-
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white mb-5 tracking-tight"
-          style={{ fontFamily: 'var(--font-headline)' }}
-        >
-          Hungry? <span className="text-red-500">Order Now</span>
-        </motion.h2>
-
-        <motion.p
-          initial={{ opacity: 0, y: 16 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.4, delay: 0.2 }}
-          className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-8 leading-relaxed"
-          style={{ fontFamily: 'var(--font-body)' }}
-        >
-          500+ halal restaurants. 30-minute delivery. Zero compromise.
-          Your next favourite meal is just a tap away.
-        </motion.p>
-
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.4, delay: 0.3 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10"
-        >
-          <a href={DELIVERY_URL} target="_blank" rel="noopener noreferrer">
-            <motion.button
-              whileHover={{ scale: 1.04, boxShadow: '0 20px 50px -12px rgba(220,38,38,0.45)' }}
-              whileTap={{ scale: 0.97 }}
-              className="px-10 py-5 bg-red-600 text-white font-bold text-lg rounded-full shadow-lg shadow-red-600/25 flex items-center gap-2"
-            >
-              Start Ordering
-              <ArrowRight className="w-5 h-5" />
-            </motion.button>
-          </a>
-        </motion.div>
-
+    <section
+      ref={ref}
+      className="relative overflow-hidden py-28 md:py-36"
+      style={{ backgroundColor: DEEP }}
+    >
+      <div className="relative z-10 max-w-[95vw] mx-auto px-6 md:px-10">
         <motion.div
           initial={{ opacity: 0 }}
           animate={isInView ? { opacity: 1 } : {}}
-          transition={{ duration: 0.3, delay: 0.4 }}
-          className="flex justify-center gap-8"
+          className="flex items-center gap-3 mb-8"
         >
-          <Link href="/fresh" className="text-gray-500 hover:text-red-400 transition-colors text-sm font-semibold">
-            &larr; Fresh
-          </Link>
-          <Link href="/kitchen" className="text-gray-500 hover:text-red-400 transition-colors text-sm font-semibold">
-            Kitchen &rarr;
-          </Link>
+          <div className="w-8 h-px" style={{ backgroundColor: GOLD }} />
+          <span
+            className="text-[10px] md:text-xs uppercase tracking-[0.3em] font-bold"
+            style={{ color: GOLD }}
+          >
+            Ready to Order
+          </span>
+        </motion.div>
+
+        <motion.h2
+          initial={{ opacity: 0, y: 30 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ delay: 0.1, duration: 0.6 }}
+          className="text-4xl sm:text-6xl md:text-7xl font-extrabold uppercase tracking-tighter leading-[0.88] text-white mb-10 max-w-4xl"
+        >
+          Hungry?
+          <br />
+          Order Now.
+        </motion.h2>
+
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={isInView ? { opacity: 1 } : {}}
+          transition={{ delay: 0.2 }}
+          className="text-white/60 text-base md:text-lg max-w-xl mb-12 leading-relaxed"
+        >
+          500+ halal restaurants. 30-60 minute delivery. Zero compromise. Your
+          next favourite meal is just a tap away.
+        </motion.p>
+
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ delay: 0.3 }}
+          className="flex flex-col sm:flex-row gap-4 mb-16"
+        >
+          <a href={DELIVERY_URL} target="_blank" rel="noopener noreferrer">
+            <button
+              className="flex items-center gap-3 px-8 py-4 bg-white font-extrabold uppercase tracking-tighter text-base hover:bg-[#F7E7CE] transition-colors"
+              style={{ color: DEEP }}
+            >
+              Start Ordering
+              <ArrowRight className="w-5 h-5" />
+            </button>
+          </a>
+          <a href={DELIVERY_URL} target="_blank" rel="noopener noreferrer">
+            <button className="flex items-center gap-3 px-8 py-4 border-2 border-white/30 text-white font-extrabold uppercase tracking-tighter text-base hover:bg-white/10 transition-colors">
+              View Restaurants
+            </button>
+          </a>
+        </motion.div>
+
+        <div className="flex flex-wrap gap-6 md:gap-10">
+          {[
+            { icon: ShieldCheck, text: "100% Halal Verified" },
+            { icon: Timer, text: "30-60 Min Delivery" },
+            { icon: Store, text: "500+ Restaurants" },
+          ].map((item, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-2 text-white/40 text-xs font-semibold uppercase tracking-wide"
+            >
+              <item.icon className="w-4 h-4" />
+              {item.text}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Watermark */}
+      <div
+        aria-hidden="true"
+        className="absolute bottom-0 right-0 font-extrabold uppercase tracking-tighter leading-none text-white/5 select-none pointer-events-none translate-x-6 translate-y-6 text-[8rem] md:text-[14rem]"
+      >
+        Delivery
+      </div>
+    </section>
+  );
+}
+
+/* ─────────────────── Merchant Image Slideshow (inside ContainerScroll card) ─────────────────── */
+const MERCHANT_IMAGES = [
+  { src: "/images/page sections/delivery3.jpg", alt: "Restaurant kitchen" },
+  { src: "/images/page sections/delivery4.jpg", alt: "Menu management" },
+  { src: "/images/page sections/delivery5.jpg", alt: "Rider pickup" },
+  { src: "/images/page sections/delivery6.jpg", alt: "Delivery handoff" },
+];
+
+function MerchantSlideshow() {
+  const [current, setCurrent] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const startRef = useRef(0);
+  const DURATION = 3000;
+
+  useEffect(() => {
+    startRef.current = performance.now();
+    let raf: number;
+
+    const tick = (now: number) => {
+      const elapsed = now - startRef.current;
+      const pct = Math.min((elapsed / DURATION) * 100, 100);
+      setProgress(pct);
+      if (elapsed < DURATION) {
+        raf = requestAnimationFrame(tick);
+      } else {
+        setCurrent((p) => (p + 1) % MERCHANT_IMAGES.length);
+      }
+    };
+
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [current]);
+
+  return (
+    <div className="relative w-full h-full select-none overflow-hidden rounded-2xl">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={current}
+          initial={{ opacity: 0, x: 50, scale: 1.04 }}
+          animate={{ opacity: 1, x: 0, scale: 1 }}
+          exit={{ opacity: 0, x: -50, scale: 0.97 }}
+          transition={{ duration: 0.6, ease: [0.32, 0, 0.67, 0] }}
+          className="absolute inset-0"
+        >
+          <Image
+            src={MERCHANT_IMAGES[current].src}
+            alt={MERCHANT_IMAGES[current].alt}
+            fill
+            className="object-contain"
+            sizes="(max-width: 768px) 100vw, 900px"
+          />
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `linear-gradient(to top, rgba(13,7,32,0.6) 0%, transparent 55%)`,
+            }}
+          />
+        </motion.div>
+      </AnimatePresence>
+
+      {/* Progress dots */}
+      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10">
+        {MERCHANT_IMAGES.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setCurrent(i)}
+            className="relative overflow-hidden rounded-full transition-all duration-300"
+            style={{
+              width: i === current ? 28 : 8,
+              height: 8,
+              backgroundColor: i === current ? PURPLE : `${CREAM}35`,
+            }}
+          >
+            {i === current && (
+              <motion.div
+                className="absolute inset-y-0 left-0 rounded-full"
+                style={{ backgroundColor: CREAM, width: `${progress}%` }}
+              />
+            )}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────── For Restaurants (Merchant) ─────────────────── */
+function ForRestaurantsSection() {
+  const points = [
+    "Manage your menu seamlessly",
+    "Receive orders instantly",
+    "Stay focused on food",
+  ];
+
+  return (
+    <section
+      className="relative overflow-hidden"
+      style={{ backgroundColor: BG2 }}
+    >
+      <span
+        aria-hidden="true"
+        className="absolute -top-4 -right-6 md:-top-10 md:-right-10 text-[10rem] md:text-[18rem] font-extrabold leading-none select-none pointer-events-none z-0"
+        style={{ color: "#0F0620" }}
+      >
+        06
+      </span>
+
+      <ContainerScroll
+        cardInnerClassName="bg-[#0D0720]"
+        titleComponent={
+          <div className="flex flex-col items-center gap-6">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-px" style={{ backgroundColor: GOLD }} />
+              <span
+                className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em]"
+                style={{ color: GOLD }}
+              >
+                For Restaurants
+              </span>
+              <div className="w-8 h-px" style={{ backgroundColor: GOLD }} />
+            </div>
+
+            <h2
+              className="text-4xl sm:text-5xl md:text-7xl font-extrabold uppercase tracking-tighter leading-[0.88]"
+              style={{ color: CREAM }}
+            >
+              Run Your Kitchen
+              <br />
+              <span style={{ color: `${CREAM}75` }}>Like a System.</span>
+            </h2>
+
+            <div
+              className="w-full max-w-md flex flex-col"
+              style={{ borderTop: `1px solid ${CREAM}12` }}
+            >
+              {points.map((p, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between gap-4 py-3 text-sm font-semibold uppercase tracking-wide"
+                  style={{
+                    color: `${CREAM}B3`,
+                    borderBottom: `1px solid ${CREAM}12`,
+                  }}
+                >
+                  <span>{p}</span>
+                  <span
+                    className="text-[10px] font-bold"
+                    style={{ color: PURPLE }}
+                  >
+                    0{i + 1}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <a href={DELIVERY_URL} target="_blank" rel="noopener noreferrer">
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                className="flex items-center gap-3 px-8 py-4 text-white font-extrabold uppercase tracking-tighter text-sm"
+                style={{ backgroundColor: DEEP }}
+              >
+                Join as a Restaurant
+                <ArrowRight className="w-4 h-4" />
+              </motion.button>
+            </a>
+          </div>
+        }
+      >
+        <MerchantSlideshow />
+      </ContainerScroll>
+    </section>
+  );
+}
+
+/* ─────────────────── Delivery Experience ─────────────────── */
+function DeliveryExperienceSection() {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-80px" });
+
+  const points = [
+    "Browse restaurants",
+    "Add to cart instantly",
+    "Track orders in real-time",
+  ];
+
+  return (
+    <section
+      ref={ref}
+      className="relative py-24 md:py-32 overflow-hidden"
+      style={{
+        backgroundColor: BG,
+        borderTop: `1px solid ${PURPLE}50`,
+        borderBottom: `1px solid ${PURPLE}50`,
+      }}
+    >
+      <span
+        aria-hidden="true"
+        className="absolute -top-4 -left-4 md:-top-10 md:-left-6 text-[10rem] md:text-[18rem] font-extrabold leading-none select-none pointer-events-none"
+        style={{ color: "#130626" }}
+      >
+        05
+      </span>
+
+      <div className="relative max-w-[95vw] mx-auto px-6 md:px-10 mb-14 md:mb-20">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={isInView ? { opacity: 1, x: 0 } : {}}
+          className="flex items-center gap-3 mb-6"
+        >
+          <div className="w-8 h-px" style={{ backgroundColor: GOLD }} />
+          <span
+            className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em]"
+            style={{ color: GOLD }}
+          >
+            Delivery
+          </span>
+        </motion.div>
+
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+          <motion.h2
+            initial={{ opacity: 0, y: 30 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6 }}
+            className="text-4xl sm:text-5xl md:text-7xl font-extrabold uppercase tracking-tighter leading-[0.88]"
+            style={{ color: CREAM }}
+          >
+            Order Without
+            <br />
+            <span style={{ color: `${CREAM}75` }}>Friction.</span>
+          </motion.h2>
+
+          <motion.ul
+            initial={{ opacity: 0, y: 20 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: 0.15, duration: 0.6 }}
+            className="flex flex-col md:max-w-sm w-full"
+            style={{ borderTop: `1px solid ${CREAM}12` }}
+          >
+            {points.map((p, i) => (
+              <li
+                key={i}
+                className="flex items-center justify-between gap-4 py-3 text-sm md:text-base font-semibold uppercase tracking-wide"
+                style={{
+                  color: `${CREAM}B3`,
+                  borderBottom: `1px solid ${CREAM}12`,
+                }}
+              >
+                <span>{p}</span>
+                <span
+                  className="text-[10px] font-bold"
+                  style={{ color: PURPLE }}
+                >
+                  0{i + 1}
+                </span>
+              </li>
+            ))}
+          </motion.ul>
+        </div>
+      </div>
+
+      <div
+        className="relative max-w-[95vw] mx-auto px-6 md:px-10 grid md:grid-cols-2"
+        style={{ gap: "1px", backgroundColor: `${CREAM}08` }}
+      >
+        {["delivery1", "delivery2"].map((img, i) => (
+          <motion.div
+            key={img}
+            initial={{ opacity: 0, y: 30 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: 0.1 + i * 0.1, duration: 0.6 }}
+            className="relative w-full aspect-[12/5] overflow-hidden"
+            style={{ backgroundColor: BG2 }}
+          >
+            <Image
+              src={`/images/page sections/${img}.jpg`}
+              alt={img === "delivery1" ? "Order at the door" : "Rider handoff"}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 48vw"
+            />
+          </motion.div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ───────────────────────── Powered By ───────────────────────── */
+function PoweredBySection() {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-60px" });
+
+  return (
+    <section
+      ref={ref}
+      className="py-20 md:py-28"
+      style={{ backgroundColor: BG }}
+    >
+      <div className="max-w-[95vw] mx-auto px-6 md:px-10">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6 }}
+          className="flex flex-col items-center text-center"
+        >
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-8 h-px" style={{ backgroundColor: GOLD }} />
+            <span
+              className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em]"
+              style={{ color: GOLD }}
+            >
+              Infrastructure
+            </span>
+            <div className="w-8 h-px" style={{ backgroundColor: GOLD }} />
+          </div>
+
+          <h2
+            className="text-3xl sm:text-4xl md:text-5xl font-extrabold uppercase tracking-tighter leading-[0.9] mb-6"
+            style={{ color: `${CREAM}CC` }}
+          >
+            Powered By
+            <br />
+            <span style={{ color: `${CREAM}75` }}>Our Delivery Partner.</span>
+          </h2>
+
+          <p
+            className="max-w-xl text-sm md:text-base leading-relaxed mb-10"
+            style={{ color: `${CREAM}65` }}
+          >
+            Delivery operations are handled by our partner platform. You may be
+            redirected to complete actions.
+          </p>
+
+          <div
+            className="relative w-44 md:w-56 aspect-[19/10] overflow-hidden opacity-70 hover:opacity-100 transition-opacity"
+            style={{ border: `1px solid ${CREAM}12` }}
+          >
+            <Image
+              src="/images/page sections/hyperzod.jpg"
+              alt="Delivery partner"
+              fill
+              className="object-contain"
+              sizes="224px"
+            />
+          </div>
         </motion.div>
       </div>
     </section>
+  );
+}
+
+/* ───────────────────────── Bottom Nav ───────────────────────── */
+function BottomNav() {
+  return (
+    <div
+      className="px-6 py-8"
+      style={{ backgroundColor: BG, borderTop: `1px solid ${CREAM}08` }}
+    >
+      <div className="max-w-[95vw] mx-auto flex justify-between items-center">
+        <Link
+          href="/fresh"
+          className="text-xs font-bold uppercase tracking-[0.2em] transition-opacity hover:opacity-100 opacity-40"
+          style={{ color: CREAM }}
+        >
+          ← Fresh
+        </Link>
+        <Link
+          href="/kitchen"
+          className="text-xs font-bold uppercase tracking-[0.2em] transition-opacity hover:opacity-100 opacity-40"
+          style={{ color: CREAM }}
+        >
+          Kitchen →
+        </Link>
+      </div>
+    </div>
   );
 }
