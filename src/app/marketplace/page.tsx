@@ -240,7 +240,7 @@ function HeroSection() {
             style={{ fontFamily: 'var(--font-body)' }}
           >
             Discover 2,000+ halal-certified products from trusted sellers.
-            From modest fashion to daily essentials — shop with confidence.
+            From modest fashion to daily essentials - shop with confidence.
           </motion.p>
 
           {/* CTAs */}
@@ -579,7 +579,7 @@ function HowItWorksSection() {
 
         {/* Steps */}
         <div className="relative">
-          {/* Connecting line — desktop */}
+          {/* Connecting line - desktop */}
           <div className="hidden md:block absolute top-28 left-[16.67%] right-[16.67%] h-px bg-indigo-500/30" />
 
           <div className="grid md:grid-cols-3 gap-10 md:gap-8">
@@ -691,7 +691,7 @@ function WhyMarketplaceSection() {
             style={{ fontFamily: 'var(--font-body)' }}
           >
             The only marketplace built from the ground up for the halal
-            community. Every product, every seller — verified.
+            community. Every product, every seller - verified.
           </p>
         </motion.div>
 

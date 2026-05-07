@@ -123,7 +123,7 @@ function HeroSection() {
             className="text-base sm:text-lg md:text-xl text-gray-300/90 max-w-xl leading-relaxed mb-6 sm:mb-10"
           >
             Chef-prepared meals made fresh daily with certified halal ingredients.
-            No cooking, no hassle — just heat, eat, and enjoy.
+            No cooking, no hassle - just heat, eat, and enjoy.
           </motion.p>
 
           <motion.div
@@ -204,7 +204,7 @@ function HowItWorksSection() {
       num: '03',
       icon: ChefHat,
       title: 'Heat & Enjoy',
-      desc: 'Ready in just 5-10 minutes. No cooking, no hassle — restaurant-quality meals at home in minutes.',
+      desc: 'Ready in just 5-10 minutes. No cooking, no hassle - restaurant-quality meals at home in minutes.',
     },
   ];
 

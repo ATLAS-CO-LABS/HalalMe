@@ -251,7 +251,7 @@ function MealCard({
       className="group bg-gray-900 rounded-2xl overflow-hidden border border-gray-800 hover:border-lime-500/40 transition-all duration-300"
       whileHover={{ y: -4 }}
     >
-      {/* Image — clickable to detail page */}
+      {/* Image - clickable to detail page */}
       <Link href={`/fresh/meals/${meal.id}`}>
         <div className="relative h-48 bg-gray-800 overflow-hidden cursor-pointer">
           <div className="absolute inset-0 bg-gradient-to-t from-gray-900/70 to-transparent z-10" />

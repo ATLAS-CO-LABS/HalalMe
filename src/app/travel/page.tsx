@@ -489,7 +489,7 @@ export default function TravelLandingPage() {
       <section className="px-4 md:px-6 pb-8 bg-gray-900">
         <div className="mx-auto max-w-4xl text-center">
           <p className="text-gray-500 text-sm" style={{ fontFamily: 'var(--font-body)' }}>
-            Prices displayed are provided by our travel partners. HalalMe Travel is a comparison service —
+            Prices displayed are provided by our travel partners. HalalMe Travel is a comparison service -
             all bookings are completed on partner websites.
           </p>
         </div>

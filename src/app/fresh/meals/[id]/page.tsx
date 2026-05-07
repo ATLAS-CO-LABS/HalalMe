@@ -233,7 +233,7 @@ export default function MealDetailPage() {
                 ) : (
                   <>
                     <ShoppingCart className="w-5 h-5" />
-                    Add to Cart — £{(meal.price * quantity).toFixed(2)}
+                    Add to Cart - £{(meal.price * quantity).toFixed(2)}
                   </>
                 )}
               </motion.button>
