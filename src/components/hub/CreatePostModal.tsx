@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Image as ImageIcon, Loader2 } from "lucide-react";
 import Image from "next/image";
 import type { PostType, Profile } from "@/types";
+import { withTimeout } from "@/lib/withTimeout";
 import Avatar from "./Avatar";
 
 interface CreatePostModalProps {
@@ -17,11 +18,18 @@ interface CreatePostModalProps {
 }
 
 const POST_TYPES: { value: PostType; label: string; emoji: string }[] = [
-  { value: "general", label: "Post", emoji: "💬" },
-  { value: "recipe",  label: "Recipe", emoji: "🍽️" },
+  { value: "general",  label: "Post",     emoji: "💬" },
+  { value: "recipe",   label: "Recipe",   emoji: "🍽️" },
   { value: "question", label: "Question", emoji: "❓" },
-  { value: "review",  label: "Review", emoji: "⭐" },
+  { value: "review",   label: "Review",   emoji: "⭐" },
 ];
+
+const PLACEHOLDERS: Record<PostType, string> = {
+  general:  "What's on your mind?",
+  recipe:   "Share a recipe or cooking tip...",
+  question: "Ask the community something...",
+  review:   "Write your review...",
+};
 
 export default function CreatePostModal({
   isOpen,
@@ -57,7 +65,8 @@ export default function CreatePostModal({
     setIsSubmitting(true);
     setError(null);
     try {
-      await onSubmit(content.trim(), selectedFile ?? undefined, postType);
+      // 30s timeout - media uploads can take several seconds on slow connections
+      await withTimeout(onSubmit(content.trim(), selectedFile ?? undefined, postType), 30_000);
       handleClose();
     } catch (err) {
       console.error("[CreatePost]", err);
@@ -165,7 +174,7 @@ export default function CreatePostModal({
                 <textarea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  placeholder="What's on your mind?"
+                  placeholder={PLACEHOLDERS[postType]}
                   className="w-full bg-transparent text-white placeholder-gray-500 text-base resize-none focus:outline-none min-h-30 font-normal"
                   style={{ fontFamily: "var(--font-body)" }}
                   autoFocus

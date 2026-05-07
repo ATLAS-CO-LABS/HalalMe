@@ -7,6 +7,8 @@ import Link from "next/link";
 import type { Notification, NotificationType } from "@/types";
 import { hubService } from "@/services/hubService";
 import { formatRelativeTime } from "@/lib/relativeTime";
+import { withTimeout } from "@/lib/withTimeout";
+import { useResumeKey } from "@/context/AppResumeContext";
 import Avatar from "./Avatar";
 
 interface NotificationPanelProps {
@@ -49,16 +51,36 @@ export default function NotificationPanel({ userId }: NotificationPanelProps) {
   const [unreadCount, setUnreadCount]     = useState(0);
   const [isLoading, setIsLoading]         = useState(false);
   const panelRef                          = useRef<HTMLDivElement>(null);
+  const resumeKey                         = useResumeKey();
 
-  // Load unread count on mount + realtime updates
+  // Monotonic counter so only the latest handleOpen fetch updates state.
+  const loadRequestIdRef = useRef(0);
+
+  // Load unread count on mount + realtime updates.
+  // Wrapped in withTimeout so a stalled network can never leave state hanging.
+  // resumeKey ensures the channel is torn down and re-created after every
+  // app-resume reconnect - Phoenix channels silently die during tab suspension.
   useEffect(() => {
-    hubService.getUnreadNotificationCount(userId).then(setUnreadCount).catch(() => {});
+    withTimeout(hubService.getUnreadNotificationCount(userId), 10_000)
+      .then(setUnreadCount)
+      .catch(() => {}); // unread count is non-critical
 
     const unsub = hubService.subscribeToNotifications(userId, () => {
       setUnreadCount((prev) => prev + 1);
     });
     return unsub;
-  }, [userId]);
+  }, [userId, resumeKey]);
+
+  // On resume: if the panel is already open, re-fetch the notifications list
+  // so the user does not see stale data from before the tab was suspended.
+  useEffect(() => {
+    if (resumeKey === 0 || !isOpen) return;
+    const requestId = ++loadRequestIdRef.current;
+    withTimeout(hubService.getNotifications(userId), 10_000)
+      .then((data) => { if (requestId === loadRequestIdRef.current) setNotifications(data); })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resumeKey]);
 
   // Close on outside click
   useEffect(() => {
@@ -75,14 +97,17 @@ export default function NotificationPanel({ userId }: NotificationPanelProps) {
   const handleOpen = async () => {
     setIsOpen((prev) => !prev);
     if (!isOpen) {
+      const requestId = ++loadRequestIdRef.current;
       setIsLoading(true);
       try {
-        const data = await hubService.getNotifications(userId);
+        const data = await withTimeout(hubService.getNotifications(userId), 10_000);
+        // Guard: only the latest open-request writes state
+        if (requestId !== loadRequestIdRef.current) return;
         setNotifications(data);
       } catch {
-        // non-critical
+        // non-critical - panel stays open with empty list
       } finally {
-        setIsLoading(false);
+        if (requestId === loadRequestIdRef.current) setIsLoading(false);
       }
     }
   };

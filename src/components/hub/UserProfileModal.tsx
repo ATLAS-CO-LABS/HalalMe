@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, MapPin, Calendar, BadgeCheck, Loader2 } from "lucide-react";
-import type { Post } from "@/types";
+import { X, MapPin, Calendar, BadgeCheck, Loader2, Heart, Gift, Trophy } from "lucide-react";
+import type { Post } from "@/types/app";
 import { hubService } from "@/services/hubService";
+import { withTimeout } from "@/lib/withTimeout";
+import { useResumeKey } from "@/context/AppResumeContext";
 import { useAuth } from "@/hooks/useAuth";
 import Avatar from "./Avatar";
 import PostCard from "./PostCard";
@@ -37,6 +39,7 @@ export default function UserProfileModal({
   onLike,
 }: UserProfileModalProps) {
   const { user: currentUser } = useAuth();
+  const resumeKey = useResumeKey();
 
   const [followerCount, setFollowerCount] = useState<number | null>(null);
   const [followingCount, setFollowingCount] = useState<number | null>(null);
@@ -44,33 +47,42 @@ export default function UserProfileModal({
   const [isFollowLoading, setIsFollowLoading] = useState(false);
   const [posts, setPosts] = useState<Post[]>(userPosts);
   const [isPostsLoading, setIsPostsLoading] = useState(false);
+  const [badgeSlugs, setBadgeSlugs] = useState<string[]>([]);
 
-  // Load stats whenever the modal opens
+  // Monotonic counter - prevents a slow previous open from overwriting
+  // state set by a newer open (e.g. user closes and opens a different profile).
+  const loadRequestIdRef = useRef(0);
+
+  // Load stats whenever the modal opens.
+  // All calls are wrapped in withTimeout(10s) so a stalled network can never
+  // leave isPostsLoading stuck.  The requestId guard ensures only the most
+  // recent open writes state.
   useEffect(() => {
     if (!isOpen) return;
 
-    let cancelled = false;
+    const requestId = ++loadRequestIdRef.current;
+    setBadgeSlugs([]);
 
     const loadStats = async () => {
       try {
         const [followers, following] = await Promise.all([
-          hubService.getFollowerCount(userId),
-          hubService.getFollowingCount(userId),
+          withTimeout(hubService.getFollowerCount(userId), 10_000),
+          withTimeout(hubService.getFollowingCount(userId), 10_000),
         ]);
-        if (!cancelled) {
-          setFollowerCount(followers);
-          setFollowingCount(following);
-        }
+        if (requestId !== loadRequestIdRef.current) return;
+        setFollowerCount(followers);
+        setFollowingCount(following);
       } catch {
-        // stats are non-critical — silently ignore
+        // stats are non-critical
       }
     };
 
     const loadFollowState = async () => {
       if (!currentUser || currentUser.id === userId) return;
       try {
-        const following = await hubService.isFollowing(currentUser.id, userId);
-        if (!cancelled) setIsFollowing(following);
+        const following = await withTimeout(hubService.isFollowing(currentUser.id, userId), 10_000);
+        if (requestId !== loadRequestIdRef.current) return;
+        setIsFollowing(following);
       } catch {
         // non-critical
       }
@@ -79,21 +91,64 @@ export default function UserProfileModal({
     const loadPosts = async () => {
       setIsPostsLoading(true);
       try {
-        const fetched = await hubService.getUserPosts(userId, currentUser?.id);
-        if (!cancelled) setPosts(fetched);
+        const fetched = await withTimeout(hubService.getUserPosts(userId, currentUser?.id), 10_000);
+        if (requestId !== loadRequestIdRef.current) return;
+        setPosts(fetched);
       } catch {
         // keep the pre-loaded posts on error
       } finally {
-        if (!cancelled) setIsPostsLoading(false);
+        if (requestId === loadRequestIdRef.current) setIsPostsLoading(false);
+      }
+    };
+
+    const loadBadges = async () => {
+      try {
+        const res = await fetch(`/api/rewards/badges?userId=${userId}`);
+        if (!res.ok) return;
+        const json = await res.json();
+        if (requestId !== loadRequestIdRef.current) return;
+        setBadgeSlugs((json.badges ?? []).map((b: { badge_slug: string }) => b.badge_slug));
+      } catch {
+        // non-critical
       }
     };
 
     loadStats();
     loadFollowState();
     loadPosts();
-
-    return () => { cancelled = true; };
+    loadBadges();
   }, [isOpen, userId, currentUser]);
+
+  // On resume: if the modal is already open, re-fetch posts and follow stats
+  // so the user does not see data cached from before the tab was suspended.
+  useEffect(() => {
+    if (resumeKey === 0 || !isOpen) return;
+    const requestId = ++loadRequestIdRef.current;
+
+    Promise.all([
+      withTimeout(hubService.getFollowerCount(userId), 10_000),
+      withTimeout(hubService.getFollowingCount(userId), 10_000),
+    ])
+      .then(([followers, following]) => {
+        if (requestId !== loadRequestIdRef.current) return;
+        setFollowerCount(followers);
+        setFollowingCount(following);
+      })
+      .catch(() => {});
+
+    if (currentUser && currentUser.id !== userId) {
+      withTimeout(hubService.isFollowing(currentUser.id, userId), 10_000)
+        .then((following) => { if (requestId === loadRequestIdRef.current) setIsFollowing(following); })
+        .catch(() => {});
+    }
+
+    setIsPostsLoading(true);
+    withTimeout(hubService.getUserPosts(userId, currentUser?.id), 10_000)
+      .then((fetched) => { if (requestId === loadRequestIdRef.current) setPosts(fetched); })
+      .catch(() => {})
+      .finally(() => { if (requestId === loadRequestIdRef.current) setIsPostsLoading(false); });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resumeKey]);
 
   const handleFollowToggle = async () => {
     if (!currentUser || isFollowLoading) return;
@@ -106,9 +161,9 @@ export default function UserProfileModal({
 
     try {
       if (wasFollowing) {
-        await hubService.unfollow(currentUser.id, userId);
+        await withTimeout(hubService.unfollow(currentUser.id, userId), 10_000);
       } else {
-        await hubService.follow(currentUser.id, userId);
+        await withTimeout(hubService.follow(currentUser.id, userId), 10_000);
       }
     } catch {
       // Revert on error
@@ -211,6 +266,30 @@ export default function UserProfileModal({
                     </div>
                   </div>
 
+                  {/* Badges */}
+                  {badgeSlugs.length > 0 && (
+                    <div className="flex items-center gap-2 mt-3 flex-wrap">
+                      {[
+                        { slug: "first-giver",  icon: Heart,   label: "First Giver",     color: "#EC4899" },
+                        { slug: "consistent",   icon: Calendar, label: "Consistent Giver", color: "#3B82F6" },
+                        { slug: "generous",     icon: Gift,    label: "Generous Heart",   color: "#8B5CF6" },
+                        { slug: "champion",     icon: Trophy,  label: "Charity Champion", color: "#F59E0B" },
+                      ]
+                        .filter((b) => badgeSlugs.includes(b.slug))
+                        .map((b) => (
+                          <div
+                            key={b.slug}
+                            title={b.label}
+                            className="flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                            style={{ backgroundColor: `${b.color}20`, color: b.color }}
+                          >
+                            <b.icon className="w-3 h-3" />
+                            {b.label}
+                          </div>
+                        ))}
+                    </div>
+                  )}
+
                   {/* Stats */}
                   <div className="flex items-center gap-6 mt-4">
                     <div>
@@ -219,19 +298,19 @@ export default function UserProfileModal({
                     </div>
                     <div>
                       <span className="text-white font-bold text-lg">
-                        {followerCount ?? "—"}
+                        {followerCount ?? "-"}
                       </span>
                       <span className="text-gray-400 text-sm ml-1">Followers</span>
                     </div>
                     <div>
                       <span className="text-white font-bold text-lg">
-                        {followingCount ?? "—"}
+                        {followingCount ?? "-"}
                       </span>
                       <span className="text-gray-400 text-sm ml-1">Following</span>
                     </div>
                   </div>
 
-                  {/* Follow / Unfollow button — hidden for own profile */}
+                  {/* Follow / Unfollow button - hidden for own profile */}
                   {!isOwnProfile && currentUser && (
                     <motion.button
                       onClick={handleFollowToggle}

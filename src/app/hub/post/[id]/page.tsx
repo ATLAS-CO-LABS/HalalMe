@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use, useCallback } from "react";
+import { useState, useEffect, use, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
@@ -20,7 +20,10 @@ import {
 } from "lucide-react";
 import type { Post, Comment } from "@/types";
 import { hubService } from "@/services/hubService";
+import { withTimeout, TimeoutError } from "@/lib/withTimeout";
 import { useAuth } from "@/hooks/useAuth";
+import { useResumeKey } from "@/context/AppResumeContext";
+import AuthGuard from "@/components/auth/AuthGuard";
 import { formatRelativeTime } from "@/lib/relativeTime";
 import Avatar from "@/components/hub/Avatar";
 
@@ -30,13 +33,26 @@ export default function PostDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  return (
+    <AuthGuard>
+      <PostDetailContent id={id} />
+    </AuthGuard>
+  );
+}
+
+function PostDetailContent({ id }: { id: string }) {
   const { user } = useAuth();
+  const resumeKey = useResumeKey();
 
   const [post, setPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCommentsLoading, setIsCommentsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Monotonically-incrementing request counter - same pattern as the feed page.
+  // Must live outside the effect so successive effect runs share the same ref.
+  const requestIdRef = useRef(0);
   const [newComment, setNewComment] = useState("");
   const [replyingTo, setReplyingTo] = useState<{ id: string; username: string } | null>(null);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
@@ -45,39 +61,77 @@ export default function PostDetailPage({
   // Load post + comments
   // ---------------------------------------------------------------------------
   useEffect(() => {
-    let cancelled = false;
+    // AbortController - cancels the network request when the effect re-runs
+    // (resumeKey, id, user change) or the component unmounts so Chrome does not
+    // leave a throttled/stale connection open.
+    const controller = new AbortController();
+    const { signal } = controller;
+
+    // Request identity - primary guard for all state updates.
+    // Each effect run gets a new ID; only the run whose ID still matches
+    // requestIdRef.current at the time it tries to write state is allowed to.
+    const requestId = ++requestIdRef.current;
 
     const loadPost = async () => {
       setIsLoading(true);
+      const attempt = () => withTimeout(hubService.getPostById(id, user?.id, signal), 10_000);
       try {
-        const data = await hubService.getPostById(id, user?.id);
-        if (!cancelled) setPost(data);
+        let data;
+        try {
+          data = await attempt();
+        } catch (err) {
+          if (!(err instanceof TimeoutError)) throw err;
+          await new Promise<void>((r) => setTimeout(r, 1_000));
+          if (requestId !== requestIdRef.current) return;
+          data = await attempt();
+        }
+        if (requestId !== requestIdRef.current) return;
+        setPost(data);
       } catch {
-        if (!cancelled) setError("Post not found.");
+        if (requestId !== requestIdRef.current) return;
+        setError("Post not found.");
       } finally {
-        if (!cancelled) setIsLoading(false);
+        if (requestId === requestIdRef.current) setIsLoading(false);
       }
     };
 
     const loadComments = async () => {
       setIsCommentsLoading(true);
+      const attempt = () => withTimeout(hubService.getComments(id, user?.id, signal), 10_000);
       try {
-        const data = await hubService.getComments(id, user?.id);
-        if (!cancelled) setComments(data);
+        let data;
+        try {
+          data = await attempt();
+        } catch (err) {
+          if (!(err instanceof TimeoutError)) throw err;
+          await new Promise<void>((r) => setTimeout(r, 1_000));
+          if (requestId !== requestIdRef.current) return;
+          data = await attempt();
+        }
+        if (requestId !== requestIdRef.current) return;
+        setComments(data);
       } catch {
-        // non-critical — silently ignore
+        // non-critical - silently ignore
       } finally {
-        if (!cancelled) setIsCommentsLoading(false);
+        if (requestId === requestIdRef.current) setIsCommentsLoading(false);
       }
     };
 
     loadPost();
     loadComments();
 
-    return () => { cancelled = true; };
-  }, [id, user?.id]);
+    return () => {
+      controller.abort();
+    };
+  // resumeKey causes the effect to re-run when the app resumes after a tab
+  // switch.  This aborts any in-flight requests that Chrome throttled or
+  // dropped while the tab was hidden and starts fresh fetches on a live
+  // connection.  user?.id (not user) avoids re-running on token refreshes
+  // that produce a new Profile object with the same id.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, user?.id, resumeKey]);
 
-  // Increment view count once per mount — separate effect so it never re-fires
+  // Increment view count once per mount - separate effect so it never re-fires
   // when the user auth state changes (which would overcount).
   useEffect(() => {
     hubService.incrementPostView(id).catch(() => {});
@@ -183,7 +237,7 @@ export default function PostDetailPage({
       setNewComment("");
       setReplyingTo(null);
     } catch {
-      // silent — user sees the button re-enable
+      // silent - user sees the button re-enable
     } finally {
       setIsSubmittingComment(false);
     }
@@ -197,7 +251,7 @@ export default function PostDetailPage({
     try {
       await navigator.clipboard.writeText(url);
     } catch {
-      // fallback — no-op
+      // fallback - no-op
     }
   };
 
@@ -344,7 +398,7 @@ export default function PostDetailPage({
 
   return (
     <div className="min-h-screen bg-[#0B0D0F]">
-      {/* Header — sticky top-16 to sit below the app header */}
+      {/* Header - sticky top-16 to sit below the app header */}
       <div className="bg-[#111418]/95 backdrop-blur-lg border-b border-gray-800 sticky top-16 z-40">
         <div className="mx-auto max-w-4xl px-4 md:px-6 py-4 md:py-5">
           <div className="flex items-center gap-3 md:gap-4">

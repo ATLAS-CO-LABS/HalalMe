@@ -21,7 +21,9 @@ export const hubService = {
     userId?: string,
     page = 1,
     pageSize = 20,
-    mode: FeedMode = "latest"
+    mode: FeedMode = "latest",
+    signal?: AbortSignal,
+    postType?: string
   ): Promise<PaginatedResult<Post>> {
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
@@ -38,12 +40,15 @@ export const hubService = {
     if (mode === "following") {
       if (!userId) return emptyResult;
 
-      const { data, error, count } = await supabase
+      const followingQuery = supabase
         .from("following_posts_view")
         .select("*", { count: "exact" })
         .eq("follower_id", userId)
         .order("created_at", { ascending: false })
         .range(from, to);
+
+      if (postType) followingQuery.eq("post_type", postType);
+      const { data, error, count } = await (signal ? followingQuery.abortSignal(signal) : followingQuery);
 
       if (error) throw new Error(error.message);
 
@@ -51,9 +56,11 @@ export const hubService = {
       if (posts.length === 0) return emptyResult;
 
       const postIds = posts.map((p) => p.id);
+      const likesQ     = supabase.from("post_likes").select("post_id").eq("user_id", userId).in("post_id", postIds);
+      const bookmarksQ = supabase.from("post_bookmarks").select("post_id").eq("user_id", userId).in("post_id", postIds);
       const [{ data: likes }, { data: bookmarks }] = await Promise.all([
-        supabase.from("post_likes").select("post_id").eq("user_id", userId).in("post_id", postIds),
-        supabase.from("post_bookmarks").select("post_id").eq("user_id", userId).in("post_id", postIds),
+        signal ? likesQ.abortSignal(signal) : likesQ,
+        signal ? bookmarksQ.abortSignal(signal) : bookmarksQ,
       ]);
       const likedSet      = new Set((likes      ?? []).map((l) => l.post_id));
       const bookmarkedSet = new Set((bookmarks  ?? []).map((b) => b.post_id));
@@ -75,6 +82,8 @@ export const hubService = {
       .eq("is_published", true)
       .range(from, to);
 
+    if (postType) query = query.eq("post_type", postType);
+
     if (mode === "trending") {
       query = query
         .order("like_count", { ascending: false })
@@ -83,17 +92,19 @@ export const hubService = {
       query = query.order("created_at", { ascending: false });
     }
 
-    const { data, error, count } = await query;
+    const { data, error, count } = await (signal ? query.abortSignal(signal) : query);
     if (error) throw new Error(error.message);
 
     let posts = (data ?? []) as Post[];
 
     // Attach is_liked + is_bookmarked for the current user
     if (userId && posts.length > 0) {
-      const postIds = posts.map((p) => p.id);
+      const postIds    = posts.map((p) => p.id);
+      const likesQ     = supabase.from("post_likes").select("post_id").eq("user_id", userId).in("post_id", postIds);
+      const bookmarksQ = supabase.from("post_bookmarks").select("post_id").eq("user_id", userId).in("post_id", postIds);
       const [{ data: likes }, { data: bookmarks }] = await Promise.all([
-        supabase.from("post_likes").select("post_id").eq("user_id", userId).in("post_id", postIds),
-        supabase.from("post_bookmarks").select("post_id").eq("user_id", userId).in("post_id", postIds),
+        signal ? likesQ.abortSignal(signal) : likesQ,
+        signal ? bookmarksQ.abortSignal(signal) : bookmarksQ,
       ]);
       const likedSet      = new Set((likes      ?? []).map((l) => l.post_id));
       const bookmarkedSet = new Set((bookmarks  ?? []).map((b) => b.post_id));
@@ -113,18 +124,22 @@ export const hubService = {
     };
   },
 
-  async getPostById(id: string, userId?: string): Promise<Post> {
-    const { data, error } = await supabase
+  async getPostById(id: string, userId?: string, signal?: AbortSignal): Promise<Post> {
+    // .abortSignal() must be called before .single() / .maybeSingle() because
+    // those terminal qualifiers downcast to PostgrestBuilder which lacks the method.
+    const postQ = supabase
       .from("posts")
       .select("*, profiles!user_id(username, full_name, avatar_url, is_verified)")
-      .eq("id", id)
-      .single();
+      .eq("id", id);
+    const { data, error } = await (signal ? postQ.abortSignal(signal).single() : postQ.single());
     if (error) throw new Error(error.message);
 
     if (userId) {
+      const likeQ     = supabase.from("post_likes").select("post_id").eq("post_id", id).eq("user_id", userId);
+      const bookmarkQ = supabase.from("post_bookmarks").select("post_id").eq("post_id", id).eq("user_id", userId);
       const [{ data: like }, { data: bookmark }] = await Promise.all([
-        supabase.from("post_likes").select("post_id").eq("post_id", id).eq("user_id", userId).maybeSingle(),
-        supabase.from("post_bookmarks").select("post_id").eq("post_id", id).eq("user_id", userId).maybeSingle(),
+        signal ? likeQ.abortSignal(signal).maybeSingle() : likeQ.maybeSingle(),
+        signal ? bookmarkQ.abortSignal(signal).maybeSingle() : bookmarkQ.maybeSingle(),
       ]);
       return { ...data, is_liked: !!like, is_bookmarked: !!bookmark };
     }
@@ -308,14 +323,15 @@ export const hubService = {
    * Returns top-level comments with their nested replies.
    * Optionally attaches is_liked for the given user.
    */
-  async getComments(postId: string, userId?: string): Promise<Comment[]> {
+  async getComments(postId: string, userId?: string, signal?: AbortSignal): Promise<Comment[]> {
     // Query 1: all top-level comments
-    const { data: topData, error } = await supabase
+    const topQ = supabase
       .from("comments")
       .select("*, profiles!user_id(username, avatar_url)")
       .eq("post_id", postId)
       .is("parent_id", null)
       .order("created_at", { ascending: true });
+    const { data: topData, error } = await (signal ? topQ.abortSignal(signal) : topQ);
 
     if (error) throw new Error(error.message);
 
@@ -324,11 +340,12 @@ export const hubService = {
 
     // Query 2: all replies for these comments in one round-trip
     const topLevelIds = topLevel.map((c) => c.id);
-    const { data: replyData } = await supabase
+    const replyQ = supabase
       .from("comments")
       .select("*, profiles!user_id(username, avatar_url)")
       .in("parent_id", topLevelIds)
       .order("created_at", { ascending: true });
+    const { data: replyData } = await (signal ? replyQ.abortSignal(signal) : replyQ);
 
     // Group replies by parent_id
     const replyMap = new Map<string, Comment[]>();
@@ -351,11 +368,12 @@ export const hubService = {
       ...topLevelIds,
       ...(replyData ?? []).map((r) => r.id),
     ];
-    const { data: likes } = await supabase
+    const likesQ = supabase
       .from("comment_likes")
       .select("comment_id")
       .eq("user_id", userId)
       .in("comment_id", allIds);
+    const { data: likes } = await (signal ? likesQ.abortSignal(signal) : likesQ);
     const likedSet = new Set((likes ?? []).map((l) => l.comment_id));
 
     return withReplies.map((c) => ({
@@ -484,17 +502,18 @@ export const hubService = {
     if (error) throw new Error(error.message);
   },
 
-  async getBookmarks(userId: string, page = 1, pageSize = 20): Promise<PaginatedResult<Post>> {
+  async getBookmarks(userId: string, page = 1, pageSize = 20, signal?: AbortSignal): Promise<PaginatedResult<Post>> {
     const from = (page - 1) * pageSize;
     const to   = from + pageSize - 1;
 
     // 1. Get paginated bookmark IDs ordered by bookmark date
-    const { data: bRows, error: bErr, count } = await supabase
+    const bQ = supabase
       .from("post_bookmarks")
       .select("post_id", { count: "exact" })
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .range(from, to);
+    const { data: bRows, error: bErr, count } = await (signal ? bQ.abortSignal(signal) : bQ);
 
     if (bErr) throw new Error(bErr.message);
     const postIds = (bRows ?? []).map((b) => b.post_id);
@@ -503,11 +522,12 @@ export const hubService = {
     }
 
     // 2. Fetch full post data for those IDs
-    const { data, error } = await supabase
+    const postsQ = supabase
       .from("posts")
       .select("*, profiles!user_id(username, full_name, avatar_url, is_verified)")
       .in("id", postIds)
       .eq("is_published", true);
+    const { data, error } = await (signal ? postsQ.abortSignal(signal) : postsQ);
     if (error) throw new Error(error.message);
 
     // Re-sort to preserve bookmark order
@@ -518,11 +538,8 @@ export const hubService = {
 
     // 3. Attach is_liked + mark is_bookmarked = true
     if (posts.length > 0) {
-      const { data: likes } = await supabase
-        .from("post_likes")
-        .select("post_id")
-        .eq("user_id", userId)
-        .in("post_id", postIds);
+      const likesQ = supabase.from("post_likes").select("post_id").eq("user_id", userId).in("post_id", postIds);
+      const { data: likes } = await (signal ? likesQ.abortSignal(signal) : likesQ);
       const likedSet = new Set((likes ?? []).map((l) => l.post_id));
       posts = posts.map((p) => ({ ...p, is_liked: likedSet.has(p.id), is_bookmarked: true }));
     }

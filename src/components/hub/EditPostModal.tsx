@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Loader2 } from "lucide-react";
 import type { Profile } from "@/types";
+import { withTimeout } from "@/lib/withTimeout";
 import Avatar from "./Avatar";
 
 interface EditPostModalProps {
@@ -41,7 +42,7 @@ export default function EditPostModal({
     setIsSubmitting(true);
     setError(null);
     try {
-      await onSubmit(content.trim());
+      await withTimeout(onSubmit(content.trim()), 10_000);
       onClose();
     } catch {
       setError("Failed to save changes. Please try again.");

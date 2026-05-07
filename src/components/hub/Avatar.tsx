@@ -36,7 +36,7 @@ export default function Avatar({
       style={{ background: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)" }}
     >
       {src ? (
-        <Image src={src} alt={alt} fill className="object-cover" />
+        <Image src={src} alt={alt} fill sizes="(max-width: 768px) 64px, 64px" className="object-cover" />
       ) : (
         <User className={`${iconSizes[size]} text-[#102C26]`} />
       )}

@@ -45,6 +45,13 @@ export default function PostCard({
 
   const isOwnPost = !!currentUserId && currentUserId === post.user_id;
   const isRecipePost = post.post_type === "recipe";
+
+  const TYPE_BADGE: Record<string, { emoji: string; label: string; className: string }> = {
+    recipe:   { emoji: "🍽️", label: "Recipe",   className: "bg-amber-500/15 text-amber-400 border-amber-500/30" },
+    question: { emoji: "❓", label: "Question", className: "bg-blue-500/15 text-blue-400 border-blue-500/30" },
+    review:   { emoji: "⭐", label: "Review",   className: "bg-green-500/15 text-green-400 border-green-500/30" },
+  };
+  const typeBadge = post.post_type && post.post_type !== "general" ? TYPE_BADGE[post.post_type] : null;
   const displayName = post.profiles?.full_name ?? post.profiles?.username ?? "Unknown";
   const username = post.profiles?.username ? `@${post.profiles.username}` : null;
   const avatarUrl = post.profiles?.avatar_url ?? undefined;
@@ -95,16 +102,23 @@ export default function PostCard({
               <BadgeCheck className="w-4 h-4 text-[#F59E0B] fill-[#F59E0B] shrink-0" />
             )}
           </div>
-          <p
-            className="text-gray-400 text-sm font-normal truncate"
-            style={{ fontFamily: "var(--font-body)" }}
-          >
-            {username && <span>{username} • </span>}
-            {formatRelativeTime(post.created_at)}
-          </p>
+          <div className="flex items-center gap-2 flex-wrap">
+            <p
+              className="text-gray-400 text-sm font-normal truncate"
+              style={{ fontFamily: "var(--font-body)" }}
+            >
+              {username && <span>{username} • </span>}
+              {formatRelativeTime(post.created_at)}
+            </p>
+            {typeBadge && (
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${typeBadge.className}`}>
+                {typeBadge.emoji} {typeBadge.label}
+              </span>
+            )}
+          </div>
         </div>
 
-        {/* Three-dot menu — own posts only */}
+        {/* Three-dot menu - own posts only */}
         {isOwnPost && (
           <div className="relative shrink-0">
             <motion.button

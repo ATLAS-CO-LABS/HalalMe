@@ -20,7 +20,10 @@ import {
 } from "lucide-react";
 import type { Post, PostType, UserSearchResult } from "@/types";
 import { hubService, type FeedMode } from "@/services/hubService";
+import { withTimeout, TimeoutError } from "@/lib/withTimeout";
+import { useResumeKey } from "@/context/AppResumeContext";
 import { useAuth } from "@/hooks/useAuth";
+import AuthGuard from "@/components/auth/AuthGuard";
 import Avatar from "@/components/hub/Avatar";
 import PostCard from "@/components/hub/PostCard";
 import CreatePostModal from "@/components/hub/CreatePostModal";
@@ -32,8 +35,32 @@ import EmptyState from "@/components/hub/EmptyState";
 
 type TabType = FeedMode | "bookmarks";
 
+// ---------------------------------------------------------------------------
+// Wrapper - owns the resetKey that forces a full remount of HubFeedContent
+// on every tab-resume reconnect.  Keying a React component (not Next.js
+// routing children) guarantees React discards all state and refs cleanly.
+// isResumeTrigger tells the content component whether this mount was caused
+// by a resume reconnect (resetKey > 0) or normal page navigation.
+// ---------------------------------------------------------------------------
 export default function HubFeedPage() {
+  const resumeKey = useResumeKey();
+  const [resetKey, setResetKey] = useState(0);
+
+  useEffect(() => {
+    if (resumeKey === 0) return;
+    setResetKey((k) => k + 1);
+  }, [resumeKey]);
+
+  return (
+    <AuthGuard>
+      <HubFeedContent key={resetKey} isResumeTrigger={resetKey > 0} />
+    </AuthGuard>
+  );
+}
+
+function HubFeedContent({ isResumeTrigger = false }: { isResumeTrigger?: boolean }) {
   const { user } = useAuth();
+  const resumeKey = useResumeKey();
 
   // Feed state
   const [posts, setPosts]               = useState<Post[]>([]);
@@ -53,6 +80,8 @@ export default function HubFeedPage() {
   // UI state
   const [activeTab, setActiveTab]           = useState<TabType>("latest");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [typeFilter, setTypeFilter]         = useState<string>("all");
+  const typeFilterRef                        = useRef<string>("all");
 
   // Modal state
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
@@ -66,57 +95,208 @@ export default function HubFeedPage() {
     bio: string | null;
   } | null>(null);
 
-  // Stable ref to current user id — used inside realtime callback to avoid stale closure
+  // Stable ref to current user id - used inside realtime callback to avoid stale closure
   const userIdRef = useRef<string | undefined>(user?.id);
   useEffect(() => { userIdRef.current = user?.id; }, [user?.id]);
 
-  // IDs of posts we created locally — realtime should skip these since
+  // Tracks the AbortController for the currently in-flight loadFeed request.
+  // Aborting it cancels the network request so isLoading is never left stuck.
+  const feedAbortRef = useRef<AbortController | null>(null);
+
+  // Monotonically-incrementing request counter.  Used only to guard setError
+  // and stale data writes - NOT to gate setIsLoading, which is decoupled.
+  const loadFeedRequestIdRef = useRef(0);
+
+  // IDs of posts we created locally - realtime should skip these since
   // handleCreatePost is already the source of truth for own new posts.
   const ownPostIdsRef = useRef<Set<string>>(new Set());
+
+  // Tracks whether the very first loadFeed call (on mount) ran without a
+  // signed-in user.  This happens when SIGNED_IN fires during a reconnect,
+  // causing AuthContext to momentarily set user=null before re-hydrating the
+  // session.  If the initial fetch ran without auth, we need to re-run it
+  // exactly once as soon as the user becomes available.
+  const hadNullUserAtMount = useRef<boolean>(false);
+
+  // Guards the empty-result retry so it fires at most once per component
+  // lifetime.  Reset on every full remount (new component instance).
+  const retriedEmptyRef = useRef(false);
+
+  // Safety-net timeout handle - clears loading after 15 s if nothing else does.
+  // 15 s is intentionally longer than withTimeout(10 s) + 1 s retry delay so that
+  // the normal retry path (TimeoutError → 1 s wait → second attempt) has a full
+  // chance to succeed before the safety net fires.
+  const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ---------------------------------------------------------------------------
   // Feed / bookmarks loading
   // ---------------------------------------------------------------------------
   const loadFeed = useCallback(
-    async (tab: TabType, pageNum: number, append: boolean) => {
+    async (tab: TabType, pageNum: number, append: boolean, isResume = false) => {
+      // Cancel the previous in-flight network request immediately so Chrome
+      // releases the connection rather than leaving it throttled in the background.
+      feedAbortRef.current?.abort();
+      const controller = new AbortController();
+      feedAbortRef.current = controller;
+      const { signal } = controller;
+
+      const requestId = ++loadFeedRequestIdRef.current;
+      console.log("[Feed] loadFeed called", { tab, pageNum, append, isResume, requestId });
+
       if (pageNum === 1) setIsLoading(true);
       else setIsLoadingMore(true);
       setError(null);
 
+      // Safety net - if the request somehow never settles (e.g. a bug in
+      // withTimeout or a completely stalled socket), force-clear loading after
+      // 15 s so the UI can never get permanently stuck.  15 s is chosen to be
+      // longer than withTimeout(10 s) + 1 s retry delay so the normal retry path
+      // finishes before the safety fires.
+      if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
+      loadingTimeoutRef.current = setTimeout(() => {
+        console.warn("[Feed] safety timeout fired - forcing isLoading=false");
+        setIsLoading(false);
+        setIsLoadingMore(false);
+      }, 15_000);
+
+      // Single-attempt factory - called up to twice (first attempt + one retry).
+      const attempt = () => withTimeout(
+        tab === "bookmarks"
+          ? hubService.getBookmarks(user!.id, pageNum, 20, signal)
+          : hubService.getFeed(user?.id, pageNum, 20, tab, signal, typeFilterRef.current !== "all" ? typeFilterRef.current : undefined),
+        10_000,
+      );
+
+      // Set to true when the empty-result resume-retry path fires so that
+      // `finally` knows to keep the loading spinner alive during the 800ms wait.
+      let retryScheduled = false;
+
       try {
         let result;
-        if (tab === "bookmarks") {
-          result = await hubService.getBookmarks(user!.id, pageNum, 20);
-        } else {
-          result = await hubService.getFeed(user?.id, pageNum, 20, tab);
+        try {
+          result = await attempt();
+        } catch (err) {
+          // On timeout, the network may just need a moment to stabilise after
+          // returning from a background tab.  Wait 1 s then retry once.
+          // Non-timeout errors (auth, network reset) skip straight to outer catch.
+          if (!(err instanceof TimeoutError)) throw err;
+          await new Promise<void>((r) => setTimeout(r, 1_000));
+          // Bail if a newer loadFeed call started during the delay.
+          if (requestId !== loadFeedRequestIdRef.current) return;
+          result = await attempt(); // second attempt - any failure goes to outer catch
         }
+
+        console.log("[Feed] data received", { count: result.data.length, isResume });
+
+        // After any resume (or SIGNED_IN-triggered remount), Supabase PostgREST
+        // can return [] before the auth token refresh completes - the RLS policy
+        // silently filters everything.  Guard: only retry if:
+        //   • first-page, non-append load (not "load more")
+        //   • user is authenticated (so empty is unexpected, not a legitimate empty feed)
+        //   • we haven't already retried this component instance (prevents loops)
+        // The retry is always called with isResume=false so it never triggers
+        // this branch again, letting a second empty result commit [] normally.
+        if (!append && pageNum === 1 && result.data.length === 0 && user?.id && !retriedEmptyRef.current) {
+          console.log("[Feed] authenticated but empty - retrying once (possible auth race)");
+          retriedEmptyRef.current = true;
+          retryScheduled = true;
+          setTimeout(() => {
+            if (requestId === loadFeedRequestIdRef.current) {
+              loadFeed(tab, 1, false, /* isResume= */ false); // no further retry
+            }
+          }, 800);
+          return; // ← do not commit empty data yet
+        }
+
+        // requestId guard on data/pagination writes: prevent a very-late stale
+        // response from overwriting data that a newer request already committed.
+        if (requestId !== loadFeedRequestIdRef.current) return;
         setPosts((prev) => (append ? [...prev, ...result.data] : result.data));
         setHasMore(result.hasMore);
         setPage(pageNum);
       } catch {
-        setError("Failed to load. Please try again.");
+        // Only show an error banner for the most recent request - a superseded
+        // request failing silently is expected (AbortError, etc.).
+        if (requestId === loadFeedRequestIdRef.current) {
+          setError("Failed to load. Please try again.");
+        }
       } finally {
-        setIsLoading(false);
-        setIsLoadingMore(false);
+        // Always cancel the safety-net timeout now that the request has settled.
+        if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
+
+        // Decouple loading-state teardown from requestId.
+        // signal.aborted is true only when a newer call aborted THIS request -
+        // in that case the newer call already set isLoading=true, so we must not
+        // clear it here.  For every other outcome (success, error, timeout) the
+        // loading state belongs to this request and we clear it unconditionally.
+        if (!signal.aborted && !retryScheduled) {
+          setIsLoading(false);
+          setIsLoadingMore(false);
+        }
       }
     },
-    [user?.id, user]
+    // user?.id (string) is sufficient - including the full `user` object would
+    // recreate loadFeed on every token refresh (SIGNED_IN fires a new Profile
+    // object reference with the same id), causing a spurious feed reload.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [user?.id]
   );
 
+  // Cleanup safety-net timeout on unmount so a stale timer cannot call setState
+  // on an already-unmounted component.
   useEffect(() => {
-    loadFeed(activeTab, 1, false);
-  }, [activeTab, loadFeed]);
+    return () => {
+      if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
+    };
+  }, []);
+
+  // Single controlled fetch on mount - [] guarantees exactly one call per
+  // component lifetime.  Tab switches are handled in the click handler below
+  // so there is no competing effect that can race and override this fetch.
+  // isResumeTrigger is only true when HubFeedPage remounted due to a resume
+  // reconnect (resetKey > 0); normal page navigation passes false so an
+  // empty result is treated as a legitimate empty feed rather than a retry.
+  useEffect(() => {
+    console.log("[Feed] mounted, calling loadFeed", { isResumeTrigger });
+    // Record whether auth was available at mount time.  If not, the fetch below
+    // will run as unauthenticated; the [user?.id] effect below re-fires once auth arrives.
+    hadNullUserAtMount.current = !user?.id;
+    loadFeed(activeTab, 1, false, isResumeTrigger);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Auth hydration recovery - fires once when user becomes available after
+  // a null-user mount.  This handles the SIGNED_IN reconnect race:
+  //   1. Tab resumes → supabase.realtime reconnects → SIGNED_IN fires
+  //   2. AuthContext calls setUser(null) during re-hydration → HubFeedContent remounts
+  //   3. Mount runs with user=null → unauthenticated fetch → no data
+  //   4. Auth hydration completes → user becomes defined → this effect fires once
+  useEffect(() => {
+    if (!hadNullUserAtMount.current) return;    // initial mount had auth - nothing to recover
+    if (!user?.id) return;                      // auth still not ready
+    hadNullUserAtMount.current = false;          // one-shot: never fire again for this mount
+    console.log("[Feed] auth arrived after null-user mount → re-fetching");
+    loadFeed(activeTab, 1, false, isResumeTrigger);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   // ---------------------------------------------------------------------------
-  // Realtime — prepend new posts (enriched with profiles + like/bookmark state)
+  // Realtime - prepend new posts (enriched with profiles + like/bookmark state)
   // ---------------------------------------------------------------------------
+  // resumeKey is included so the channel is torn down and re-created after
+  // every app-resume reconnect.  Phoenix only auto-rejoins channels after an
+  // *unexpected* socket close (network drop / BFCache unfreeze); after our
+  // programmatic disconnect() + connect() cycle the channel is permanently
+  // dead unless we explicitly re-subscribe.  The cleanup function returned
+  // here calls supabase.removeChannel(), so React's effect teardown handles
+  // the old channel before the new subscription is registered.
   useEffect(() => {
     const unsubscribe = hubService.subscribeToFeed(async (rawPost) => {
-      // Skip posts we created ourselves — handleCreatePost already prepended them
+      // Skip posts we created ourselves - handleCreatePost already prepended them
       if (ownPostIdsRef.current.has(rawPost.id)) return;
 
       // Enrich the raw realtime payload (no profiles join, no is_liked) before
-      // prepending — fall back to the raw post if the fetch fails.
+      // prepending - fall back to the raw post if the fetch fails.
       let enriched = rawPost;
       try {
         enriched = await hubService.getPostById(rawPost.id, userIdRef.current);
@@ -129,7 +309,8 @@ export default function HubFeedPage() {
       });
     });
     return unsubscribe;
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, resumeKey]);
 
   // ---------------------------------------------------------------------------
   // Server-side search (debounced 500ms)
@@ -250,7 +431,7 @@ export default function HubFeedPage() {
       const updatedPost = await hubService.updatePost(newPost.id, content, [mediaUrl]);
       const enriched    = { ...updatedPost, profiles: ownProfiles, is_liked: false, is_bookmarked: false };
       setPosts((prev) => {
-        // Realtime may have already prepended this post — update in place instead of duplicating
+        // Realtime may have already prepended this post - update in place instead of duplicating
         if (prev.some((p) => p.id === enriched.id)) {
           return prev.map((p) => p.id === enriched.id ? enriched : p);
         }
@@ -259,7 +440,7 @@ export default function HubFeedPage() {
     } else {
       const enriched = { ...newPost, profiles: ownProfiles, is_liked: false, is_bookmarked: false };
       setPosts((prev) => {
-        // Realtime may have already prepended this post — update in place instead of duplicating
+        // Realtime may have already prepended this post - update in place instead of duplicating
         if (prev.some((p) => p.id === enriched.id)) {
           return prev.map((p) => p.id === enriched.id ? enriched : p);
         }
@@ -309,7 +490,7 @@ export default function HubFeedPage() {
         );
       }
     } catch {
-      // bio is non-critical — leave as null
+      // bio is non-critical - leave as null
     }
   };
 
@@ -414,7 +595,7 @@ export default function HubFeedPage() {
               return (
                 <motion.button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => { setActiveTab(tab.id); loadFeed(tab.id, 1, false); setTypeFilter("all"); typeFilterRef.current = "all"; }}
                   className={`flex items-center gap-1.5 px-3 md:px-4 py-1.5 md:py-2 rounded-full font-semibold transition-all whitespace-nowrap text-xs md:text-sm ${
                     activeTab === tab.id
                       ? "bg-[#F59E0B] text-[#0B0D0F]"
@@ -429,6 +610,34 @@ export default function HubFeedPage() {
               );
             })}
           </div>
+        </div>
+
+        {/* Type filter pills */}
+        <div className="mx-auto max-w-4xl px-4 md:px-6 pb-3 pt-1 flex gap-2 overflow-x-auto scrollbar-hide">
+          {[
+            { value: "all",      label: "All",       emoji: "✦"  },
+            { value: "general",  label: "Posts",     emoji: "💬" },
+            { value: "recipe",   label: "Recipes",   emoji: "🍽️" },
+            { value: "question", label: "Questions", emoji: "❓" },
+            { value: "review",   label: "Reviews",   emoji: "⭐" },
+          ].map((f) => (
+            <button
+              key={f.value}
+              onClick={() => {
+                typeFilterRef.current = f.value;
+                setTypeFilter(f.value);
+                loadFeed(activeTab, 1, false);
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all border ${
+                typeFilter === f.value
+                  ? "bg-gray-200 text-[#0B0D0F] border-gray-200"
+                  : "bg-transparent text-gray-500 border-gray-700 hover:border-gray-500 hover:text-gray-300"
+              }`}
+            >
+              <span>{f.emoji}</span>
+              {f.label}
+            </button>
+          ))}
         </div>
 
         {/* Search */}
@@ -536,14 +745,14 @@ export default function HubFeedPage() {
             icon={Users}
             title="Nothing here yet"
             description="Follow some people to see their posts in this feed."
-            action={{ label: "Browse Latest", onClick: () => setActiveTab("latest") }}
+            action={{ label: "Browse Latest", onClick: () => { setActiveTab("latest"); loadFeed("latest", 1, false); } }}
           />
         ) : !searchQuery && displayPosts.length === 0 && activeTab === "bookmarks" ? (
           <EmptyState
             icon={Bookmark}
             title="No saved posts"
             description="Tap the bookmark icon on any post to save it here."
-            action={{ label: "Browse Feed", onClick: () => setActiveTab("latest") }}
+            action={{ label: "Browse Feed", onClick: () => { setActiveTab("latest"); loadFeed("latest", 1, false); } }}
           />
         ) : !searchQuery && displayPosts.length === 0 ? (
           <EmptyState
@@ -575,7 +784,7 @@ export default function HubFeedPage() {
           </div>
         )}
 
-        {/* Load More — only for feed, not search or bookmarks single-page */}
+        {/* Load More - only for feed, not search or bookmarks single-page */}
         {!isLoading && !searchQuery && hasMore && (
           <motion.div
             className="mt-8 flex justify-center"
