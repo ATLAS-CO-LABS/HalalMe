@@ -27,7 +27,6 @@ const GOLD = "#D4AF37";
 const PURPLE = "#5E188F";
 const LIGHT_PURPLE = "#B96AF0";
 const DEEP = "#4A1270";
-const VIOLET = "#1E0E38";
 
 const DELIVERY_URL = "https://delivery.halalme.co.uk";
 
@@ -208,11 +207,12 @@ function HeroSection() {
               <div
                 style={{
                   position: "relative",
-                  width: 44,
-                  height: 44,
+                  width: 36,
+                  height: 36,
                   flexShrink: 0,
                 }}
               >
+                <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(255,255,255,0.92)", borderRadius: "50%" }} />
                 <div
                   style={{
                     position: "absolute",

@@ -66,7 +66,7 @@ export default function KitchenLandingPage() {
     <div className="min-h-screen" style={{ backgroundColor: BG }}>
       {/* ─── Hero ───────────────────────────────────────── */}
       <section
-        className="relative h-screen min-h-[600px] flex items-center overflow-hidden"
+        className="relative h-screen min-h-150 flex items-center overflow-hidden"
         style={{ backgroundColor: BG, borderBottom: `1px solid ${MAGENTA}50` }}
       >
         <div className="absolute inset-0 z-0">
@@ -115,11 +115,12 @@ export default function KitchenLandingPage() {
                 <div
                   style={{
                     position: "relative",
-                    width: 44,
-                    height: 44,
+                    width: 36,
+                    height: 36,
                     flexShrink: 0,
                   }}
                 >
+                  <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(255,255,255,0.92)", borderRadius: "50%" }} />
                   <div
                     style={{
                       position: "absolute",

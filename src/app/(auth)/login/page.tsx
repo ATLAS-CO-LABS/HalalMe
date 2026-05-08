@@ -16,7 +16,10 @@ export default async function LoginPage({
       {/* Logo + heading */}
       <div className="mb-8">
         <div className="flex items-center gap-2.5 mb-6">
-          <Image src="/logo/logo.png" alt="HalalMe" width={28} height={28} className="object-contain" />
+          <span style={{ position: "relative", display: "inline-flex", width: 26, height: 26, flexShrink: 0 }}>
+              <span style={{ position: "absolute", inset: 0, backgroundColor: "rgba(255,255,255,0.92)", borderRadius: "50%" }} />
+              <Image src="/logo/logo.png" alt="HalalMe" width={26} height={26} className="object-contain relative z-10" />
+            </span>
           <div className="w-px h-5 bg-[#F7E7CE]/15" />
           <span className="text-[10px] font-bold text-[#F59E0B] uppercase tracking-[0.3em]">
             Sign In

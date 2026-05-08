@@ -40,13 +40,10 @@ export default function SelectRolePage() {
             className="mb-8 sm:mb-10 text-center"
           >
             <Link href="/" className="inline-flex items-center gap-2.5 mb-6">
-              <Image
-                src="/logo/logo.png"
-                alt="HalalMe"
-                width={26}
-                height={26}
-                className="object-contain"
-              />
+              <span style={{ position: "relative", display: "inline-flex", width: 26, height: 26, flexShrink: 0 }}>
+                <span style={{ position: "absolute", inset: 0, backgroundColor: "rgba(255,255,255,0.92)", borderRadius: "50%" }} />
+                <Image src="/logo/logo.png" alt="HalalMe" width={26} height={26} className="object-contain relative z-10" />
+              </span>
               <span
                 className="text-lg font-black text-[#F7E7CE] tracking-tight"
                 style={{ fontFamily: "var(--font-logo)" }}
@@ -126,7 +123,9 @@ export default function SelectRolePage() {
                   ].map((text, i) => (
                     <div key={i} className="flex items-center gap-2">
                       <Check className="w-3 h-3 text-[#F59E0B] shrink-0" />
-                      <span className="text-[11px] text-[#F7E7CE]/55">{text}</span>
+                      <span className="text-[11px] text-[#F7E7CE]/55">
+                        {text}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -135,7 +134,7 @@ export default function SelectRolePage() {
                 <div className="grid grid-cols-3 gap-px bg-[#F7E7CE]/8 mb-5">
                   {[
                     { Icon: ChefHat, label: "Kitchen" },
-                    { Icon: Users, label: "Hub" },
+                    { Icon: Users, label: "Social" },
                     { Icon: Gift, label: "Rewards" },
                   ].map(({ Icon, label }, i) => (
                     <div
@@ -205,7 +204,9 @@ export default function SelectRolePage() {
                   ].map((text, i) => (
                     <div key={i} className="flex items-center gap-2">
                       <Check className="w-3 h-3 text-[#F59E0B] shrink-0" />
-                      <span className="text-[11px] text-[#F7E7CE]/55">{text}</span>
+                      <span className="text-[11px] text-[#F7E7CE]/55">
+                        {text}
+                      </span>
                     </div>
                   ))}
                 </div>

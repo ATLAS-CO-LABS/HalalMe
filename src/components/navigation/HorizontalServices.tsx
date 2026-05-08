@@ -147,12 +147,13 @@ export default function HorizontalServices() {
                   <span
                     style={{
                       position: "relative",
-                      width: 26,
-                      height: 26,
+                      width: 30,
+                      height: 30,
                       flexShrink: 0,
                       display: "inline-block",
                     }}
                   >
+                    <span style={{ position: "absolute", inset: 0, backgroundColor: "rgba(255,255,255,0.92)", borderRadius: "50%" }} />
                     <span
                       style={{
                         position: "absolute",
@@ -220,7 +221,7 @@ export default function HorizontalServices() {
 
             {/* Colored accent line on each panel */}
             <div
-              className="absolute bottom-0 left-0 w-full h-[3px] opacity-60"
+              className="absolute bottom-0 left-0 w-full h-0.75 opacity-60"
               style={{ backgroundColor: s.accent }}
             />
           </div>
@@ -228,7 +229,7 @@ export default function HorizontalServices() {
       </div>
 
       {/* Progress bar - desktop only */}
-      <div className="hidden md:block absolute bottom-0 left-0 right-0 h-[3px] bg-[#F7E7CE]/8 z-10">
+      <div className="hidden md:block absolute bottom-0 left-0 right-0 h-0.75 bg-[#F7E7CE]/8 z-10">
         <div
           ref={progressRef}
           className="h-full bg-[#F7E7CE]/50 origin-left"

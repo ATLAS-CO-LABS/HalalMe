@@ -103,13 +103,16 @@ export default function Header() {
 
             {/* ─── Logo ─── */}
             <Link href="/" className="flex items-center gap-2.5 md:flex-none">
-              <Image
-                src="/logo/logo.png"
-                alt="HalalMe Logo"
-                width={34}
-                height={34}
-                className="object-contain"
-              />
+              <span style={{ position: "relative", display: "inline-flex", width: 26, height: 26, flexShrink: 0 }}>
+                <span style={{ position: "absolute", inset: 0, backgroundColor: "rgba(255,255,255,0.92)", borderRadius: "50%" }} />
+                <Image
+                  src="/logo/logo.png"
+                  alt="HalalMe Logo"
+                  width={26}
+                  height={26}
+                  className="object-contain relative z-10"
+                />
+              </span>
               <span
                 className="text-xl font-black text-[#F7E7CE] tracking-tight"
                 style={{ fontFamily: 'var(--font-logo)' }}
@@ -344,7 +347,10 @@ export default function Header() {
               {/* Panel header */}
               <div className="flex items-center justify-between px-5 h-16 border-b border-[#F7E7CE]/10">
                 <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2">
-                  <Image src="/logo/logo.png" alt="HalalMe Logo" width={30} height={30} className="object-contain" />
+                  <span style={{ position: "relative", display: "inline-flex", width: 22, height: 22, flexShrink: 0 }}>
+                    <span style={{ position: "absolute", inset: 0, backgroundColor: "rgba(255,255,255,0.92)", borderRadius: "50%" }} />
+                    <Image src="/logo/logo.png" alt="HalalMe Logo" width={22} height={22} className="object-contain relative z-10" />
+                  </span>
                   <span className="text-lg font-black text-[#F7E7CE]" style={{ fontFamily: 'var(--font-logo)' }}>
                     HalalMe
                   </span>

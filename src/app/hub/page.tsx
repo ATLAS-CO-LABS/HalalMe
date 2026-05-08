@@ -303,11 +303,12 @@ export default function HubLandingPage() {
                 <div
                   style={{
                     position: "relative",
-                    width: 44,
-                    height: 44,
+                    width: 36,
+                    height: 36,
                     flexShrink: 0,
                   }}
                 >
+                  <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(255,255,255,0.92)", borderRadius: "50%" }} />
                   <div
                     style={{
                       position: "absolute",

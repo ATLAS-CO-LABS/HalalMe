@@ -59,7 +59,10 @@ export default function Footer() {
           {/* Brand Column */}
           <div className="lg:col-span-4 flex flex-col gap-5">
             <Link href="/" className="inline-flex items-center gap-3">
-              <Image src="/logo/logo.png" alt="HalalMe Logo" width={40} height={40} className="object-contain" />
+              <span style={{ position: "relative", display: "inline-flex", width: 36, height: 36, flexShrink: 0 }}>
+                <span style={{ position: "absolute", inset: 0, backgroundColor: "rgba(255,255,255,0.92)", borderRadius: "50%" }} />
+                <Image src="/logo/logo.png" alt="HalalMe Logo" width={36} height={36} className="object-contain relative z-10" />
+              </span>
               <span
                 className="text-2xl font-black text-[#F7E7CE]"
                 style={{ fontFamily: 'var(--font-logo)' }}

@@ -1,15 +1,11 @@
 "use client";
 
 import { useAuth } from "@/hooks/useAuth";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { supabase } from "@/services/supabase";
 import {
-  Truck,
-  ChefHat,
-  Users,
-  Gift,
   ArrowRight,
   ShieldCheck,
   Settings,
@@ -26,7 +22,8 @@ const services = [
     name: "Delivery",
     description:
       "Order fresh halal meals from certified restaurants and vendors delivered straight to your door.",
-    icon: Truck,
+    accent: "#B96AF0",
+    logoColor: "#5E188F",
     href: "/delivery",
     external: false,
     tag: "Live",
@@ -35,16 +32,16 @@ const services = [
     name: "Kitchen",
     description:
       "Discover halal recipes, AI-powered meal planning, and step-by-step cooking guides for every skill level.",
-    icon: ChefHat,
+    accent: "#F03E9E",
     href: "/kitchen",
     external: false,
     tag: "Beta",
   },
   {
-    name: "Hub",
+    name: "Social",
     description:
-      "Connect with your local halal community. Share recipes, attend food events, and discover new favourites.",
-    icon: Users,
+      "Connect with the global Muslim community. Share recipes, reviews, and halal finds.",
+    accent: "#F59E0B",
     href: "/hub",
     external: false,
     tag: "Beta",
@@ -53,7 +50,7 @@ const services = [
     name: "Rewards",
     description:
       "Earn points across all HalalMe services. Redeem for discounts, donate to charity, or unlock exclusive perks.",
-    icon: Gift,
+    accent: "#14B8A6",
     href: "/rewards",
     external: false,
     tag: "Live",
@@ -139,13 +136,10 @@ export default function DashboardPage() {
         <nav className="border-b border-[#F7E7CE]/8 bg-[#0A1C19]/60 backdrop-blur-sm">
           <div className="container mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2.5">
-              <Image
-                src="/logo/logo.png"
-                alt="HalalMe"
-                width={26}
-                height={26}
-                className="object-contain"
-              />
+              <span style={{ position: "relative", display: "inline-flex", width: 26, height: 26, flexShrink: 0 }}>
+                <span style={{ position: "absolute", inset: 0, backgroundColor: "rgba(255,255,255,0.92)", borderRadius: "50%" }} />
+                <Image src="/logo/logo.png" alt="HalalMe" width={26} height={26} className="object-contain relative z-10" />
+              </span>
               <span
                 className="text-lg font-black text-[#F7E7CE] tracking-tight"
                 style={{ fontFamily: "var(--font-logo)" }}
@@ -292,7 +286,6 @@ export default function DashboardPage() {
 
             <div className="grid gap-px grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 bg-[#F7E7CE]/8 mb-12">
               {services.map((service, i) => {
-                const Icon = service.icon;
                 const CardContent = (
                   <div
                     key={i}
@@ -307,10 +300,26 @@ export default function DashboardPage() {
                     </span>
 
                     <div className="relative z-10">
-                      {/* Top row: icon + tag */}
+                      {/* Top row: logo + tag */}
                       <div className="flex items-start justify-between mb-5">
-                        <div className="w-10 h-10 bg-[#F7E7CE]/8 border border-[#F7E7CE]/12 group-hover:bg-[#102C26]/10 group-hover:border-[#102C26]/15 flex items-center justify-center transition-colors duration-300">
-                          <Icon className="w-5 h-5 text-[#F7E7CE]/60 group-hover:text-[#102C26]/70 transition-colors duration-300" />
+                        <div style={{ position: "relative", width: 36, height: 36, flexShrink: 0 }}>
+                          <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(255,255,255,0.92)", borderRadius: "50%" }} />
+                          <div
+                            style={{
+                              position: "absolute",
+                              inset: 0,
+                              backgroundColor: ("logoColor" in service ? service.logoColor : undefined) ?? service.accent,
+                              WebkitMaskImage: "url(/logo/logo.png)",
+                              maskImage: "url(/logo/logo.png)",
+                              WebkitMaskSize: "contain",
+                              maskSize: "contain",
+                              WebkitMaskRepeat: "no-repeat",
+                              maskRepeat: "no-repeat",
+                              maskMode: "alpha",
+                              WebkitMaskPosition: "center",
+                              maskPosition: "center",
+                            } as React.CSSProperties}
+                          />
                         </div>
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider border transition-colors duration-300 ${

@@ -20,7 +20,10 @@ export default function AuthLayout({
       <header className="relative z-10 border-b border-[#F7E7CE]/8 bg-[#0A1C19]/60 backdrop-blur-sm">
         <div className="container mx-auto flex h-14 sm:h-16 items-center px-6">
           <Link href="/" className="flex items-center gap-2.5">
-            <Image src="/logo/logo.png" alt="HalalMe" width={28} height={28} className="object-contain" />
+            <span style={{ position: "relative", display: "inline-flex", width: 26, height: 26, flexShrink: 0 }}>
+                <span style={{ position: "absolute", inset: 0, backgroundColor: "rgba(255,255,255,0.92)", borderRadius: "50%" }} />
+                <Image src="/logo/logo.png" alt="HalalMe" width={26} height={26} className="object-contain relative z-10" />
+              </span>
             <span
               className="text-lg sm:text-xl font-black text-[#F7E7CE] tracking-tight"
               style={{ fontFamily: "var(--font-logo)" }}
