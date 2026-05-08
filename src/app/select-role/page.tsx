@@ -40,9 +40,30 @@ export default function SelectRolePage() {
             className="mb-8 sm:mb-10 text-center"
           >
             <Link href="/" className="inline-flex items-center gap-2.5 mb-6">
-              <span style={{ position: "relative", display: "inline-flex", width: 26, height: 26, flexShrink: 0 }}>
-                <span style={{ position: "absolute", inset: 0, backgroundColor: "rgba(255,255,255,0.92)", borderRadius: "50%" }} />
-                <Image src="/logo/logo.png" alt="HalalMe" width={26} height={26} className="object-contain relative z-10" />
+              <span
+                style={{
+                  position: "relative",
+                  display: "inline-flex",
+                  width: 26,
+                  height: 26,
+                  flexShrink: 0,
+                }}
+              >
+                <span
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    backgroundColor: "rgba(255,255,255,0.92)",
+                    borderRadius: "50%",
+                  }}
+                />
+                <Image
+                  src="/logo/logo.png"
+                  alt="HalalMe"
+                  width={26}
+                  height={26}
+                  className="object-contain relative z-10"
+                />
               </span>
               <span
                 className="text-lg font-black text-[#F7E7CE] tracking-tight"
@@ -213,7 +234,7 @@ export default function SelectRolePage() {
 
                 <div className="space-y-2">
                   <a
-                    href="https://www.halalme.co.uk/en/home"
+                    href="https://delivery.halalme.co.uk/en/home"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
