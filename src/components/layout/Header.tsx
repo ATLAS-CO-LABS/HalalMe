@@ -206,6 +206,19 @@ export default function Header() {
                   </Link>
                 );
               })}
+
+              {/* For Restaurants — highlighted delivery-adjacent link */}
+              <Link href="/for-restaurants">
+                <span
+                  className={`relative px-3 py-1.5 text-xs font-bold uppercase tracking-tight border transition-all duration-200 ${
+                    pathname?.startsWith('/for-restaurants')
+                      ? 'bg-[#5E188F]/30 border-[#5E188F] text-[#B96AF0]'
+                      : 'bg-[#5E188F]/10 border-[#5E188F]/40 text-[#B96AF0]/80 hover:bg-[#5E188F]/25 hover:border-[#5E188F]/70 hover:text-[#B96AF0]'
+                  }`}
+                >
+                  For Restaurants
+                </span>
+              </Link>
             </nav>
 
             {/* ─── Desktop Auth ─── */}
@@ -443,6 +456,27 @@ export default function Header() {
                         </motion.div>
                       );
                     })}
+
+                    {/* For Restaurants — purple-accented */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.38 + infoLinks.length * 0.05, duration: 0.22 }}
+                    >
+                      <Link href="/for-restaurants" onClick={() => setMobileMenuOpen(false)}>
+                        <motion.div
+                          whileTap={{ scale: 0.92 }}
+                          transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                          className={`px-4 py-2 text-sm font-bold border uppercase tracking-tight transition-colors ${
+                            pathname?.startsWith('/for-restaurants')
+                              ? 'bg-[#5E188F]/30 text-[#B96AF0] border-[#5E188F]'
+                              : 'bg-[#5E188F]/10 text-[#B96AF0]/80 border-[#5E188F]/40 hover:bg-[#5E188F]/20 hover:text-[#B96AF0] hover:border-[#5E188F]/60'
+                          }`}
+                        >
+                          For Restaurants
+                        </motion.div>
+                      </Link>
+                    </motion.div>
                   </div>
                 </div>
               </nav>

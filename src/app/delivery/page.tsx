@@ -1128,7 +1128,7 @@ function ForRestaurantsSection() {
               ))}
             </div>
 
-            <a href="https://tally.so/r/EklXdA" target="_blank" rel="noopener noreferrer">
+            <Link href="/for-restaurants">
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
@@ -1138,7 +1138,7 @@ function ForRestaurantsSection() {
                 Join as a Restaurant
                 <ArrowRight className="w-4 h-4" />
               </motion.button>
-            </a>
+            </Link>
           </div>
         }
       >

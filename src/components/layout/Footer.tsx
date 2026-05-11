@@ -12,11 +12,12 @@ const services = [
 ];
 
 const companyLinks = [
-  { label: 'About',    href: '/about'    },
-  { label: 'Blog',     href: '/blog'     },
-  { label: 'Careers',  href: '/careers'  },
-  { label: 'Help',     href: '/help'     },
-  { label: 'Contact',  href: '/contact'  },
+  { label: 'About',            href: '/about'            },
+  { label: 'For Restaurants',  href: '/for-restaurants'  },
+  { label: 'Blog',             href: '/blog'             },
+  { label: 'Careers',          href: '/careers'          },
+  { label: 'Help',             href: '/help'             },
+  { label: 'Contact',          href: '/contact'          },
 ];
 
 const legalLinks = [
