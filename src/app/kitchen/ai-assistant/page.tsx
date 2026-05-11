@@ -14,7 +14,6 @@ import { recipeService, AIRequestError } from "@/services/recipeService";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthGate } from "@/hooks/useAuthGate";
 import type { AIAssistantResponse, AIMessage } from "@/types";
-import AQIIntro from "./AQIIntro";
 
 // ── Palette ───────────────────────────────────────────────────────────
 const BG      = "#1C1C1C";
@@ -212,7 +211,7 @@ function SidebarContent({ convs, activeConv, onConvClick, onNewChat, onDelete, u
       <div className="shrink-0 px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <Image src="/logo/logo.png" alt="AQI" width={32} height={32} className="object-contain" />
+            <Image src="/logo/aqi.png" alt="AQI" width={32} height={32} className="object-contain rounded-full bg-white p-1.5" />
             <div className="absolute inset-0 rounded-full" style={{ boxShadow: `0 0 12px rgba(240,62,158,0.5)` }} />
           </div>
           <div>
@@ -608,7 +607,7 @@ export default function AIAssistantPage() {
           transition={{ duration: 1.5, repeat: Infinity }}
           className="flex items-center gap-3"
         >
-          <Image src="/logo/logo.png" alt="AQI" width={24} height={24} className="object-contain opacity-50" />
+          <Image src="/logo/aqi.png" alt="AQI" width={24} height={24} className="object-contain rounded-full bg-white p-1 opacity-50" />
           <span className="text-[10px] font-black uppercase" style={{ color: `${CREAM}40`, letterSpacing: "0.3em" }}>
             Loading
           </span>
@@ -617,8 +616,6 @@ export default function AIAssistantPage() {
     );
   }
 
-  // Non-authenticated users see the intro page
-  if (!user) return <AQIIntro onAuth={() => requireAuth(() => {}, "Sign up to chat with AQI — your personal halal cooking assistant")} />;
 
   return (
     <div className="fixed inset-0 flex overflow-hidden" style={{ backgroundColor: BG, color: CREAM, zIndex: 50 }}>
@@ -670,7 +667,7 @@ export default function AIAssistantPage() {
             </button>
             <div className="flex items-center gap-2.5">
               <div className="relative">
-                <Image src="/logo/logo.png" alt="AQI" width={26} height={26} className="object-contain shrink-0" />
+                <Image src="/logo/aqi.png" alt="AQI" width={26} height={26} className="object-contain shrink-0 rounded-full bg-white p-1" />
                 <div className="absolute inset-0" style={{ boxShadow: "0 0 10px rgba(240,62,158,0.4)" }} />
               </div>
               <div className="hidden sm:block">
@@ -751,9 +748,9 @@ export default function AIAssistantPage() {
                   <div className="aqi-logo-ring-3" />
                   <div className="aqi-logo-ring-2" />
                   <div className="aqi-logo-ring-1" />
-                  <div className="relative z-10 w-20 h-20 flex items-center justify-center"
+                  <div className="relative z-10 w-20 h-20 rounded-full flex items-center justify-center"
                     style={{ background: "rgba(240,62,158,0.08)", border: "1px solid rgba(240,62,158,0.2)" }}>
-                    <Image src="/logo/logo.png" alt="AQI" width={52} height={52} className="object-contain" />
+                    <Image src="/logo/aqi.png" alt="AQI" width={52} height={52} className="object-contain rounded-full bg-white p-2" />
                   </div>
                 </motion.div>
 
@@ -837,7 +834,7 @@ export default function AIAssistantPage() {
                       <div className={`flex items-center gap-2 mb-2 ${isUser ? "justify-end" : "justify-start"}`}>
                         {!isUser && (
                           <div className="relative">
-                            <Image src="/logo/logo.png" alt="AQI" width={18} height={18} className="object-contain" />
+                            <Image src="/logo/aqi.png" alt="AQI" width={18} height={18} className="object-contain rounded-full bg-white p-1" />
                             <div className="absolute inset-0" style={{ boxShadow: "0 0 6px rgba(240,62,158,0.5)" }} />
                           </div>
                         )}
@@ -958,7 +955,7 @@ export default function AIAssistantPage() {
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                   <div className="flex items-center gap-2 mb-2">
                     <div className="relative">
-                      <Image src="/logo/logo.png" alt="AQI" width={18} height={18} className="object-contain" />
+                      <Image src="/logo/aqi.png" alt="AQI" width={18} height={18} className="object-contain rounded-full bg-white p-1" />
                       <div className="absolute inset-0" style={{ boxShadow: "0 0 6px rgba(240,62,158,0.5)" }} />
                     </div>
                     <span className="text-[9px] font-black uppercase" style={{ color: `${VIOLET}90`, letterSpacing: "0.24em" }}>AQI</span>
@@ -988,7 +985,7 @@ export default function AIAssistantPage() {
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
                     <div className="flex items-center gap-2 mb-2">
                       <div className="relative w-5 h-5 flex items-center justify-center">
-                        <Image src="/logo/logo.png" alt="AQI" width={18} height={18} className="object-contain" />
+                        <Image src="/logo/aqi.png" alt="AQI" width={18} height={18} className="object-contain rounded-full bg-white p-1" />
                         <Loader2 className="absolute inset-0 w-5 h-5 text-violet-400/40 animate-spin" strokeWidth={1.5} />
                       </div>
                       <span className="text-[9px] font-black uppercase" style={{ color: `${VIOLET}70`, letterSpacing: "0.24em" }}>AQI</span>
@@ -1144,7 +1141,7 @@ export default function AIAssistantPage() {
         .aqi-logo-ring-3 {
           position: absolute;
           inset: 0;
-          border-radius: 0;
+          border-radius: 50%;
           border: 1px solid rgba(240,62,158,0.25);
           animation: aqi-ring 2.5s ease-out infinite;
         }

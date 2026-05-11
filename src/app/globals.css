@@ -417,17 +417,15 @@ button {
 }
 
 /* =============================================
-   LOADING SCREEN ANIMATION (Osmo-inspired)
+   LOADING SCREEN ANIMATION
    ============================================= */
 
-/* Disable Scroll on Loading */
 main:has(.loading-header) {
   height: 100dvh;
   overflow: hidden;
 }
 
 .loading-header {
-  color: #f4f4f4;
   position: fixed;
   top: 0;
   left: 0;
@@ -438,9 +436,11 @@ main:has(.loading-header) {
 }
 
 .loading-loader {
-  color: #201d1d;
+  color: #F7E7CE;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
+  gap: clamp(14px, 2vw, 28px);
   width: 100%;
   height: 100%;
   display: flex;
@@ -448,130 +448,214 @@ main:has(.loading-header) {
   top: 0;
   left: 0;
   overflow: hidden;
-  background: #f4f4f4;
+  background: #102C26;
+}
+
+.loading-main-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  will-change: transform, opacity;
+}
+
+.loading-logo-circle {
+  width: clamp(72px, 7.5vw, 92px);
+  height: clamp(72px, 7.5vw, 92px);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.97);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+  overflow: hidden;
 }
 
 .loading-h1 {
   white-space: nowrap;
   justify-content: center;
-  align-items: center;
-  font-size: 12.5em;
+  align-items: flex-end;
+  font-size: 10em;
   font-weight: 700;
-  line-height: 0.75;
+  line-height: 0.85;
   display: flex;
   position: relative;
   font-family: var(--font-headline);
+  color: #F7E7CE;
 }
 
-.h1-start {
-  justify-content: flex-end;
-  width: 2em;
-  display: flex;
+.loading-letter-wrap {
+  display: inline-block;
   overflow: hidden;
-}
-
-.h1-end {
-  justify-content: flex-start;
-  width: 2.9em;
-  display: flex;
-  overflow: hidden;
+  line-height: 0.85;
 }
 
 .loading-letter {
   display: block;
-  position: relative;
 }
 
-.letter-white.is-space {
-  margin-left: 0.25em;
-}
-
-.loader-box {
-  flex-flow: column;
-  justify-content: center;
-  align-items: center;
-  width: 0;
-  display: flex;
-  position: relative;
-}
-
-.loader-box-inner {
-  justify-content: center;
-  align-items: center;
-  min-width: 1em;
-  height: 95%;
-  display: flex;
-  position: relative;
-}
-
-.growing-image {
-  justify-content: center;
-  align-items: center;
-  width: 0%;
-  height: 100%;
-  display: flex;
+/* ── Service cards ── */
+.loading-badge {
   position: absolute;
+  width: clamp(155px, 17vw, 210px);
+  height: clamp(95px, 10.5vw, 128px);
+  border-radius: 6px;
   overflow: hidden;
+  border: 1px solid rgba(247, 231, 206, 0.08);
+  pointer-events: none;
+  will-change: transform, opacity;
 }
 
-.growing-image-wrap {
-  width: 100%;
-  min-width: 1em;
+.loading-badge-img-wrap {
+  position: absolute;
+  inset: 0;
+}
+
+.loading-badge-img {
+  object-fit: cover;
+  object-position: center;
+}
+
+.loading-badge-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    #050F0D 0%,
+    rgba(16, 44, 38, 0.82) 45%,
+    rgba(16, 44, 38, 0.15) 100%
+  );
+}
+
+.loading-badge-content {
+  position: absolute;
+  inset: 0;
   display: flex;
+  flex-direction: column;
   justify-content: center;
+  padding: 10px 12px;
+  gap: 3px;
+}
+
+.loading-badge-counter {
+  display: flex;
   align-items: center;
+  gap: 5px;
+  margin-bottom: 2px;
 }
 
-.cover-image {
-  pointer-events: none;
-  object-fit: cover;
-  -webkit-user-select: none;
-  user-select: none;
-  width: 100%;
-  height: 100%;
+.loading-badge-counter-line {
+  display: block;
+  width: 14px;
+  height: 1px;
+  flex-shrink: 0;
+}
+
+.loading-badge-counter-text {
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: #F59E0B;
+  text-transform: uppercase;
+}
+
+.loading-badge-brand {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.loading-badge-halalme {
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  color: #F7E7CE;
+  font-family: var(--font-logo);
+}
+
+.loading-badge-service {
+  font-size: 0.95rem;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  line-height: 1;
+  font-family: var(--font-headline);
+}
+
+.loading-badge-tagline {
+  font-size: 0.42rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  color: rgba(247, 231, 206, 0.6);
+  text-transform: uppercase;
+  margin-top: 1px;
+}
+
+.loading-badge-line {
   position: absolute;
-  top: 0;
+  bottom: 0;
   left: 0;
-}
-
-.cover-image-extra {
-  pointer-events: none;
-  object-fit: cover;
-  -webkit-user-select: none;
-  user-select: none;
   width: 100%;
-  height: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-
-.cover-image-extra.is-1 {
-  z-index: 3;
-}
-
-.cover-image-extra.is-2 {
-  z-index: 2;
-}
-
-.cover-image-extra.is-3 {
-  z-index: 1;
-}
-
-@media screen and (max-width: 991px) {
-  .loading-h1 {
-    font-size: 9em;
-  }
+  height: 2px;
+  opacity: 0.7;
 }
 
 @media screen and (max-width: 767px) {
-  .loading-h1 {
-    font-size: 5.5em;
+  .loading-badge {
+    width: clamp(120px, 28vw, 155px);
+    height: clamp(74px, 17vw, 95px);
   }
+  .loading-badge-service { font-size: 0.75rem; }
+}
+
+/* ── Tagline ── */
+.loading-tagline {
+  position: absolute;
+  bottom: 7%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.68em;
+  font-weight: 500;
+  letter-spacing: 0.32em;
+  color: rgba(247, 231, 206, 0.32);
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+@media screen and (max-width: 991px) {
+  .loading-h1 { font-size: 7.5em; }
+}
+
+@media screen and (max-width: 767px) {
+  .loading-h1 { font-size: 5em; }
+  .loading-loader { gap: 12px; }
+  .loading-badge {
+    width: 38vw;
+    height: 22vw;
+    max-width: 160px;
+    max-height: 96px;
+  }
+  .loading-badge-service  { font-size: 0.78rem; }
+  .loading-badge-content  { padding: 8px 10px; gap: 2px; }
+  .loading-badge-halalme  { font-size: 0.52rem; }
+  .loading-badge-tagline  { display: none; }
 }
 
 @media screen and (max-width: 480px) {
-  .loading-h1 {
-    font-size: 3.5em;
+  .loading-h1 { font-size: 3.2em; }
+  .loading-loader { gap: 10px; }
+  .loading-tagline { display: none; }
+  .loading-logo-circle {
+    width: 64px;
+    height: 64px;
+    padding: 4px;
   }
+  .loading-badge {
+    width: 40vw;
+    height: 23vw;
+    max-width: 148px;
+    max-height: 86px;
+  }
+  .loading-badge-service  { font-size: 0.7rem; }
+  .loading-badge-counter  { display: none; }
 }

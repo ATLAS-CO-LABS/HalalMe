@@ -303,11 +303,11 @@ export default function AQISection() {
                 style={{ borderBottom: "1px solid rgba(240,62,158,0.08)" }}
               >
                 <Image
-                  src="/logo/logo.png"
+                  src="/logo/aqi.png"
                   alt="AQI"
                   width={20}
                   height={20}
-                  className="object-contain"
+                  className="object-contain rounded-full bg-white p-1"
                 />
                 <span
                   className="text-[10px] font-black uppercase"
@@ -381,11 +381,11 @@ export default function AQISection() {
                     >
                       <div className="flex items-center gap-1.5 mb-1">
                         <Image
-                          src="/logo/logo.png"
+                          src="/logo/aqi.png"
                           alt="AQI"
                           width={12}
                           height={12}
-                          className="object-contain"
+                          className="object-contain rounded-full bg-white p-0.5"
                         />
                         <span
                           className="text-[8px] font-black uppercase"
@@ -439,11 +439,11 @@ export default function AQISection() {
                       <div className="max-w-[82%]">
                         <div className="flex items-center gap-1.5 mb-1.5">
                           <Image
-                            src="/logo/logo.png"
+                            src="/logo/aqi.png"
                             alt="AQI"
                             width={12}
                             height={12}
-                            className="object-contain"
+                            className="object-contain rounded-full bg-white p-0.5"
                           />
                           <span
                             className="text-[8px] font-black uppercase"
