@@ -87,7 +87,7 @@ export default function SelectRolePage() {
               <span className="text-[#F7E7CE]/45">to use HalalMe?</span>
             </h1>
             <p className="mt-3 text-sm text-[#F7E7CE]/45 max-w-md mx-auto leading-relaxed">
-              Choose your path to get started with our platform
+              What would you like to do first?
             </p>
           </motion.div>
 
@@ -126,13 +126,14 @@ export default function SelectRolePage() {
                       Platform
                     </p>
                     <h2 className="text-base sm:text-lg font-extrabold uppercase tracking-tighter text-[#F7E7CE] leading-tight">
-                      HalalMe Ecosystem
+                      Explore & Connect
                     </h2>
                   </div>
                 </div>
 
                 <p className="text-[#F7E7CE]/45 text-xs mb-4 leading-relaxed">
-                  Access all HalalMe services with one unified account.
+                  Explore recipes, social community & rewards - all halal, all
+                  in one place.
                 </p>
 
                 {/* Feature bullets */}
@@ -176,7 +177,7 @@ export default function SelectRolePage() {
                   whileTap={{ scale: 0.98 }}
                   className="w-full h-10 bg-[#F7E7CE] text-[#102C26] font-extrabold uppercase tracking-tighter text-xs flex items-center justify-center gap-2 hover:bg-[#F7E7CE]/90 transition-colors"
                 >
-                  Join HalalMe Ecosystem
+                  Get Started
                   <ArrowRight className="w-3.5 h-3.5" />
                 </motion.button>
               </div>
@@ -207,7 +208,7 @@ export default function SelectRolePage() {
                       Service
                     </p>
                     <h2 className="text-base sm:text-lg font-extrabold uppercase tracking-tighter text-[#F7E7CE] leading-tight">
-                      HalalMe Delivery
+                      Order Food
                     </h2>
                   </div>
                 </div>
@@ -268,25 +269,19 @@ export default function SelectRolePage() {
                     </a>
                   </div>
                 </div>
-
-                {/* Powered by - partner attribution */}
-                <div className="mt-4 pt-3 border-t border-[#F7E7CE]/8 flex items-center justify-center gap-3">
-                  <p className="text-[9px] font-bold text-[#F7E7CE]/35 uppercase tracking-[0.3em] shrink-0">
-                    Powered By
-                  </p>
-                  <div className="relative w-20 aspect-[19/10] opacity-75 hover:opacity-100 transition-opacity">
-                    <Image
-                      src="/images/page sections/hyperzod.jpg"
-                      alt="Delivery partner - Hyperzod"
-                      fill
-                      className="object-contain"
-                      sizes="80px"
-                    />
-                  </div>
-                </div>
               </div>
             </motion.div>
           </div>
+
+          {/* ── Access note ─────────────────────────────────────── */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.42 }}
+            className="mt-4 text-center text-xs text-[#F7E7CE]/30 max-w-sm mx-auto leading-relaxed"
+          >
+            You can always access everything from your dashboard later.
+          </motion.p>
 
           {/* ── Trust bar ───────────────────────────────────────── */}
           <motion.div
@@ -297,7 +292,7 @@ export default function SelectRolePage() {
           >
             {[
               { Icon: ShieldCheck, text: "100% Halal Verified" },
-              { text: "1K+ Users" },
+              { text: "900+ Restaurants" },
               { text: "4 Unified Services" },
             ].map((item, i) => (
               <div

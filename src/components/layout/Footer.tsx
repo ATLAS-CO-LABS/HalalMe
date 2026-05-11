@@ -7,7 +7,7 @@ import Image from 'next/image';
 const services = [
   { label: 'Delivery', href: '/delivery' },
   { label: 'Kitchen',  href: '/kitchen'  },
-  { label: 'Hub',      href: '/hub'      },
+  { label: 'Social',   href: '/hub'      },
   { label: 'Rewards',  href: '/rewards'  },
 ];
 

@@ -84,6 +84,7 @@ export default function Home() {
           <HorizontalServices />
 
           <HowItWorksSection />
+          <TestimonialsSection />
           <FinalCTA />
         </div>
       </div>
@@ -220,10 +221,10 @@ function HeroSection() {
 
 function ServiceTicker() {
   const services = [
-    "HalalMe Delivery",
-    "HalalMe Kitchen",
-    "HalalMe Social",
-    "HalalMe Rewards",
+    { label: "HalalMe Delivery", href: "/delivery" },
+    { label: "HalalMe Kitchen", href: "/kitchen" },
+    { label: "HalalMe Social", href: "/hub" },
+    { label: "HalalMe Rewards", href: "/rewards" },
   ];
 
   return (
@@ -245,15 +246,16 @@ function ServiceTicker() {
         }}
       >
         {[...services, ...services].map((s, i) => (
-          <span
+          <Link
             key={i}
-            className="inline-flex items-center gap-8 md:gap-12 px-8 md:px-12 text-[#102C26] font-extrabold uppercase tracking-tighter text-base md:text-xl"
+            href={s.href}
+            className="inline-flex items-center gap-8 md:gap-12 px-8 md:px-12 text-[#102C26] font-extrabold uppercase tracking-tighter text-base md:text-xl hover:text-[#102C26]/60 transition-colors"
           >
-            {s}
+            {s.label}
             <span className="text-[#102C26]/25 text-sm" aria-hidden="true">
               ✦
             </span>
-          </span>
+          </Link>
         ))}
       </div>
     </div>
@@ -264,10 +266,10 @@ function ServiceTicker() {
 
 function StatsStrip() {
   const stats = [
-    { value: "1K+", label: "Active Users" },
-    { value: "1000+", label: "Halal Vendors" },
+    { value: "900+", label: "Restaurants Signed" },
+    { value: "5", label: "UK Cities" },
     { value: "4", label: "Services" },
-    { value: "40+", label: "Countries" },
+    { value: "100%", label: "Halal Verified" },
   ];
 
   return (
@@ -495,6 +497,109 @@ function HowItWorksSection() {
             </motion.div>
           );
         })}
+      </div>
+    </section>
+  );
+}
+
+/* ─── Testimonials ─────────────────────────────────────────────────── */
+
+function TestimonialsSection() {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-80px" });
+
+  // TODO: Replace with real quotes from restaurant owners
+  const testimonials = [
+    {
+      quote:
+        "I was live on HalalMe within 48 hours of signing up. The team handled everything.",
+      name: "Ahmed R.",
+      business: "Kebab Palace",
+      city: "Leicester",
+    },
+    {
+      quote:
+        "Our orders doubled in the first month. Being on a halal-dedicated platform means our customers trust us from day one.",
+      name: "Fatima A.",
+      business: "Spice Garden",
+      city: "Birmingham",
+    },
+    {
+      quote:
+        "Finally a platform that understands our values. The setup was seamless and the support team is always there.",
+      name: "Mohammed K.",
+      business: "Biryani House",
+      city: "Manchester",
+    },
+    {
+      quote:
+        "HalalMe is the only delivery platform where we feel truly represented. Our customers love it.",
+      name: "Sara H.",
+      business: "The Halal Kitchen",
+      city: "London",
+    },
+  ];
+
+  return (
+    <section
+      ref={ref}
+      className="bg-[#0A1C19] py-24 md:py-32"
+      style={{
+        borderTop: "1px solid #F59E0B50",
+        borderBottom: "1px solid #F59E0B50",
+      }}
+    >
+      <div className="max-w-[95vw] mx-auto px-6 md:px-10 mb-14 md:mb-20">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={isInView ? { opacity: 1, x: 0 } : {}}
+          className="flex items-center gap-3 mb-6"
+        >
+          <div className="w-8 h-px bg-[#F59E0B]" />
+          <span className="text-[#F59E0B] text-[10px] md:text-xs uppercase tracking-[0.3em] font-bold">
+            Restaurant Partners
+          </span>
+        </motion.div>
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6 }}
+          className="text-4xl sm:text-5xl md:text-7xl font-extrabold uppercase tracking-tighter leading-[0.88] text-[#F7E7CE]"
+        >
+          Trusted by
+          <br />
+          <span className="text-[#F7E7CE]/50">Real Restaurants.</span>
+        </motion.h2>
+      </div>
+
+      <div
+        className="max-w-[95vw] mx-auto px-6 md:px-10 grid md:grid-cols-2"
+        style={{
+          gap: "1px",
+          backgroundColor: "#F7E7CE",
+          borderLeft: "2px solid #F7E7CE",
+          borderRight: "2px solid #F7E7CE",
+        }}
+      >
+        {testimonials.map((t, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 30 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: i * 0.1, duration: 0.5 }}
+            className="bg-[#0A1C19] border border-[#F7E7CE]/8 p-8 md:p-10 flex flex-col justify-between gap-6"
+          >
+            <p className="text-[#F7E7CE]/70 text-base md:text-lg leading-relaxed italic">
+              &ldquo;{t.quote}&rdquo;
+            </p>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-px bg-[#F59E0B]" />
+              <span className="text-[#F7E7CE]/45 text-xs uppercase tracking-[0.2em] font-bold">
+                {t.name} · {t.business}, {t.city}
+              </span>
+            </div>
+          </motion.div>
+        ))}
       </div>
     </section>
   );

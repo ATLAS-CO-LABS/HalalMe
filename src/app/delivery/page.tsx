@@ -114,7 +114,7 @@ export default function DeliveryLandingPage() {
       <DeliveryExperienceSection />
       <ForRestaurantsSection />
       <PromoBanner />
-      <PoweredBySection />
+      <TestimonialsSection />
       <FinalCTA />
       <BottomNav />
     </div>
@@ -124,7 +124,7 @@ export default function DeliveryLandingPage() {
 /* ───────────────────────── Promo Ticker ───────────────────────── */
 function PromoBar() {
   const tickerText =
-    "£10 OFF YOUR FIRST ORDER  ·  100% HALAL CERTIFIED  ·  FREE DELIVERY OVER £25  ·  500+ RESTAURANTS  ·  30-60 MIN AVG DELIVERY  ·  ";
+    "£10 OFF YOUR FIRST ORDER  ·  100% HALAL CERTIFIED  ·  FREE DELIVERY OVER £25  ·  900+ RESTAURANTS  ·  30-60 MIN AVG DELIVERY  ·  ";
   return (
     <div className="overflow-hidden" style={{ backgroundColor: PURPLE }}>
       <div
@@ -304,7 +304,7 @@ function HeroSection() {
             {[
               { icon: ShieldCheck, text: "100% Halal" },
               { icon: Timer, text: "30-60 Min Delivery" },
-              { icon: Store, text: "500+ Restaurants" },
+              { icon: Store, text: "900+ Restaurants" },
             ].map((item, i) => (
               <div
                 key={i}
@@ -339,10 +339,10 @@ function StatsStrip() {
       }}
     >
       {[
-        { value: "500+", label: "Restaurants", icon: Store },
-        { value: "50K+", label: "Orders Delivered", icon: ShoppingBag },
+        { value: "900+", label: "Restaurants", icon: Store },
         { value: "30-60m", label: "Avg Delivery", icon: Timer },
-        { value: "4.8", label: "Star Rating", icon: Star },
+        { value: "Free", label: "Over £25 Delivery", icon: BadgePercent },
+        { value: "100%", label: "Halal Verified", icon: ShieldCheck },
       ].map((s, i) => {
         const Icon = s.icon;
         return (
@@ -387,7 +387,7 @@ function HowItWorksSection() {
       num: "01",
       icon: Store,
       title: "Browse Restaurants",
-      desc: "Explore 500+ certified halal restaurants near you. Filter by cuisine, rating, or delivery time.",
+      desc: "Explore 900+ certified halal restaurants near you. Filter by cuisine, rating, or delivery time.",
     },
     {
       num: "02",
@@ -1261,65 +1261,104 @@ function DeliveryExperienceSection() {
   );
 }
 
-/* ───────────────────────── Powered By ───────────────────────── */
-function PoweredBySection() {
+/* ───────────────────────── Testimonials ───────────────────────── */
+function TestimonialsSection() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-60px" });
+
+  // TODO: Replace with real quotes from restaurant partners
+  const testimonials = [
+    {
+      quote:
+        "I was live on HalalMe within 48 hours of signing up. The team handled everything.",
+      name: "Ahmed R.",
+      business: "Kebab Palace",
+      city: "Leicester",
+    },
+    {
+      quote:
+        "Our orders doubled in the first month. Being on a halal-dedicated platform means our customers trust us from day one.",
+      name: "Fatima A.",
+      business: "Spice Garden",
+      city: "Birmingham",
+    },
+    {
+      quote:
+        "Finally a delivery platform that understands our values. Setup was seamless and the support team is always there.",
+      name: "Mohammed K.",
+      business: "Biryani House",
+      city: "Manchester",
+    },
+  ];
 
   return (
     <section
       ref={ref}
       className="py-20 md:py-28"
-      style={{ backgroundColor: BG }}
+      style={{ backgroundColor: BG2, borderTop: `1px solid ${PURPLE}50` }}
     >
       <div className="max-w-[95vw] mx-auto px-6 md:px-10">
         <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={isInView ? { opacity: 1, x: 0 } : {}}
+          className="flex items-center gap-3 mb-6"
+        >
+          <div className="w-8 h-px" style={{ backgroundColor: GOLD }} />
+          <span
+            className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em]"
+            style={{ color: GOLD }}
+          >
+            Restaurant Partners
+          </span>
+        </motion.div>
+        <motion.h2
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
-          className="flex flex-col items-center text-center"
+          className="text-4xl sm:text-5xl md:text-6xl font-extrabold uppercase tracking-tighter leading-[0.88] mb-14 md:mb-20"
+          style={{ color: CREAM }}
         >
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-8 h-px" style={{ backgroundColor: GOLD }} />
-            <span
-              className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em]"
-              style={{ color: GOLD }}
+          Trusted by
+          <br />
+          <span style={{ color: `${CREAM}50` }}>Real Restaurants.</span>
+        </motion.h2>
+
+        <div
+          className="grid md:grid-cols-3"
+          style={{
+            gap: "1px",
+            backgroundColor: `${PURPLE}50`,
+            borderLeft: `2px solid ${PURPLE}50`,
+            borderRight: `2px solid ${PURPLE}50`,
+          }}
+        >
+          {testimonials.map((t, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 30 }}
+              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ delay: i * 0.12, duration: 0.5 }}
+              className="flex flex-col justify-between gap-6 p-8 md:p-10"
+              style={{ backgroundColor: BG }}
             >
-              Infrastructure
-            </span>
-            <div className="w-8 h-px" style={{ backgroundColor: GOLD }} />
-          </div>
-
-          <h2
-            className="text-3xl sm:text-4xl md:text-5xl font-extrabold uppercase tracking-tighter leading-[0.9] mb-6"
-            style={{ color: `${CREAM}CC` }}
-          >
-            Powered By
-            <br />
-            <span style={{ color: `${CREAM}75` }}>Our Delivery Partner.</span>
-          </h2>
-
-          <p
-            className="max-w-xl text-sm md:text-base leading-relaxed mb-10"
-            style={{ color: `${CREAM}65` }}
-          >
-            Delivery operations are handled by our partner platform. You may be
-            redirected to complete actions.
-          </p>
-
-          <div
-            className="relative w-44 md:w-56 aspect-[19/10] overflow-hidden opacity-70 hover:opacity-100 transition-opacity"
-            style={{ border: `1px solid ${CREAM}12` }}
-          >
-            <Image
-              src="/images/page sections/hyperzod.jpg"
-              alt="Delivery partner"
-              fill
-              className="object-contain"
-              sizes="224px"
-            />
-          </div>
-        </motion.div>
+              <p
+                className="text-base md:text-lg leading-relaxed italic"
+                style={{ color: `${CREAM}B3` }}
+              >
+                &ldquo;{t.quote}&rdquo;
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-px" style={{ backgroundColor: GOLD }} />
+                <span
+                  className="text-xs uppercase tracking-[0.2em] font-bold"
+                  style={{ color: `${CREAM}45` }}
+                >
+                  {t.name} · {t.business}, {t.city}
+                </span>
+              </div>
+            </motion.div>
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -1340,6 +1379,20 @@ function BottomNav() {
         >
           ← Fresh
         </Link>
+        <div className="flex items-center gap-2" style={{ opacity: 0.75 }}>
+          <span className="text-[10px] font-medium uppercase tracking-widest" style={{ color: CREAM }}>
+            Powered by
+          </span>
+          <div className="relative w-16 aspect-[19/10]">
+            <Image
+              src="/images/page sections/hyperzod.jpg"
+              alt="Hyperzod"
+              fill
+              className="object-contain"
+              sizes="64px"
+            />
+          </div>
+        </div>
         <Link
           href="/kitchen"
           className="text-xs font-bold uppercase tracking-[0.2em] transition-opacity hover:opacity-100 opacity-40"
