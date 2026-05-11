@@ -113,7 +113,7 @@ export default function LoadingScreen({ onLoadingComplete }: LoadingScreenProps)
           <div
             key={s.name}
             className="loading-badge"
-            style={{ ...s.style, '--badge-accent': s.accent } as React.CSSProperties}
+            style={{ ...s.style, '--badge-accent': s.accent } as unknown as React.CSSProperties}
           >
             {/* Background image */}
             <div className="loading-badge-img-wrap">
