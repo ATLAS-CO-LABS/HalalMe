@@ -13,7 +13,6 @@ import {
   ClipboardList,
   Mail,
   MapPin,
-  Phone,
   Settings,
   ShieldCheck,
   ShoppingBag,
@@ -609,7 +608,7 @@ function ComparisonSection() {
   }[] = [
     {
       feature: "Commission Rate",
-      halalme: "[TBC]%",
+      halalme: "15%",
       uberEats: "~30%",
       deliveroo: "~25–35%",
     },
@@ -804,13 +803,13 @@ function TestimonialsSection() {
     {
       text: "I was sceptical at first, but the team came to my shop, did everything on the spot, and I was taking orders within two days. The commission is fair and my customers love it.",
       name: "Ahmed K.",
-      restaurant: "Spice House",
+      restaurant: "Amigos",
       city: "Leicester",
     },
     {
       text: "We were paying 30% on Uber Eats. HalalMe gives us a better deal and our customers are actually looking for halal food specifically. It's a no-brainer.",
       name: "Yusuf M.",
-      restaurant: "Grill Masters",
+      restaurant: "Pizza Plaza",
       city: "Burton",
     },
   ];
@@ -976,9 +975,6 @@ function FinalCTASection() {
           className="flex flex-col sm:flex-row gap-4 mb-14 text-sm"
           style={{ color: "rgba(255,255,255,0.45)" }}
         >
-          <span className="flex items-center gap-2">
-            <Phone className="w-4 h-4" /> [phone number]
-          </span>
           <span className="flex items-center gap-2">
             <Mail className="w-4 h-4" /> partners@halalme.co.uk
           </span>

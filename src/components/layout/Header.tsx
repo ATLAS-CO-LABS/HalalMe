@@ -207,16 +207,16 @@ export default function Header() {
                 );
               })}
 
-              {/* For Restaurants — highlighted delivery-adjacent link */}
+              {/* For Merchants — highlighted link */}
               <Link href="/for-restaurants">
                 <span
                   className={`relative px-3 py-1.5 text-xs font-bold uppercase tracking-tight border transition-all duration-200 ${
                     pathname?.startsWith('/for-restaurants')
-                      ? 'bg-[#5E188F]/30 border-[#5E188F] text-[#B96AF0]'
-                      : 'bg-[#5E188F]/10 border-[#5E188F]/40 text-[#B96AF0]/80 hover:bg-[#5E188F]/25 hover:border-[#5E188F]/70 hover:text-[#B96AF0]'
+                      ? 'bg-[#F7E7CE]/20 border-[#F7E7CE] text-[#F7E7CE]'
+                      : 'bg-[#F7E7CE]/8 border-[#F7E7CE]/40 text-[#F7E7CE]/75 hover:bg-[#F7E7CE]/15 hover:border-[#F7E7CE]/70 hover:text-[#F7E7CE]'
                   }`}
                 >
-                  For Restaurants
+                  For Merchants
                 </span>
               </Link>
             </nav>
@@ -402,12 +402,13 @@ export default function Header() {
                           initial={{ opacity: 0, scale: 0.92 }}
                           animate={{ opacity: 1, scale: 1 }}
                           transition={{ delay: 0.08 + i * 0.04, duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+                          className="h-full"
                         >
-                          <Link href={link.href} onClick={() => setMobileMenuOpen(false)}>
+                          <Link href={link.href} onClick={() => setMobileMenuOpen(false)} className="h-full block">
                             <motion.div
                               whileTap={{ scale: 0.95 }}
                               transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-                              className={`flex flex-col gap-0.5 p-3 transition-colors ${
+                              className={`flex flex-col gap-0.5 p-3 h-full transition-colors ${
                                 isActive
                                   ? 'bg-[#F7E7CE] text-[#102C26]'
                                   : 'bg-[#102C26] text-[#F7E7CE]/70 hover:bg-[#F7E7CE]/8 hover:text-[#F7E7CE]'
@@ -430,27 +431,28 @@ export default function Header() {
                 {/* Info links */}
                 <div className="px-3 pb-4">
                   <p className="px-1 pb-2.5 text-[10px] font-bold text-[#F7E7CE]/35 uppercase tracking-widest">Info</p>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-col border border-[#F7E7CE]/10 overflow-hidden">
                     {infoLinks.map((link, i) => {
                       const isActive = pathname?.startsWith(link.href);
                       return (
                         <motion.div
                           key={link.href}
-                          initial={{ opacity: 0, y: 8 }}
-                          animate={{ opacity: 1, y: 0 }}
+                          initial={{ opacity: 0, x: -8 }}
+                          animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: 0.38 + i * 0.05, duration: 0.22 }}
                         >
                           <Link href={link.href} onClick={() => setMobileMenuOpen(false)}>
                             <motion.div
-                              whileTap={{ scale: 0.92 }}
+                              whileTap={{ scale: 0.98 }}
                               transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-                              className={`px-4 py-2 text-sm font-semibold border uppercase tracking-tight transition-colors ${
+                              className={`flex items-center justify-between px-4 py-3 text-sm font-semibold uppercase tracking-tight border-b border-[#F7E7CE]/8 transition-colors ${
                                 isActive
-                                  ? 'bg-[#F7E7CE] text-[#102C26] border-[#F7E7CE]'
-                                  : 'bg-transparent text-[#F7E7CE]/60 border-[#F7E7CE]/15 hover:text-[#F7E7CE] hover:border-[#F7E7CE]/30'
+                                  ? 'bg-[#F7E7CE]/10 text-[#F7E7CE]'
+                                  : 'text-[#F7E7CE]/60 hover:bg-[#F7E7CE]/5 hover:text-[#F7E7CE]'
                               }`}
                             >
                               {link.label}
+                              {isActive && <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B]" />}
                             </motion.div>
                           </Link>
                         </motion.div>
@@ -459,21 +461,24 @@ export default function Header() {
 
                     {/* For Restaurants — purple-accented */}
                     <motion.div
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
+                      initial={{ opacity: 0, x: -8 }}
+                      animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.38 + infoLinks.length * 0.05, duration: 0.22 }}
                     >
                       <Link href="/for-restaurants" onClick={() => setMobileMenuOpen(false)}>
                         <motion.div
-                          whileTap={{ scale: 0.92 }}
+                          whileTap={{ scale: 0.98 }}
                           transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-                          className={`px-4 py-2 text-sm font-bold border uppercase tracking-tight transition-colors ${
+                          className={`flex items-center justify-between px-4 py-3 text-sm font-bold uppercase tracking-tight transition-colors ${
                             pathname?.startsWith('/for-restaurants')
-                              ? 'bg-[#5E188F]/30 text-[#B96AF0] border-[#5E188F]'
-                              : 'bg-[#5E188F]/10 text-[#B96AF0]/80 border-[#5E188F]/40 hover:bg-[#5E188F]/20 hover:text-[#B96AF0] hover:border-[#5E188F]/60'
+                              ? 'bg-[#F7E7CE]/15 text-[#F7E7CE]'
+                              : 'text-[#F7E7CE]/70 hover:bg-[#F7E7CE]/8 hover:text-[#F7E7CE]'
                           }`}
                         >
-                          For Restaurants
+                          For Merchants
+                          <svg className="h-3.5 w-3.5 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                          </svg>
                         </motion.div>
                       </Link>
                     </motion.div>

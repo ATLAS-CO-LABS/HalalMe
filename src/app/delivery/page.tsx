@@ -11,10 +11,9 @@ import {
   ShoppingBag,
   ShieldCheck,
   Zap,
-  Star,
   ArrowRight,
-  Clock,
   BadgePercent,
+  MapPin,
   Timer,
   Radio,
   Tag,
@@ -33,69 +32,57 @@ const DELIVERY_URL = "https://delivery.halalme.co.uk";
 const restaurants = [
   {
     id: 1,
-    name: "Kebab Kingdom",
-    cuisine: "Turkish & Middle Eastern",
-    rating: 4.9,
-    deliveryTime: "20-30 min",
-    deliveryFee: "Free",
-    image:
-      "https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=600&auto=format&fit=crop&q=80",
-    popular: true,
+    name: "Dippers",
+    cuisine: "Fast Food",
+    distance: "1.57 mi",
+    deliveryFee: "£2.99",
+    image: "/images/delivery/dippers.png",
+    url: "https://delivery.halalme.co.uk/en/m/dippers/66bf8d1b35890ee93d00a208",
   },
   {
     id: 2,
-    name: "Spice Route",
-    cuisine: "Indian & Pakistani",
-    rating: 4.8,
-    deliveryTime: "25-35 min",
-    deliveryFee: "£1.49",
-    image:
-      "https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=600&auto=format&fit=crop&q=80",
-    popular: true,
+    name: "Kake Temptations",
+    cuisine: "Ice Cream, Dessert",
+    distance: "0.99 mi",
+    deliveryFee: "£2.35",
+    image: "/images/delivery/kake.png",
+    url: "https://delivery.halalme.co.uk/en/m/kake-temptations-1/666b2905a7834f18970ad9ed",
   },
   {
     id: 3,
-    name: "Shawarma House",
-    cuisine: "Lebanese",
-    rating: 4.7,
-    deliveryTime: "15-25 min",
-    deliveryFee: "Free",
-    image:
-      "https://images.unsplash.com/photo-1529006557810-274b9b2fc783?w=600&auto=format&fit=crop&q=80",
-    popular: false,
+    name: "Uncle J's",
+    cuisine: "Fast Food, Asian, Chinese",
+    distance: "1.55 mi",
+    deliveryFee: "£3.30",
+    image: "/images/delivery/uncle%20js.png",
+    url: "https://delivery.halalme.co.uk/en/m/uncle-js/66a100dc7328b7e115019742",
   },
   {
     id: 4,
-    name: "Naan Stop",
-    cuisine: "Tandoori & Grill",
-    rating: 4.9,
-    deliveryTime: "20-30 min",
-    deliveryFee: "£0.99",
-    image:
-      "https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?w=600&auto=format&fit=crop&q=80",
-    popular: true,
+    name: "Tegtat",
+    cuisine: "Breakfast, Bakery",
+    distance: "0.41 mi",
+    deliveryFee: "£1.99",
+    image: "/images/delivery/tehtat.png",
+    url: "https://delivery.halalme.co.uk/en/m/tegtat/66a68223e692ee4bee00a593",
   },
   {
     id: 5,
-    name: "Falafel Factory",
-    cuisine: "Mediterranean",
-    rating: 4.6,
-    deliveryTime: "15-20 min",
-    deliveryFee: "Free",
-    image:
-      "https://images.unsplash.com/photo-1540914124281-342587941389?w=600&auto=format&fit=crop&q=80",
-    popular: false,
+    name: "Amigos",
+    cuisine: "Pizza, Burger, Kebab",
+    distance: "0.81 mi",
+    deliveryFee: "£2.35",
+    image: "/images/delivery/amigo.png",
+    url: "https://delivery.halalme.co.uk/en/m/amigos/664f59eb133c5c0dff016c92",
   },
   {
     id: 6,
-    name: "Biryani Brothers",
-    cuisine: "South Asian",
-    rating: 4.8,
-    deliveryTime: "30-40 min",
-    deliveryFee: "£1.99",
-    image:
-      "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=600&auto=format&fit=crop&q=80",
-    popular: true,
+    name: "Pizza Plaza",
+    cuisine: "Pizza, Burger, Fast Food",
+    distance: "0.43 mi",
+    deliveryFee: "£1.00",
+    image: "/images/delivery/pizza%20plaza.png",
+    url: "https://delivery.halalme.co.uk/en/m/pizza-plaza-1/65245926d20a415db006c845",
   },
 ];
 
@@ -577,7 +564,7 @@ function RestaurantsSection() {
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: 0.1 + i * 0.08, duration: 0.5 }}
           >
-            <a href={DELIVERY_URL} target="_blank" rel="noopener noreferrer">
+            <a href={r.url} target="_blank" rel="noopener noreferrer">
               <div
                 className="group relative overflow-hidden cursor-pointer transition-colors duration-300"
                 style={{ backgroundColor: BG2, border: `1px solid ${CREAM}08` }}
@@ -602,41 +589,14 @@ function RestaurantsSection() {
                       background: `linear-gradient(to top, ${BG2} 0%, transparent 60%)`,
                     }}
                   />
-                  {r.popular && (
-                    <div className="absolute top-3 left-3 z-20">
-                      <span
-                        className="text-white text-xs font-bold px-3 py-1.5 uppercase tracking-widest"
-                        style={{ backgroundColor: PURPLE }}
-                      >
-                        Popular
-                      </span>
-                    </div>
-                  )}
                 </div>
                 <div className="p-6">
-                  <div className="flex items-start justify-between gap-2 mb-1.5">
-                    <h3
-                      className="text-lg font-extrabold uppercase tracking-tight transition-colors duration-300 group-hover:opacity-70"
-                      style={{ color: CREAM }}
-                    >
-                      {r.name}
-                    </h3>
-                    <div
-                      className="flex items-center gap-1 px-2 py-0.5 shrink-0"
-                      style={{ backgroundColor: `${PURPLE}26` }}
-                    >
-                      <Star
-                        className="w-3.5 h-3.5"
-                        style={{ color: PURPLE, fill: PURPLE }}
-                      />
-                      <span
-                        className="text-sm font-bold"
-                        style={{ color: `${CREAM}CC` }}
-                      >
-                        {r.rating}
-                      </span>
-                    </div>
-                  </div>
+                  <h3
+                    className="text-lg font-extrabold uppercase tracking-tight mb-1.5 transition-colors duration-300 group-hover:opacity-70"
+                    style={{ color: CREAM }}
+                  >
+                    {r.name}
+                  </h3>
                   <p
                     className="text-sm mb-4 uppercase tracking-wide font-medium"
                     style={{ color: `${CREAM}65` }}
@@ -649,8 +609,8 @@ function RestaurantsSection() {
                   >
                     <div className="flex items-center gap-3 font-semibold uppercase tracking-wide">
                       <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {r.deliveryTime}
+                        <MapPin className="w-3 h-3" />
+                        {r.distance}
                       </span>
                       <span className="flex items-center gap-1">
                         <Bike className="w-3 h-3" />
@@ -1266,28 +1226,24 @@ function TestimonialsSection() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-60px" });
 
-  // TODO: Replace with real quotes from restaurant partners
   const testimonials = [
     {
       quote:
-        "I was live on HalalMe within 48 hours of signing up. The team handled everything.",
-      name: "Ahmed R.",
-      business: "Kebab Palace",
-      city: "Leicester",
+        "Halal Me Delivery is a game-changer for halal food lovers! The app is user-friendly, the food quality is exceptional, and the delivery is punctual. Their customer service goes above and beyond. Highly recommended for a top-notch halal dining experience!",
+      name: "Zainab Javied",
+      date: "11 October 2023",
     },
     {
       quote:
-        "Our orders doubled in the first month. Being on a halal-dedicated platform means our customers trust us from day one.",
-      name: "Fatima A.",
-      business: "Spice Garden",
-      city: "Birmingham",
+        "Ordered it yesterday extremely fast delivery definitely gonna be ordering from here again",
+      name: "Adyaan",
+      date: "23 April 2024",
     },
     {
       quote:
-        "Finally a delivery platform that understands our values. Setup was seamless and the support team is always there.",
-      name: "Mohammed K.",
-      business: "Biryani House",
-      city: "Manchester",
+        "Ordered food last week it was very fast delivery very delicious halal food great service loved it! Definitley gonna order again thank you!",
+      name: "Ibrahim Khawaja",
+      date: "5 April 2024",
     },
   ];
 
@@ -1308,7 +1264,7 @@ function TestimonialsSection() {
             className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em]"
             style={{ color: GOLD }}
           >
-            Restaurant Partners
+            Customer Reviews
           </span>
         </motion.div>
         <motion.h2
@@ -1318,9 +1274,9 @@ function TestimonialsSection() {
           className="text-4xl sm:text-5xl md:text-6xl font-extrabold uppercase tracking-tighter leading-[0.88] mb-14 md:mb-20"
           style={{ color: CREAM }}
         >
-          Trusted by
+          Real People.
           <br />
-          <span style={{ color: `${CREAM}50` }}>Real Restaurants.</span>
+          <span style={{ color: `${CREAM}50` }}>Real Reviews.</span>
         </motion.h2>
 
         <div
@@ -1349,12 +1305,20 @@ function TestimonialsSection() {
               </p>
               <div className="flex items-center gap-3">
                 <div className="w-8 h-px" style={{ backgroundColor: GOLD }} />
-                <span
-                  className="text-xs uppercase tracking-[0.2em] font-bold"
-                  style={{ color: `${CREAM}45` }}
-                >
-                  {t.name} · {t.business}, {t.city}
-                </span>
+                <div>
+                  <span
+                    className="block text-xs uppercase tracking-[0.2em] font-bold"
+                    style={{ color: `${CREAM}80` }}
+                  >
+                    {t.name}
+                  </span>
+                  <span
+                    className="text-[10px] uppercase tracking-widest"
+                    style={{ color: `${CREAM}35` }}
+                  >
+                    {t.date}
+                  </span>
+                </div>
               </div>
             </motion.div>
           ))}

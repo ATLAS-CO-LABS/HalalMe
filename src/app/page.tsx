@@ -106,112 +106,160 @@ function HeroSection() {
   }, []);
 
   return (
-    <section className="fixed top-0 left-0 w-full h-screen z-0 flex items-center overflow-hidden bg-[#102C26]">
+    <section className="fixed top-0 left-0 w-full h-screen z-0 flex items-center justify-center overflow-hidden bg-[#102C26]">
       <div className="absolute inset-0 z-0">
         <Image
           src="/images/hero/halal5.jpg"
           alt="Halal Lifestyle"
           fill
-          className="object-cover opacity-100 scale-105"
+          className="object-cover scale-105"
           priority
         />
         <div
           className="absolute inset-0"
           style={{
-            background: `linear-gradient(to right, #102C26F5 0%, #102C26D0 30%, #102C2699 55%, #102C2622 100%)`,
+            background: `radial-gradient(ellipse at center, #102C2640 0%, #102C26B0 55%, #102C26F0 100%)`,
           }}
         />
       </div>
 
-      <div className="container mx-auto px-6 md:px-10 relative z-10 pt-20">
-        <div className="max-w-5xl">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 }}
-            className="flex items-center gap-3 mb-6 md:mb-8"
-          >
-            <div className="w-8 h-px bg-[#F59E0B]" />
-            <span className="text-[#F59E0B] text-[10px] md:text-xs font-bold uppercase tracking-[0.3em]">
-              The All-in-One Halal Platform
-            </span>
-          </motion.div>
+      <div className="relative z-10 flex flex-col items-center text-center px-6 pt-20 w-full">
 
-          <h1 className="font-extrabold uppercase tracking-tighter leading-[0.88]">
-            <motion.span
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.7 }}
-              className="block text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#F7E7CE]/40 mb-1"
-            >
-              Your All-in-One
-            </motion.span>
-            <motion.span
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.32, duration: 0.7 }}
-              className="block text-[clamp(2.25rem,8vw,8rem)] text-[#F7E7CE]"
-            >
-              Halal Living
-            </motion.span>
-            <span className="block text-[clamp(2.25rem,8vw,8rem)] min-h-[1em]">
-              <AnimatePresence mode="wait">
-                <motion.span
-                  key={wordIndex}
-                  initial={{ opacity: 0, y: 36 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -36 }}
-                  transition={{ duration: 0.36, ease: [0.22, 1, 0.36, 1] }}
-                  className="inline-block text-[#F7E7CE]/70"
-                >
-                  {CYCLE_WORDS[wordIndex]}
-                </motion.span>
-              </AnimatePresence>
-            </span>
-          </h1>
+        {/* Top ornament */}
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          className="mb-3"
+        >
+          <span className="text-[#F59E0B] text-xl select-none">✦</span>
+        </motion.div>
 
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="mt-6 md:mt-7 text-base md:text-lg text-[#F7E7CE]/50 max-w-md leading-relaxed"
-          >
-            Live daily life the halal way, without switching apps.
-          </motion.p>
+        {/* Eyebrow */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.12 }}
+          className="flex items-center gap-3 mb-3"
+        >
+          <div className="w-8 h-px bg-[#F59E0B]" />
+          <span className="text-[#F59E0B] text-[10px] md:text-xs font-bold uppercase tracking-[0.3em]">
+            The All-in-One Halal Platform
+          </span>
+          <div className="w-8 h-px bg-[#F59E0B]" />
+        </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
+        {/* Eyebrow bottom ornament */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.18 }}
+          className="mb-6 md:mb-8"
+        >
+          <span className="text-[#F59E0B]/35 text-sm select-none">◆</span>
+        </motion.div>
+
+        {/* Heading */}
+        <h1 className="font-extrabold uppercase tracking-tighter leading-[0.88]">
+          <motion.span
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.72 }}
-            className="mt-8 flex flex-wrap gap-4"
+            transition={{ delay: 0.22, duration: 0.7 }}
+            className="block text-[clamp(2.5rem,8vw,8rem)] text-[#F7E7CE]"
           >
-            {!user && (
-              <Link href="/select-role">
-                <motion.button
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="flex items-center gap-3 px-7 sm:px-8 py-3.5 sm:py-4 bg-[#F7E7CE] text-[#102C26] font-extrabold uppercase tracking-tighter text-sm sm:text-base"
-                >
-                  Create Free Account
-                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
-                </motion.button>
-              </Link>
-            )}
-            <a href="#how-it-works">
-              <motion.button
-                whileHover={{
-                  scale: 1.03,
-                  backgroundColor: "rgba(247,231,206,0.08)",
-                }}
-                whileTap={{ scale: 0.97 }}
-                className="flex items-center gap-3 px-7 sm:px-8 py-3.5 sm:py-4 border-2 border-[#F7E7CE]/25 text-[#F7E7CE] font-extrabold uppercase tracking-tighter text-sm sm:text-base transition-all"
+            Halal Living
+          </motion.span>
+          <span className="block text-[clamp(2.5rem,8vw,8rem)] min-h-[1em]">
+            <AnimatePresence mode="wait">
+              <motion.span
+                key={wordIndex}
+                initial={{ opacity: 0, y: 36 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -36 }}
+                transition={{ duration: 0.36, ease: [0.22, 1, 0.36, 1] }}
+                className="inline-block text-[#F7E7CE]/70"
               >
-                See How It Works
-                <ChevronDown className="w-4 h-4 opacity-60" />
+                {CYCLE_WORDS[wordIndex]}
+              </motion.span>
+            </AnimatePresence>
+          </span>
+        </h1>
+
+        {/* Middle ornament separator */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.55 }}
+          className="mt-6 mb-5 flex items-center gap-4"
+        >
+          <div className="w-14 h-px bg-[#F59E0B]/30" />
+          <span className="text-[#F59E0B]/55 text-xs select-none">✦</span>
+          <div className="w-14 h-px bg-[#F59E0B]/30" />
+        </motion.div>
+
+        {/* Subtitle */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.62 }}
+          className="text-base md:text-lg text-[#F7E7CE] max-w-sm leading-relaxed"
+        >
+          Live daily life the halal way, without switching apps.
+        </motion.p>
+
+        {/* Buttons */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.74 }}
+          className="mt-8 flex flex-wrap gap-4 justify-center"
+        >
+          {!user && (
+            <Link href="/select-role">
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                className="flex items-center gap-3 px-7 sm:px-8 py-3.5 sm:py-4 bg-[#F7E7CE] text-[#102C26] font-extrabold uppercase tracking-tighter text-sm sm:text-base"
+              >
+                Create Free Account
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
               </motion.button>
-            </a>
-          </motion.div>
-        </div>
+            </Link>
+          )}
+          <a href="#how-it-works">
+            <motion.button
+              whileHover={{ scale: 1.03, backgroundColor: "rgba(247,231,206,0.08)" }}
+              whileTap={{ scale: 0.97 }}
+              className="flex items-center gap-3 px-7 sm:px-8 py-3.5 sm:py-4 border-2 border-[#F7E7CE]/25 text-[#F7E7CE] font-extrabold uppercase tracking-tighter text-sm sm:text-base transition-all"
+            >
+              See How It Works
+              <ChevronDown className="w-4 h-4 opacity-60" />
+            </motion.button>
+          </a>
+        </motion.div>
+
+        {/* Trust badges */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.9 }}
+          className="mt-10 flex items-center divide-x divide-[#F7E7CE]/15 max-w-full overflow-hidden"
+        >
+          {[
+            { icon: ShieldCheck, text: "Halal Verified Services" },
+            { icon: LayoutGrid, text: "One App for Everything" },
+            { icon: UserCircle, text: "Muslim-First Experience" },
+          ].map((item, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-2 px-4 sm:px-5 text-[#F7E7CE]/40 text-[10px] sm:text-xs font-semibold uppercase tracking-wide"
+            >
+              <item.icon className="w-3.5 h-3.5 shrink-0" />
+              {item.text}
+            </div>
+          ))}
+        </motion.div>
+
       </div>
     </section>
   );
@@ -508,35 +556,24 @@ function TestimonialsSection() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-80px" });
 
-  // TODO: Replace with real quotes from restaurant owners
   const testimonials = [
     {
       quote:
-        "I was live on HalalMe within 48 hours of signing up. The team handled everything.",
-      name: "Ahmed R.",
-      business: "Kebab Palace",
-      city: "Leicester",
+        "The AI recipe feature is honestly incredible. I told it what I had in the fridge and it gave me a full halal meal plan in seconds. I've discovered dishes I never would've tried otherwise. Cooking halal at home has never been this easy.",
+      name: "Jani Fernandez",
+      feature: "Kitchen Recipes",
     },
     {
       quote:
-        "Our orders doubled in the first month. Being on a halal-dedicated platform means our customers trust us from day one.",
-      name: "Fatima A.",
-      business: "Spice Garden",
-      city: "Birmingham",
+        "The community on here is unlike anything else. I've connected with people who actually understand the halal lifestyle - sharing recipes, restaurant finds, everything. It feels like a space that was built for us.",
+      name: "Maryam",
+      feature: "Social Community",
     },
     {
       quote:
-        "Finally a platform that understands our values. The setup was seamless and the support team is always there.",
-      name: "Mohammed K.",
-      business: "Biryani House",
-      city: "Manchester",
-    },
-    {
-      quote:
-        "HalalMe is the only delivery platform where we feel truly represented. Our customers love it.",
-      name: "Sara H.",
-      business: "The Halal Kitchen",
-      city: "London",
+        "The rewards are really good - you can donate to so many different charities. Love that every time I order I'm also giving back. Never seen anything like this on any other food app.",
+      name: "Arbab",
+      feature: "Charity Donations",
     },
   ];
 
@@ -557,7 +594,7 @@ function TestimonialsSection() {
         >
           <div className="w-8 h-px bg-[#F59E0B]" />
           <span className="text-[#F59E0B] text-[10px] md:text-xs uppercase tracking-[0.3em] font-bold">
-            Restaurant Partners
+            What People Are Saying
           </span>
         </motion.div>
         <motion.h2
@@ -566,14 +603,14 @@ function TestimonialsSection() {
           transition={{ duration: 0.6 }}
           className="text-4xl sm:text-5xl md:text-7xl font-extrabold uppercase tracking-tighter leading-[0.88] text-[#F7E7CE]"
         >
-          Trusted by
+          Real People.
           <br />
-          <span className="text-[#F7E7CE]/50">Real Restaurants.</span>
+          <span className="text-[#F7E7CE]/50">Real Stories.</span>
         </motion.h2>
       </div>
 
       <div
-        className="max-w-[95vw] mx-auto px-6 md:px-10 grid md:grid-cols-2"
+        className="max-w-[95vw] mx-auto px-6 md:px-10 grid md:grid-cols-3"
         style={{
           gap: "1px",
           backgroundColor: "#F7E7CE",
@@ -594,9 +631,14 @@ function TestimonialsSection() {
             </p>
             <div className="flex items-center gap-3">
               <div className="w-8 h-px bg-[#F59E0B]" />
-              <span className="text-[#F7E7CE]/45 text-xs uppercase tracking-[0.2em] font-bold">
-                {t.name} · {t.business}, {t.city}
-              </span>
+              <div>
+                <span className="block text-[#F7E7CE]/80 text-xs uppercase tracking-[0.2em] font-bold">
+                  {t.name}
+                </span>
+                <span className="text-[#F59E0B]/60 text-[10px] uppercase tracking-widest">
+                  {t.feature}
+                </span>
+              </div>
             </div>
           </motion.div>
         ))}
