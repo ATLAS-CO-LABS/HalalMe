@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
@@ -244,7 +244,7 @@ type Tab = "all" | "mine" | "saved";
 
 const CUISINES = ["All", "South Asian", "Middle Eastern", "Moroccan", "Turkish", "Mediterranean", "East Asian", "West African"];
 
-export default function RecipesPage() {
+function RecipesContent() {
   const { user } = useAuth();
   const { requireAuth } = useAuthGate();
   const router = useRouter();
@@ -689,5 +689,13 @@ export default function RecipesPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function RecipesPage() {
+  return (
+    <Suspense>
+      <RecipesContent />
+    </Suspense>
   );
 }
