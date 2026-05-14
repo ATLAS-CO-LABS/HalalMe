@@ -255,10 +255,15 @@ export default function RecipeDetailPage({
   // ── Share ─────────────────────────────────────────────────────
   const handleShare = async () => {
     const url = window.location.href;
+    const shareData = { title: recipe?.title ?? "HalalMe Recipe", text: `Check out this recipe on HalalMe`, url };
     try {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      if (navigator.share && navigator.canShare?.(shareData)) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(url);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }
     } catch {
       window.prompt("Copy this link:", url);
     }

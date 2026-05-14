@@ -62,7 +62,8 @@ const services = [
 interface DashboardStats {
   rewardPoints: number;
   totalDonated: number;
-  savedItems: number;
+  savedRecipes: number;
+  savedPosts: number;
 }
 
 export default function DashboardPage() {
@@ -81,7 +82,8 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats>({
     rewardPoints: 0,
     totalDonated: 0,
-    savedItems: 0,
+    savedRecipes: 0,
+    savedPosts: 0,
   });
   const [statsLoading, setStatsLoading] = useState(true);
 
@@ -105,11 +107,11 @@ export default function DashboardPage() {
               .eq("status", "completed"),
             supabase
               .from("recipe_favorites")
-              .select("id", { count: "exact", head: true })
+              .select("recipe_id", { count: "exact", head: true })
               .eq("user_id", userId),
             supabase
               .from("post_bookmarks")
-              .select("id", { count: "exact", head: true })
+              .select("post_id", { count: "exact", head: true })
               .eq("user_id", userId),
           ]);
 
@@ -118,10 +120,10 @@ export default function DashboardPage() {
           (sum: number, d: { amount: number }) => sum + d.amount,
           0,
         );
-        const savedItems =
-          (recipeFavRes.count ?? 0) + (bookmarksRes.count ?? 0);
+        const savedRecipes = recipeFavRes.count ?? 0;
+        const savedPosts   = bookmarksRes.count ?? 0;
 
-        setStats({ rewardPoints, totalDonated, savedItems });
+        setStats({ rewardPoints, totalDonated, savedRecipes, savedPosts });
       } catch {
         // silently keep zeros on error
       } finally {
@@ -230,7 +232,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Stats Row */}
-            <div className="mb-12 grid gap-px grid-cols-1 sm:grid-cols-3 bg-[#F7E7CE]/8">
+            <div className="mb-12 grid gap-px grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 bg-[#F7E7CE]/8">
               {[
                 {
                   label: "Reward Balance",
@@ -259,15 +261,26 @@ export default function DashboardPage() {
                   href: "/rewards#donations",
                 },
                 {
-                  label: "Saved Items",
-                  value: statsLoading ? "-" : stats.savedItems.toString(),
+                  label: "Saved Recipes",
+                  value: statsLoading ? "-" : stats.savedRecipes.toString(),
                   sub:
-                    stats.savedItems > 0
-                      ? "Recipes & posts saved"
-                      : "Save your favourites",
+                    stats.savedRecipes > 0
+                      ? "Recipes bookmarked"
+                      : "Save recipes to cook later",
                   icon: Bookmark,
                   num: "03",
-                  href: "/kitchen/recipes",
+                  href: "/kitchen/recipes?tab=saved",
+                },
+                {
+                  label: "Saved Posts",
+                  value: statsLoading ? "-" : stats.savedPosts.toString(),
+                  sub:
+                    stats.savedPosts > 0
+                      ? "Posts bookmarked"
+                      : "Bookmark posts from the hub",
+                  icon: Bookmark,
+                  num: "04",
+                  href: "/hub/feed?tab=bookmarks",
                 },
               ].map((stat, i) => (
                 <Link

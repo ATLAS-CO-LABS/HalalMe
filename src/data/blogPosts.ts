@@ -92,7 +92,7 @@ export const blogPosts: BlogPost[] = [
 <p>Download our free Ramadan meal planning template on HalalMe Kitchen and let our AI assistant customize portions based on your family size.</p>
     `,
     category: "Recipes",
-    image: "https://images.unsplash.com/photo-1547424850-28ac9ac2c574?w=800&q=80",
+    image: "https://images.unsplash.com/photo-1665989215795-f67f4723087d?w=800&q=80",
     author: {
       name: "Chef Yusuf Ali",
       avatar: "YA",
@@ -260,7 +260,7 @@ export const blogPosts: BlogPost[] = [
 <p>Explore family-friendly halal recipes on HalalMe Kitchen — designed to get little hands involved in the cooking process.</p>
     `,
     category: "Community",
-    image: "https://images.unsplash.com/photo-1536640712-4d4c36ff0e4e?w=800&q=80",
+    image: "https://images.unsplash.com/photo-1605433247501-698725862cea?w=800&q=80",
     author: {
       name: "Khadijah Mahmoud",
       avatar: "KM",
@@ -358,7 +358,7 @@ export const blogPosts: BlogPost[] = [
 <p>Discover ethical halal fashion brands and sustainable modest wear on HalalMe Marketplace — where every listed brand meets our ethical sourcing standards.</p>
     `,
     category: "Halal Living",
-    image: "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=800&q=80",
+    image: "https://images.unsplash.com/photo-1571513800374-df1bbe650e56?w=800&q=80",
     author: {
       name: "Nadia Qureshi",
       avatar: "NQ",

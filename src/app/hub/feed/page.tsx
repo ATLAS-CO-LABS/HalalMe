@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   Plus,
@@ -44,7 +45,9 @@ type TabType = FeedMode | "bookmarks";
 // ---------------------------------------------------------------------------
 export default function HubFeedPage() {
   const resumeKey = useResumeKey();
+  const searchParams = useSearchParams();
   const [resetKey, setResetKey] = useState(0);
+  const initialTab = searchParams.get("tab") === "bookmarks" ? "bookmarks" : "latest";
 
   useEffect(() => {
     if (resumeKey === 0) return;
@@ -53,12 +56,12 @@ export default function HubFeedPage() {
 
   return (
     <AuthGuard>
-      <HubFeedContent key={resetKey} isResumeTrigger={resetKey > 0} />
+      <HubFeedContent key={resetKey} isResumeTrigger={resetKey > 0} initialTab={initialTab} />
     </AuthGuard>
   );
 }
 
-function HubFeedContent({ isResumeTrigger = false }: { isResumeTrigger?: boolean }) {
+function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { isResumeTrigger?: boolean; initialTab?: TabType }) {
   const { user } = useAuth();
   const resumeKey = useResumeKey();
 
@@ -78,7 +81,7 @@ function HubFeedContent({ isResumeTrigger = false }: { isResumeTrigger?: boolean
   const searchDebounceRef                   = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // UI state
-  const [activeTab, setActiveTab]           = useState<TabType>("latest");
+  const [activeTab, setActiveTab]           = useState<TabType>(initialTab);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [typeFilter, setTypeFilter]         = useState<string>("all");
   const typeFilterRef                        = useRef<string>("all");

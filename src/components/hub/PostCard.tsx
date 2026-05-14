@@ -13,8 +13,8 @@ import {
   BadgeCheck,
   MoreHorizontal,
   Edit2,
-  Trash2,
   Check,
+  Trash2,
   X,
 } from "lucide-react";
 import type { Post } from "@/types";
@@ -58,12 +58,21 @@ export default function PostCard({
   const isVerified = post.profiles?.is_verified ?? false;
   const firstImage = post.media_urls?.[0] ?? null;
 
+  const [copied, setCopied] = useState(false);
+
   const handleShare = async () => {
     const url = `${window.location.origin}/hub/post/${post.id}`;
+    const shareData = { title: post.profiles?.username ?? "HalalMe", text: post.content?.slice(0, 100), url };
     try {
-      await navigator.clipboard.writeText(url);
+      if (navigator.share && navigator.canShare?.(shareData)) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(url);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }
     } catch {
-      // Fallback for browsers that block clipboard
+      window.prompt("Copy this link:", url);
     }
   };
 
@@ -300,12 +309,12 @@ export default function PostCard({
             )}
             <motion.button
               onClick={handleShare}
-              className="text-gray-400 hover:text-[#F59E0B] transition-colors"
-              title="Copy link"
+              className={`transition-colors ${copied ? "text-[#F59E0B]" : "text-gray-400 hover:text-[#F59E0B]"}`}
+              title={copied ? "Copied!" : "Share"}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
             >
-              <Share2 className="w-5 h-5" />
+              {copied ? <Check className="w-5 h-5" /> : <Share2 className="w-5 h-5" />}
             </motion.button>
           </div>
         </div>

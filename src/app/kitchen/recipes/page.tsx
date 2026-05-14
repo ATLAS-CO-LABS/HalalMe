@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Clock, ChefHat, Search, Plus, ArrowLeft,
   Star, Users, Bookmark, Sparkles, Lock, Pencil, Trash2,
@@ -249,8 +249,12 @@ export default function RecipesPage() {
   const { requireAuth } = useAuthGate();
   const router = useRouter();
   const resumeKey = useResumeKey();
+  const searchParams = useSearchParams();
 
-  const [activeTab, setActiveTab]         = useState<Tab>("all");
+  const [activeTab, setActiveTab]         = useState<Tab>(() => {
+    const t = searchParams.get("tab");
+    return t === "saved" ? "saved" : "all";
+  });
   const [searchQuery, setSearchQuery]     = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState("All");
   const [selectedCuisine, setSelectedCuisine]       = useState("All");
