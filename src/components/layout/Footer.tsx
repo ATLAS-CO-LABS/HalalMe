@@ -260,23 +260,21 @@ export default function Footer() {
         {/* ── Disclaimer ───────────────────────────────────────── */}
         <div className="mt-12 pt-8 border-t border-[#F7E7CE]/8">
           <p className="text-[#F7E7CE]/25 text-[11px] leading-relaxed max-w-4xl">
-            <span className="font-semibold text-[#F7E7CE]/35 uppercase tracking-wide">
-              Disclaimer:{" "}
-            </span>
-            HalalMe endeavours to ensure all listed restaurants, products, and
-            services meet halal standards. Users are encouraged to verify
-            independently where required. HalalMe is not a halal certification
-            body. All charity donations are processed through verified
-            third-party partners. HalalMe is not responsible for the actions of
-            independent vendors or third-party service providers. By using our
-            platform, you agree to our Terms of Service and Privacy Policy.
+            HalalMe verifies halal certification for all listed merchants at onboarding but cannot guarantee the halal status of every individual item at all times. Report concerns to{" "}
+            <a
+              href="mailto:Support@HalalMe.co.uk"
+              className="underline underline-offset-2 hover:text-[#F7E7CE]/40 transition-colors"
+            >
+              Support@HalalMe.co.uk
+            </a>
+            . Merchants and delivery partners operate independently. HalalMe is a marketplace and is not liable for third-party fulfilment or merchant conduct. Charitable donations are processed by verified charity partners. We process personal data under UK GDPR and the Data Protection Act 2018. Services are provided on an &ldquo;as is&rdquo; basis. By using HalalMe you agree to our Terms of Service and Privacy Policy. HalalMe is operated by Halal Delivery LTD (Company No. 13450710), registered in England and Wales. Last updated 13/05/2026.
           </p>
         </div>
 
         {/* ── Bottom Bar ────────────────────────────────────────── */}
         <div className="mt-6 pt-6 border-t border-[#F7E7CE]/8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-[#F7E7CE]/25 text-xs">
-            © {currentYear} HalalMe. All Rights Reserved.
+            © {currentYear} HalalMe Delivery LTD. All Rights Reserved.
           </p>
           <div className="flex items-center gap-4 flex-wrap justify-center">
             {legalLinks.map((link) => (
