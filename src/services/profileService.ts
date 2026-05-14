@@ -24,7 +24,7 @@ export const profileService = {
 
   async updateProfile(
     userId: string,
-    updates: Partial<Pick<Profile, "full_name" | "username" | "bio" | "location">>
+    updates: Partial<Pick<Profile, "full_name" | "username" | "bio" | "location" | "phone" | "hyperzod_customer_id">>
   ): Promise<Profile> {
     const { data, error } = await supabase
       .from("profiles")
@@ -63,6 +63,16 @@ export const profileService = {
       .maybeSingle();
     if (!data) return true;
     // Allow if it belongs to the current user (editing own profile)
+    return currentUserId ? data.id === currentUserId : false;
+  },
+
+  async isPhoneAvailable(phone: string, currentUserId?: string): Promise<boolean> {
+    const { data } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("phone", phone)
+      .maybeSingle();
+    if (!data) return true;
     return currentUserId ? data.id === currentUserId : false;
   },
 

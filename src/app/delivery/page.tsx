@@ -281,6 +281,15 @@ function HeroSection() {
             </a>
           </motion.div>
 
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.85 }}
+            className="mt-3 text-xs text-white/40"
+          >
+            Already have a HalalMe account? Log in at delivery with your email — a one-time code will be sent to you.
+          </motion.p>
+
           {/* Trust badges */}
           <motion.div
             initial={{ opacity: 0 }}

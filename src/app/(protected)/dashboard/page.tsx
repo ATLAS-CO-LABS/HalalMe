@@ -4,6 +4,8 @@ import { useAuth } from "@/hooks/useAuth";
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useSearchParams, useRouter } from "next/navigation";
+import { Truck, X } from "lucide-react";
 import { supabase } from "@/services/supabase";
 import {
   ArrowRight,
@@ -65,6 +67,17 @@ interface DashboardStats {
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const [showDeliveryBanner, setShowDeliveryBanner] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("delivery") === "ready") {
+      setShowDeliveryBanner(true);
+      router.replace("/dashboard");
+    }
+  }, [searchParams, router]);
+
   const [stats, setStats] = useState<DashboardStats>({
     rewardPoints: 0,
     totalDonated: 0,
@@ -132,6 +145,26 @@ export default function DashboardPage() {
       />
 
       <div className="relative z-10">
+        {/* Delivery account ready banner */}
+        {showDeliveryBanner && (
+          <div className="bg-[#5E188F] border-b border-white/10 px-4 py-3 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <Truck className="w-4 h-4 text-white shrink-0" />
+              <p className="text-sm text-white">
+                <span className="font-bold">Your delivery account is ready.</span>{" "}
+                Log in at{" "}
+                <a href="https://delivery.halalme.co.uk" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:opacity-80">
+                  delivery.halalme.co.uk
+                </a>{" "}
+                with your email — a one-time code will be sent to you.
+              </p>
+            </div>
+            <button onClick={() => setShowDeliveryBanner(false)} className="text-white/60 hover:text-white shrink-0">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
         {/* Top Navigation Bar */}
         <nav className="border-b border-[#F7E7CE]/8 bg-[#0A1C19]/60 backdrop-blur-sm">
           <div className="container mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">

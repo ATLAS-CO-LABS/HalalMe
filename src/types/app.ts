@@ -1643,19 +1643,21 @@ export interface CityGuide {
 export type NotificationType = "like_post" | "like_comment" | "comment" | "reply" | "follow";
 
 export interface Profile {
-  id:            string;
-  email?:        string;
-  full_name:     string;
-  username:      string | null;
-  avatar_url:    string | null;
-  bio:           string | null;
-  location:      string | null;
-  role:          string;
-  is_verified:   boolean;
-  reward_points: number;
-  reward_tier:   string;
-  created_at:    string;
-  updated_at:    string;
+  id:                   string;
+  email?:               string;
+  full_name:            string;
+  username:             string | null;
+  avatar_url:           string | null;
+  bio:                  string | null;
+  location:             string | null;
+  phone:                string | null;
+  hyperzod_customer_id: string | null;
+  role:                 string;
+  is_verified:          boolean;
+  reward_points:        number;
+  reward_tier:          string;
+  created_at:           string;
+  updated_at:           string;
 }
 
 export interface Recipe {

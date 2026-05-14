@@ -5,7 +5,18 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { profileService } from "@/services/profileService";
-import { CheckCircle2, XCircle, Loader2, Camera, ArrowRight } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, Camera, ArrowRight, Phone } from "lucide-react";
+
+const COUNTRY_CODES = [
+  { code: "GB", label: "🇬🇧 +44" },
+  { code: "PK", label: "🇵🇰 +92" },
+  { code: "IN", label: "🇮🇳 +91" },
+  { code: "BD", label: "🇧🇩 +880" },
+  { code: "AE", label: "🇦🇪 +971" },
+  { code: "SA", label: "🇸🇦 +966" },
+  { code: "US", label: "🇺🇸 +1" },
+  { code: "CA", label: "🇨🇦 +1" },
+];
 
 function validateUsername(value: string): string | null {
   if (value.length < 3) return "At least 3 characters";
@@ -20,10 +31,13 @@ export default function CompleteProfilePage() {
   const { user, isLoading: authLoading, refreshUser } = useAuth();
   const router = useRouter();
 
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
   useEffect(() => {
     if (!authLoading && !user) router.replace("/login");
-    if (!authLoading && user?.username) router.replace("/dashboard");
-  }, [user, authLoading, router]);
+    if (!authLoading && user?.username && !submitting) router.replace("/dashboard");
+  }, [user, authLoading, router, submitting]);
 
   const [username, setUsername] = useState("");
   const [availState, setAvailState] = useState<AvailState>("idle");
@@ -33,8 +47,8 @@ export default function CompleteProfilePage() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [mobile, setMobile] = useState("");
+  const [countryCode, setCountryCode] = useState("GB");
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -86,9 +100,27 @@ export default function CompleteProfilePage() {
           console.warn("Avatar upload failed, continuing without it.");
         }
       }
-      await profileService.updateProfile(user.id, { username });
+      const trimmedMobile = mobile.trim();
+      if (trimmedMobile && trimmedMobile.length < 7) {
+        setSubmitError("Mobile number looks too short. Please check and try again.");
+        setSubmitting(false);
+        return;
+      }
+      const phone = trimmedMobile ? `${countryCode}:${trimmedMobile}` : undefined;
+      if (phone) {
+        const phoneAvailable = await profileService.isPhoneAvailable(phone, user.id);
+        if (!phoneAvailable) {
+          setSubmitError("This mobile number is already linked to another account.");
+          setSubmitting(false);
+          return;
+        }
+      }
+      await profileService.updateProfile(user.id, { username, ...(phone ? { phone } : {}) });
       await refreshUser();
-      router.push("/dashboard");
+      // Fire-and-forget: provision Hyperzod account in background
+      const hasPhone = !!phone;
+      fetch("/api/hyperzod/provision-customer", { method: "POST" }).catch(() => {});
+      router.push(hasPhone ? "/dashboard?delivery=ready" : "/dashboard");
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Something went wrong. Try again.");
     } finally {
@@ -208,10 +240,45 @@ export default function CompleteProfilePage() {
           </div>
         </div>
 
-        {/* ── Step 2: Username ──────────────────────────────────── */}
+        {/* ── Step 2: Mobile ───────────────────────────────────── */}
         <div className="bg-[#0A1C19] border border-[#F7E7CE]/10 rounded-xl px-6 py-5">
           <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#F7E7CE]/30 mb-1">
             Step 2
+          </p>
+          <h2 className="text-base font-bold text-[#F7E7CE] mb-1 flex items-center gap-2">
+            <Phone className="h-4 w-4 text-[#F59E0B]" />
+            Mobile number
+          </h2>
+          <p className="text-xs text-[#F7E7CE]/35 mb-5">
+            Needed to activate your HalalMe Delivery account. Skip if you don&apos;t need delivery.
+          </p>
+          <div className="flex gap-2">
+            <select
+              value={countryCode}
+              onChange={(e) => setCountryCode(e.target.value)}
+              className="h-11 rounded-lg border border-[#F7E7CE]/12 bg-[#F7E7CE]/5 px-2 text-sm text-[#F7E7CE] outline-none focus:border-[#F59E0B]/50 focus:ring-1 focus:ring-[#F59E0B]/15 shrink-0"
+            >
+              {COUNTRY_CODES.map(({ code, label }) => (
+                <option key={code} value={code} className="bg-[#0A1C19]">{label}</option>
+              ))}
+            </select>
+            <input
+              type="tel"
+              value={mobile}
+              onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))}
+              placeholder="7911 123456"
+              className="flex-1 h-11 rounded-lg border border-[#F7E7CE]/12 bg-[#F7E7CE]/5 px-3 text-sm text-[#F7E7CE] placeholder-[#F7E7CE]/20 outline-none focus:border-[#F59E0B]/50 focus:ring-1 focus:ring-[#F59E0B]/15"
+            />
+          </div>
+          <p className="text-xs text-[#F7E7CE]/20 mt-2">
+            Numbers only · no country prefix needed
+          </p>
+        </div>
+
+        {/* ── Step 3: Username ──────────────────────────────────── */}
+        <div className="bg-[#0A1C19] border border-[#F7E7CE]/10 rounded-xl px-6 py-5">
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#F7E7CE]/30 mb-1">
+            Step 3
           </p>
           <h2 className="text-base font-bold text-[#F7E7CE] mb-1">
             Pick your username
