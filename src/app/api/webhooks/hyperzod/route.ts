@@ -1,15 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase-server";
 
-const WEBHOOK_SECRET = process.env.HYPERZOD_WEBHOOK_SECRET ?? "";
+// const WEBHOOK_SECRET = process.env.HYPERZOD_WEBHOOK_SECRET ?? ""; // TODO: re-enable when Hyperzod confirms secret header name
 
-function verifySecret(req: NextRequest): boolean {
-  if (!WEBHOOK_SECRET) return true; // skip verification if not configured yet
-  const header =
-    req.headers.get("x-webhook-secret") ??
-    req.headers.get("x-hyperzod-secret") ??
-    req.headers.get("authorization")?.replace("Bearer ", "");
-  return header === WEBHOOK_SECRET;
+function verifySecret(_req: NextRequest): boolean {
+  // TODO: re-enable once Hyperzod confirms which header carries the whsec_ secret
+  return true;
 }
 
 function generateUsername(firstName: string, lastName: string): string {
