@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
     email,
     {
       data: { full_name: fullName, from_hyperzod: true },
-      redirectTo: `${siteUrl}/auth/callback?next=/complete-profile`,
+      redirectTo: `${siteUrl}/login`,
     }
   );
 
