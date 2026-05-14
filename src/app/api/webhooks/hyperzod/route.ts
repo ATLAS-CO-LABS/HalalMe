@@ -33,8 +33,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  // Extract customer data — handle both flat and nested payloads
-  const data = (payload.data ?? payload) as Record<string, unknown>;
+  // Hyperzod sends customer data under "payload" key: { event: "...", payload: { ... } }
+  const data = (payload.payload ?? payload.data ?? payload) as Record<string, unknown>;
   const email = (data.email ?? "") as string;
   const firstName = (data.first_name ?? "") as string;
   const lastName = (data.last_name ?? "") as string;
@@ -48,6 +48,7 @@ export async function POST(req: NextRequest) {
   const serviceClient = createServiceClient();
 
   const fullName = `${firstName} ${lastName}`.trim() || email.split("@")[0];
+  // mobile arrives as "+923483096535" (already prefixed), store as "PK:+923483096535"
   const phone = mobile ? `${countryCode}:${mobile}` : null;
   const username = generateUsername(firstName, lastName);
 
