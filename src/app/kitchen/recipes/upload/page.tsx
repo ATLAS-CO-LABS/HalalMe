@@ -42,7 +42,7 @@ interface RecipeForm {
 
 // ── Styles ──────────────────────────────────────────────────────────
 const fieldClass =
-  "w-full text-white px-4 py-3 border focus:outline-none transition-colors text-sm font-normal";
+  "w-full text-white px-4 py-3 border focus:outline-none transition-colors text-base font-normal";
 const labelClass = "block font-extrabold uppercase tracking-tighter mb-2 text-xs";
 
 const CUISINES = [

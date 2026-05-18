@@ -598,7 +598,7 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
               return (
                 <motion.button
                   key={tab.id}
-                  onClick={() => { setActiveTab(tab.id); loadFeed(tab.id, 1, false); setTypeFilter("all"); typeFilterRef.current = "all"; }}
+                  onClick={() => { setActiveTab(tab.id); loadFeed(tab.id, 1, false); setTypeFilter("all"); typeFilterRef.current = "all"; setSearchQuery(""); setSearchResults([]); }}
                   className={`flex items-center gap-1.5 px-3 md:px-4 py-1.5 md:py-2 rounded-full font-semibold transition-all whitespace-nowrap text-xs md:text-sm ${
                     activeTab === tab.id
                       ? "bg-[#F59E0B] text-[#0B0D0F]"
@@ -652,7 +652,7 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search posts, users..."
-              className="w-full bg-gray-800/60 text-white rounded-full pl-10 pr-10 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-amber-500/50 border border-gray-700 hover:border-gray-600 font-normal transition-colors"
+              className="w-full bg-gray-800/60 text-white rounded-full pl-10 pr-10 py-2.5 text-base focus:outline-none focus:ring-1 focus:ring-amber-500/50 border border-gray-700 hover:border-gray-600 font-normal transition-colors"
               style={{ fontFamily: "var(--font-body)" }}
             />
             {searchQuery && (

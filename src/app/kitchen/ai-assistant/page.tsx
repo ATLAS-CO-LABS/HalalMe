@@ -1042,7 +1042,7 @@ export default function AIAssistantPage() {
                 onBlur={() => setInputFocused(false)}
                 placeholder={hasUser ? "Continue the conversation…" : "Say hi, ask what's in your fridge, or name a dish…"}
                 disabled={isLoading}
-                className="w-full resize-none text-sm outline-none px-4 py-3.5 pr-14"
+                className="w-full resize-none text-base outline-none px-4 py-3.5 pr-14"
                 style={{
                   backgroundColor: "transparent",
                   color: CREAM,

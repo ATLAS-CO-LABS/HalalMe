@@ -88,7 +88,7 @@ export default function Header() {
             <div className="md:hidden flex items-center">
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-2 -ml-2 text-[#F7E7CE]/70 hover:text-[#F7E7CE] transition-colors"
+                className="p-3 -ml-3 text-[#F7E7CE]/70 hover:text-[#F7E7CE] transition-colors"
                 aria-label="Toggle menu"
               >
                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -370,7 +370,7 @@ export default function Header() {
                 </Link>
                 <button
                   onClick={() => setMobileMenuOpen(false)}
-                  className="p-2 -mr-2 text-[#F7E7CE]/40 hover:text-[#F7E7CE] transition-colors"
+                  className="p-3 -mr-3 text-[#F7E7CE]/40 hover:text-[#F7E7CE] transition-colors"
                 >
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

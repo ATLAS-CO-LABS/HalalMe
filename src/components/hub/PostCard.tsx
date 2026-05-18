@@ -108,7 +108,7 @@ export default function PostCard({
               {displayName}
             </h3>
             {isVerified && (
-              <BadgeCheck className="w-4 h-4 text-[#F59E0B] fill-[#F59E0B] shrink-0" />
+              <BadgeCheck className="w-4 h-4 text-[#F59E0B] shrink-0" />
             )}
           </div>
           <div className="flex items-center gap-2 flex-wrap">
@@ -251,6 +251,7 @@ export default function PostCard({
               src={firstImage}
               alt="Post image"
               fill
+              unoptimized
               className="object-cover group-hover:scale-105 transition-transform duration-300"
             />
             {/* Multi-image indicator */}

@@ -254,7 +254,7 @@ export default function HubLandingPage() {
     <div className="min-h-screen" style={{ backgroundColor: BG }}>
       {/* ─── Hero ─────────────────────────────────────────── */}
       <section
-        className="relative h-screen min-h-[620px] flex items-center overflow-hidden"
+        className="relative h-screen min-h-[620px] flex items-center justify-center overflow-hidden"
         style={{ backgroundColor: BG3 }}
       >
         <div className="absolute inset-0 z-0">
@@ -269,19 +269,19 @@ export default function HubLandingPage() {
           <div
             className="absolute inset-0"
             style={{
-              background: `linear-gradient(to right, ${BG3}F5 0%, ${BG3}D0 30%, ${BG3}99 55%, ${BG3}22 100%)`,
+              background: `radial-gradient(ellipse at center, ${BG3}20 0%, ${BG3}A0 55%, ${BG3}F5 100%)`,
             }}
           />
         </div>
 
-        <div className="relative z-10 w-full max-w-[95vw] mx-auto px-6 md:px-10 pt-20">
-          <div className="max-w-4xl">
+        <div className="relative z-10 flex flex-col items-center text-center px-6 pt-20 w-full">
+          <div className="max-w-4xl w-full flex flex-col items-center">
             {/* Eyebrow */}
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="flex items-center gap-3 mb-6 md:mb-8"
+              className="flex items-center justify-center gap-3 mb-6 md:mb-8"
             >
               <div className="w-8 h-px" style={{ backgroundColor: AMBER }} />
               <span
@@ -290,6 +290,7 @@ export default function HubLandingPage() {
               >
                 Your Halal Community
               </span>
+              <div className="w-8 h-px" style={{ backgroundColor: AMBER }} />
             </motion.div>
 
             {/* H1 */}
@@ -298,7 +299,7 @@ export default function HubLandingPage() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2, duration: 0.7 }}
-                className="flex items-center gap-3 mb-3 normal-case"
+                className="flex items-center justify-center gap-3 mb-3 normal-case"
               >
                 <div
                   style={{
@@ -357,7 +358,7 @@ export default function HubLandingPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.6 }}
-              className="mt-6 md:mt-7 text-base md:text-lg max-w-md leading-relaxed text-white/50 font-normal"
+              className="mt-6 md:mt-7 text-base md:text-lg max-w-md leading-relaxed text-white/50 font-normal mx-auto"
               style={{ fontFamily: "var(--font-body)" }}
             >
               Join thousands of food lovers sharing recipes, posting food
@@ -368,7 +369,7 @@ export default function HubLandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.72 }}
-              className="mt-8 flex flex-wrap gap-4"
+              className="mt-8 flex flex-wrap gap-4 justify-center"
             >
               {!user && (
                 <motion.button
@@ -401,7 +402,7 @@ export default function HubLandingPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.9 }}
-              className="mt-8 flex flex-wrap gap-6"
+              className="mt-8 flex flex-wrap gap-6 justify-center"
             >
               {[
                 { Icon: Users, text: "10K+ Members" },

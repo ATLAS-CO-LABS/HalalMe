@@ -127,8 +127,24 @@
   --radius-4xl: calc(var(--radius) + 16px);
 }
 
+html {
+  overflow-x: hidden;
+}
+
 body {
   font-family: var(--font-body);
+  overflow-x: hidden;
+}
+
+/* Eliminate 300ms tap delay and double-tap zoom on Android Chrome */
+button,
+a,
+[role="button"],
+input,
+select,
+textarea,
+label {
+  touch-action: manipulation;
 }
 
 /* Custom animations for HalalMe */

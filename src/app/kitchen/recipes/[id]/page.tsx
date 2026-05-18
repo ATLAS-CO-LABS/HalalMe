@@ -16,6 +16,8 @@ import {
   Check,
   Loader2,
   X,
+  ShieldCheck,
+  BadgeCheck,
 } from "lucide-react";
 import { recipeService } from "@/services/recipeService";
 import { useAuth } from "@/hooks/useAuth";
@@ -532,6 +534,12 @@ export default function RecipeDetailPage({
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
+          {recipe.is_halal_verified && (
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 mb-3 bg-emerald-600/90 text-white text-xs font-bold uppercase tracking-wide">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              Halal Verified
+            </div>
+          )}
           <h1
             className="text-2xl md:text-3xl lg:text-5xl font-extrabold uppercase tracking-tighter mb-3"
             style={{ color: CREAM }}
@@ -637,12 +645,17 @@ export default function RecipeDetailPage({
               >
                 Uploaded by
               </p>
-              <p
-                className="font-extrabold uppercase tracking-tight text-sm"
-                style={{ color: CREAM }}
-              >
-                {recipe.profiles?.username ?? "Community member"}
-              </p>
+              <div className="flex items-center gap-1.5">
+                <p
+                  className="font-extrabold uppercase tracking-tight text-sm"
+                  style={{ color: CREAM }}
+                >
+                  {recipe.profiles?.username ?? "Community member"}
+                </p>
+                {recipe.profiles?.is_verified && (
+                  <BadgeCheck className="w-4 h-4 shrink-0" style={{ color: MAGENTA }} />
+                )}
+              </div>
             </div>
           </div>
         </motion.div>
@@ -884,7 +897,7 @@ export default function RecipeDetailPage({
                 placeholder="Share your experience with this recipe… (optional)"
                 rows={3}
                 disabled={submitLoading}
-                className="w-full text-white text-sm px-4 py-3 border focus:outline-none transition-colors resize-none font-normal disabled:opacity-50"
+                className="w-full text-white text-base px-4 py-3 border focus:outline-none transition-colors resize-none font-normal disabled:opacity-50"
                 style={{
                   backgroundColor: BG2,
                   borderColor: `${CREAM}10`,

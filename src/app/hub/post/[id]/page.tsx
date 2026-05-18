@@ -4,6 +4,7 @@ import { useState, useEffect, use, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Heart,
@@ -41,6 +42,7 @@ export default function PostDetailPage({
 }
 
 function PostDetailContent({ id }: { id: string }) {
+  const router = useRouter();
   const { user } = useAuth();
   const resumeKey = useResumeKey();
 
@@ -402,15 +404,14 @@ function PostDetailContent({ id }: { id: string }) {
       <div className="bg-[#111418]/95 backdrop-blur-lg border-b border-gray-800 sticky top-16 z-40">
         <div className="mx-auto max-w-4xl px-4 md:px-6 py-4 md:py-5">
           <div className="flex items-center gap-3 md:gap-4">
-            <Link href="/hub/feed">
               <motion.button
+                onClick={() => router.back()}
                 className="text-gray-400 hover:text-white transition-colors"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
               >
                 <ArrowLeft className="w-5 h-5 md:w-6 md:h-6" />
               </motion.button>
-            </Link>
             <h1
               className="text-xl md:text-2xl font-extrabold uppercase tracking-tight text-white"
               style={{ fontFamily: "var(--font-headline)" }}
@@ -442,7 +443,7 @@ function PostDetailContent({ id }: { id: string }) {
                   {displayName}
                 </h3>
                 {isVerified && (
-                  <BadgeCheck className="w-4 h-4 text-[#F59E0B] fill-[#F59E0B] shrink-0" />
+                  <BadgeCheck className="w-4 h-4 text-[#F59E0B] shrink-0" />
                 )}
               </div>
               <p
@@ -495,14 +496,16 @@ function PostDetailContent({ id }: { id: string }) {
 
           {/* Images */}
           {firstImage && (
-            <div className="relative w-full aspect-16/10 bg-gray-700">
-              <Image src={firstImage} alt="Post image" fill className="object-cover" />
-              {(post.media_urls?.length ?? 0) > 1 && (
-                <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm text-white text-xs font-semibold px-2 py-1 rounded-full">
-                  1/{post.media_urls!.length}
-                </div>
-              )}
-            </div>
+            <a href={firstImage} target="_blank" rel="noopener noreferrer" className="block">
+              <div className="relative w-full aspect-16/10 bg-gray-900 cursor-zoom-in overflow-hidden group">
+                <Image src={firstImage} alt="Post image" fill unoptimized className="object-cover group-hover:scale-105 transition-transform duration-300" />
+                {(post.media_urls?.length ?? 0) > 1 && (
+                  <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm text-white text-xs font-semibold px-2 py-1 rounded-full">
+                    1/{post.media_urls!.length}
+                  </div>
+                )}
+              </div>
+            </a>
           )}
 
           {/* Actions */}
@@ -584,7 +587,7 @@ function PostDetailContent({ id }: { id: string }) {
                   onChange={(e) => setNewComment(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleAddComment()}
                   placeholder={replyingTo ? `Reply to @${replyingTo.username}...` : "Write a comment..."}
-                  className="flex-1 bg-gray-800 text-white rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-amber-500/50 border border-gray-700 hover:border-gray-600 font-normal transition-colors"
+                  className="flex-1 bg-gray-800 text-white rounded-full px-4 py-2.5 text-base focus:outline-none focus:ring-1 focus:ring-amber-500/50 border border-gray-700 hover:border-gray-600 font-normal transition-colors"
                   style={{ fontFamily: "var(--font-body)" }}
                   disabled={isSubmittingComment}
                 />

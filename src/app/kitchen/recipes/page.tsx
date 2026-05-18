@@ -7,7 +7,7 @@ import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Clock, ChefHat, Search, Plus, ArrowLeft,
-  Star, Users, Bookmark, Sparkles, Lock, Pencil, Trash2,
+  Star, Users, Bookmark, Sparkles, Lock, Pencil, Trash2, BadgeCheck,
 } from "lucide-react";
 import { recipeService } from "@/services/recipeService";
 import { useAuth } from "@/hooks/useAuth";
@@ -157,6 +157,9 @@ function RecipeCard({
                 <span className="text-xs truncate" style={{ color: `${CREAM}30` }}>
                   {recipe.profiles?.username ?? "Unknown"}
                 </span>
+                {recipe.profiles?.is_verified && (
+                  <BadgeCheck className="w-3 h-3 shrink-0" style={{ color: MAGENTA }} />
+                )}
               </div>
             </div>
           </div>
@@ -509,7 +512,7 @@ function RecipesContent() {
                 placeholder="Search recipes…"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full text-white text-sm pl-11 pr-5 py-2.5 border focus:outline-none transition-colors"
+                className="w-full text-white text-base pl-11 pr-5 py-2.5 border focus:outline-none transition-colors"
                 style={{ backgroundColor: BG2, borderColor: `${CREAM}10`, caretColor: MAGENTA }}
                 onFocus={e => e.target.style.borderColor = MAGENTA}
                 onBlur={e => e.target.style.borderColor = `${CREAM}10`}
