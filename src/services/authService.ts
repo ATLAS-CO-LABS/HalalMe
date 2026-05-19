@@ -49,6 +49,10 @@ export const authService = {
       options: { data: { full_name: name } },
     });
     if (error) throw new Error(error.message);
+    // Supabase silently "succeeds" for duplicate emails — identities will be empty
+    if (data.user && data.user.identities?.length === 0) {
+      throw new Error("An account with this email already exists. Please sign in instead.");
+    }
     return data;
   },
 
