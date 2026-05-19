@@ -101,26 +101,28 @@ export default function CompleteProfilePage() {
         }
       }
       const trimmedMobile = mobile.trim();
-      if (trimmedMobile && trimmedMobile.length < 7) {
+      if (!trimmedMobile) {
+        setSubmitError("A mobile number is required to continue.");
+        setSubmitting(false);
+        return;
+      }
+      if (trimmedMobile.length < 7) {
         setSubmitError("Mobile number looks too short. Please check and try again.");
         setSubmitting(false);
         return;
       }
-      const phone = trimmedMobile ? `${countryCode}:${trimmedMobile}` : undefined;
-      if (phone) {
-        const phoneAvailable = await profileService.isPhoneAvailable(phone, user.id);
-        if (!phoneAvailable) {
-          setSubmitError("This mobile number is already linked to another account.");
-          setSubmitting(false);
-          return;
-        }
+      const phone = `${countryCode}:${trimmedMobile}`;
+      const phoneAvailable = await profileService.isPhoneAvailable(phone, user.id);
+      if (!phoneAvailable) {
+        setSubmitError("This mobile number is already linked to another account.");
+        setSubmitting(false);
+        return;
       }
-      await profileService.updateProfile(user.id, { username, ...(phone ? { phone } : {}) });
+      await profileService.updateProfile(user.id, { username, phone });
       await refreshUser();
       // Fire-and-forget: provision Hyperzod account in background
-      const hasPhone = !!phone;
       fetch("/api/hyperzod/provision-customer", { method: "POST" }).catch(() => {});
-      router.push(hasPhone ? "/dashboard?delivery=ready" : "/dashboard");
+      router.push("/dashboard?delivery=ready");
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Something went wrong. Try again.");
     } finally {
@@ -137,7 +139,7 @@ export default function CompleteProfilePage() {
   }
 
   const firstName = user.full_name?.split(" ")[0] ?? "there";
-  const canSubmit = !submitting && availState === "available" && !usernameError;
+  const canSubmit = !submitting && availState === "available" && !usernameError && mobile.trim().length >= 7;
 
   return (
     <div className="space-y-6">
@@ -250,7 +252,7 @@ export default function CompleteProfilePage() {
             Mobile number
           </h2>
           <p className="text-xs text-[#F7E7CE]/35 mb-5">
-            Needed to activate your HalalMe Delivery account. Skip if you don&apos;t need delivery.
+            Required to activate your HalalMe account.
           </p>
           <div className="flex gap-2">
             <select

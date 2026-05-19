@@ -17,7 +17,19 @@ import {
   Lock,
   Trash2,
   ChevronRight,
+  Phone,
 } from "lucide-react";
+
+const COUNTRY_CODES = [
+  { code: "GB", label: "🇬🇧 +44" },
+  { code: "PK", label: "🇵🇰 +92" },
+  { code: "IN", label: "🇮🇳 +91" },
+  { code: "BD", label: "🇧🇩 +880" },
+  { code: "AE", label: "🇦🇪 +971" },
+  { code: "SA", label: "🇸🇦 +966" },
+  { code: "US", label: "🇺🇸 +1" },
+  { code: "CA", label: "🇨🇦 +1" },
+];
 
 /* ─── username validation ────────────────────────────────── */
 function validateUsername(value: string): string | null {
@@ -146,6 +158,8 @@ export default function ProfilePage() {
   const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
   const [location, setLocation] = useState("");
+  const [mobile, setMobile] = useState("");
+  const [countryCode, setCountryCode] = useState("GB");
 
   /* ── username availability ── */
   const [availState, setAvailState] = useState<AvailState>("idle");
@@ -170,6 +184,11 @@ export default function ProfilePage() {
     setBio(user.bio ?? "");
     setLocation(user.location ?? "");
     if (user.avatar_url) setAvatarPreview(user.avatar_url);
+    if (user.phone) {
+      const [cc, num] = user.phone.split(":");
+      if (cc && num) { setCountryCode(cc); setMobile(num); }
+      else setMobile(user.phone);
+    }
   }, [user]);
 
   /* ── username availability check ── */
@@ -230,11 +249,24 @@ export default function ProfilePage() {
         setAvatarFile(null);
       }
 
+      const trimmedMobile = mobile.trim();
+      const phone = trimmedMobile ? `${countryCode}:${trimmedMobile}` : undefined;
+
+      if (phone && phone !== user.phone) {
+        const phoneAvailable = await profileService.isPhoneAvailable(phone, user.id);
+        if (!phoneAvailable) {
+          setSaveError("This mobile number is already linked to another account.");
+          setSaving(false);
+          return;
+        }
+      }
+
       await profileService.updateProfile(user.id, {
         full_name: fullName,
         username,
         bio: bio || undefined,
         location: location || undefined,
+        ...(phone !== undefined ? { phone } : {}),
       });
 
       await refreshUser();
@@ -410,6 +442,34 @@ export default function ProfilePage() {
                 placeholder="City, Country"
                 icon={MapPin}
               />
+            </Field>
+          </Section>
+
+          {/* ── Contact ── */}
+          <Section title="Contact">
+            <Field label="Mobile Number">
+              <div className="flex gap-2">
+                <select
+                  value={countryCode}
+                  onChange={(e) => { setCountryCode(e.target.value); setSaveSuccess(false); }}
+                  className="h-10.5 rounded-md border border-[#F7E7CE]/15 bg-[#F7E7CE]/5 px-2 text-sm text-[#F7E7CE] outline-none focus:border-[#F59E0B]/60 focus:ring-1 focus:ring-[#F59E0B]/15 shrink-0"
+                >
+                  {COUNTRY_CODES.map(({ code, label }) => (
+                    <option key={code} value={code} className="bg-[#0A1C19]">{label}</option>
+                  ))}
+                </select>
+                <div className="relative flex-1">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#F7E7CE]/25 pointer-events-none" />
+                  <input
+                    type="tel"
+                    value={mobile}
+                    onChange={(e) => { setMobile(e.target.value.replace(/\D/g, "")); setSaveSuccess(false); }}
+                    placeholder="7911 123456"
+                    className="w-full h-10.5 rounded-md border border-[#F7E7CE]/15 bg-[#F7E7CE]/5 pl-9 pr-3 text-sm text-[#F7E7CE] placeholder-[#F7E7CE]/20 outline-none focus:border-[#F59E0B]/60 focus:ring-1 focus:ring-[#F59E0B]/15"
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-[#F7E7CE]/20 mt-1.5">Numbers only · no country prefix needed</p>
             </Field>
           </Section>
 
