@@ -237,21 +237,15 @@ export default function SelectRolePage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
-                  <a
-                    href="https://tally.so/r/EklXdA"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block"
+                  <motion.button
+                    onClick={() => router.push("/partner/merchant")}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full h-10 bg-[#F7E7CE] text-[#102C26] font-extrabold uppercase tracking-tighter text-xs flex items-center justify-center gap-1.5 hover:bg-[#F7E7CE]/90 transition-colors"
                   >
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="w-full h-10 bg-[#F7E7CE] text-[#102C26] font-extrabold uppercase tracking-tighter text-xs flex items-center justify-center gap-1.5 hover:bg-[#F7E7CE]/90 transition-colors"
-                    >
-                      <Store className="w-3.5 h-3.5" />
-                      Merchant
-                    </motion.button>
-                  </a>
+                    <Store className="w-3.5 h-3.5" />
+                    Merchant
+                  </motion.button>
                   <a
                     href="https://tally.so/r/Pd96Nx"
                     target="_blank"

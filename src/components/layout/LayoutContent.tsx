@@ -18,6 +18,7 @@ const hideFooterPaths = [
   "/select-role",
   "/help",
   "/contact",
+  "/partner",
   "/about",
   "/fresh",
   "/delivery",
@@ -33,6 +34,7 @@ const hideHeaderPaths = [
   "/profile",
   "/select-role",
   "/kitchen/ai-assistant",
+  "/partner",
 ];
 
 export default function LayoutContent({ children }: { children: React.ReactNode }) {

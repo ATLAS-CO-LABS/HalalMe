@@ -31,7 +31,7 @@ const GOLD = "#D4AF37";
 const PURPLE = "#5E188F";
 const LIGHT_PURPLE = "#B96AF0";
 const DEEP = "#4A1270";
-const TALLY_URL = "https://tally.so/r/EklXdA";
+const MERCHANT_SIGNUP_URL = "/partner/merchant";
 
 export default function ForRestaurantsPage() {
   return (
@@ -208,7 +208,7 @@ function HeroSection() {
               transition={{ delay: 0.68 }}
               className="flex flex-wrap gap-4 justify-center"
             >
-              <a href={TALLY_URL} target="_blank" rel="noopener noreferrer">
+              <a href={MERCHANT_SIGNUP_URL}>
                 <motion.button
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
@@ -947,7 +947,7 @@ function FinalCTASection() {
           transition={{ delay: 0.3 }}
           className="mb-8"
         >
-          <a href={TALLY_URL} target="_blank" rel="noopener noreferrer">
+          <a href={MERCHANT_SIGNUP_URL}>
             <button
               className="flex items-center gap-3 px-8 py-4 font-extrabold uppercase tracking-tighter text-base hover:opacity-90 transition-opacity"
               style={{ backgroundColor: CREAM, color: DEEP }}
