@@ -268,6 +268,7 @@ function UploadRecipeInner() {
         tags:             [] as string[],
         nutrition:        null,
         image_url:        form.existingImageUrl ?? null,
+        image_public_id:  null,
       };
 
       let recipeId: string;
