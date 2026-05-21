@@ -132,6 +132,7 @@ export default function MerchantSignupPage() {
   function validateStep(): string | null {
     if (step === 0) {
       if (!form.name.trim()) return "Restaurant name is required";
+      if (form.name.trim().length < 2) return "Restaurant name is too short";
       if (form.category_ids.length === 0) return "Select at least one category";
       if (form.order_types.length === 0) return "Select at least one order type";
     }
@@ -142,7 +143,9 @@ export default function MerchantSignupPage() {
     }
     if (step === 2) {
       if (!form.owner_name.trim()) return "Owner / contact name is required";
+      if (form.owner_name.trim().length < 2) return "Owner name is too short";
       if (!form.phone.trim()) return "Phone number is required";
+      if (form.phone.replace(/\D/g, "").length < 6) return "Enter a valid phone number";
       if (!form.email.trim()) return "Email is required";
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return "Enter a valid email address";
     }
