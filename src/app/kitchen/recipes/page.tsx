@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
+import { cldUrl, CLD_RECIPE } from "@/lib/cldUrl";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Clock, ChefHat, Search, Plus, ArrowLeft,
@@ -73,7 +74,7 @@ function RecipeCard({
           <div className="relative h-44 overflow-hidden" style={{ backgroundColor: '#080612' }}>
             {recipe.image_url ? (
               <Image
-                src={recipe.image_url}
+                src={cldUrl(recipe.image_url, CLD_RECIPE) ?? recipe.image_url!}
                 alt={recipe.title}
                 fill
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"

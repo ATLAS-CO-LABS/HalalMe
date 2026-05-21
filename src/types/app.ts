@@ -1648,6 +1648,7 @@ export interface Profile {
   full_name:            string;
   username:             string | null;
   avatar_url:           string | null;
+  avatar_public_id:     string | null;
   bio:                  string | null;
   location:             string | null;
   phone:                string | null;
@@ -1675,6 +1676,7 @@ export interface Recipe {
   tags:             string[] | null;
   nutrition:        unknown | null;
   image_url:        string | null;
+  image_public_id:  string | null;
   is_ai_generated:  boolean;
   is_halal_verified: boolean;
   is_published:     boolean;
@@ -1849,8 +1851,9 @@ export interface Post {
   user_id:       string;
   post_type:     string;
   content:       string;
-  media_urls:    string[] | null;
-  recipe_id:     string | null;
+  media_urls:        string[] | null;
+  media_public_ids:  string[] | null;
+  recipe_id:         string | null;
   like_count:    number;
   comment_count: number;
   view_count:    number;

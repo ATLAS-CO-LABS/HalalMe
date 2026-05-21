@@ -10,6 +10,7 @@ import {
   Users,
   Gift,
   Truck,
+  Store,
   ArrowRight,
   ShieldCheck,
   Check,
@@ -132,8 +133,8 @@ export default function SelectRolePage() {
                 </div>
 
                 <p className="text-[#F7E7CE]/45 text-xs mb-4 leading-relaxed">
-                  Explore recipes, social community & rewards - all halal, all
-                  in one place.
+                  Explore recipes, social community, rewards & halal food
+                  delivery — all in one place.
                 </p>
 
                 {/* Feature bullets */}
@@ -142,6 +143,7 @@ export default function SelectRolePage() {
                     "AI-powered halal recipe assistant",
                     "Social hub for the halal community",
                     "Earn rewards by donating to causes",
+                    "Order halal food from local restaurants",
                   ].map((text, i) => (
                     <div key={i} className="flex items-center gap-2">
                       <Check className="w-3 h-3 text-[#F59E0B] shrink-0" />
@@ -153,15 +155,16 @@ export default function SelectRolePage() {
                 </div>
 
                 {/* Service mini-grid */}
-                <div className="grid grid-cols-3 gap-px bg-[#F7E7CE]/8 mb-5">
+                <div className="grid grid-cols-4 gap-px bg-[#F7E7CE]/8 mb-5">
                   {[
                     { Icon: ChefHat, label: "Kitchen" },
                     { Icon: Users, label: "Social" },
                     { Icon: Gift, label: "Rewards" },
+                    { Icon: Truck, label: "Delivery" },
                   ].map(({ Icon, label }, i) => (
                     <div
                       key={i}
-                      className="bg-[#0A1C19] px-2.5 py-2 flex items-center gap-1.5"
+                      className="bg-[#0A1C19] px-2 py-2 flex items-center gap-1.5"
                     >
                       <Icon className="w-3 h-3 text-[#F7E7CE]/35 shrink-0" />
                       <span className="text-[10px] text-[#F7E7CE]/50 font-medium">
@@ -183,7 +186,7 @@ export default function SelectRolePage() {
               </div>
             </motion.div>
 
-            {/* Card 2: HalalMe Delivery */}
+            {/* Card 2: Merchants & Drivers */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -201,28 +204,28 @@ export default function SelectRolePage() {
               <div className="relative z-10">
                 <div className="flex items-center gap-2.5 mb-4">
                   <div className="w-9 h-9 bg-[#F7E7CE]/8 border border-[#F7E7CE]/12 flex items-center justify-center shrink-0">
-                    <Truck className="w-4 h-4 text-[#F7E7CE]/60" />
+                    <Store className="w-4 h-4 text-[#F7E7CE]/60" />
                   </div>
                   <div>
                     <p className="text-[9px] font-bold text-[#F59E0B] uppercase tracking-[0.25em] mb-0.5">
-                      Service
+                      Partners
                     </p>
                     <h2 className="text-base sm:text-lg font-extrabold uppercase tracking-tighter text-[#F7E7CE] leading-tight">
-                      Order Food
+                      Merchants & Drivers
                     </h2>
                   </div>
                 </div>
 
                 <p className="text-[#F7E7CE]/45 text-xs mb-4 leading-relaxed">
-                  Order halal food from verified restaurants, or join as a
-                  vendor or driver.
+                  Join the HalalMe Delivery network as a restaurant partner or
+                  delivery driver.
                 </p>
 
                 <div className="flex flex-col gap-2 mb-5">
                   {[
-                    "Fast halal food delivery to your door",
-                    "Dedicated delivery platform",
-                    "Join as a vendor or driver",
+                    "List your restaurant on HalalMe Delivery",
+                    "Manage orders & menus in real time",
+                    "Earn flexibly as a delivery driver",
                   ].map((text, i) => (
                     <div key={i} className="flex items-center gap-2">
                       <Check className="w-3 h-3 text-[#F59E0B] shrink-0" />
@@ -233,41 +236,37 @@ export default function SelectRolePage() {
                   ))}
                 </div>
 
-                <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-2">
                   <a
-                    href="https://delivery.halalme.co.uk/en/home"
+                    href="https://tally.so/r/EklXdA"
                     target="_blank"
                     rel="noopener noreferrer"
+                    className="block"
                   >
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className="w-full h-10 bg-[#F7E7CE] text-[#102C26] font-extrabold uppercase tracking-tighter text-xs flex items-center justify-center gap-2 hover:bg-[#F7E7CE]/90 transition-colors"
+                      className="w-full h-10 bg-[#F7E7CE] text-[#102C26] font-extrabold uppercase tracking-tighter text-xs flex items-center justify-center gap-1.5 hover:bg-[#F7E7CE]/90 transition-colors"
                     >
-                      Order Food
-                      <ArrowRight className="w-3.5 h-3.5" />
+                      <Store className="w-3.5 h-3.5" />
+                      Merchant
                     </motion.button>
                   </a>
-                  <div className="grid grid-cols-2 gap-2">
-                    <a
-                      href="https://tally.so/r/EklXdA"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                  <a
+                    href="https://tally.so/r/Pd96Nx"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block"
+                  >
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="w-full h-10 bg-[#F7E7CE] text-[#102C26] font-extrabold uppercase tracking-tighter text-xs flex items-center justify-center gap-1.5 hover:bg-[#F7E7CE]/90 transition-colors"
                     >
-                      <button className="w-full h-9 border border-[#F7E7CE]/15 text-[#F7E7CE]/55 text-[11px] font-bold uppercase tracking-tight hover:border-[#F7E7CE]/30 hover:text-[#F7E7CE]/80 transition-all">
-                        Vendor Signup
-                      </button>
-                    </a>
-                    <a
-                      href="https://tally.so/r/Pd96Nx"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <button className="w-full h-9 border border-[#F7E7CE]/15 text-[#F7E7CE]/55 text-[11px] font-bold uppercase tracking-tight hover:border-[#F7E7CE]/30 hover:text-[#F7E7CE]/80 transition-all">
-                        Driver Signup
-                      </button>
-                    </a>
-                  </div>
+                      <Truck className="w-3.5 h-3.5" />
+                      Driver
+                    </motion.button>
+                  </a>
                 </div>
               </div>
             </motion.div>

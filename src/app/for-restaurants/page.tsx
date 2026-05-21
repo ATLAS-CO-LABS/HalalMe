@@ -219,16 +219,6 @@ function HeroSection() {
                   <ArrowRight className="w-4 h-4" />
                 </motion.button>
               </a>
-              <a href="#how-it-works">
-                <motion.button
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="flex items-center gap-3 px-7 py-3.5 font-extrabold uppercase tracking-tighter text-sm border-2 hover:bg-white/10 transition-colors"
-                  style={{ borderColor: `${CREAM}50`, color: CREAM }}
-                >
-                  See How It Works ↓
-                </motion.button>
-              </a>
             </motion.div>
 
             <motion.div

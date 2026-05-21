@@ -4,6 +4,7 @@ import { useState, useEffect, use, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
+import { cldUrl, CLD_POST_IMG } from "@/lib/cldUrl";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -396,7 +397,7 @@ function PostDetailContent({ id }: { id: string }) {
   const displayName = post.profiles?.full_name ?? post.profiles?.username ?? "Unknown";
   const username = post.profiles?.username ? `@${post.profiles.username}` : null;
   const isVerified = post.profiles?.is_verified ?? false;
-  const firstImage = post.media_urls?.[0] ?? null;
+  const firstImage = cldUrl(post.media_urls?.[0], CLD_POST_IMG) ?? null;
 
   return (
     <div className="min-h-screen bg-[#0B0D0F]">

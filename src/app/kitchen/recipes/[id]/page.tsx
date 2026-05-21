@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef, use } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
+import { cldUrl, CLD_RECIPE } from "@/lib/cldUrl";
 import {
   ArrowLeft,
   Clock,
@@ -415,7 +416,7 @@ export default function RecipeDetailPage({
       <div className="relative h-72 md:h-[420px] lg:h-[520px]">
         {recipe.image_url ? (
           <Image
-            src={recipe.image_url}
+            src={cldUrl(recipe.image_url, CLD_RECIPE) ?? recipe.image_url!}
             alt={recipe.title}
             fill
             sizes="100vw"

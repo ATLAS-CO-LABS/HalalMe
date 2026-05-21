@@ -122,22 +122,24 @@ export const recipeService = {
   },
 
   async uploadRecipeImage(recipeId: string, file: File): Promise<string> {
-    const ext = file.name.split(".").pop();
-    const path = `${recipeId}/cover.${ext}`;
+    const form = new FormData();
+    form.append("file", file);
+    form.append("folder", "halalme/recipes");
+    form.append("public_id", `${recipeId}/cover`);
 
-    const { error } = await supabase.storage
-      .from("recipe-images")
-      .upload(path, file, { upsert: true });
-    if (error) throw new Error(error.message);
-
-    const { data } = supabase.storage.from("recipe-images").getPublicUrl(path);
+    const res = await fetch("/api/upload", { method: "POST", body: form });
+    if (!res.ok) {
+      const { error } = await res.json();
+      throw new Error(error ?? "Upload failed");
+    }
+    const { url, public_id } = await res.json() as { url: string; public_id: string };
 
     await supabase
       .from("recipes")
-      .update({ image_url: data.publicUrl })
+      .update({ image_url: url, image_public_id: public_id })
       .eq("id", recipeId);
 
-    return data.publicUrl;
+    return url;
   },
 
   // ---------------------------------------------------------------------------

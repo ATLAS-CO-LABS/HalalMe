@@ -78,10 +78,11 @@ export default function KitchenLandingPage() {
             priority
             sizes="100vw"
           />
+          <div className="absolute inset-0" style={{ backgroundColor: `${BG}CC` }} />
           <div
             className="absolute inset-0"
             style={{
-              background: `radial-gradient(ellipse at center, ${BG}20 0%, ${BG}A0 55%, ${BG}F5 100%)`,
+              background: `radial-gradient(ellipse at center, transparent 0%, ${BG}50 55%, ${BG}90 100%)`,
             }}
           />
         </div>

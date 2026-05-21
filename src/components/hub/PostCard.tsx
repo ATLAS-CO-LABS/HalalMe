@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
+import { cldUrl, CLD_POST_IMG } from "@/lib/cldUrl";
 import {
   Heart,
   MessageCircle,
@@ -56,7 +57,7 @@ export default function PostCard({
   const username = post.profiles?.username ? `@${post.profiles.username}` : null;
   const avatarUrl = post.profiles?.avatar_url ?? undefined;
   const isVerified = post.profiles?.is_verified ?? false;
-  const firstImage = post.media_urls?.[0] ?? null;
+  const firstImage = cldUrl(post.media_urls?.[0], CLD_POST_IMG) ?? null;
 
   const [copied, setCopied] = useState(false);
 

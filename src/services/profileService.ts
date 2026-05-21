@@ -37,22 +37,24 @@ export const profileService = {
   },
 
   async uploadAvatar(userId: string, file: File): Promise<string> {
-    const ext = file.name.split(".").pop();
-    const path = `${userId}/avatar.${ext}`;
+    const form = new FormData();
+    form.append("file", file);
+    form.append("folder", "halalme/avatars");
+    form.append("public_id", `${userId}/avatar`);
 
-    const { error: uploadError } = await supabase.storage
-      .from("avatars")
-      .upload(path, file, { upsert: true });
-    if (uploadError) throw new Error(uploadError.message);
-
-    const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+    const res = await fetch("/api/upload", { method: "POST", body: form });
+    if (!res.ok) {
+      const { error } = await res.json();
+      throw new Error(error ?? "Upload failed");
+    }
+    const { url, public_id } = await res.json() as { url: string; public_id: string };
 
     await supabase
       .from("profiles")
-      .update({ avatar_url: data.publicUrl })
+      .update({ avatar_url: url, avatar_public_id: public_id })
       .eq("id", userId);
 
-    return data.publicUrl;
+    return url;
   },
 
   async isUsernameAvailable(username: string, currentUserId?: string): Promise<boolean> {

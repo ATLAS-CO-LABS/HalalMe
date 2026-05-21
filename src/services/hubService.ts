@@ -152,6 +152,7 @@ export const hubService = {
     content: string,
     options?: {
       media_urls?: string[];
+      media_public_ids?: string[];
       post_type?: Post["post_type"];
       recipe_id?: string;
     }
@@ -161,7 +162,8 @@ export const hubService = {
       .insert({
         user_id: userId,
         content,
-        media_urls: options?.media_urls ?? [],
+        media_urls:        options?.media_urls        ?? [],
+        media_public_ids:  options?.media_public_ids  ?? [],
         post_type: options?.post_type ?? "general",
         recipe_id: options?.recipe_id ?? null,
       })
@@ -171,14 +173,16 @@ export const hubService = {
     return { ...data, is_liked: false };
   },
 
-  /** Updates a post's content and optionally its media_urls. */
+  /** Updates a post's content and optionally its media. */
   async updatePost(
     id: string,
     content: string,
-    media_urls?: string[]
+    media_urls?: string[],
+    media_public_ids?: string[]
   ): Promise<Post> {
     const updates: Record<string, unknown> = { content };
-    if (media_urls !== undefined) updates.media_urls = media_urls;
+    if (media_urls !== undefined)       updates.media_urls       = media_urls;
+    if (media_public_ids !== undefined) updates.media_public_ids = media_public_ids;
 
     const { data, error } = await supabase
       .from("posts")
@@ -191,61 +195,64 @@ export const hubService = {
   },
 
   async deletePost(id: string): Promise<void> {
-    // Fetch media_urls + user_id before deletion so we can clean up storage
     const { data: post } = await supabase
       .from("posts")
-      .select("user_id, media_urls")
+      .select("media_public_ids")
       .eq("id", id)
       .single();
 
     const { error } = await supabase.from("posts").delete().eq("id", id);
     if (error) throw new Error(error.message);
 
-    // Best-effort storage cleanup — don't block or throw on failure
-    if (post?.media_urls?.length) {
-      const paths = post.media_urls.map((url: string) => {
-        // Extract the storage path from the public URL
-        const marker = "/object/public/post-media/";
-        const idx = url.indexOf(marker);
-        return idx !== -1 ? url.slice(idx + marker.length) : null;
-      }).filter(Boolean) as string[];
-
-      if (paths.length) {
-        supabase.storage.from("post-media").remove(paths).catch(() => {});
-      }
+    // Best-effort Cloudinary cleanup — fire-and-forget, never block
+    if (post?.media_public_ids?.length) {
+      fetch("/api/upload/delete", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ public_ids: post.media_public_ids }),
+      }).catch(() => {});
     }
   },
 
   /**
-   * Uploads a media file to the post-media bucket.
-   * Path pattern: {userId}/{postId}/{timestamp}.{ext}
-   * Returns the public CDN URL.
+   * Uploads a media file directly to Cloudinary (unsigned preset).
+   * Returns { url, public_id } — store both on the post for later deletion
+   * and transformation support.
    */
   async uploadPostMedia(
     userId: string,
     postId: string,
     file: File
-  ): Promise<string> {
+  ): Promise<{ url: string; public_id: string }> {
     const ALLOWED_MIME = ["image/jpeg", "image/png", "image/webp", "image/gif", "video/mp4"];
     const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 
-    if (file.size > MAX_FILE_SIZE) {
-      throw new Error("File size exceeds the 50 MB limit.");
-    }
+    if (file.size > MAX_FILE_SIZE) throw new Error("File size exceeds the 50 MB limit.");
     if (!ALLOWED_MIME.includes(file.type)) {
       throw new Error(`File type "${file.type}" is not allowed. Use JPEG, PNG, WebP, GIF, or MP4.`);
     }
 
-    const ext = file.name.split(".").pop() ?? "jpg";
-    const path = `${userId}/${postId}/${Date.now()}.${ext}`;
+    const cloudName    = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+    const resourceType = file.type.startsWith("video/") ? "video" : "image";
 
-    const { error } = await supabase.storage
-      .from("post-media")
-      .upload(path, file, { upsert: false });
-    if (error) throw new Error(error.message);
+    const form = new FormData();
+    form.append("file", file);
+    form.append("upload_preset", uploadPreset!);
+    form.append("folder", `halalme/posts/${userId}/${postId}`);
 
-    const { data } = supabase.storage.from("post-media").getPublicUrl(path);
-    return data.publicUrl;
+    const res = await fetch(
+      `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`,
+      { method: "POST", body: form }
+    );
+
+    if (!res.ok) {
+      const data = await res.json() as { error?: { message?: string } };
+      throw new Error(data.error?.message ?? "Upload failed");
+    }
+
+    const data = await res.json() as { secure_url: string; public_id: string };
+    return { url: data.secure_url, public_id: data.public_id };
   },
 
   /** Returns all published posts for a given user profile. */

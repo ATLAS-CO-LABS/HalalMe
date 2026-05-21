@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { User } from "lucide-react";
+import { cldUrl, CLD_AVATAR } from "@/lib/cldUrl";
 
 interface AvatarProps {
   src?: string;
@@ -36,7 +37,7 @@ export default function Avatar({
       style={{ background: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)" }}
     >
       {src ? (
-        <Image src={src} alt={alt} fill sizes="(max-width: 768px) 64px, 64px" className="object-cover" />
+        <Image src={cldUrl(src, CLD_AVATAR) ?? src} alt={alt} fill sizes="(max-width: 768px) 64px, 64px" className="object-cover" />
       ) : (
         <User className={`${iconSizes[size]} text-[#102C26]`} />
       )}

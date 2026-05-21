@@ -266,10 +266,11 @@ export default function HubLandingPage() {
             priority
             sizes="100vw"
           />
+          <div className="absolute inset-0" style={{ backgroundColor: `${BG3}CC` }} />
           <div
             className="absolute inset-0"
             style={{
-              background: `radial-gradient(ellipse at center, ${BG3}20 0%, ${BG3}A0 55%, ${BG3}F5 100%)`,
+              background: `radial-gradient(ellipse at center, transparent 0%, ${BG3}50 55%, ${BG3}90 100%)`,
             }}
           />
         </div>

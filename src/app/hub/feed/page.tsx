@@ -430,8 +430,8 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
     const ownProfiles = { username: user.username, full_name: user.full_name, avatar_url: user.avatar_url, is_verified: user.is_verified };
 
     if (mediaFile) {
-      const mediaUrl    = await hubService.uploadPostMedia(user.id, newPost.id, mediaFile);
-      const updatedPost = await hubService.updatePost(newPost.id, content, [mediaUrl]);
+      const { url, public_id } = await hubService.uploadPostMedia(user.id, newPost.id, mediaFile);
+      const updatedPost = await hubService.updatePost(newPost.id, content, [url], [public_id]);
       const enriched    = { ...updatedPost, profiles: ownProfiles, is_liked: false, is_bookmarked: false };
       setPosts((prev) => {
         // Realtime may have already prepended this post - update in place instead of duplicating

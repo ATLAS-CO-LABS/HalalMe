@@ -9,13 +9,6 @@ import { CheckCircle2, XCircle, Loader2, Camera, ArrowRight, Phone } from "lucid
 
 const COUNTRY_CODES = [
   { code: "GB", label: "🇬🇧 +44" },
-  { code: "PK", label: "🇵🇰 +92" },
-  { code: "IN", label: "🇮🇳 +91" },
-  { code: "BD", label: "🇧🇩 +880" },
-  { code: "AE", label: "🇦🇪 +971" },
-  { code: "SA", label: "🇸🇦 +966" },
-  { code: "US", label: "🇺🇸 +1" },
-  { code: "CA", label: "🇨🇦 +1" },
 ];
 
 function validateUsername(value: string): string | null {
