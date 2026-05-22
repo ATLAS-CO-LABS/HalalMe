@@ -114,6 +114,7 @@ function HeroSection() {
           fill
           className="object-cover scale-105"
           priority
+          sizes="100vw"
         />
         <div
           className="absolute inset-0"
@@ -238,12 +239,22 @@ function HeroSection() {
           </a>
         </motion.div>
 
+        {/* Promo nudge */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.82 }}
+          className="mt-4 text-xs font-semibold text-[#F59E0B]"
+        >
+          New customer? Use code <span className="font-extrabold tracking-wider">HALAL10</span> for £10 off your first delivery.
+        </motion.p>
+
         {/* Trust badges */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.9 }}
-          className="mt-10 flex items-center divide-x divide-[#F7E7CE]/15 max-w-full overflow-hidden"
+          className="mt-6 flex items-center divide-x divide-[#F7E7CE]/15 max-w-full overflow-hidden"
         >
           {[
             { icon: ShieldCheck, text: "Halal Verified Services" },

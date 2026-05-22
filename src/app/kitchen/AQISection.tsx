@@ -126,7 +126,7 @@ export default function AQISection() {
     } else {
       requireAuth(
         () => router.push("/kitchen/ai-assistant"),
-        "Sign up to chat with AQI — your personal halal cooking assistant"
+        "Sign up to chat with AQI - your personal halal cooking assistant"
       );
     }
   };
@@ -472,7 +472,7 @@ export default function AQISection() {
                 </AnimatePresence>
               </div>
 
-              {/* Input row — real functional input */}
+              {/* Input row - real functional input */}
               <motion.div
                 className="flex items-center gap-2 mx-4 mb-4 px-3 py-2"
                 animate={

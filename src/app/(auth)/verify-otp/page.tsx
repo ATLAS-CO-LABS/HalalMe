@@ -68,7 +68,7 @@ function VerifyOtpContent() {
         router.push(redirect ?? "/dashboard");
       } else {
         await minDelay(authService.verifyPasswordResetOtp(email, otp));
-        // Same — reset-password page checks useAuth().user; sync first.
+        // Same - reset-password page checks useAuth().user; sync first.
         await refreshUser();
         router.push("/reset-password");
       }

@@ -17,9 +17,25 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const BASE_URL = "https://halalme.co.uk";
+const DEFAULT_OG_IMAGE = `${BASE_URL}/images/hero/halal5.jpg`;
+
 export const metadata: Metadata = {
-  title: "HalalMe",
-  description: "Seven halal services. One account.",
+  title: {
+    default: "HalalMe",
+    template: "%s | HalalMe",
+  },
+  description: "Four halal services. One account. Order food, discover recipes, connect with the community and earn charity rewards.",
+  metadataBase: new URL(BASE_URL),
+  openGraph: {
+    type: "website",
+    siteName: "HalalMe",
+    images: [{ url: DEFAULT_OG_IMAGE, width: 1200, height: 630, alt: "HalalMe" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    site: "@halalme",
+  },
 };
 
 export const viewport: Viewport = {

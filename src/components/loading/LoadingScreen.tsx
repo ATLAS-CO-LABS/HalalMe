@@ -27,7 +27,7 @@ export default function LoadingScreen({ onLoadingComplete }: { onLoadingComplete
       onComplete: () => onLoadingComplete?.(),
     });
 
-    // Phase 1 — logo springs in
+    // Phase 1 - logo springs in
     tl.to(mainLogo, {
       opacity: 1, scale: 1, y: 0,
       duration: 0.75,
@@ -45,7 +45,7 @@ export default function LoadingScreen({ onLoadingComplete }: { onLoadingComplete
       });
     }, [], 0.5);
 
-    // Phase 2 — wordmark letters rise in
+    // Phase 2 - wordmark letters rise in
     tl.from(letters, {
       yPercent: 100,
       stagger: 0.03,
@@ -58,7 +58,7 @@ export default function LoadingScreen({ onLoadingComplete }: { onLoadingComplete
     // Hold
     tl.to({}, { duration: 0.55 }, 2.1);
 
-    // Phase 3 — exit
+    // Phase 3 - exit
     tl.call(() => gsap.killTweensOf(pulseRing), [], 2.65);
 
     tl.to(letters,  { yPercent: -100, stagger: 0.02, duration: 0.4, ease: 'expo.in' }, 2.65);

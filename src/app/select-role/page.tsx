@@ -134,7 +134,7 @@ export default function SelectRolePage() {
 
                 <p className="text-[#F7E7CE]/45 text-xs mb-4 leading-relaxed">
                   Explore recipes, social community, rewards & halal food
-                  delivery — all in one place.
+                  delivery - all in one place.
                 </p>
 
                 {/* Feature bullets */}

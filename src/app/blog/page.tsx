@@ -158,6 +158,7 @@ function FeaturedPostSection({ post }: { post: (typeof blogPosts)[0] }) {
                 alt={post.title}
                 fill
                 className="object-cover group-hover:scale-105 transition-transform duration-700 opacity-80"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 60vw, 800px"
               />
               <div className="absolute top-4 left-4">
                 <span className="px-3 py-1 bg-[#F59E0B] text-[#102C26] text-[10px] font-bold uppercase tracking-[0.2em]">
@@ -247,6 +248,7 @@ function BlogCard({ post }: { post: (typeof blogPosts)[0] }) {
             alt={post.title}
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-700 opacity-75 group-hover:opacity-90"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           />
           <div className="absolute top-3 left-3">
             <span className="px-2.5 py-1 bg-[#0A1C19]/80 text-[#F7E7CE]/70 text-[9px] font-bold uppercase tracking-[0.2em]">

@@ -233,10 +233,10 @@ export default function Footer() {
             </h3>
             <div className="bg-[#102C26] border border-[#F7E7CE]/8 p-5">
               <p className="text-[#F7E7CE]/70 text-sm font-medium mb-1">
-                Halal updates, straight to you.
+                Get weekly halal restaurant picks.
               </p>
               <p className="text-[#F7E7CE]/35 text-xs mb-5 leading-relaxed">
-                New features, community stories & Halal living tips.
+                New openings, exclusive offers & halal living tips - delivered to your inbox.
               </p>
               <form className="flex flex-col gap-2.5">
                 <input
@@ -253,6 +253,9 @@ export default function Footer() {
                   Subscribe
                 </motion.button>
               </form>
+              <p className="text-[#F7E7CE]/20 text-[10px] mt-2.5">
+                No spam. Unsubscribe any time.
+              </p>
             </div>
           </div>
         </div>

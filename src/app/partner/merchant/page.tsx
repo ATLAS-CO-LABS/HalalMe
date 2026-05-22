@@ -22,18 +22,18 @@ interface Category {
 }
 
 interface FormData {
-  // Step 1 — Business
+  // Step 1 - Business
   name: string;
   category_ids: string[];
   order_types: string[];
-  // Step 2 — Address
+  // Step 2 - Address
   address: string;
   city: string;
   state: string;
   post_code: string;
   country: string;
   country_code: string;
-  // Step 3 — Contact
+  // Step 3 - Contact
   owner_name: string;
   phone: string;
   phone_country_code: string;

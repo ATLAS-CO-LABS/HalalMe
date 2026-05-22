@@ -207,7 +207,7 @@ export default function Header() {
                 );
               })}
 
-              {/* For Merchants — highlighted link */}
+              {/* For Merchants - highlighted link */}
               <Link href="/for-restaurants">
                 <span
                   className={`relative px-3 py-1.5 text-xs font-bold uppercase tracking-tight border transition-all duration-200 ${
@@ -459,7 +459,7 @@ export default function Header() {
                       );
                     })}
 
-                    {/* For Restaurants — purple-accented */}
+                    {/* For Restaurants - purple-accented */}
                     <motion.div
                       initial={{ opacity: 0, x: -8 }}
                       animate={{ opacity: 1, x: 0 }}

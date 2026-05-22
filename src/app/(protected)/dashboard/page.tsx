@@ -158,7 +158,7 @@ export default function DashboardPage() {
                 <a href="https://delivery.halalme.co.uk" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:opacity-80">
                   delivery.halalme.co.uk
                 </a>{" "}
-                with your email — a one-time code will be sent to you.
+                with your email - a one-time code will be sent to you.
               </p>
             </div>
             <button onClick={() => setShowDeliveryBanner(false)} className="text-white/60 hover:text-white shrink-0">

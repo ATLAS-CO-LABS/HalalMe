@@ -229,7 +229,7 @@ function HeroSection() {
             >
               {[
                 { icon: ShieldCheck, text: "100% Halal Verified" },
-                { icon: Store, text: "900+ Restaurants" },
+                { icon: Store, text: "900+ Registered Partners" },
                 { icon: Timer, text: "Go Live in 48hrs" },
               ].map((item, i) => (
                 <div
@@ -835,7 +835,7 @@ function TestimonialsSection() {
           className="text-4xl sm:text-5xl md:text-7xl font-extrabold uppercase tracking-tighter leading-[0.88]"
           style={{ color: CREAM }}
         >
-          900+ Restaurants.
+          900+ Partners.
           <br />
           <span style={{ color: `${CREAM}75` }}>Here's Why They Joined.</span>
         </motion.h2>
@@ -974,7 +974,7 @@ function FinalCTASection() {
           {[
             { icon: ShieldCheck, text: "Halal Certified" },
             { icon: BookOpen, text: "Scholar Verified" },
-            { icon: Store, text: "900+ Restaurants" },
+            { icon: Store, text: "900+ Registered Partners" },
             { icon: Wallet, text: "Payout Every 3 Days" },
           ].map((item, i) => (
             <div

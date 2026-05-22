@@ -17,6 +17,7 @@ import {
   Timer,
   Radio,
   Tag,
+  X,
 } from "lucide-react";
 
 const BG = "#1E0E38";
@@ -92,6 +93,7 @@ export default function DeliveryLandingPage() {
       className="min-h-screen overflow-x-hidden pt-16"
       style={{ backgroundColor: BG }}
     >
+      <AnnouncementBanner />
       <PromoBar />
       <HeroSection />
       <StatsStrip />
@@ -108,10 +110,38 @@ export default function DeliveryLandingPage() {
   );
 }
 
+/* ───────────────────────── Announcement Banner ───────────────────────── */
+function AnnouncementBanner() {
+  const [dismissed, setDismissed] = useState(false);
+  if (dismissed) return null;
+  return (
+    <div
+      className="relative flex items-center justify-center gap-3 px-10 py-2.5 text-xs font-semibold text-center"
+      style={{ backgroundColor: DEEP, color: CREAM }}
+    >
+      <BadgePercent className="w-3.5 h-3.5 shrink-0" style={{ color: GOLD }} />
+      <span>
+        New to HalalMe? Get{" "}
+        <span className="font-extrabold" style={{ color: GOLD }}>£10 off</span>{" "}
+        your first order - use code{" "}
+        <span className="font-extrabold tracking-wider" style={{ color: GOLD }}>HALAL10</span>{" "}
+        at checkout.
+      </span>
+      <button
+        onClick={() => setDismissed(true)}
+        aria-label="Dismiss"
+        className="absolute right-3 top-1/2 -translate-y-1/2 opacity-50 hover:opacity-100 transition-opacity"
+      >
+        <X className="w-3.5 h-3.5" />
+      </button>
+    </div>
+  );
+}
+
 /* ───────────────────────── Promo Ticker ───────────────────────── */
 function PromoBar() {
   const tickerText =
-    "£10 OFF YOUR FIRST ORDER  ·  100% HALAL CERTIFIED  ·  FREE DELIVERY OVER £25  ·  900+ RESTAURANTS  ·  30-60 MIN AVG DELIVERY  ·  ";
+    "£10 OFF YOUR FIRST ORDER  ·  100% HALAL CERTIFIED  ·  FREE DELIVERY OVER £25  ·  500+ ACTIVE RESTAURANTS  ·  30-60 MIN AVG DELIVERY  ·  ";
   return (
     <div className="overflow-hidden" style={{ backgroundColor: PURPLE }}>
       <div
@@ -286,10 +316,20 @@ function HeroSection() {
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.85 }}
-            className="mt-3 text-xs text-white/40"
+            transition={{ delay: 0.82 }}
+            className="mt-3 text-xs font-semibold"
+            style={{ color: GOLD }}
           >
-            Already have a HalalMe account? Log in at delivery with your email — a one-time code will be sent to you.
+            New customer? Use code <span className="font-extrabold tracking-wider">HALAL10</span> for £10 off your first order.
+          </motion.p>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.85 }}
+            className="mt-1.5 text-xs text-white/40"
+          >
+            Already have a HalalMe account? Log in at delivery with your email - a one-time code will be sent to you.
           </motion.p>
 
           {/* Trust badges */}
@@ -302,7 +342,7 @@ function HeroSection() {
             {[
               { icon: ShieldCheck, text: "100% Halal" },
               { icon: Timer, text: "30-60 Min Delivery" },
-              { icon: Store, text: "900+ Restaurants" },
+              { icon: Store, text: "500+ Active Restaurants" },
             ].map((item, i) => (
               <div
                 key={i}
@@ -337,7 +377,7 @@ function StatsStrip() {
       }}
     >
       {[
-        { value: "900+", label: "Restaurants", icon: Store },
+        { value: "500+", label: "Active Restaurants", icon: Store },
         { value: "30-60m", label: "Avg Delivery", icon: Timer },
         { value: "Free", label: "Over £25 Delivery", icon: BadgePercent },
         { value: "100%", label: "Halal Verified", icon: ShieldCheck },
@@ -385,7 +425,7 @@ function HowItWorksSection() {
       num: "01",
       icon: Store,
       title: "Browse Restaurants",
-      desc: "Explore 900+ certified halal restaurants near you. Filter by cuisine, rating, or delivery time.",
+      desc: "Explore 500+ certified halal restaurants near you. Filter by cuisine, rating, or delivery time.",
     },
     {
       num: "02",
@@ -1347,13 +1387,6 @@ function BottomNav() {
       style={{ backgroundColor: BG, borderTop: `1px solid ${CREAM}08` }}
     >
       <div className="max-w-[95vw] mx-auto flex justify-between items-center">
-        <Link
-          href="/fresh"
-          className="text-xs font-bold uppercase tracking-[0.2em] transition-opacity hover:opacity-100 opacity-40"
-          style={{ color: CREAM }}
-        >
-          ← Fresh
-        </Link>
         <div className="flex items-center gap-2" style={{ opacity: 0.75 }}>
           <span className="text-[10px] font-medium uppercase tracking-widest" style={{ color: CREAM }}>
             Powered by
