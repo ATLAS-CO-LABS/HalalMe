@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef, use } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { cldUrl, CLD_RECIPE } from "@/lib/cldUrl";
 import {
   ArrowLeft,
@@ -19,6 +20,9 @@ import {
   X,
   ShieldCheck,
   BadgeCheck,
+  Pencil,
+  Trash2,
+  Printer,
 } from "lucide-react";
 import { recipeService } from "@/services/recipeService";
 import { useAuth } from "@/hooks/useAuth";
@@ -43,6 +47,14 @@ function cookTimeLabel(mins: number | null) {
   return mins >= 60
     ? `${Math.floor(mins / 60)}h ${mins % 60 > 0 ? `${mins % 60}m` : ""}`.trim()
     : `${mins} min`;
+}
+
+// Compact form for the time breakdown line, e.g. "15m" or "1h 5m".
+function minutesShort(mins: number) {
+  if (mins <= 0) return "0m";
+  return mins >= 60
+    ? `${Math.floor(mins / 60)}h${mins % 60 > 0 ? ` ${mins % 60}m` : ""}`
+    : `${mins}m`;
 }
 
 // ── Star selector ────────────────────────────────────────────────────
@@ -81,8 +93,17 @@ function StarSelector({
 }
 
 // ── Review card ──────────────────────────────────────────────────────
-function ReviewCard({ review }: { review: RecipeReview }) {
+function ReviewCard({
+  review,
+  onDelete,
+  deleting,
+}: {
+  review: RecipeReview;
+  onDelete?: () => void;
+  deleting?: boolean;
+}) {
   const initial = review.profiles?.username?.charAt(0).toUpperCase() ?? "U";
+  const [confirming, setConfirming] = useState(false);
   return (
     <div
       className="p-4 border"
@@ -124,16 +145,54 @@ function ReviewCard({ review }: { review: RecipeReview }) {
             </p>
           </div>
         </div>
-        <div className="flex gap-0.5">
-          {[1, 2, 3, 4, 5].map((s) => (
-            <Star
-              key={s}
-              className="w-3.5 h-3.5"
-              fill={review.rating >= s ? "#FBBF24" : "transparent"}
-              stroke={review.rating >= s ? "#FBBF24" : "#6B7280"}
-              strokeWidth={1.5}
-            />
-          ))}
+        <div className="flex flex-col items-end gap-1.5">
+          <div className="flex gap-0.5">
+            {[1, 2, 3, 4, 5].map((s) => (
+              <Star
+                key={s}
+                className="w-3.5 h-3.5"
+                fill={review.rating >= s ? "#FBBF24" : "transparent"}
+                stroke={review.rating >= s ? "#FBBF24" : "#6B7280"}
+                strokeWidth={1.5}
+              />
+            ))}
+          </div>
+          {onDelete && (
+            confirming ? (
+              <div className="flex items-center gap-2">
+                <span className="text-[11px]" style={{ color: `${CREAM}45` }}>Delete?</span>
+                <button
+                  type="button"
+                  onClick={onDelete}
+                  disabled={deleting}
+                  className="text-[11px] font-bold uppercase tracking-tight text-red-400 hover:text-red-300 disabled:opacity-50 flex items-center gap-1"
+                >
+                  {deleting ? <Loader2 className="w-3 h-3 animate-spin" /> : "Yes"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirming(false)}
+                  disabled={deleting}
+                  className="text-[11px] font-bold uppercase tracking-tight disabled:opacity-50"
+                  style={{ color: `${CREAM}45` }}
+                >
+                  No
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirming(true)}
+                aria-label="Delete your review"
+                className="text-[11px] font-bold uppercase tracking-tight flex items-center gap-1 transition-colors"
+                style={{ color: `${CREAM}40` }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "rgb(248,113,113)")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = `${CREAM}40`)}
+              >
+                <Trash2 className="w-3 h-3" /> Delete
+              </button>
+            )
+          )}
         </div>
       </div>
       {review.comment && (
@@ -145,6 +204,59 @@ function ReviewCard({ review }: { review: RecipeReview }) {
   );
 }
 
+// ── Related recipe card (compact) ────────────────────────────────────
+function RelatedCard({ recipe }: { recipe: Recipe }) {
+  return (
+    <Link href={`/kitchen/recipes/${recipe.id}`}>
+      <motion.div
+        className="group overflow-hidden h-full cursor-pointer"
+        style={{ backgroundColor: BG2, border: `1px solid ${CREAM}08` }}
+        whileHover={{ y: -4, borderColor: MAGENTA, boxShadow: `0 16px 40px -12px ${MAGENTA}40` }}
+      >
+        <div className="relative h-32" style={{ backgroundColor: "#080612" }}>
+          {recipe.image_url ? (
+            <Image
+              src={cldUrl(recipe.image_url, CLD_RECIPE) ?? recipe.image_url!}
+              alt={recipe.title}
+              fill
+              sizes="(max-width: 640px) 50vw, 33vw"
+              className="object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <ChefHat className="w-8 h-8 text-gray-600" />
+            </div>
+          )}
+          {recipe.avg_rating ? (
+            <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm px-2 py-0.5 flex items-center gap-1">
+              <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+              <span className="text-white text-[11px] font-bold">{Number(recipe.avg_rating).toFixed(1)}</span>
+            </div>
+          ) : null}
+        </div>
+        <div className="p-3">
+          <h3
+            className="text-sm font-extrabold uppercase tracking-tighter mb-1.5 line-clamp-1 group-hover:opacity-80 transition-opacity"
+            style={{ color: CREAM }}
+          >
+            {recipe.title}
+          </h3>
+          <div className="flex items-center justify-between text-xs" style={{ color: `${CREAM}50` }}>
+            <span className="flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5" /> {cookTimeLabel(recipe.cook_time_mins)}
+            </span>
+            {recipe.difficulty && (
+              <span className={`px-2 py-0.5 font-semibold ${difficultyColor(recipe.difficulty)}`}>
+                {recipe.difficulty.charAt(0).toUpperCase() + recipe.difficulty.slice(1)}
+              </span>
+            )}
+          </div>
+        </div>
+      </motion.div>
+    </Link>
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════════
 export default function RecipeDetailPage({
   params,
@@ -152,6 +264,7 @@ export default function RecipeDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const router = useRouter();
   const { user } = useAuth();
   const { requireAuth } = useAuthGate();
   const userRef = useRef(user);
@@ -161,6 +274,15 @@ export default function RecipeDetailPage({
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [recipeLoading, setRecipeLoading] = useState(true);
   const [recipeError, setRecipeError] = useState(false);
+
+  // ── Related recipes ───────────────────────────────────────────
+  const [related, setRelated] = useState<Recipe[]>([]);
+  const [relatedLoading, setRelatedLoading] = useState(true);
+
+  // ── Owner delete state ────────────────────────────────────────
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   // ── Ingredient/step checklist state ──────────────────────────
   const [checkedIngredients, setCheckedIngredients] = useState<number[]>([]);
@@ -180,6 +302,7 @@ export default function RecipeDetailPage({
   const [reviewError, setReviewError] = useState("");
   const [reviewSuccess, setReviewSuccess] = useState(false);
   const [userReviewId, setUserReviewId] = useState<string | null>(null);
+  const [deletingReview, setDeletingReview] = useState(false);
 
   // ── Share state ───────────────────────────────────────────────
   const [copied, setCopied] = useState(false);
@@ -229,6 +352,47 @@ export default function RecipeDetailPage({
       .then(setIsBookmarked)
       .catch(() => {});
   }, [id, user]);
+
+  // ── Load related recipes (same cuisine, fall back to latest) ──
+  useEffect(() => {
+    if (!recipe) return;
+    let cancelled = false;
+    (async () => {
+      setRelatedLoading(true);
+      try {
+        const collected = new Map<string, Recipe>();
+        if (recipe.cuisine) {
+          const byCuisine = await recipeService.getRecipes({ cuisine: recipe.cuisine, pageSize: 8 });
+          byCuisine.data.forEach((r) => { if (r.id !== recipe.id) collected.set(r.id, r); });
+        }
+        if (collected.size < 6) {
+          const latest = await recipeService.getRecipes({ pageSize: 8 });
+          latest.data.forEach((r) => { if (r.id !== recipe.id) collected.set(r.id, r); });
+        }
+        if (!cancelled) setRelated(Array.from(collected.values()).slice(0, 6));
+      } catch {
+        if (!cancelled) setRelated([]);
+      } finally {
+        if (!cancelled) setRelatedLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [recipe]);
+
+  // ── Owner delete ──────────────────────────────────────────────
+  const isOwner = !!user && recipe?.user_id === user.id;
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    setDeleteError("");
+    try {
+      await recipeService.deleteRecipe(id);
+      router.push("/kitchen/recipes?tab=mine");
+    } catch (err) {
+      setDeleting(false);
+      setDeleteError(err instanceof Error ? err.message : "Failed to delete recipe.");
+    }
+  };
 
   // ── Bookmark toggle ───────────────────────────────────────────
   const handleBookmark = async () => {
@@ -313,6 +477,23 @@ export default function RecipeDetailPage({
       return;
     }
     requireAuth(doReviewSubmit, "Sign in to leave a review");
+  };
+
+  const handleDeleteReview = async () => {
+    if (!userReviewId) return;
+    setDeletingReview(true);
+    setReviewError("");
+    try {
+      await recipeService.deleteReview(userReviewId);
+      setUserReviewId(null);
+      setReviewRating(0);
+      setReviewComment("");
+      await loadReviews();
+    } catch (err) {
+      setReviewError(err instanceof Error ? err.message : "Failed to delete review.");
+    } finally {
+      setDeletingReview(false);
+    }
   };
 
   const toggleIngredient = (i: number) =>
@@ -409,11 +590,31 @@ export default function RecipeDetailPage({
     (ins) => (typeof ins === "string" ? ins : ins.text),
   );
 
+  // ── Time: show total (prep + cook) with a breakdown when prep exists ──
+  const prepMins = recipe.prep_time_mins ?? 0;
+  const cookMins = recipe.cook_time_mins ?? 0;
+  const totalMins = prepMins + cookMins;
+  const hasPrep = prepMins > 0;
+
   // ═══════════════════════════════════════════════════════════════
   return (
-    <div className="min-h-screen" style={{ backgroundColor: BG }}>
+    <div className="recipe-page min-h-screen" style={{ backgroundColor: BG }}>
+      {/* Print stylesheet: hide chrome and force ink-friendly colours */}
+      <style>{`
+        @media print {
+          .no-print { display: none !important; }
+          .recipe-page, .recipe-page * {
+            background: #fff !important;
+            color: #111 !important;
+            box-shadow: none !important;
+            border-color: #ccc !important;
+          }
+          @page { margin: 1.5cm; }
+        }
+      `}</style>
+
       {/* Hero image */}
-      <div className="relative h-72 md:h-[420px] lg:h-[520px]">
+      <div className="no-print relative h-72 md:h-[420px] lg:h-[520px]">
         {recipe.image_url ? (
           <Image
             src={cldUrl(recipe.image_url, CLD_RECIPE) ?? recipe.image_url!}
@@ -462,6 +663,48 @@ export default function RecipeDetailPage({
 
         {/* Actions */}
         <div className="absolute top-4 md:top-6 right-4 md:right-6 flex gap-2 md:gap-3">
+          {isOwner && (
+            <>
+              <Link href={`/kitchen/recipes/upload?edit=${id}`}>
+                <motion.button
+                  title="Edit recipe"
+                  className="backdrop-blur-sm text-white p-2 md:p-3 border transition-colors"
+                  style={{ backgroundColor: "rgba(0,0,0,0.6)", borderColor: "rgba(255,255,255,0.2)" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = `${MAGENTA}cc`; e.currentTarget.style.borderColor = MAGENTA; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "rgba(0,0,0,0.6)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; }}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Pencil className="w-5 h-5 md:w-6 md:h-6" />
+                </motion.button>
+              </Link>
+              <motion.button
+                onClick={() => setShowDeleteConfirm(true)}
+                title="Delete recipe"
+                className="backdrop-blur-sm text-white p-2 md:p-3 border transition-colors"
+                style={{ backgroundColor: "rgba(0,0,0,0.6)", borderColor: "rgba(255,255,255,0.2)" }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "rgba(220,38,38,0.8)"; e.currentTarget.style.borderColor = "rgb(239,68,68)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "rgba(0,0,0,0.6)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; }}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Trash2 className="w-5 h-5 md:w-6 md:h-6" />
+              </motion.button>
+            </>
+          )}
+          <motion.button
+            onClick={() => window.print()}
+            title="Print or save as PDF"
+            className="backdrop-blur-sm text-white p-2 md:p-3 border transition-colors"
+            style={{ backgroundColor: "rgba(0,0,0,0.6)", borderColor: "rgba(255,255,255,0.2)" }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = `${MAGENTA}cc`; e.currentTarget.style.borderColor = MAGENTA; }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "rgba(0,0,0,0.6)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Printer className="w-5 h-5 md:w-6 md:h-6" />
+          </motion.button>
+
           <motion.button
             onClick={handleShare}
             title={copied ? "Copied!" : "Copy link"}
@@ -556,6 +799,20 @@ export default function RecipeDetailPage({
             </p>
           )}
 
+          {Array.isArray(recipe.tags) && recipe.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-6">
+              {recipe.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="px-3 py-1 text-xs font-semibold lowercase tracking-tight"
+                  style={{ backgroundColor: `${MAGENTA}18`, color: CREAM }}
+                >
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          )}
+
           <div
             className="grid grid-cols-2 md:grid-cols-4"
             style={{ gap: "1px", backgroundColor: `${CREAM}08` }}
@@ -563,8 +820,11 @@ export default function RecipeDetailPage({
             {[
               {
                 icon: <Clock className="w-4 h-4 md:w-5 md:h-5" />,
-                label: "Cook Time",
-                value: cookTimeLabel(recipe.cook_time_mins),
+                label: hasPrep ? "Total Time" : "Cook Time",
+                value: cookTimeLabel(totalMins || null),
+                sub: hasPrep
+                  ? `${minutesShort(prepMins)} prep · ${minutesShort(cookMins)} cook`
+                  : null,
               },
               {
                 icon: <Users className="w-4 h-4 md:w-5 md:h-5" />,
@@ -584,7 +844,7 @@ export default function RecipeDetailPage({
                 label: `Rating (${reviews.length})`,
                 value: `${avgRating} / 5.0`,
               },
-            ].map(({ icon, label, value, badge }, i) => (
+            ].map(({ icon, label, value, badge, sub }, i) => (
               <div
                 key={i}
                 className="p-3 md:p-4"
@@ -611,6 +871,11 @@ export default function RecipeDetailPage({
                     style={{ color: CREAM }}
                   >
                     {value}
+                  </p>
+                )}
+                {sub && (
+                  <p className="text-[11px] mt-0.5 font-normal" style={{ color: `${CREAM}40` }}>
+                    {sub}
                   </p>
                 )}
               </div>
@@ -666,7 +931,7 @@ export default function RecipeDetailPage({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="mb-8"
+          className="mb-8 no-print"
         >
           <Link href={`/kitchen/ai-assistant?recipe=${id}`}>
             <motion.button
@@ -708,10 +973,17 @@ export default function RecipeDetailPage({
                   {ingredients.map((ing, i) => (
                     <motion.div
                       key={i}
+                      role="checkbox"
+                      aria-checked={checkedIngredients.includes(i)}
+                      aria-label={ing}
+                      tabIndex={0}
                       onClick={() => toggleIngredient(i)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleIngredient(i); }
+                      }}
                       whileHover={{ scale: 1.01 }}
                       whileTap={{ scale: 0.99 }}
-                      className="flex items-start gap-3 p-3 cursor-pointer transition-all border"
+                      className="flex items-start gap-3 p-3 cursor-pointer transition-all border focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F03E9E]"
                       style={
                         checkedIngredients.includes(i)
                           ? {
@@ -778,10 +1050,17 @@ export default function RecipeDetailPage({
                   {steps.map((step, i) => (
                     <motion.div
                       key={i}
+                      role="checkbox"
+                      aria-checked={checkedSteps.includes(i)}
+                      aria-label={`Step ${i + 1}: ${step}`}
+                      tabIndex={0}
                       onClick={() => toggleStep(i)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleStep(i); }
+                      }}
                       whileHover={{ scale: 1.01 }}
                       whileTap={{ scale: 0.99 }}
-                      className="flex gap-4 p-4 cursor-pointer transition-all border"
+                      className="flex gap-4 p-4 cursor-pointer transition-all border focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F03E9E]"
                       style={
                         checkedSteps.includes(i)
                           ? {
@@ -834,6 +1113,7 @@ export default function RecipeDetailPage({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
+          className="no-print"
         >
           <div
             className="p-6 border"
@@ -971,13 +1251,116 @@ export default function RecipeDetailPage({
             ) : (
               <div className="space-y-2" style={{ gap: "1px" }}>
                 {reviews.map((review) => (
-                  <ReviewCard key={review.id} review={review} />
+                  <ReviewCard
+                    key={review.id}
+                    review={review}
+                    onDelete={user && review.user_id === user.id ? handleDeleteReview : undefined}
+                    deleting={deletingReview}
+                  />
                 ))}
               </div>
             )}
           </div>
         </motion.div>
+
+        {/* ── You might also like ──────────────────────────────────── */}
+        {(relatedLoading || related.length > 0) && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.45 }}
+            className="mt-10 no-print"
+          >
+            <h2
+              className="text-2xl font-extrabold uppercase tracking-tighter mb-6 flex items-center gap-3"
+              style={{ color: CREAM }}
+            >
+              <span className="text-3xl">🍽️</span> You Might Also Like
+            </h2>
+            {relatedLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin" style={{ color: MAGENTA }} />
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+                {related.map((r) => (
+                  <RelatedCard key={r.id} recipe={r} />
+                ))}
+              </div>
+            )}
+          </motion.div>
+        )}
       </div>
+
+      {/* ── Delete confirmation modal ──────────────────────────────── */}
+      <AnimatePresence>
+        {showDeleteConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ backgroundColor: "rgba(0,0,0,0.7)" }}
+            onClick={() => !deleting && setShowDeleteConfirm(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-sm p-6 border"
+              style={{ backgroundColor: BG2, borderColor: `${CREAM}15` }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div
+                className="w-12 h-12 flex items-center justify-center mb-4"
+                style={{ backgroundColor: "rgba(220,38,38,0.15)" }}
+              >
+                <Trash2 className="w-6 h-6 text-red-400" />
+              </div>
+              <h3
+                className="text-lg font-extrabold uppercase tracking-tighter mb-2"
+                style={{ color: CREAM }}
+              >
+                Delete this recipe?
+              </h3>
+              <p className="text-sm mb-5" style={{ color: `${CREAM}55` }}>
+                “{recipe.title}” will be permanently removed. This can’t be undone.
+              </p>
+              {deleteError && (
+                <p className="text-red-400 text-xs mb-3 flex items-center gap-1">
+                  <X className="w-3 h-3 shrink-0" /> {deleteError}
+                </p>
+              )}
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={deleting}
+                  className="flex-1 px-4 py-2.5 text-sm font-extrabold uppercase tracking-tighter border transition-colors disabled:opacity-50"
+                  style={{ color: CREAM, borderColor: `${CREAM}20`, backgroundColor: "transparent" }}
+                >
+                  Cancel
+                </button>
+                <motion.button
+                  type="button"
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="flex-1 px-4 py-2.5 text-sm font-extrabold uppercase tracking-tighter text-white flex items-center justify-center gap-2 disabled:opacity-60"
+                  style={{ backgroundColor: "rgb(220,38,38)" }}
+                  whileHover={!deleting ? { scale: 1.02 } : {}}
+                  whileTap={!deleting ? { scale: 0.98 } : {}}
+                >
+                  {deleting ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Deleting…</>
+                  ) : (
+                    "Delete"
+                  )}
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

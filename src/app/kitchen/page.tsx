@@ -78,7 +78,10 @@ export default function KitchenLandingPage() {
             priority
             sizes="100vw"
           />
-          <div className="absolute inset-0" style={{ backgroundColor: `${BG}CC` }} />
+          <div
+            className="absolute inset-0"
+            style={{ backgroundColor: `${BG}CC` }}
+          />
           <div
             className="absolute inset-0"
             style={{
@@ -122,7 +125,14 @@ export default function KitchenLandingPage() {
                     flexShrink: 0,
                   }}
                 >
-                  <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(255,255,255,0.92)", borderRadius: "50%" }} />
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      backgroundColor: "rgba(255,255,255,0.92)",
+                      borderRadius: "50%",
+                    }}
+                  />
                   <div
                     style={{
                       position: "absolute",
@@ -192,7 +202,7 @@ export default function KitchenLandingPage() {
                 className="flex items-center gap-3 px-7 sm:px-8 py-3.5 sm:py-4 text-white font-extrabold uppercase tracking-tighter text-sm sm:text-base"
                 style={{ backgroundColor: DEEP }}
               >
-                Start Cooking with AQI
+                Cook with AQI
                 <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
               </motion.button>
 

@@ -30,10 +30,12 @@ interface RecipeForm {
   title: string;
   description: string;
   cuisine: string;
+  cuisineOther: string;
   prep_time_mins: string;
   cook_time_mins: string;
   servings: string;
   difficulty: "easy" | "medium" | "hard" | "";
+  tags: string[];
   ingredients: IngredientRow[];
   instructions: string[];
   image: File | null;
@@ -43,7 +45,16 @@ interface RecipeForm {
 // ── Styles ──────────────────────────────────────────────────────────
 const fieldClass =
   "w-full text-white px-4 py-3 border focus:outline-none transition-colors text-base font-normal";
+// Number inputs: strip the native up/down spinner arrows.
+const numberFieldClass =
+  `${fieldClass} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0`;
 const labelClass = "block font-extrabold uppercase tracking-tighter mb-2 text-xs";
+
+const fieldStyleBase = {
+  backgroundColor: BG2,
+  borderColor: `${CREAM}10`,
+  caretColor: MAGENTA,
+};
 
 const CUISINES = [
   "Middle Eastern", "South Asian", "Turkish", "Moroccan", "Lebanese",
@@ -51,7 +62,154 @@ const CUISINES = [
   "Mediterranean", "British", "Other",
 ];
 
-const COMMON_UNITS = ["", "g", "kg", "ml", "L", "cup", "cups", "tbsp", "tsp", "piece", "pieces", "slice", "slices"];
+// Known units → canonical form. Used to detect the unit token while parsing
+// a free-text ingredient like "2 cups basmati rice".
+const UNIT_ALIASES: Record<string, string> = {
+  g: "g", gram: "g", grams: "g",
+  kg: "kg", kilogram: "kg", kilograms: "kg",
+  ml: "ml", milliliter: "ml", millilitre: "ml", milliliters: "ml", millilitres: "ml",
+  l: "L", liter: "L", litre: "L", liters: "L", litres: "L",
+  cup: "cup", cups: "cups",
+  tbsp: "tbsp", tablespoon: "tbsp", tablespoons: "tbsp",
+  tsp: "tsp", teaspoon: "tsp", teaspoons: "tsp",
+  oz: "oz", ounce: "oz", ounces: "oz",
+  lb: "lb", lbs: "lb", pound: "lb", pounds: "lb",
+  piece: "piece", pieces: "pieces", pc: "piece", pcs: "pieces",
+  slice: "slice", slices: "slices",
+  clove: "clove", cloves: "cloves",
+  pinch: "pinch", pinches: "pinch",
+  can: "can", cans: "cans",
+  handful: "handful", handfuls: "handfuls",
+  dash: "dash", dashes: "dash",
+  sprig: "sprig", sprigs: "sprigs",
+  stick: "stick", sticks: "sticks",
+};
+
+// Matches a leading quantity: 2 · 1.5 · 1,5 · 1/2 · ½ · 2-3
+const AMOUNT_RE = /^(\d+(?:[.,]\d+)?|\d*\/\d+|[¼½¾⅓⅔⅛⅜⅝⅞])(?:\s*[-–]\s*\d+(?:[.,]\d+)?)?$/;
+
+// Parse "2 cups basmati rice" → { amount: "2", unit: "cups", name: "basmati rice" }.
+// Forgiving: missing amount/unit are fine, and anything unrecognised stays in the name.
+function parseIngredient(input: string): IngredientRow {
+  const text = input.trim();
+  if (!text) return { amount: "", unit: "", name: "" };
+
+  let tokens = text.split(/\s+/);
+  let amount = "";
+  let unit = "";
+
+  if (tokens.length > 1 && AMOUNT_RE.test(tokens[0])) {
+    amount = tokens[0];
+    tokens = tokens.slice(1);
+    // Mixed number: "1 1/2 cups"
+    if (tokens.length > 1 && /^\d+\/\d+$/.test(tokens[0]) && /^\d+$/.test(amount)) {
+      amount = `${amount} ${tokens[0]}`;
+      tokens = tokens.slice(1);
+    }
+  }
+
+  if (tokens.length > 1) {
+    const candidate = tokens[0].toLowerCase().replace(/\.$/, "");
+    if (UNIT_ALIASES[candidate]) {
+      unit = UNIT_ALIASES[candidate];
+      tokens = tokens.slice(1);
+    }
+  }
+
+  const name = tokens.join(" ").trim();
+  // Nothing usable left as a name → keep the whole input as the name.
+  if (!name) return { amount: "", unit: "", name: text };
+  return { amount, unit, name };
+}
+
+const MAX_TAGS = 8;
+
+// ── Custom themed dropdown (replaces native <select>) ────────────────
+function Dropdown({
+  value, onChange, options, placeholder, compact = false,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
+  placeholder?: string;
+  compact?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("mousedown", onClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const selected = options.find((o) => o.value === value);
+  const hasValue = !!selected && selected.value !== "";
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className={`${compact ? "px-3 py-3" : "px-4 py-3"} w-full border focus:outline-none transition-colors text-base font-normal flex items-center justify-between text-left`}
+        style={{ ...fieldStyleBase, borderColor: open ? MAGENTA : `${CREAM}10` }}
+      >
+        <span className="truncate" style={{ color: hasValue || selected ? "#fff" : `${CREAM}35` }}>
+          {selected ? selected.label : placeholder}
+        </span>
+        <ChevronDown
+          className={`${compact ? "w-3.5 h-3.5" : "w-4 h-4"} shrink-0 ml-1.5 transition-transform duration-200`}
+          style={{ color: `${CREAM}50`, transform: open ? "rotate(180deg)" : "none" }}
+        />
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.ul
+            role="listbox"
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.12 }}
+            className="absolute z-50 w-full mt-1 max-h-60 overflow-auto border shadow-2xl"
+            style={{ backgroundColor: BG2, borderColor: `${CREAM}15` }}
+          >
+            {options.map((o) => {
+              const active = o.value === value;
+              return (
+                <li key={o.value || "__empty"} role="option" aria-selected={active}>
+                  <button
+                    type="button"
+                    onClick={() => { onChange(o.value); setOpen(false); }}
+                    className="w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center justify-between"
+                    style={{
+                      color: active ? MAGENTA : `${CREAM}80`,
+                      backgroundColor: active ? `${MAGENTA}14` : "transparent",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `${CREAM}08`)}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = active ? `${MAGENTA}14` : "transparent")}
+                  >
+                    {o.label}
+                    {active && <Check className="w-3.5 h-3.5 shrink-0 ml-2" />}
+                  </button>
+                </li>
+              );
+            })}
+          </motion.ul>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 // ── Inline notification ─────────────────────────────────────────────
 function Notification({
@@ -144,17 +302,24 @@ function UploadRecipeInner() {
   const [isSubmitting, setIsSubmitting]   = useState(false);
   const [notification, setNotification]   = useState<{ type: "success" | "error"; message: string } | null>(null);
 
-  const [ingredientRow, setIngredientRow]           = useState<IngredientRow>({ amount: "", unit: "", name: "" });
+  const [ingredientInput, setIngredientInput]       = useState("");
   const [currentInstruction, setCurrentInstruction] = useState("");
+  const [currentTag, setCurrentTag]                 = useState("");
+  const ingredientInputRef                          = useRef<HTMLInputElement>(null);
+  const instructionInputRef                         = useRef<HTMLTextAreaElement>(null);
+  const [editingIngredient, setEditingIngredient]   = useState<number | null>(null);
+  const [editingInstruction, setEditingInstruction] = useState<number | null>(null);
 
   const [form, setForm] = useState<RecipeForm>({
     title:            "",
     description:      "",
     cuisine:          "",
+    cuisineOther:     "",
     prep_time_mins:   "",
     cook_time_mins:   "",
     servings:         "",
     difficulty:       "",
+    tags:             [],
     ingredients:      [],
     instructions:     [],
     image:            null,
@@ -167,14 +332,18 @@ function UploadRecipeInner() {
     setLoadingRecipe(true);
     try {
       const recipe = await recipeService.getRecipeById(editId);
+      const loadedCuisine = recipe.cuisine ?? "";
+      const isKnownCuisine = CUISINES.includes(loadedCuisine);
       setForm({
         title:            recipe.title ?? "",
         description:      recipe.description ?? "",
-        cuisine:          recipe.cuisine ?? "",
+        cuisine:          loadedCuisine ? (isKnownCuisine ? loadedCuisine : "Other") : "",
+        cuisineOther:     loadedCuisine && !isKnownCuisine ? loadedCuisine : "",
         prep_time_mins:   recipe.prep_time_mins != null ? String(recipe.prep_time_mins) : "",
         cook_time_mins:   recipe.cook_time_mins != null ? String(recipe.cook_time_mins) : "",
         servings:         recipe.servings       != null ? String(recipe.servings)       : "",
         difficulty:       (recipe.difficulty as RecipeForm["difficulty"]) ?? "",
+        tags:             Array.isArray(recipe.tags) ? recipe.tags : [],
         ingredients:      normaliseIngredients(recipe.ingredients),
         instructions:     normaliseInstructions(recipe.instructions),
         image:            null,
@@ -197,29 +366,81 @@ function UploadRecipeInner() {
 
   // ── Ingredients ───────────────────────────────────────────────────
   const addIngredient = () => {
-    if (!ingredientRow.name.trim()) return;
-    setForm((prev) => ({
-      ...prev,
-      ingredients: [...prev.ingredients, { ...ingredientRow, name: ingredientRow.name.trim() }],
-    }));
-    setIngredientRow({ amount: "", unit: "", name: "" });
+    const parsed = parseIngredient(ingredientInput);
+    if (!parsed.name.trim()) return;
+    setForm((prev) => {
+      if (editingIngredient !== null) {
+        const next = [...prev.ingredients];
+        next[editingIngredient] = parsed;            // replace in place
+        return { ...prev, ingredients: next };
+      }
+      return { ...prev, ingredients: [...prev.ingredients, parsed] };
+    });
+    setEditingIngredient(null);
+    setIngredientInput("");
+    // Keep focus for rapid, keyboard-only entry (esp. on mobile).
+    ingredientInputRef.current?.focus();
+  };
+
+  const editIngredient = (index: number) => {
+    const ing = form.ingredients[index];
+    setIngredientInput([ing.amount, ing.unit, ing.name].filter(Boolean).join(" "));
+    setEditingIngredient(index);
+    ingredientInputRef.current?.focus();
   };
 
   const removeIngredient = (index: number) =>
-    setForm((prev) => ({ ...prev, ingredients: prev.ingredients.filter((_, i) => i !== index) }));
+    setForm((prev) => {
+      // Editing the row being removed → cancel edit; clear the input too.
+      if (editingIngredient === index) { setEditingIngredient(null); setIngredientInput(""); }
+      else if (editingIngredient !== null && index < editingIngredient) setEditingIngredient(editingIngredient - 1);
+      return { ...prev, ingredients: prev.ingredients.filter((_, i) => i !== index) };
+    });
 
   // ── Instructions ──────────────────────────────────────────────────
   const addInstruction = () => {
-    if (!currentInstruction.trim()) return;
-    setForm((prev) => ({
-      ...prev,
-      instructions: [...prev.instructions, currentInstruction.trim()],
-    }));
+    const text = currentInstruction.trim();
+    if (!text) return;
+    setForm((prev) => {
+      if (editingInstruction !== null) {
+        const next = [...prev.instructions];
+        next[editingInstruction] = text;             // replace in place (keeps step order)
+        return { ...prev, instructions: next };
+      }
+      return { ...prev, instructions: [...prev.instructions, text] };
+    });
+    setEditingInstruction(null);
     setCurrentInstruction("");
+    // Keep focus for rapid, keyboard-only entry (esp. on mobile).
+    instructionInputRef.current?.focus();
+  };
+
+  const editInstruction = (index: number) => {
+    setCurrentInstruction(form.instructions[index]);
+    setEditingInstruction(index);
+    instructionInputRef.current?.focus();
   };
 
   const removeInstruction = (index: number) =>
-    setForm((prev) => ({ ...prev, instructions: prev.instructions.filter((_, i) => i !== index) }));
+    setForm((prev) => {
+      if (editingInstruction === index) { setEditingInstruction(null); setCurrentInstruction(""); }
+      else if (editingInstruction !== null && index < editingInstruction) setEditingInstruction(editingInstruction - 1);
+      return { ...prev, instructions: prev.instructions.filter((_, i) => i !== index) };
+    });
+
+  // ── Tags ──────────────────────────────────────────────────────────
+  const addTag = () => {
+    const tag = currentTag.trim().toLowerCase();
+    if (!tag) return;
+    setForm((prev) => {
+      if (prev.tags.includes(tag) || prev.tags.length >= MAX_TAGS) return prev;
+      return { ...prev, tags: [...prev.tags, tag] };
+    });
+    setCurrentTag("");
+  };
+
+  const removeTag = (index: number) =>
+    setForm((prev) => ({ ...prev, tags: prev.tags.filter((_, i) => i !== index) }));
 
   // ── Image ─────────────────────────────────────────────────────────
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -236,6 +457,8 @@ function UploadRecipeInner() {
     if (!form.title.trim())       return "Recipe title is required.";
     if (!form.description.trim()) return "Description is required.";
     if (!form.cuisine)            return "Please select a cuisine.";
+    if (form.cuisine === "Other" && !form.cuisineOther.trim())
+                                  return "Please enter your cuisine.";
     if (!form.difficulty)         return "Please select a difficulty level.";
     if (!form.cook_time_mins || isNaN(Number(form.cook_time_mins)))
                                   return "Cook time must be a number (minutes).";
@@ -255,7 +478,7 @@ function UploadRecipeInner() {
       const recipeData = {
         title:            form.title.trim(),
         description:      form.description.trim(),
-        cuisine:          form.cuisine,
+        cuisine:          form.cuisine === "Other" ? form.cuisineOther.trim() : form.cuisine,
         difficulty:       form.difficulty as "easy" | "medium" | "hard",
         prep_time_mins:   form.prep_time_mins ? Number(form.prep_time_mins) : null,
         cook_time_mins:   Number(form.cook_time_mins),
@@ -265,7 +488,7 @@ function UploadRecipeInner() {
         is_published:     true,
         is_ai_generated:  false,
         is_halal_verified: false,
-        tags:             [] as string[],
+        tags:             form.tags,
         nutrition:        null,
         image_url:        form.existingImageUrl ?? null,
         image_public_id:  null,
@@ -298,7 +521,6 @@ function UploadRecipeInner() {
     } finally {
       setIsSubmitting(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form, isEditMode, editId, router]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -325,14 +547,10 @@ function UploadRecipeInner() {
   }
 
   // ── Input field styles (applied inline for theming) ──────────────
-  const fieldStyle = {
-    backgroundColor: BG2,
-    borderColor: `${CREAM}10`,
-    caretColor: MAGENTA,
-  };
-  const fieldFocus = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+  const fieldStyle = fieldStyleBase;
+  const fieldFocus = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     (e.target.style.borderColor = MAGENTA);
-  const fieldBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+  const fieldBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     (e.target.style.borderColor = `${CREAM}10`);
 
   // ══════════════════════════════════════════════════════════════════
@@ -402,6 +620,7 @@ function UploadRecipeInner() {
                   value={form.title}
                   onChange={(e) => set("title", e.target.value)}
                   placeholder="e.g., Chicken Biryani"
+                  maxLength={120}
                   className={fieldClass}
                   style={fieldStyle}
                   onFocus={fieldFocus}
@@ -418,6 +637,7 @@ function UploadRecipeInner() {
                   onChange={(e) => set("description", e.target.value)}
                   placeholder="Brief description of your recipe..."
                   rows={3}
+                  maxLength={500}
                   className={`${fieldClass} resize-none`}
                   style={fieldStyle}
                   onFocus={fieldFocus}
@@ -429,23 +649,34 @@ function UploadRecipeInner() {
               {/* Cuisine */}
               <div>
                 <label className={labelClass} style={{ color: `${CREAM}60` }}>Cuisine *</label>
-                <div className="relative">
-                  <select
-                    value={form.cuisine}
-                    onChange={(e) => set("cuisine", e.target.value)}
-                    className={`${fieldClass} appearance-none pr-10`}
-                    style={fieldStyle}
-                    onFocus={fieldFocus}
-                    onBlur={fieldBlur}
-                    required
-                  >
-                    <option value="">Select cuisine…</option>
-                    {CUISINES.map((c) => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                </div>
+                <Dropdown
+                  value={form.cuisine}
+                  onChange={(v) => set("cuisine", v)}
+                  placeholder="Select cuisine…"
+                  options={CUISINES.map((c) => ({ value: c, label: c }))}
+                />
+                <AnimatePresence>
+                  {form.cuisine === "Other" && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <input
+                        type="text"
+                        value={form.cuisineOther}
+                        onChange={(e) => set("cuisineOther", e.target.value)}
+                        placeholder="Enter your cuisine…"
+                        maxLength={40}
+                        className={`${fieldClass} mt-2`}
+                        style={fieldStyle}
+                        onFocus={fieldFocus}
+                        onBlur={fieldBlur}
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* Time + Servings + Difficulty */}
@@ -458,7 +689,8 @@ function UploadRecipeInner() {
                     onChange={(e) => set("prep_time_mins", e.target.value)}
                     placeholder="15"
                     min="0"
-                    className={fieldClass}
+                    inputMode="numeric"
+                    className={numberFieldClass}
                     style={fieldStyle}
                     onFocus={fieldFocus}
                     onBlur={fieldBlur}
@@ -472,7 +704,8 @@ function UploadRecipeInner() {
                     onChange={(e) => set("cook_time_mins", e.target.value)}
                     placeholder="45"
                     min="1"
-                    className={fieldClass}
+                    inputMode="numeric"
+                    className={numberFieldClass}
                     style={fieldStyle}
                     onFocus={fieldFocus}
                     onBlur={fieldBlur}
@@ -487,7 +720,8 @@ function UploadRecipeInner() {
                     onChange={(e) => set("servings", e.target.value)}
                     placeholder="4"
                     min="1"
-                    className={fieldClass}
+                    inputMode="numeric"
+                    className={numberFieldClass}
                     style={fieldStyle}
                     onFocus={fieldFocus}
                     onBlur={fieldBlur}
@@ -496,24 +730,77 @@ function UploadRecipeInner() {
                 </div>
                 <div className="p-3" style={{ backgroundColor: BG2 }}>
                   <label className={labelClass} style={{ color: `${CREAM}60` }}>Difficulty *</label>
-                  <div className="relative">
-                    <select
-                      value={form.difficulty}
-                      onChange={(e) => set("difficulty", e.target.value as RecipeForm["difficulty"])}
-                      className={`${fieldClass} appearance-none pr-10`}
-                      style={fieldStyle}
-                      onFocus={fieldFocus}
-                      onBlur={fieldBlur}
-                      required
-                    >
-                      <option value="">Select…</option>
-                      <option value="easy">Easy</option>
-                      <option value="medium">Medium</option>
-                      <option value="hard">Hard</option>
-                    </select>
-                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                  </div>
+                  <Dropdown
+                    value={form.difficulty}
+                    onChange={(v) => set("difficulty", v as RecipeForm["difficulty"])}
+                    placeholder="Select…"
+                    compact
+                    options={[
+                      { value: "easy", label: "Easy" },
+                      { value: "medium", label: "Medium" },
+                      { value: "hard", label: "Hard" },
+                    ]}
+                  />
                 </div>
+              </div>
+
+              {/* Tags */}
+              <div>
+                <label className={labelClass} style={{ color: `${CREAM}60` }}>
+                  Tags <span style={{ color: `${CREAM}35` }}>(optional · helps people find your recipe)</span>
+                </label>
+                <div className="flex gap-1">
+                  <input
+                    type="text"
+                    value={currentTag}
+                    onChange={(e) => setCurrentTag(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(); } }}
+                    placeholder={form.tags.length >= MAX_TAGS ? "Tag limit reached" : "e.g., spicy, vegetarian, ramadan"}
+                    disabled={form.tags.length >= MAX_TAGS}
+                    maxLength={24}
+                    className={`${fieldClass} flex-1 disabled:opacity-50`}
+                    style={fieldStyle}
+                    onFocus={fieldFocus}
+                    onBlur={fieldBlur}
+                  />
+                  <motion.button
+                    type="button"
+                    onClick={addTag}
+                    disabled={form.tags.length >= MAX_TAGS}
+                    className="w-11 flex items-center justify-center text-white transition-colors disabled:opacity-50"
+                    style={{ backgroundColor: DEEP }}
+                    onMouseEnter={e => (e.currentTarget.style.backgroundColor = MAGENTA)}
+                    onMouseLeave={e => (e.currentTarget.style.backgroundColor = DEEP)}
+                    whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                  >
+                    <Plus className="w-5 h-5" />
+                  </motion.button>
+                </div>
+                {form.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    <AnimatePresence>
+                      {form.tags.map((tag, i) => (
+                        <motion.span
+                          key={tag}
+                          initial={{ opacity: 0, scale: 0.85 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.85 }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold"
+                          style={{ backgroundColor: `${MAGENTA}18`, color: CREAM }}
+                        >
+                          #{tag}
+                          <button
+                            type="button"
+                            onClick={() => removeTag(i)}
+                            className="opacity-60 hover:opacity-100 transition-opacity"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </motion.span>
+                      ))}
+                    </AnimatePresence>
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>
@@ -577,44 +864,22 @@ function UploadRecipeInner() {
               </h2>
             </div>
             <p className="text-xs mb-5 ml-9" style={{ color: `${CREAM}40` }}>
-              Enter amount, unit (optional), and ingredient name
+              Type it naturally — e.g. “2 cups basmati rice”, then press Enter
             </p>
 
-            {/* Input row */}
-            <div className="grid grid-cols-[80px_110px_1fr_auto] gap-1 mb-3">
+            {/* Single smart input — parses amount + unit + name */}
+            <div className="flex gap-1 mb-3">
               <input
+                ref={ingredientInputRef}
                 type="text"
-                value={ingredientRow.amount}
-                onChange={(e) => setIngredientRow((r) => ({ ...r, amount: e.target.value }))}
-                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addIngredient())}
-                placeholder="2"
-                className={`${fieldClass} text-center`}
-                style={fieldStyle}
-                onFocus={fieldFocus}
-                onBlur={fieldBlur}
-              />
-              <div className="relative">
-                <select
-                  value={ingredientRow.unit}
-                  onChange={(e) => setIngredientRow((r) => ({ ...r, unit: e.target.value }))}
-                  className={`${fieldClass} appearance-none pr-7`}
-                  style={fieldStyle}
-                  onFocus={fieldFocus}
-                  onBlur={fieldBlur}
-                >
-                  {COMMON_UNITS.map((u) => (
-                    <option key={u} value={u}>{u || "unit"}</option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
-              </div>
-              <input
-                type="text"
-                value={ingredientRow.name}
-                onChange={(e) => setIngredientRow((r) => ({ ...r, name: e.target.value }))}
-                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addIngredient())}
-                placeholder="e.g., basmati rice"
-                className={fieldClass}
+                value={ingredientInput}
+                onChange={(e) => setIngredientInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addIngredient(); } }}
+                placeholder={editingIngredient !== null ? "Edit ingredient…" : "e.g., 2 cups basmati rice"}
+                enterKeyHint="done"
+                autoCapitalize="none"
+                autoComplete="off"
+                className={`${fieldClass} flex-1`}
                 style={fieldStyle}
                 onFocus={fieldFocus}
                 onBlur={fieldBlur}
@@ -622,13 +887,14 @@ function UploadRecipeInner() {
               <motion.button
                 type="button"
                 onClick={addIngredient}
-                className="w-11 flex items-center justify-center text-white transition-colors"
+                aria-label={editingIngredient !== null ? "Save ingredient" : "Add ingredient"}
+                className="w-12 shrink-0 flex items-center justify-center text-white transition-colors"
                 style={{ backgroundColor: DEEP }}
                 onMouseEnter={e => (e.currentTarget.style.backgroundColor = MAGENTA)}
                 onMouseLeave={e => (e.currentTarget.style.backgroundColor = DEEP)}
                 whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
               >
-                <Plus className="w-5 h-5" />
+                {editingIngredient !== null ? <Check className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
               </motion.button>
             </div>
 
@@ -641,15 +907,23 @@ function UploadRecipeInner() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 10 }}
                   className="flex items-center justify-between px-4 py-2.5 border mb-1"
-                  style={{ backgroundColor: BG, borderColor: `${CREAM}08` }}
+                  style={{ backgroundColor: BG, borderColor: editingIngredient === i ? MAGENTA : `${CREAM}08` }}
                 >
                   <span className="text-sm font-normal" style={{ color: `${CREAM}75` }}>
                     {[ing.amount, ing.unit, ing.name].filter(Boolean).join(" ")}
                   </span>
-                  <button type="button" onClick={() => removeIngredient(i)}
-                    className="text-red-400 hover:text-red-300 transition-colors ml-3">
-                    <X className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-2 ml-3 shrink-0">
+                    <button type="button" onClick={() => editIngredient(i)} aria-label="Edit ingredient"
+                      className="transition-colors" style={{ color: `${CREAM}45` }}
+                      onMouseEnter={e => (e.currentTarget.style.color = MAGENTA)}
+                      onMouseLeave={e => (e.currentTarget.style.color = `${CREAM}45`)}>
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                    <button type="button" onClick={() => removeIngredient(i)} aria-label="Remove ingredient"
+                      className="text-red-400 hover:text-red-300 transition-colors">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
                 </motion.div>
               ))}
             </AnimatePresence>
@@ -670,11 +944,15 @@ function UploadRecipeInner() {
 
             <div className="flex gap-1 mb-3">
               <textarea
+                ref={instructionInputRef}
                 value={currentInstruction}
                 onChange={(e) => setCurrentInstruction(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter" && e.ctrlKey) { e.preventDefault(); addInstruction(); } }}
-                placeholder="Describe this cooking step… (Ctrl+Enter to add)"
+                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); addInstruction(); } }}
+                placeholder={editingInstruction !== null
+                  ? "Edit this step… (Enter to save)"
+                  : "Describe this step, then press Enter (Shift+Enter for a new line)"}
                 rows={2}
+                enterKeyHint="done"
                 className={`${fieldClass} flex-1 resize-none`}
                 style={fieldStyle}
                 onFocus={fieldFocus}
@@ -683,13 +961,14 @@ function UploadRecipeInner() {
               <motion.button
                 type="button"
                 onClick={addInstruction}
+                aria-label={editingInstruction !== null ? "Save step" : "Add step"}
                 className="text-white px-5 font-extrabold uppercase tracking-tighter self-start h-11.5 flex items-center"
                 style={{ backgroundColor: DEEP }}
                 onMouseEnter={e => (e.currentTarget.style.backgroundColor = MAGENTA)}
                 onMouseLeave={e => (e.currentTarget.style.backgroundColor = DEEP)}
                 whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
               >
-                <Plus className="w-5 h-5" />
+                {editingInstruction !== null ? <Check className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
               </motion.button>
             </div>
 
@@ -701,7 +980,7 @@ function UploadRecipeInner() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 10 }}
                   className="flex gap-3 p-4 border mb-1"
-                  style={{ backgroundColor: BG, borderColor: `${CREAM}08` }}
+                  style={{ backgroundColor: BG, borderColor: editingInstruction === i ? MAGENTA : `${CREAM}08` }}
                 >
                   <div
                     className="w-7 h-7 flex items-center justify-center font-extrabold text-white text-sm shrink-0"
@@ -709,13 +988,21 @@ function UploadRecipeInner() {
                   >
                     {i + 1}
                   </div>
-                  <p className="flex-1 text-sm font-normal" style={{ color: `${CREAM}75` }}>
+                  <p className="flex-1 text-sm font-normal whitespace-pre-wrap" style={{ color: `${CREAM}75` }}>
                     {step}
                   </p>
-                  <button type="button" onClick={() => removeInstruction(i)}
-                    className="text-red-400 hover:text-red-300 transition-colors">
-                    <X className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-start gap-2 shrink-0">
+                    <button type="button" onClick={() => editInstruction(i)} aria-label="Edit step"
+                      className="transition-colors" style={{ color: `${CREAM}45` }}
+                      onMouseEnter={e => (e.currentTarget.style.color = MAGENTA)}
+                      onMouseLeave={e => (e.currentTarget.style.color = `${CREAM}45`)}>
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                    <button type="button" onClick={() => removeInstruction(i)} aria-label="Remove step"
+                      className="text-red-400 hover:text-red-300 transition-colors">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
                 </motion.div>
               ))}
             </AnimatePresence>
