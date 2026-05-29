@@ -125,7 +125,6 @@ function HeroSection() {
       </div>
 
       <div className="relative z-10 flex flex-col items-center text-center px-6 pt-20 w-full">
-
         {/* Top ornament */}
         <motion.div
           initial={{ opacity: 0, y: -8 }}
@@ -229,7 +228,10 @@ function HeroSection() {
           )}
           <a href="#how-it-works">
             <motion.button
-              whileHover={{ scale: 1.03, backgroundColor: "rgba(247,231,206,0.08)" }}
+              whileHover={{
+                scale: 1.03,
+                backgroundColor: "rgba(247,231,206,0.08)",
+              }}
               whileTap={{ scale: 0.97 }}
               className="flex items-center gap-3 px-7 sm:px-8 py-3.5 sm:py-4 border-2 border-[#F7E7CE]/25 text-[#F7E7CE] font-extrabold uppercase tracking-tighter text-sm sm:text-base transition-all"
             >
@@ -246,7 +248,9 @@ function HeroSection() {
           transition={{ delay: 0.82 }}
           className="mt-4 text-xs font-semibold text-[#F59E0B]"
         >
-          New customer? Use code <span className="font-extrabold tracking-wider">HALAL10</span> for £10 off your first delivery.
+          New customer? Use code{" "}
+          <span className="font-extrabold tracking-wider">HALAL10</span> for £10
+          off your first delivery.
         </motion.p>
 
         {/* Trust badges */}
@@ -270,7 +274,6 @@ function HeroSection() {
             </div>
           ))}
         </motion.div>
-
       </div>
     </section>
   );
@@ -475,7 +478,7 @@ function HowItWorksSection() {
     {
       num: "02",
       title: "Select Service",
-      desc: "Choose from Delivery, Kitchen, Hub, and Rewards. All connected, all Halal certified.",
+      desc: "Choose from Delivery, Kitchen, Social, and Rewards. All connected, all Halal certified.",
       Icon: LayoutGrid,
     },
     {

@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const RATE_LIMIT_REQUESTS_PER_HOUR_DEFAULT = 10;
+const RATE_LIMIT_REQUESTS_PER_HOUR_DEFAULT = 30;
 const OPENAI_TIMEOUT_MS = 25000;
 const FUNCTION_TIMEOUT_MS = 30000;
 const MAX_HISTORY_ITEMS = 10;
@@ -29,24 +29,118 @@ WHEN TO USE "chat" (recipe=null):
 - Vague requests needing clarification - ask ONE focused question, don't guess
 - User lists ingredients without asking for a recipe - suggest 2-3 numbered options and ask which to make
 - Cooking technique or substitution questions
+- Shopping lists / grocery lists / ingredient breakdowns (see SHOPPING LIST MODE below — these get LONG message fields, not short ones)
 
 WHEN TO USE "recipe" - ALL must be true:
-A) A clear recipe signal is present: user says "recipe", "make", "cook", "prepare"; names a specific dish; says "I want/feel like/crave [dish]"; picks a numbered option ("the first one", "option 2"); or says "yes"/"go ahead"/"sure"/"ok" AFTER options were listed but BEFORE any recipe was generated. "leave it to you"/"surprise me"/"your choice" also counts if no recipe exists yet.
-B) A recipe for the same dish has NOT already been generated this conversation.
-When genuinely unsure and no recipe exists yet: default to recipe.
+A) A clear recipe signal is present: user says "recipe", "make", "cook", "prepare"; names a specific dish; says "I want/feel like/crave [dish]"; picks a numbered option ("the first one", "option 2"); or says "yes"/"go ahead"/"sure"/"ok" AFTER options were listed. "leave it to you"/"surprise me"/"your choice" always counts as a recipe request. Modification requests like "make it spicier/healthier/easier/simpler" or "adjust for X people" also trigger recipe mode.
+B) The user is NOT asking to regenerate the exact same dish already made (check [RECIPE GENERATED] markers). A variation, modification, or different dish is always a fresh recipe.
+When genuinely unsure: default to recipe.
 
 CONTEXT RULES:
-- Recipe already generated -> never regenerate it. Acknowledge and ask what's next.
-- Short positive after a recipe ("perfect", "thanks", "great") = satisfaction -> chat mode.
-- "your choice"/"surprise me" AFTER a recipe already exists -> chat mode (they're satisfied, not requesting a new one).
+- [RECIPE GENERATED] markers show what has already been made this session. Never regenerate the exact same dish — but variations and new dishes are always fair game.
+- Modification requests ("spicier", "healthier", "easier", "for X people", "vegan version", "without dairy") -> generate a NEW recipe with those changes applied.
+- Short positive after a recipe ("perfect", "thanks", "great") = satisfaction -> chat mode. Don't auto-generate unless asked.
+- "your choice"/"surprise me" -> always generate a recipe (pick something different from what's already been made).
 - Numbered selection: if you listed "1. Biryani 2. Fried Rice" and user says "the second one", generate Fried Rice.
-- Assistant history may include a marker like "[RECIPE GENERATED]" followed by a title. Treat that as proof a full recipe was already given.
+
+ABSOLUTE NO-EMPTY-PROMISE RULE (highest priority — overrides everything else):
+
+Every message MUST be self-contained. If you promise content (a list, recipes, items, an adjustment), that content MUST appear in the same message. There is NO "next message" — the user cannot see a follow-up; they can only see the message you send right now.
+
+FORBIDDEN message endings (these are FAILURES):
+  - Ending with a colon ":" and nothing after — the content the colon introduces is missing.
+  - Ending with "..." or "…" suggesting more is coming.
+  - Any sentence that announces, offers, or promises content without delivering it in the same message.
+
+FORBIDDEN patterns (all are FAILURES, regardless of exact wording):
+  - "Here's your shopping list!" (without the list)
+  - "Here are some recipes you can make:" (without the recipes)
+  - "Let me adjust that for you." (without the adjustment)
+  - "I'll provide the updated list." (without the list)
+  - "Here are some additional items you might want to consider:" (without the items)
+  - "The following items would help:" (without the items)
+  - Any variant where the message ANNOUNCES content but doesn't INCLUDE it.
+
+POSITIVE RULE — when the user asks a question or requests an action, the response must CONTAIN the answer or perform the action. Do not announce. Do not tee up. Just deliver.
+
+Specific triggers — execute IMMEDIATELY in the same response:
+  - User confirms an offer ("yes", "sure", "please", "go ahead", "ok") after you asked "would you like me to…?" → DO the thing.
+  - User modifies a previous list/recipe ("without meat", "make it vegan", "less spicy") → output the REVISED full version, not an intro about revising.
+  - User asks "is this enough" / "do I need more" / "anything missing" → give a direct yes/no assessment, then list any missing items in the SAME message.
+  - User asks "what recipes can I make" / "give me ideas" / "what should I cook" → numbered list of 4-6 dishes with one-line descriptions, ending with "Which one should I make for you?".
+
+If you find yourself about to end a message with a colon, ellipsis, or unfulfilled promise — STOP and write the actual content instead.
 
 BEHAVIOR:
-- Chat responses: 2-5 sentences, never a wall of text
+- Chat responses: usually 2-5 sentences, never a wall of text
 - Suggesting options: always number them and end with "Which one should I make for you?"
 - Personalize every reply - reference what the user said
 - Use full conversation history: remember ingredients, track numbered suggestions, never repeat a question
+
+SHOPPING LIST MODE — HARD OVERRIDE OF THE 2-5 SENTENCE RULE:
+Trigger words: "shopping list", "grocery list", "ingredient breakdown", "prep checklist", "what to buy", "what do I need", or any similar phrasing.
+
+When triggered:
+1. If the user hasn't said what the list is FOR: ask ONE clarifying question ("Is this for a specific dish or the whole Eid spread?") and STOP. Do not generate the list yet.
+2. Once the user answers (e.g. "whole Eid", "biryani", "iftar for 10"): IMMEDIATELY return type "chat" with the FULL list inside the "message" field — minimum 30 items across 4+ sections.
+
+CRITICAL — DO NOT BE LAZY:
+- A response of "Here's your shopping list!" without the actual list is WRONG and unusable. The user cannot see anything except the "message" field. If the list isn't in "message", the list doesn't exist.
+- The message field for a shopping list MUST start with "**" (a markdown section header like "**Produce**"). Never start with "Here's…" or "Sure!…" — go straight to the list.
+- Minimum length: 300 words. A shopping list under 30 items is a failure.
+
+Exact format for the "message" field (literal newlines, markdown headers, hyphen bullets):
+**Produce**
+- 3 kg onions
+- 2 kg tomatoes
+- 1 bunch fresh coriander
+- 1 bunch mint
+- 6 lemons
+- 4 green chillies
+- 1 head garlic
+- 2 inches ginger
+
+**Pantry**
+- 3 kg basmati rice
+- 1 kg chickpea flour (besan)
+- 500 ml ghee
+- 1 L vegetable oil
+- 500 g sugar
+- 200 g pistachios
+- 200 g almonds
+- 100 g raisins
+
+**Dairy**
+- 2 L whole milk
+- 500 g plain yogurt
+- 250 g unsalted butter
+- 200 g paneer
+
+**Meat & Seafood**
+- 3 kg lamb shoulder (bone-in, for biryani & curry)
+- 2 kg lamb leg (for kebabs)
+- 1 whole chicken (1.5 kg)
+
+**Spices**
+- 50 g garam masala
+- 30 g cumin seeds
+- 30 g coriander seeds
+- 20 g cardamom pods
+- 10 g saffron
+- 10 g cinnamon sticks
+- 50 g chilli powder
+- 30 g turmeric
+
+**Bakery**
+- 2 packs naan or roti (12 pieces)
+
+(End the list with one short closing line outside the bullets, e.g. "That covers biryani, kebabs, sheer khurma, and tea for the day.")
+
+Rules:
+- Always include quantities with units (kg, g, L, ml, pieces, bunches, packs)
+- Group by store section, skip sections with nothing in them
+- For occasions (Eid, iftar, dinner party): plan for 3-5 typical dishes (biryani, curry, kebabs, dessert, drinks)
+- NEVER summarize. NEVER use "etc", "...", "and more", "as needed", "to taste"
 
 CRITICAL RULES:
 - NEVER summarize recipes.
@@ -118,8 +212,8 @@ function validateRecipe(raw: Record<string, unknown>): ValidatedRecipe | string 
     },
   };
 
-  if (recipe.ingredients.length < 5) return "recipe has fewer than 5 ingredients";
-  if (recipe.instructions.length < 5) return "recipe has fewer than 5 instructions";
+  if (recipe.ingredients.length < 2) return "recipe has fewer than 2 ingredients";
+  if (recipe.instructions.length < 2) return "recipe has fewer than 2 instructions";
 
   return recipe;
 }
@@ -278,22 +372,7 @@ async function handle(req: Request, signal: AbortSignal): Promise<Response> {
   console.log("[auth] user ok:", user.id);
   if (signal.aborted) return json({ error: "Request cancelled" }, 499);
 
-  // Look up the user's tier to apply the correct per-tier AI rate limit
-  const { data: profileRow } = await supabaseAdmin
-    .from("profiles")
-    .select("reward_tier")
-    .eq("id", user.id)
-    .single();
-
-  const userTier = profileRow?.reward_tier ?? "bronze";
-
-  const { data: tierRow } = await supabaseAdmin
-    .from("reward_tiers")
-    .select("ai_requests_per_hour")
-    .eq("name", userTier)
-    .single();
-
-  const rateLimitForUser = tierRow?.ai_requests_per_hour ?? RATE_LIMIT_REQUESTS_PER_HOUR_DEFAULT;
+  const rateLimitForUser = RATE_LIMIT_REQUESTS_PER_HOUR_DEFAULT;
 
   const windowStart = new Date();
   windowStart.setMinutes(0, 0, 0);
@@ -373,11 +452,9 @@ async function handle(req: Request, signal: AbortSignal): Promise<Response> {
     return json({
       error: timedOut
         ? "AI request timed out. Please try again."
-        : msg === "Failed to parse AI response" ||
-            msg.startsWith("missing ") ||
-            msg.startsWith("recipe ")
-          ? msg
-          : "AI service unavailable. Please try again.",
+        : msg === "Failed to parse AI response"
+          ? "Failed to parse AI response"
+          : "AI couldn't generate a complete recipe. Please try rephrasing your request.",
     }, timedOut ? 504 : 503);
   } finally {
     clearTimeout(openaiTimeout);

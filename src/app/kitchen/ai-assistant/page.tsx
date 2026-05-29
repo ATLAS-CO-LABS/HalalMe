@@ -37,6 +37,8 @@ type Message = {
   recipeId?: string | null;
   requestsRemaining?: number;
   aiMessage?: string;
+  isError?: boolean;
+  retryPrompt?: string;
 };
 type Conv = { id: string; title: string; group: string };
 
@@ -470,6 +472,12 @@ export default function AIAssistantPage() {
     router.push(`/kitchen/recipes/${msg.recipeId}`);
   };
 
+  const handleRetry = (msg: Message) => {
+    if (!msg.retryPrompt || isLoading) return;
+    setMessages((p) => p.filter((m) => m.id !== msg.id));
+    doSubmit(msg.retryPrompt);
+  };
+
   const loadSession = async (sid: string) => {
     setActiveConv(sid);
     setSidebarOpen(false);
@@ -572,15 +580,18 @@ export default function AIAssistantPage() {
       const code = err instanceof AIRequestError ? err.code : "upstream";
       const errText = err instanceof Error ? err.message : "Something went wrong";
       setStreamingContent(null);
+      const canRetry = code !== "rate_limit" && code !== "auth";
       setMessages((p) => [...p, {
         id: (Date.now() + 1).toString(),
         role: "assistant",
         responseType: "chat" as const,
         content:
-          code === "rate_limit" ? "You've reached the AI request limit (10 per hour). Please try again later."
+          code === "rate_limit" ? "You've reached the AI request limit (30 per hour). Please try again later."
           : code === "auth"     ? "Your sign-in session has expired. Please sign out and back in, then try again."
           :                       `Sorry, I ran into an issue. ${errText}`,
         ts: new Date(),
+        isError: true,
+        retryPrompt: canRetry ? text : undefined,
       }]);
     } finally {
       if (!controller.signal.aborted) setIsLoading(false);
@@ -693,15 +704,31 @@ export default function AIAssistantPage() {
                   {Array.from({ length: 10 }).map((_, i) => (
                     <div key={i} className="w-1 h-3 transition-all"
                       style={{
-                        backgroundColor: i < requestsLeft
-                          ? requestsLeft <= 3 ? "#f87171" : VIOLET
+                        backgroundColor: i < Math.round((requestsLeft / 30) * 10)
+                          ? requestsLeft <= 5 ? "#f87171" : VIOLET
                           : "rgba(247,224,192,0.08)",
                       }} />
                   ))}
                 </div>
-                <span className="text-[9px] font-bold" style={{ color: requestsLeft <= 3 ? "#f87171" : `${CREAM}30` }}>
-                  {requestsLeft}/10
-                </span>
+                {requestsLeft <= 5 ? (
+                  <motion.span
+                    className="text-[9px] font-black uppercase px-1.5 py-0.5"
+                    style={{
+                      color: "#f87171",
+                      background: "rgba(248,113,113,0.08)",
+                      border: "1px solid rgba(248,113,113,0.3)",
+                      letterSpacing: "0.12em",
+                    }}
+                    animate={{ opacity: [1, 0.6, 1] }}
+                    transition={{ duration: 1.6, repeat: Infinity }}
+                  >
+                    {requestsLeft} left
+                  </motion.span>
+                ) : (
+                  <span className="text-[9px] font-bold" style={{ color: `${CREAM}30` }}>
+                    {requestsLeft}/30
+                  </span>
+                )}
               </div>
             )}
             {hasUser && (
@@ -893,54 +920,105 @@ export default function AIAssistantPage() {
 
                         {/* Action row */}
                         {!isUser && msg.id !== "init" && (
-                          <div className="mt-2 flex items-center gap-1.5">
-                            <motion.button
-                              onClick={() => {
-                                const text = msg.responseType === "recipe" && msg.recipe
-                                  ? [
-                                      msg.content,
-                                      `\n${msg.recipe.title}`,
-                                      "\nIngredients:",
-                                      ...msg.recipe.ingredients.map((i) => `- ${[i.amount, i.unit, i.name].filter(Boolean).join(" ")}`),
-                                      "\nInstructions:",
-                                      ...msg.recipe.instructions.map((s) => `${s.step}. ${s.text}`),
-                                    ].filter(Boolean).join("\n")
-                                  : msg.content;
-                                navigator.clipboard.writeText(text).then(() => {
-                                  setCopiedId(msg.id);
-                                  setTimeout(() => setCopiedId(null), 2000);
-                                });
-                              }}
-                              className="flex items-center gap-1 px-2 py-1 text-[9px] font-bold uppercase transition-all"
-                              style={{
-                                color: copiedId === msg.id ? "#4ade80" : `${CREAM}28`,
-                                border: `1px solid ${copiedId === msg.id ? "rgba(74,222,128,0.2)" : "rgba(247,224,192,0.08)"}`,
-                                letterSpacing: "0.12em",
-                              }}
-                              whileHover={{ color: CREAM, borderColor: "rgba(247,224,192,0.2)" } as never}
-                              whileTap={{ scale: 0.97 }}
-                            >
-                              {copiedId === msg.id
-                                ? <><Check className="w-2.5 h-2.5" strokeWidth={2.5} /> Copied</>
-                                : <><Copy className="w-2.5 h-2.5" strokeWidth={2} /> Copy</>}
-                            </motion.button>
-
-                            {msg.responseType === "recipe" && msg.recipeId && (
+                          <div className="mt-2 space-y-1.5">
+                            <div className="flex items-center gap-1.5">
+                              {msg.isError && msg.retryPrompt && (
+                                <motion.button
+                                  onClick={() => handleRetry(msg)}
+                                  disabled={isLoading}
+                                  className="flex items-center gap-1 px-2 py-1 text-[9px] font-bold uppercase transition-all"
+                                  style={{
+                                    color: VIOLET,
+                                    border: "1px solid rgba(240,62,158,0.3)",
+                                    letterSpacing: "0.12em",
+                                    opacity: isLoading ? 0.4 : 1,
+                                  }}
+                                  whileHover={!isLoading ? { scale: 1.03, borderColor: "rgba(240,62,158,0.6)" } as never : {}}
+                                  whileTap={!isLoading ? { scale: 0.97 } as never : {}}
+                                >
+                                  <RotateCcw className="w-2.5 h-2.5" strokeWidth={2.25} />
+                                  Try again
+                                </motion.button>
+                              )}
                               <motion.button
-                                onClick={() => handleSaveRecipe(msg)}
+                                onClick={() => {
+                                  const text = msg.responseType === "recipe" && msg.recipe
+                                    ? [
+                                        msg.content,
+                                        `\n${msg.recipe.title}`,
+                                        "\nIngredients:",
+                                        ...msg.recipe.ingredients.map((i) => `- ${[i.amount, i.unit, i.name].filter(Boolean).join(" ")}`),
+                                        "\nInstructions:",
+                                        ...msg.recipe.instructions.map((s) => `${s.step}. ${s.text}`),
+                                      ].filter(Boolean).join("\n")
+                                    : msg.content;
+                                  navigator.clipboard.writeText(text).then(() => {
+                                    setCopiedId(msg.id);
+                                    setTimeout(() => setCopiedId(null), 2000);
+                                  });
+                                }}
                                 className="flex items-center gap-1 px-2 py-1 text-[9px] font-bold uppercase transition-all"
                                 style={{
-                                  color: savedIds.has(msg.id) ? "#4ade80" : `${VIOLET}80`,
-                                  border: `1px solid ${savedIds.has(msg.id) ? "rgba(74,222,128,0.2)" : "rgba(240,62,158,0.2)"}`,
+                                  color: copiedId === msg.id ? "#4ade80" : `${CREAM}28`,
+                                  border: `1px solid ${copiedId === msg.id ? "rgba(74,222,128,0.2)" : "rgba(247,224,192,0.08)"}`,
                                   letterSpacing: "0.12em",
                                 }}
-                                whileHover={{ scale: 1.03 } as never}
+                                whileHover={{ color: CREAM, borderColor: "rgba(247,224,192,0.2)" } as never}
                                 whileTap={{ scale: 0.97 }}
                               >
-                                {savedIds.has(msg.id)
-                                  ? <><Check className="w-2.5 h-2.5" strokeWidth={2.5} /> Saved</>
-                                  : <><BookmarkPlus className="w-2.5 h-2.5" strokeWidth={2} /> View Recipe</>}
+                                {copiedId === msg.id
+                                  ? <><Check className="w-2.5 h-2.5" strokeWidth={2.5} /> Copied</>
+                                  : <><Copy className="w-2.5 h-2.5" strokeWidth={2} /> Copy</>}
                               </motion.button>
+
+                              {msg.responseType === "recipe" && msg.recipeId && (
+                                <motion.button
+                                  onClick={() => handleSaveRecipe(msg)}
+                                  className="flex items-center gap-1 px-2 py-1 text-[9px] font-bold uppercase transition-all"
+                                  style={{
+                                    color: savedIds.has(msg.id) ? "#4ade80" : `${VIOLET}80`,
+                                    border: `1px solid ${savedIds.has(msg.id) ? "rgba(74,222,128,0.2)" : "rgba(240,62,158,0.2)"}`,
+                                    letterSpacing: "0.12em",
+                                  }}
+                                  whileHover={{ scale: 1.03 } as never}
+                                  whileTap={{ scale: 0.97 }}
+                                >
+                                  {savedIds.has(msg.id)
+                                    ? <><Check className="w-2.5 h-2.5" strokeWidth={2.5} /> Saved</>
+                                    : <><BookmarkPlus className="w-2.5 h-2.5" strokeWidth={2} /> View Recipe</>}
+                                </motion.button>
+                              )}
+                            </div>
+
+                            {/* Quick action chips — only on recipe messages */}
+                            {msg.responseType === "recipe" && msg.recipe && (
+                              <div className="flex flex-wrap gap-1">
+                                {[
+                                  { label: "🛒 Shopping list", prompt: `Give me a complete shopping list for ${msg.recipe.title}, grouped by store section (Produce, Pantry, Dairy, Meat & Seafood, Spices). Include quantities for each item.` },
+                                  { label: "🌶 Spicier",       prompt: `Make a spicier version of ${msg.recipe.title}` },
+                                  { label: "🥗 Healthier",     prompt: `Make a healthier version of ${msg.recipe.title}` },
+                                  { label: "⚡ Simpler",       prompt: `Make an easier, simpler version of ${msg.recipe.title}` },
+                                  { label: "👥 For 2",         prompt: `Adjust ${msg.recipe.title} for 2 people` },
+                                  { label: "👥 For 6",         prompt: `Adjust ${msg.recipe.title} for 6 people` },
+                                ].map(({ label, prompt }) => (
+                                  <motion.button
+                                    key={label}
+                                    onClick={() => { if (!isLoading) doSubmit(prompt); }}
+                                    disabled={isLoading}
+                                    className="px-2 py-1 text-[9px] font-bold uppercase transition-all"
+                                    style={{
+                                      color: `${CREAM}30`,
+                                      border: "1px solid rgba(247,224,192,0.07)",
+                                      letterSpacing: "0.1em",
+                                      opacity: isLoading ? 0.35 : 1,
+                                    }}
+                                    whileHover={!isLoading ? { color: CREAM, borderColor: "rgba(240,62,158,0.35)" } as never : {}}
+                                    whileTap={!isLoading ? { scale: 0.95 } as never : {}}
+                                  >
+                                    {label}
+                                  </motion.button>
+                                ))}
+                              </div>
                             )}
                           </div>
                         )}
