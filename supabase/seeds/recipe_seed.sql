@@ -38,7 +38,7 @@ BEGIN
      {"name":"saffron","amount":"1","unit":"pinch"},
      {"name":"fresh mint leaves","amount":"1","unit":"handful"}]'::jsonb,
    'South Asian', 'medium', 90, 5,
-   'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=800&q=80',
+   '/images/Recipes/chicken-biryani.jpg',
    true, true, ARRAY['rice','chicken','dum','spiced']),
 
   -- ── 2. Butter Chicken ────────────────────────────────────────────────────
@@ -60,7 +60,7 @@ BEGIN
      {"name":"kasuri methi","amount":"1","unit":"tsp"},
      {"name":"honey","amount":"1","unit":"tsp"}]'::jsonb,
    'South Asian', 'easy', 40, 4,
-   'https://images.unsplash.com/photo-1585937421612-70a008356fbe?auto=format&fit=crop&w=800&q=80',
+   '/images/Recipes/butter-chicken.jpg',
    true, true, ARRAY['curry','creamy','mild','chicken']),
 
   -- ── 3. Lamb Seekh Kebab ──────────────────────────────────────────────────
@@ -81,7 +81,7 @@ BEGIN
      {"name":"fresh coriander (chopped)","amount":"3","unit":"tbsp"},
      {"name":"chaat masala","amount":"0.5","unit":"tsp"}]'::jsonb,
    'South Asian', 'medium', 30, 4,
-   'https://images.unsplash.com/photo-1544025162-d76538cf8ed1?auto=format&fit=crop&w=800&q=80',
+   '/images/Recipes/lamb-seekh-kebab.jpg',
    true, true, ARRAY['kebab','grilled','lamb','bbq']),
 
   -- ── 4. Dal Makhani ───────────────────────────────────────────────────────
@@ -103,7 +103,7 @@ BEGIN
      {"name":"Kashmiri chilli powder","amount":"1","unit":"tsp"},
      {"name":"ginger-garlic paste","amount":"1","unit":"tbsp"}]'::jsonb,
    'South Asian', 'easy', 90, 4,
-   'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80',
+   '/images/Recipes/dal-makhani.jpg',
    true, true, ARRAY['lentils','vegetarian','slow-cooked','comfort']),
 
   -- ── 5. Haleem ────────────────────────────────────────────────────────────
@@ -126,7 +126,7 @@ BEGIN
      {"name":"ghee","amount":"4","unit":"tbsp"},
      {"name":"onions","amount":"3","unit":"large"}]'::jsonb,
    'South Asian', 'hard', 180, 6,
-   'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80',
+   '/images/Recipes/haleem.jpg',
    true, true, ARRAY['lamb','grains','slow-cooked','Ramadan']),
 
   -- ── 6. Chicken Nihari ────────────────────────────────────────────────────
@@ -149,7 +149,7 @@ BEGIN
      {"name":"fresh ginger (julienne)","amount":"30","unit":"g"},
      {"name":"lemon","amount":"1","unit":""}]'::jsonb,
    'South Asian', 'hard', 100, 4,
-   'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=800&q=80',
+   '/images/Recipes/chicken-nihari.jpg',
    true, true, ARRAY['chicken','slow-cooked','gravy','breakfast']),
 
   -- ── 7. Crispy Samosas ────────────────────────────────────────────────────
@@ -171,7 +171,7 @@ BEGIN
      {"name":"green chilli (finely chopped)","amount":"1","unit":""},
      {"name":"oil for deep frying","amount":"1","unit":"litre"}]'::jsonb,
    'South Asian', 'medium', 55, 6,
-   'https://images.unsplash.com/photo-1574484284002-952d92456975?auto=format&fit=crop&w=800&q=80',
+   '/images/Recipes/crispy-potato-samosas.jpg',
    true, true, ARRAY['snack','fried','pastry','vegetarian']),
 
   -- ── 8. Tandoori Chicken ──────────────────────────────────────────────────
@@ -193,7 +193,7 @@ BEGIN
      {"name":"vegetable oil","amount":"2","unit":"tbsp"},
      {"name":"salt","amount":"1.5","unit":"tsp"}]'::jsonb,
    'South Asian', 'easy', 45, 4,
-   'https://images.unsplash.com/photo-1599974579688-8dbdd335c77f?auto=format&fit=crop&w=800&q=80',
+   '/images/Recipes/tandoori-chicken.png',
    true, true, ARRAY['chicken','grilled','tandoori','marinade']),
 
   -- ── 9. Chicken Shawarma ──────────────────────────────────────────────────
@@ -215,7 +215,7 @@ BEGIN
      {"name":"pickled turnips","amount":"80","unit":"g"},
      {"name":"tahini","amount":"2","unit":"tbsp"}]'::jsonb,
    'Middle Eastern', 'medium', 35, 4,
-   'https://images.unsplash.com/photo-1529006557810-274b9b501176?auto=format&fit=crop&w=800&q=80',
+   '/images/Recipes/chicken-shawarma.jpg',
    true, true, ARRAY['wrap','street food','chicken','grilled']),
 
   -- ── 10. Classic Hummus ───────────────────────────────────────────────────
@@ -237,7 +237,7 @@ BEGIN
      {"name":"smoked paprika","amount":"0.5","unit":"tsp"},
      {"name":"salt","amount":"1","unit":"tsp"}]'::jsonb,
    'Middle Eastern', 'easy', 15, 6,
-   'https://images.unsplash.com/photo-1593001872095-7d5b3868fb1d?auto=format&fit=crop&w=800&q=80',
+   '/images/Recipes/classic-hummus.jpg',
    true, true, ARRAY['dip','chickpeas','vegan','quick']),
 
   -- ── 11. Crispy Falafel ───────────────────────────────────────────────────
@@ -259,7 +259,7 @@ BEGIN
      {"name":"baking powder","amount":"1","unit":"tsp"},
      {"name":"sesame seeds","amount":"2","unit":"tbsp"}]'::jsonb,
    'Middle Eastern', 'medium', 30, 4,
-   'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80',
+   '/images/Recipes/crispy-falafel.jpg',
    true, true, ARRAY['chickpeas','fried','vegan','street food']),
 
   -- ── 12. Lamb Mansaf ──────────────────────────────────────────────────────
@@ -281,7 +281,7 @@ BEGIN
      {"name":"saffron","amount":"1","unit":"pinch"},
      {"name":"thin flatbread (markook)","amount":"2","unit":"sheets"}]'::jsonb,
    'Middle Eastern', 'hard', 120, 6,
-   'https://images.unsplash.com/photo-1574894709920-11b28e7367e3?auto=format&fit=crop&w=800&q=80',
+   '/images/Recipes/jordanian-lamb-mansaf.jpg',
    true, true, ARRAY['lamb','Jordan','celebratory','yogurt']),
 
   -- ── 13. Saudi Kabsa ──────────────────────────────────────────────────────
@@ -303,7 +303,7 @@ BEGIN
      {"name":"raisins","amount":"40","unit":"g"},
      {"name":"toasted almonds","amount":"50","unit":"g"}]'::jsonb,
    'Middle Eastern', 'medium', 80, 6,
-   'https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=800&q=80',
+   '/images/Recipes/saudi-kabsa.jpg',
    true, true, ARRAY['rice','Saudi','chicken','festive']),
 
   -- ── 14. Tabbouleh ────────────────────────────────────────────────────────
@@ -325,7 +325,7 @@ BEGIN
      {"name":"extra-virgin olive oil","amount":"60","unit":"ml"},
      {"name":"ground allspice","amount":"0.25","unit":"tsp"}]'::jsonb,
    'Middle Eastern', 'easy', 20, 4,
-   'https://images.unsplash.com/photo-1547592166-23ac88772483?auto=format&fit=crop&w=800&q=80',
+   '/images/Recipes/lebanese-tabbouleh.jpg',
    true, true, ARRAY['salad','herbs','vegan','mezze']),
 
   -- ── 15. Baked Kibbeh ─────────────────────────────────────────────────────
@@ -348,7 +348,7 @@ BEGIN
      {"name":"olive oil","amount":"4","unit":"tbsp"},
      {"name":"salt and black pepper","amount":"","unit":"to taste"}]'::jsonb,
    'Middle Eastern', 'medium', 60, 6,
-   'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=800&q=80',
+   '/images/Recipes/baked-kibbeh.jpg',
    true, true, ARRAY['lamb','baked','Lebanese','mezze']),
 
   -- ── 16. Chicken Tagine ───────────────────────────────────────────────────
@@ -371,7 +371,7 @@ BEGIN
      {"name":"ground turmeric","amount":"0.5","unit":"tsp"},
      {"name":"olive oil","amount":"3","unit":"tbsp"}]'::jsonb,
    'Moroccan', 'medium', 90, 4,
-   'https://images.unsplash.com/photo-1551218808-94e220e084d2?auto=format&fit=crop&w=800&q=80',
+   '/images/Recipes/moroccan-chicken-tagine.jpg',
    true, true, ARRAY['tagine','Moroccan','slow-cooked','chicken']),
 
   -- ── 17. Harira Soup ──────────────────────────────────────────────────────
@@ -393,7 +393,7 @@ BEGIN
      {"name":"vermicelli noodles","amount":"60","unit":"g"},
      {"name":"saffron and warming spices","amount":"","unit":"to taste"}]'::jsonb,
    'Moroccan', 'easy', 60, 6,
-   'https://images.unsplash.com/photo-1534482421-64566f976cfa?auto=format&fit=crop&w=800&q=80',
+   '/images/Recipes/harira-soup.jpg',
    true, true, ARRAY['soup','Ramadan','lamb','lentils']),
 
   -- ── 18. Lamb Couscous ────────────────────────────────────────────────────
@@ -415,7 +415,7 @@ BEGIN
      {"name":"saffron","amount":"1","unit":"pinch"},
      {"name":"harissa (to serve)","amount":"","unit":""}]'::jsonb,
    'Moroccan', 'medium', 110, 6,
-   'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=800&q=80',
+   '/images/Recipes/moroccan-lamb-couscous.jpg',
    true, true, ARRAY['couscous','lamb','Moroccan','feast']),
 
   -- ── 19. Chicken Bastilla ─────────────────────────────────────────────────
@@ -438,7 +438,7 @@ BEGIN
      {"name":"ground cinnamon","amount":"1","unit":"tsp"},
      {"name":"unsalted butter","amount":"100","unit":"g"}]'::jsonb,
    'Moroccan', 'hard', 120, 6,
-   'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80',
+   '/images/Recipes/chicken-bastilla.jpg',
    true, false, ARRAY['pie','pastry','Moroccan','festive']),
 
   -- ── 20. Iskender Kebab ───────────────────────────────────────────────────
@@ -461,7 +461,7 @@ BEGIN
      {"name":"ground cumin","amount":"1","unit":"tsp"},
      {"name":"chilli flakes","amount":"0.5","unit":"tsp"}]'::jsonb,
    'Turkish', 'medium', 45, 4,
-   'https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&w=800&q=80',
+   '/images/Recipes/iskender-kebab.jpg',
    true, true, ARRAY['kebab','Turkish','lamb','bread']),
 
   -- ── 21. Lahmacun ─────────────────────────────────────────────────────────
@@ -484,7 +484,7 @@ BEGIN
      {"name":"paprika","amount":"1","unit":"tsp"},
      {"name":"flat-leaf parsley","amount":"30","unit":"g"}]'::jsonb,
    'Turkish', 'medium', 55, 4,
-   'https://images.unsplash.com/photo-1540189549336-e6e99dba4f66?auto=format&fit=crop&w=800&q=80',
+   '/images/Recipes/lahmacun.jpg',
    true, true, ARRAY['flatbread','Turkish','lamb','baked']),
 
   -- ── 22. Menemen ──────────────────────────────────────────────────────────
@@ -506,7 +506,7 @@ BEGIN
      {"name":"chilli flakes","amount":"0.25","unit":"tsp"},
      {"name":"flat-leaf parsley","amount":"10","unit":"g"}]'::jsonb,
    'Turkish', 'easy', 20, 2,
-   'https://images.unsplash.com/photo-1518779578993-ec3579fee39f?auto=format&fit=crop&w=800&q=80',
+   '/images/Recipes/menemen.jpg',
    true, true, ARRAY['breakfast','eggs','Turkish','quick']),
 
   -- ── 23. Jollof Rice ──────────────────────────────────────────────────────
@@ -529,7 +529,7 @@ BEGIN
      {"name":"tomato paste","amount":"2","unit":"tbsp"},
      {"name":"dried thyme","amount":"1","unit":"tsp"}]'::jsonb,
    'West African', 'medium', 65, 6,
-   'https://images.unsplash.com/photo-1603360946369-dc9bb6258143?auto=format&fit=crop&w=800&q=80',
+   '/images/Recipes/west-african-jollof-rice.jpg',
    true, true, ARRAY['rice','West African','tomato','festive']),
 
   -- ── 24. Suya Skewers ─────────────────────────────────────────────────────
@@ -550,7 +550,7 @@ BEGIN
      {"name":"onion powder","amount":"0.5","unit":"tsp"},
      {"name":"vegetable oil","amount":"3","unit":"tbsp"}]'::jsonb,
    'West African', 'easy', 25, 4,
-   'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=800&q=80',
+   '/images/Recipes/nigerian-suya-skewers.jpg',
    true, true, ARRAY['beef','grilled','Nigerian','street food']),
 
   -- ── 25. Chermoula Grilled Fish ───────────────────────────────────────────
@@ -572,7 +572,7 @@ BEGIN
      {"name":"smoked paprika","amount":"1","unit":"tsp"},
      {"name":"extra-virgin olive oil","amount":"5","unit":"tbsp"}]'::jsonb,
    'Mediterranean', 'easy', 25, 4,
-   'https://images.unsplash.com/photo-1455619452474-d73693d409d5?auto=format&fit=crop&w=800&q=80',
+   '/images/Recipes/chermoula-grilled-sea-bass.jpg',
    true, true, ARRAY['fish','grilled','Moroccan','healthy'])
 
   ON CONFLICT DO NOTHING;

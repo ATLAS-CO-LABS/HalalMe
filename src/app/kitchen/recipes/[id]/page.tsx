@@ -614,17 +614,34 @@ export default function RecipeDetailPage({
       `}</style>
 
       {/* Hero image */}
-      <div className="no-print relative h-72 md:h-[420px] lg:h-[520px]">
+      <div
+        className="no-print relative h-72 md:h-[420px] lg:h-[520px] overflow-hidden"
+        style={{ backgroundColor: BG2 }}
+      >
         {recipe.image_url ? (
-          <Image
-            src={cldUrl(recipe.image_url, CLD_RECIPE) ?? recipe.image_url!}
-            alt={recipe.title}
-            fill
-            sizes="100vw"
-            className="object-cover object-center"
-            priority
-            loading="eager"
-          />
+          <>
+            {/* Blurred backdrop fills the letterbox area so the full photo
+                can sit uncropped in front without empty bars. */}
+            <Image
+              src={cldUrl(recipe.image_url) ?? recipe.image_url!}
+              alt=""
+              aria-hidden
+              fill
+              sizes="100vw"
+              className="object-cover scale-110 blur-2xl opacity-40"
+              priority
+            />
+            {/* The full, uncropped recipe photo. */}
+            <Image
+              src={cldUrl(recipe.image_url) ?? recipe.image_url!}
+              alt={recipe.title}
+              fill
+              sizes="100vw"
+              className="object-contain object-center"
+              priority
+              loading="eager"
+            />
+          </>
         ) : (
           <div
             className="w-full h-full flex items-center justify-center"

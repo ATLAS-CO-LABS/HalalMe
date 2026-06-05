@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase-server";
 import { createHyperzodMerchant } from "@/services/hyperzodService";
+import { sendMerchantWelcomeEmail } from "@/services/emailService";
 
 export async function POST(req: NextRequest) {
   try {
@@ -80,6 +81,15 @@ export async function POST(req: NextRequest) {
       console.error("[provision-merchant] db insert error", dbError);
       return NextResponse.json({ error: "db_error" }, { status: 500 });
     }
+
+    // Fire-and-forget — do not block the response on email delivery
+    sendMerchantWelcomeEmail({
+      to: email,
+      restaurantName: name,
+      ownerName: owner_name ?? undefined,
+    }).catch((err) =>
+      console.error("[provision-merchant] welcome email failed", err)
+    );
 
     return NextResponse.json({
       success: true,

@@ -3,7 +3,7 @@
 import { motion, useInView } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   BookOpen,
@@ -14,6 +14,9 @@ import {
   ArrowRight,
 } from "lucide-react";
 import AQISection from "./AQISection";
+import { recipeService } from "@/services/recipeService";
+import { cldUrl } from "@/lib/cldUrl";
+import type { Recipe } from "@/types";
 
 /* ─── Magenta base - matches AI assistant palette ───── */
 const BG = "#1C1C1C";
@@ -21,6 +24,13 @@ const BG2 = "#161616";
 const CREAM = "#F7E7CE";
 const MAGENTA = "#F03E9E";
 const DEEP = "#C41E73";
+
+function cookTimeLabel(mins: number | null) {
+  if (!mins) return "—";
+  return mins >= 60
+    ? `${Math.floor(mins / 60)}h ${mins % 60 > 0 ? `${mins % 60}m` : ""}`.trim()
+    : `${mins} min`;
+}
 
 export default function KitchenLandingPage() {
   const router = useRouter();
@@ -34,6 +44,15 @@ export default function KitchenLandingPage() {
   const cardsInView = useInView(cardsRef, { once: true });
   const featuresInView = useInView(featuresRef, { once: true });
   const ctaInView = useInView(ctaRef, { once: true });
+
+  // ── Recipe feed carousel (real recipes) ──────────────
+  const [feed, setFeed] = useState<Recipe[]>([]);
+  useEffect(() => {
+    recipeService
+      .getRecipes({ pageSize: 10 })
+      .then((res) => setFeed(res.data))
+      .catch(() => {});
+  }, []);
 
   const features = [
     {
@@ -672,144 +691,126 @@ export default function KitchenLandingPage() {
               }}
             />
 
-            <div
-              className="flex"
-              style={{ animation: "kitchen-scroll 28s linear infinite" }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.animationPlayState = "paused")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.animationPlayState = "running")
-              }
-            >
-              {[...Array(2)].map((_, clone) =>
-                [
-                  {
-                    title: "Lamb Biryani",
-                    cuisine: "South Asian",
-                    time: "60 min",
-                    difficulty: "Medium",
-                    rating: "4.9",
-                    author: "Fatima A.",
-                    emoji: "🍚",
-                  },
-                  {
-                    title: "Chicken Shawarma",
-                    cuisine: "Middle Eastern",
-                    time: "35 min",
-                    difficulty: "Easy",
-                    rating: "4.8",
-                    author: "Omar K.",
-                    emoji: "🌯",
-                  },
-                  {
-                    title: "Butter Chicken",
-                    cuisine: "South Asian",
-                    time: "45 min",
-                    difficulty: "Medium",
-                    rating: "4.7",
-                    author: "Aisha M.",
-                    emoji: "🍛",
-                  },
-                  {
-                    title: "Beef Kofta",
-                    cuisine: "Middle Eastern",
-                    time: "30 min",
-                    difficulty: "Easy",
-                    rating: "4.8",
-                    author: "Yusuf R.",
-                    emoji: "🍢",
-                  },
-                  {
-                    title: "Dal Makhani",
-                    cuisine: "South Asian",
-                    time: "50 min",
-                    difficulty: "Medium",
-                    rating: "4.6",
-                    author: "Sara N.",
-                    emoji: "🍲",
-                  },
-                  {
-                    title: "Falafel Wrap",
-                    cuisine: "Mediterranean",
-                    time: "20 min",
-                    difficulty: "Easy",
-                    rating: "4.7",
-                    author: "Hana M.",
-                    emoji: "🥙",
-                  },
-                ].map((recipe, i) => (
-                  <Link
-                    href="/kitchen/recipes"
-                    key={`${clone}-${i}`}
-                    className="shrink-0 mx-2"
-                    style={{ width: "260px" }}
-                  >
-                    <div
-                      className="group cursor-pointer transition-colors duration-300"
-                      onMouseEnter={(e) =>
-                        (e.currentTarget.style.backgroundColor = DEEP)
-                      }
-                      onMouseLeave={(e) =>
-                        (e.currentTarget.style.backgroundColor = BG2)
-                      }
-                      style={{
-                        backgroundColor: BG2,
-                        border: `1px solid ${MAGENTA}25`,
-                      }}
-                    >
-                      <div
-                        className="w-full h-36 flex items-center justify-center"
-                        style={{
-                          backgroundColor: `${MAGENTA}12`,
-                          borderBottom: `1px solid ${MAGENTA}20`,
-                        }}
-                      >
-                        <span className="text-5xl">{recipe.emoji}</span>
-                      </div>
-                      <div className="p-4">
-                        <div className="flex items-start justify-between gap-2 mb-1.5">
-                          <h3
-                            className="text-sm font-extrabold uppercase tracking-tighter group-hover:text-black! transition-colors"
-                            style={{ color: CREAM }}
-                          >
-                            {recipe.title}
-                          </h3>
-                          <span
-                            className="text-xs font-bold shrink-0 group-hover:text-black/60! transition-colors"
-                            style={{ color: `${CREAM}75` }}
-                          >
-                            ★ {recipe.rating}
-                          </span>
-                        </div>
-                        <p
-                          className="text-[10px] uppercase tracking-wide font-semibold mb-2 group-hover:text-black! transition-colors"
-                          style={{ color: MAGENTA }}
-                        >
-                          {recipe.cuisine}
-                        </p>
-                        <div
-                          className="flex items-center justify-between text-[10px] group-hover:text-black/65! transition-colors"
-                          style={{ color: `${CREAM}55` }}
-                        >
-                          <span>⏱ {recipe.time}</span>
-                          <span
-                            className={
-                              recipe.difficulty === "Easy"
-                                ? "text-green-400"
-                                : "text-yellow-400"
-                            }
-                          >
-                            {recipe.difficulty}
-                          </span>
-                          <span>by {recipe.author}</span>
-                        </div>
+            {feed.length === 0 ? (
+              /* Loading skeletons */
+              <div className="flex">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="shrink-0 mx-2" style={{ width: "260px" }}>
+                    <div style={{ backgroundColor: BG2, border: `1px solid ${MAGENTA}25` }}>
+                      <div className="w-full h-36 animate-pulse" style={{ backgroundColor: `${MAGENTA}12` }} />
+                      <div className="p-4 space-y-2">
+                        <div className="h-3 w-3/4 animate-pulse" style={{ backgroundColor: `${CREAM}15` }} />
+                        <div className="h-2 w-1/2 animate-pulse" style={{ backgroundColor: `${CREAM}10` }} />
+                        <div className="h-2 w-full animate-pulse" style={{ backgroundColor: `${CREAM}08` }} />
                       </div>
                     </div>
-                  </Link>
-                )),
-              )}
-            </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div
+                className="flex"
+                style={{ animation: "kitchen-scroll 28s linear infinite" }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.animationPlayState = "paused")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.animationPlayState = "running")
+                }
+              >
+                {[...Array(2)].map((_, clone) =>
+                  feed.map((recipe, i) => (
+                    <Link
+                      href={`/kitchen/recipes/${recipe.id}`}
+                      key={`${clone}-${i}`}
+                      className="shrink-0 mx-2"
+                      style={{ width: "260px" }}
+                    >
+                      <div
+                        className="group cursor-pointer transition-colors duration-300"
+                        onMouseEnter={(e) =>
+                          (e.currentTarget.style.backgroundColor = DEEP)
+                        }
+                        onMouseLeave={(e) =>
+                          (e.currentTarget.style.backgroundColor = BG2)
+                        }
+                        style={{
+                          backgroundColor: BG2,
+                          border: `1px solid ${MAGENTA}25`,
+                        }}
+                      >
+                        <div
+                          className="relative w-full h-36 overflow-hidden"
+                          style={{
+                            backgroundColor: `${MAGENTA}12`,
+                            borderBottom: `1px solid ${MAGENTA}20`,
+                          }}
+                        >
+                          {recipe.image_url ? (
+                            <Image
+                              src={cldUrl(recipe.image_url) ?? recipe.image_url}
+                              alt={recipe.title}
+                              fill
+                              sizes="260px"
+                              className="object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <ChefHat className="w-10 h-10 text-gray-600" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-4">
+                          <div className="flex items-start justify-between gap-2 mb-1.5">
+                            <h3
+                              className="text-sm font-extrabold uppercase tracking-tighter line-clamp-1 group-hover:text-black! transition-colors"
+                              style={{ color: CREAM }}
+                            >
+                              {recipe.title}
+                            </h3>
+                            {recipe.avg_rating ? (
+                              <span
+                                className="text-xs font-bold shrink-0 group-hover:text-black/60! transition-colors"
+                                style={{ color: `${CREAM}75` }}
+                              >
+                                ★ {Number(recipe.avg_rating).toFixed(1)}
+                              </span>
+                            ) : null}
+                          </div>
+                          <p
+                            className="text-[10px] uppercase tracking-wide font-semibold mb-2 group-hover:text-black! transition-colors"
+                            style={{ color: MAGENTA }}
+                          >
+                            {recipe.cuisine ?? "Halal"}
+                          </p>
+                          <div
+                            className="flex items-center justify-between text-[10px] group-hover:text-black/65! transition-colors"
+                            style={{ color: `${CREAM}55` }}
+                          >
+                            <span>⏱ {cookTimeLabel(recipe.cook_time_mins)}</span>
+                            {recipe.difficulty && (
+                              <span
+                                className={
+                                  recipe.difficulty === "easy"
+                                    ? "text-green-400"
+                                    : "text-yellow-400"
+                                }
+                              >
+                                {recipe.difficulty.charAt(0).toUpperCase() +
+                                  recipe.difficulty.slice(1)}
+                              </span>
+                            )}
+                            <span className="truncate max-w-[80px]">
+                              by {recipe.profiles?.username ?? "Community"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  )),
+                )}
+              </div>
+            )}
           </div>
           <style>{`
             @keyframes kitchen-scroll {
