@@ -197,19 +197,24 @@ export const hubService = {
   async deletePost(id: string): Promise<void> {
     const { data: post } = await supabase
       .from("posts")
-      .select("media_public_ids")
+      .select("media_public_ids, media_urls")
       .eq("id", id)
       .single();
 
     const { error } = await supabase.from("posts").delete().eq("id", id);
     if (error) throw new Error(error.message);
 
-    // Best-effort Cloudinary cleanup — fire-and-forget, never block
+    // Best-effort Cloudinary cleanup — fire-and-forget, never block.
+    // media_urls is sent alongside so the API can delete videos with the correct
+    // resource_type (otherwise videos would orphan and eat the Cloudinary quota).
     if (post?.media_public_ids?.length) {
       fetch("/api/upload/delete", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ public_ids: post.media_public_ids }),
+        body:    JSON.stringify({
+          public_ids: post.media_public_ids,
+          media_urls: post.media_urls ?? [],
+        }),
       }).catch(() => {});
     }
   },
@@ -224,12 +229,18 @@ export const hubService = {
     postId: string,
     file: File
   ): Promise<{ url: string; public_id: string }> {
-    const ALLOWED_MIME = ["image/jpeg", "image/png", "image/webp", "image/gif", "video/mp4"];
+    // video/quicktime (.mov) is how iPhones record video and Live Photos, and
+    // image/heic/heif is the default iPhone photo format — Cloudinary transcodes
+    // all of these on delivery, so they're safe to accept.
+    const ALLOWED_MIME = [
+      "image/jpeg", "image/png", "image/webp", "image/gif", "image/heic", "image/heif",
+      "video/mp4", "video/quicktime",
+    ];
     const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 
     if (file.size > MAX_FILE_SIZE) throw new Error("File size exceeds the 50 MB limit.");
     if (!ALLOWED_MIME.includes(file.type)) {
-      throw new Error(`File type "${file.type}" is not allowed. Use JPEG, PNG, WebP, GIF, or MP4.`);
+      throw new Error(`File type "${file.type}" is not allowed. Use JPEG, PNG, WebP, GIF, MP4, or MOV.`);
     }
 
     const cloudName    = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;

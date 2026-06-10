@@ -1,7 +1,8 @@
-import { Bricolage_Grotesque } from "next/font/google";
+import { Poppins } from "next/font/google";
 
-// Distinctive display face for admin headings — warm, characterful, on-brand.
-export const display = Bricolage_Grotesque({
+// Platform headline face — matches the consumer app's Poppins headings so the
+// admin reads as part of the same brand system.
+export const display = Poppins({
   subsets: ["latin"],
   weight: ["500", "600", "700", "800"],
   display: "swap",

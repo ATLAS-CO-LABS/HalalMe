@@ -35,7 +35,10 @@ import {
   Pencil,
   Power,
   Trash2,
+  FileText,
+  Eye,
 } from "lucide-react";
+import { MERCHANT_DOC_TYPES, REQUIRED_DOC_KEYS } from "@/lib/merchantStages";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -69,6 +72,17 @@ interface Merchant {
   invited_at: string | null;
   contacted_at: string | null;
   activated_at: string | null;
+}
+
+interface AdminDocument {
+  id: string;
+  doc_type: string;
+  status: "uploaded" | "under_review" | "approved" | "rejected";
+  rejection_reason: string | null;
+  expires_at: string | null;
+  file_name: string | null;
+  uploaded_at: string;
+  url: string;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -136,8 +150,22 @@ function daysSince(iso: string) {
 function StatusBadge({ status }: { status: string }) {
   const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.pending;
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${cfg.badge}`}>
+    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${cfg.badge}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+      {cfg.label}
+    </span>
+  );
+}
+
+function DocBadge({ status }: { status: AdminDocument["status"] }) {
+  const cfg =
+    status === "approved"
+      ? { label: "Approved", cls: "bg-green-50 text-green-700" }
+      : status === "rejected"
+      ? { label: "Rejected", cls: "bg-red-50 text-red-700" }
+      : { label: "Under review", cls: "bg-amber-50 text-amber-700" };
+  return (
+    <span className={`shrink-0 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 ${cfg.cls}`}>
       {cfg.label}
     </span>
   );
@@ -159,11 +187,11 @@ function Card({
   className?: string;
 }) {
   return (
-    <div className={`bg-white rounded-2xl border shadow-sm ${accent ? "border-gray-100 border-l-4 border-l-[#102C26]" : "border-gray-100"} ${className}`}>
+    <div className={`bg-white rounded-none border ${accent ? "border-[#102C26]/12 border-l-4 border-l-[#102C26]" : "border-[#102C26]/12"} ${className}`}>
       {title && (
-        <div className="px-4 sm:px-6 py-4 border-b border-gray-50 flex items-start justify-between gap-3">
+        <div className="px-4 sm:px-6 py-4 border-b border-[#102C26]/8 flex items-start justify-between gap-3">
           <div>
-            <h2 className={`${display.className} text-[15px] font-bold text-[#102C26] tracking-tight`}>{title}</h2>
+            <h2 className={`${display.className} text-[13px] font-extrabold uppercase tracking-wide text-[#102C26]`}>{title}</h2>
             {subtitle && <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>}
           </div>
           {action && <div className="shrink-0">{action}</div>}
@@ -186,8 +214,8 @@ function InfoItem({
   mono?: boolean;
 }) {
   return (
-    <div className="flex items-start gap-3 py-3.5 border-b border-gray-50 last:border-0">
-      <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center shrink-0">
+    <div className="flex items-start gap-3 py-3.5 border-b border-[#102C26]/8 last:border-0">
+      <div className="w-8 h-8 rounded-none bg-gray-50 flex items-center justify-center shrink-0">
         <Icon size={14} className="text-gray-400" />
       </div>
       <div className="flex-1 min-w-0">
@@ -209,9 +237,9 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
 }
 
 const inputCls =
-  "w-full text-sm text-gray-900 bg-white border border-gray-300 rounded-xl px-3.5 py-2.5 " +
+  "w-full text-sm text-gray-900 bg-white border border-gray-300 rounded-none px-3.5 py-2.5 " +
   "focus:outline-none focus:ring-2 focus:ring-[#102C26]/20 focus:border-[#102C26] " +
-  "placeholder:text-gray-400 transition-colors shadow-sm";
+  "placeholder:text-gray-400 transition-colors";
 
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
@@ -219,26 +247,26 @@ const inputCls =
 function Skeleton() {
   return (
     <div className="animate-pulse">
-      <div className="bg-white border-b border-gray-100 px-8 py-5 flex items-center justify-between">
+      <div className="bg-white border-b border-[#102C26]/12 px-8 py-5 flex items-center justify-between">
         <div className="space-y-2">
           <div className="h-3 bg-gray-200 rounded w-28" />
           <div className="h-6 bg-gray-200 rounded w-56" />
         </div>
-        <div className="h-9 bg-gray-200 rounded-xl w-32" />
+        <div className="h-9 bg-gray-200 rounded-none w-32" />
       </div>
-      <div className="grid grid-cols-4 gap-4 px-8 py-5 bg-gray-50 border-b border-gray-100">
+      <div className="grid grid-cols-4 gap-4 px-8 py-5 bg-gray-50 border-b border-[#102C26]/12">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="bg-white rounded-2xl border border-gray-100 h-20" />
+          <div key={i} className="bg-white rounded-none border border-[#102C26]/12 h-20" />
         ))}
       </div>
       <div className="p-8 grid grid-cols-5 gap-6">
         <div className="col-span-3 space-y-5">
-          <div className="h-64 bg-gray-100 rounded-2xl" />
-          <div className="h-48 bg-gray-100 rounded-2xl" />
+          <div className="h-64 bg-gray-100 rounded-none" />
+          <div className="h-48 bg-gray-100 rounded-none" />
         </div>
         <div className="col-span-2 space-y-5">
-          <div className="h-52 bg-gray-100 rounded-2xl" />
-          <div className="h-48 bg-gray-100 rounded-2xl" />
+          <div className="h-52 bg-gray-100 rounded-none" />
+          <div className="h-48 bg-gray-100 rounded-none" />
         </div>
       </div>
     </div>
@@ -299,6 +327,12 @@ export default function MerchantDetailPage() {
   const [publishing, setPublishing] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
 
+  // Documents
+  const [documents, setDocuments] = useState<AdminDocument[]>([]);
+  const [reviewingId, setReviewingId] = useState<string | null>(null);
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -318,6 +352,42 @@ export default function MerchantDetailPage() {
   }, [id]);
 
   useEffect(() => { load(); }, [load]);
+
+  const loadDocuments = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/admin/merchants/${id}/documents`);
+      if (!res.ok) return;
+      const { documents: docs } = await res.json() as { documents: AdminDocument[] };
+      setDocuments(docs);
+    } catch {
+      // non-fatal — the rest of the page still works
+    }
+  }, [id]);
+
+  useEffect(() => { loadDocuments(); }, [loadDocuments]);
+
+  async function reviewDocument(docId: string, action: "approve" | "reject", reason?: string) {
+    setReviewingId(docId);
+    try {
+      const res = await fetch(`/api/admin/merchants/${id}/documents/${docId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, reason }),
+      });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({})) as { error?: string };
+        alert(json.error ?? "Couldn't update the document. Please try again.");
+        return;
+      }
+      setRejectingId(null);
+      setRejectReason("");
+      await loadDocuments();
+    } catch {
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setReviewingId(null);
+    }
+  }
 
   // Save the Details card (rep + commission only)
   async function handleSaveDetails() {
@@ -537,7 +607,7 @@ export default function MerchantDetailPage() {
   if (notFound || !merchant) {
     return (
       <div className="flex flex-col items-center justify-center min-h-96 text-center py-24">
-        <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center mb-4">
+        <div className="w-12 h-12 bg-gray-100 rounded-none flex items-center justify-center mb-4">
           <AlertTriangle size={20} className="text-gray-400" />
         </div>
         <p className="text-base font-semibold text-gray-700">Merchant not found</p>
@@ -563,11 +633,18 @@ export default function MerchantDetailPage() {
   const isRejected = merchant.status === "rejected";
   const currentIndex = STAGES.findIndex((s) => s.key === merchant.status);
 
+  const requiredDocsApproved = REQUIRED_DOC_KEYS.every((k) =>
+    documents.some((d) => d.doc_type === k && d.status === "approved"),
+  );
+  const approvedRequiredCount = REQUIRED_DOC_KEYS.filter((k) =>
+    documents.some((d) => d.doc_type === k && d.status === "approved"),
+  ).length;
+
   return (
     <div className="bg-[#F3E9D6] min-h-full">
 
       {/* ── Header ── */}
-      <div className="bg-white border-b border-gray-100 px-4 sm:px-8 py-3 sm:py-4 sticky top-14 md:top-0 z-20 shadow-sm">
+      <div className="bg-white border-b border-[#102C26]/12 px-4 sm:px-8 py-3 sm:py-4 sticky top-14 md:top-0 z-20">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <button
@@ -579,7 +656,7 @@ export default function MerchantDetailPage() {
             </button>
             <span className="text-gray-200 text-lg hidden sm:inline">/</span>
             <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-              <h1 className={`${display.className} text-base sm:text-lg font-bold text-[#102C26] truncate tracking-tight`}>{merchant.name}</h1>
+              <h1 className={`${display.className} text-base sm:text-lg font-extrabold uppercase tracking-tighter text-[#102C26] truncate`}>{merchant.name}</h1>
               <StatusBadge status={merchant.status} />
             </div>
           </div>
@@ -588,7 +665,7 @@ export default function MerchantDetailPage() {
           <div className="relative shrink-0">
             <button
               onClick={() => setShowActions((v) => !v)}
-              className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-[#102C26] text-white rounded-xl text-sm font-semibold hover:bg-[#102C26]/90 transition-colors"
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-[#102C26] text-[#F7E7CE] rounded-none text-xs font-extrabold uppercase tracking-tighter hover:bg-[#102C26]/90 transition-colors"
             >
               <MoreHorizontal size={15} className="sm:hidden" />
               <span className="hidden sm:inline">Actions</span>
@@ -598,7 +675,7 @@ export default function MerchantDetailPage() {
             {showActions && (
               <>
                 <div className="fixed inset-0 z-30" onClick={() => setShowActions(false)} />
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 z-40">
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-none shadow-xl border border-[#102C26]/12 py-1.5 z-40">
                   <button
                     onClick={() => copyToClipboard(merchant.email, "email")}
                     className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
@@ -624,7 +701,7 @@ export default function MerchantDetailPage() {
                       Reject merchant
                     </button>
                   )}
-                  <div className="my-1 border-t border-gray-100" />
+                  <div className="my-1 border-t border-[#102C26]/12" />
                   <button
                     onClick={() => { setShowActions(false); setDeleteError(null); setDeleteConfirmText(""); setShowDelete(true); }}
                     className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
@@ -640,7 +717,7 @@ export default function MerchantDetailPage() {
       </div>
 
       {/* ── Quick stats strip ── */}
-      <div className="bg-white border-b border-gray-100 px-4 sm:px-8 py-3 sm:py-4">
+      <div className="bg-white border-b border-[#102C26]/12 px-4 sm:px-8 py-3 sm:py-4">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
 
           {/* Days registered */}
@@ -648,14 +725,14 @@ export default function MerchantDetailPage() {
             const days = daysSince(merchant.created_at);
             const urgent = days > 2 && merchant.status === "pending";
             return (
-              <div className={`rounded-2xl border p-4 ${urgent ? "bg-amber-50/60 border-amber-200" : "bg-white border-gray-100"}`}>
+              <div className={`rounded-none border p-4 ${urgent ? "bg-amber-50/60 border-amber-200" : "bg-white border-[#102C26]/12"}`}>
                 <div className="flex items-start justify-between">
                   <div className="min-w-0">
                     <p className="text-xs font-medium text-gray-500">Days registered</p>
                     <p className={`${display.className} text-2xl font-bold mt-1 ${urgent ? "text-amber-700" : "text-[#102C26]"}`}>{days}d</p>
                     <p className="text-xs text-gray-400 mt-0.5 truncate">{fmtDate(merchant.created_at)}</p>
                   </div>
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${urgent ? "bg-amber-100" : "bg-green-50"}`}>
+                  <div className={`w-10 h-10 rounded-none flex items-center justify-center shrink-0 ${urgent ? "bg-amber-100" : "bg-green-50"}`}>
                     <Calendar size={18} className={urgent ? "text-amber-600" : "text-green-600"} />
                   </div>
                 </div>
@@ -664,7 +741,7 @@ export default function MerchantDetailPage() {
           })()}
 
           {/* Commission */}
-          <div className={`rounded-2xl border p-4 ${merchant.commission_percentage == null ? "bg-amber-50/60 border-amber-200" : "bg-white border-gray-100"}`}>
+          <div className={`rounded-none border p-4 ${merchant.commission_percentage == null ? "bg-amber-50/60 border-amber-200" : "bg-white border-[#102C26]/12"}`}>
             <div className="flex items-start justify-between">
               <div className="min-w-0">
                 <p className="text-xs font-medium text-gray-500">Commission</p>
@@ -674,7 +751,7 @@ export default function MerchantDetailPage() {
                 <p className="text-xs text-gray-400 mt-0.5">of order value</p>
               </div>
               <div className="flex flex-col items-end gap-2 shrink-0">
-                <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-none bg-orange-50 flex items-center justify-center">
                   <Coins size={18} className="text-orange-500" />
                 </div>
                 {merchant.commission_percentage == null && (
@@ -687,14 +764,14 @@ export default function MerchantDetailPage() {
           </div>
 
           {/* Checklist */}
-          <div className="rounded-2xl border border-gray-100 bg-white p-4">
+          <div className="rounded-none border border-[#102C26]/12 bg-white p-4">
             <div className="flex items-start justify-between">
               <div className="min-w-0">
                 <p className="text-xs font-medium text-gray-500">Checklist</p>
                 <p className={`${display.className} text-2xl font-bold text-[#102C26] mt-1`}>{checklistDone}/4</p>
                 <p className="text-xs text-gray-400 mt-0.5">{checklistComplete ? "Ready to publish" : "Items completed"}</p>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-none bg-purple-50 flex items-center justify-center shrink-0">
                 <ListChecks size={18} className="text-purple-500" />
               </div>
             </div>
@@ -707,7 +784,7 @@ export default function MerchantDetailPage() {
           </div>
 
           {/* Hyperzod */}
-          <div className={`rounded-2xl border p-4 ${merchant.hyperzod_sync_failed ? "bg-amber-50/60 border-amber-200" : "bg-white border-gray-100"}`}>
+          <div className={`rounded-none border p-4 ${merchant.hyperzod_sync_failed ? "bg-amber-50/60 border-amber-200" : "bg-white border-[#102C26]/12"}`}>
             <div className="flex items-start justify-between">
               <div className="min-w-0">
                 <p className="text-xs font-medium text-gray-500">Hyperzod</p>
@@ -719,7 +796,7 @@ export default function MerchantDetailPage() {
                   {merchant.hyperzod_merchant_id ? merchant.hyperzod_merchant_id.slice(0, 14) + "…" : "Not yet synced"}
                 </p>
               </div>
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${merchant.hyperzod_sync_failed ? "bg-amber-100" : "bg-green-50"}`}>
+              <div className={`w-10 h-10 rounded-none flex items-center justify-center shrink-0 ${merchant.hyperzod_sync_failed ? "bg-amber-100" : "bg-green-50"}`}>
                 <Link2 size={18} className={merchant.hyperzod_sync_failed ? "text-amber-600" : "text-green-600"} />
               </div>
             </div>
@@ -741,7 +818,7 @@ export default function MerchantDetailPage() {
             action={
               <button
                 onClick={openEdit}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-none hover:bg-gray-50 transition-colors"
               >
                 <Pencil size={13} /> Edit
               </button>
@@ -801,6 +878,111 @@ export default function MerchantDetailPage() {
             />
           </Card>
 
+          {/* Verification documents */}
+          <Card
+            title="Verification Documents"
+            subtitle="Review and approve before inviting"
+            action={
+              <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                requiredDocsApproved ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"
+              }`}>
+                {approvedRequiredCount}/{REQUIRED_DOC_KEYS.length} required
+              </span>
+            }
+          >
+            <div className="space-y-2">
+              {MERCHANT_DOC_TYPES.map((dt) => {
+                const doc = documents.find((d) => d.doc_type === dt.key);
+                return (
+                  <div key={dt.key} className="rounded-none border border-[#102C26]/12 bg-gray-50/50 p-3.5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <FileText size={14} className="text-gray-400 shrink-0" />
+                          <p className="text-sm font-semibold text-gray-800 truncate">{dt.label}</p>
+                          {dt.required
+                            ? <span className="text-[10px] font-bold uppercase text-amber-600">Required</span>
+                            : <span className="text-[10px] font-bold uppercase text-gray-400">Optional</span>}
+                        </div>
+                        {doc?.file_name && <p className="text-xs text-gray-400 mt-1 truncate pl-6">{doc.file_name}</p>}
+                        {doc?.expires_at && <p className="text-xs text-gray-400 mt-0.5 pl-6">Expires {fmtDate(doc.expires_at)}</p>}
+                        {doc?.status === "rejected" && doc.rejection_reason && (
+                          <p className="text-xs text-red-600 mt-1.5 pl-6">Rejected: {doc.rejection_reason}</p>
+                        )}
+                      </div>
+                      {doc ? (
+                        <DocBadge status={doc.status} />
+                      ) : (
+                        <span className="text-xs text-gray-400 italic shrink-0">Not uploaded</span>
+                      )}
+                    </div>
+
+                    {doc && (
+                      <>
+                        {rejectingId === doc.id ? (
+                          <div className="mt-3 pl-6">
+                            <textarea
+                              value={rejectReason}
+                              onChange={(e) => setRejectReason(e.target.value)}
+                              placeholder="Tell the merchant what needs fixing…"
+                              rows={2}
+                              className={`${inputCls} resize-none`}
+                            />
+                            <div className="flex items-center gap-2 mt-2">
+                              <button
+                                onClick={() => reviewDocument(doc.id, "reject", rejectReason)}
+                                disabled={!rejectReason.trim() || reviewingId === doc.id}
+                                className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded-none px-3 py-1.5 disabled:opacity-50"
+                              >
+                                {reviewingId === doc.id ? <Loader2 size={12} className="animate-spin" /> : <Ban size={12} />}
+                                Confirm reject
+                              </button>
+                              <button
+                                onClick={() => { setRejectingId(null); setRejectReason(""); }}
+                                className="text-xs font-medium text-gray-500 hover:text-gray-800 px-2 py-1.5"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex flex-wrap items-center gap-2 mt-3 pl-6">
+                            <a
+                              href={doc.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 text-xs font-medium text-[#102C26] border border-gray-200 rounded-none px-3 py-1.5 hover:bg-gray-50"
+                            >
+                              <Eye size={13} /> View
+                            </a>
+                            {doc.status !== "approved" && (
+                              <button
+                                onClick={() => reviewDocument(doc.id, "approve")}
+                                disabled={reviewingId === doc.id}
+                                className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-green-600 hover:bg-green-700 rounded-none px-3 py-1.5 disabled:opacity-50"
+                              >
+                                {reviewingId === doc.id ? <Loader2 size={12} className="animate-spin" /> : <Check size={13} />}
+                                Approve
+                              </button>
+                            )}
+                            {doc.status !== "rejected" && (
+                              <button
+                                onClick={() => { setRejectingId(doc.id); setRejectReason(""); }}
+                                className="inline-flex items-center gap-1.5 text-xs font-medium text-red-600 border border-red-200 rounded-none px-3 py-1.5 hover:bg-red-50"
+                              >
+                                <Ban size={13} /> Reject
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+
           {/* Notes */}
           <Card
             title="Notes"
@@ -809,7 +991,7 @@ export default function MerchantDetailPage() {
               <button
                 onClick={handleAddNote}
                 disabled={!note.trim() || addingNote}
-                className="px-4 py-2 bg-[#102C26] text-white rounded-xl text-sm font-semibold
+                className="px-4 py-2 bg-[#102C26] text-[#F7E7CE] rounded-none text-sm font-semibold
                            hover:bg-[#102C26]/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               >
                 {addingNote ? "Adding…" : "Add Note"}
@@ -817,7 +999,7 @@ export default function MerchantDetailPage() {
             }
           >
             {merchant.notes ? (
-              <div className="mb-5 rounded-xl bg-gray-50 border border-gray-100 p-4">
+              <div className="mb-5 rounded-none bg-gray-50 border border-[#102C26]/12 p-4">
                 {merchant.notes.split("\n").map((line, i) => {
                   const timestampMatch = line.match(/^\[(.+?)\]\s(.+)$/);
                   if (timestampMatch) {
@@ -840,7 +1022,7 @@ export default function MerchantDetailPage() {
                 })}
               </div>
             ) : (
-              <div className="mb-5 rounded-xl bg-gray-50 border border-dashed border-gray-200 p-6 text-center">
+              <div className="mb-5 rounded-none bg-gray-50 border border-dashed border-gray-200 p-6 text-center">
                 <p className="text-sm text-gray-400">No notes yet — add the first one below.</p>
               </div>
             )}
@@ -878,7 +1060,7 @@ export default function MerchantDetailPage() {
 
               <div>
                 <FieldLabel>Commission %</FieldLabel>
-                <div className="flex items-stretch border border-gray-300 rounded-xl overflow-hidden shadow-sm focus-within:ring-2 focus-within:ring-[#102C26]/20 focus-within:border-[#102C26] transition-all bg-white">
+                <div className="flex items-stretch border border-gray-300 rounded-none overflow-hidden focus-within:ring-2 focus-within:ring-[#102C26]/20 focus-within:border-[#102C26] transition-all bg-white">
                   <input
                     type="number"
                     min="0"
@@ -898,12 +1080,12 @@ export default function MerchantDetailPage() {
               <button
                 onClick={handleSaveDetails}
                 disabled={saving}
-                className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-none text-sm font-semibold transition-all ${
                   saveResult === "success"
                     ? "bg-green-600 text-white"
                     : saveResult === "error"
                     ? "bg-red-600 text-white"
-                    : "bg-[#102C26] text-white hover:bg-[#102C26]/90 disabled:opacity-50"
+                    : "bg-[#102C26] text-[#F7E7CE] hover:bg-[#102C26]/90 disabled:opacity-50"
                 }`}
               >
                 {saveResult === "success"
@@ -923,7 +1105,7 @@ export default function MerchantDetailPage() {
           >
             {isRejected ? (
               <div className="text-center py-2">
-                <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-3">
+                <div className="w-12 h-12 rounded-none bg-red-50 flex items-center justify-center mx-auto mb-3">
                   <Ban size={20} className="text-red-500" />
                 </div>
                 <p className="text-sm font-semibold text-gray-800">Merchant rejected</p>
@@ -931,7 +1113,7 @@ export default function MerchantDetailPage() {
                 <button
                   onClick={() => changeStatus("pending")}
                   disabled={transitioning}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-[#102C26] border border-[#102C26]/20 hover:bg-[#102C26]/5 transition-colors disabled:opacity-50"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-none text-sm font-semibold text-[#102C26] border border-[#102C26]/20 hover:bg-[#102C26]/5 transition-colors disabled:opacity-50"
                 >
                   <RotateCcw size={14} /> Reopen onboarding
                 </button>
@@ -977,11 +1159,19 @@ export default function MerchantDetailPage() {
                           {current && (
                             <div className="mt-2.5">
                               <p className="text-xs text-gray-500 mb-2.5 leading-relaxed">{stage.desc}</p>
+                              {next?.key === "invited" && !requiredDocsApproved && (
+                                <div className="flex items-start gap-2 rounded-none bg-amber-50 border border-amber-200 px-3 py-2 mb-2.5">
+                                  <AlertTriangle size={13} className="text-amber-600 mt-0.5 shrink-0" />
+                                  <p className="text-xs text-amber-800 leading-relaxed">
+                                    Not all required documents are approved yet. You can still invite, but verify first where possible.
+                                  </p>
+                                </div>
+                              )}
                               {next ? (
                                 <button
                                   onClick={() => changeStatus(next.key)}
                                   disabled={transitioning}
-                                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold bg-[#102C26] text-white hover:bg-[#102C26]/90 transition-colors disabled:opacity-50"
+                                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-none text-sm font-semibold bg-[#102C26] text-[#F7E7CE] hover:bg-[#102C26]/90 transition-colors disabled:opacity-50"
                                 >
                                   {transitioning
                                     ? <><Loader2 size={13} className="animate-spin" /> Updating…</>
@@ -989,7 +1179,7 @@ export default function MerchantDetailPage() {
                                   }
                                 </button>
                               ) : (
-                                <p className="text-xs text-green-700 bg-green-50 rounded-lg px-3 py-2 font-medium">
+                                <p className="text-xs text-green-700 bg-green-50 rounded-none px-3 py-2 font-medium">
                                   ✓ Ready — complete the checklist below to go live.
                                 </p>
                               )}
@@ -1029,14 +1219,14 @@ export default function MerchantDetailPage() {
                           {merchant.activated_at && (
                             <p className="text-xs text-gray-400 mt-0.5">{fmt(merchant.activated_at)}</p>
                           )}
-                          <div className="mt-2.5 flex items-center gap-2 rounded-xl bg-green-50 border border-green-200 px-3 py-2.5 text-sm font-semibold text-green-700">
+                          <div className="mt-2.5 flex items-center gap-2 rounded-none bg-green-50 border border-green-200 px-3 py-2.5 text-sm font-semibold text-green-700">
                             <CheckCircle2 size={15} /> Published &amp; Live on HalalMe
                           </div>
 
                           {/* Deactivate */}
                           <div className="mt-3">
                             {confirmingDeactivate ? (
-                              <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-3">
+                              <div className="rounded-none bg-amber-50 border border-amber-200 px-3 py-3">
                                 <p className="text-xs text-amber-800 font-medium mb-2.5">
                                   Take this merchant offline? They&apos;ll be hidden from customers on Hyperzod and HalalMe.
                                 </p>
@@ -1044,7 +1234,7 @@ export default function MerchantDetailPage() {
                                   <button
                                     onClick={handleDeactivate}
                                     disabled={deactivating}
-                                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 rounded-lg px-3 py-1.5 disabled:opacity-50"
+                                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 rounded-none px-3 py-1.5 disabled:opacity-50"
                                   >
                                     {deactivating ? <Loader2 size={12} className="animate-spin" /> : <Power size={12} />}
                                     Yes, deactivate
@@ -1084,7 +1274,7 @@ export default function MerchantDetailPage() {
                                   type="button"
                                   title={hint}
                                   onClick={() => toggleCheck(key)}
-                                  className={`w-full flex items-center gap-2.5 p-2.5 rounded-xl text-left transition-colors ${
+                                  className={`w-full flex items-center gap-2.5 p-2.5 rounded-none text-left transition-colors ${
                                     checked ? "bg-green-50 border border-green-100" : "bg-gray-50 border border-transparent hover:border-gray-200"
                                   }`}
                                 >
@@ -1112,9 +1302,9 @@ export default function MerchantDetailPage() {
                           <button
                             onClick={() => { setPublishError(null); setShowPublishConfirm(true); }}
                             disabled={!checklistComplete}
-                            className={`mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all ${
+                            className={`mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-none text-sm font-semibold transition-all ${
                               checklistComplete
-                                ? "bg-green-600 text-white hover:bg-green-700 shadow-sm"
+                                ? "bg-green-600 text-white hover:bg-green-700"
                                 : "bg-gray-100 text-gray-400 cursor-not-allowed"
                             }`}
                           >
@@ -1131,7 +1321,7 @@ export default function MerchantDetailPage() {
 
                 {/* Reject action */}
                 {!isLive && (
-                  <div className="mt-2 pt-4 border-t border-gray-50">
+                  <div className="mt-2 pt-4 border-t border-[#102C26]/8">
                     {confirmingReject ? (
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-xs text-gray-500">Reject this merchant?</span>
@@ -1146,7 +1336,7 @@ export default function MerchantDetailPage() {
                           <button
                             onClick={() => changeStatus("rejected")}
                             disabled={transitioning}
-                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg px-3 py-1.5 disabled:opacity-50"
+                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded-none px-3 py-1.5 disabled:opacity-50"
                           >
                             {transitioning ? <Loader2 size={12} className="animate-spin" /> : <Ban size={12} />}
                             Yes, reject
@@ -1177,11 +1367,11 @@ export default function MerchantDetailPage() {
           onClick={() => !deleting && setShowDelete(false)}
         >
           <div
-            className="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden"
+            className="bg-white rounded-none shadow-xl max-w-md w-full overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="bg-red-600 px-6 py-5 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-none bg-white/15 flex items-center justify-center shrink-0">
                 <Trash2 size={18} className="text-white" />
               </div>
               <div>
@@ -1211,14 +1401,14 @@ export default function MerchantDetailPage() {
               </div>
 
               {deleteError && (
-                <div className="mt-4 flex items-start gap-2 rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700">
+                <div className="mt-4 flex items-start gap-2 rounded-none bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700">
                   <AlertTriangle size={15} className="mt-0.5 shrink-0" />
                   <span>{deleteError}</span>
                 </div>
               )}
             </div>
 
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-3">
+            <div className="px-6 py-4 bg-gray-50 border-t border-[#102C26]/12 flex items-center justify-end gap-3">
               <button
                 onClick={() => setShowDelete(false)}
                 disabled={deleting}
@@ -1229,7 +1419,7 @@ export default function MerchantDetailPage() {
               <button
                 onClick={handleDelete}
                 disabled={deleting || deleteConfirmText.trim() !== merchant.name}
-                className="flex items-center gap-2 px-5 py-2.5 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-5 py-2.5 bg-red-600 text-white rounded-none text-sm font-semibold hover:bg-red-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {deleting
                   ? <><Loader2 size={14} className="animate-spin" /> Deleting…</>
@@ -1248,12 +1438,12 @@ export default function MerchantDetailPage() {
           onClick={() => !savingEdit && setShowEdit(false)}
         >
           <div
-            className="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden"
+            className="bg-white rounded-none shadow-xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
             <div className="bg-[#102C26] px-6 py-5 flex items-center gap-3 shrink-0">
-              <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-none bg-white/15 flex items-center justify-center shrink-0">
                 <Pencil size={17} className="text-[#F7E7CE]" />
               </div>
               <div>
@@ -1328,7 +1518,7 @@ export default function MerchantDetailPage() {
             {/* Error */}
             {editError && (
               <div className="px-6 pb-2 shrink-0">
-                <div className="flex items-start gap-2 rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700">
+                <div className="flex items-start gap-2 rounded-none bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700">
                   <AlertTriangle size={15} className="mt-0.5 shrink-0" />
                   <span>{editError}</span>
                 </div>
@@ -1336,7 +1526,7 @@ export default function MerchantDetailPage() {
             )}
 
             {/* Footer */}
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-3 shrink-0">
+            <div className="px-6 py-4 bg-gray-50 border-t border-[#102C26]/12 flex items-center justify-end gap-3 shrink-0">
               <button
                 onClick={() => setShowEdit(false)}
                 disabled={savingEdit}
@@ -1347,7 +1537,7 @@ export default function MerchantDetailPage() {
               <button
                 onClick={handleSaveEdit}
                 disabled={savingEdit}
-                className="flex items-center gap-2 px-5 py-2.5 bg-[#102C26] text-white rounded-xl text-sm font-semibold hover:bg-[#102C26]/90 transition-colors disabled:opacity-60"
+                className="flex items-center gap-2 px-5 py-2.5 bg-[#102C26] text-[#F7E7CE] rounded-none text-sm font-semibold hover:bg-[#102C26]/90 transition-colors disabled:opacity-60"
               >
                 {savingEdit
                   ? <><Loader2 size={14} className="animate-spin" /> Saving…</>
@@ -1366,12 +1556,12 @@ export default function MerchantDetailPage() {
           onClick={() => !publishing && setShowPublishConfirm(false)}
         >
           <div
-            className="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden"
+            className="bg-white rounded-none shadow-xl max-w-md w-full overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
             <div className="bg-green-600 px-6 py-5 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-none bg-white/15 flex items-center justify-center shrink-0">
                 <Rocket size={18} className="text-white" />
               </div>
               <div>
@@ -1388,7 +1578,7 @@ export default function MerchantDetailPage() {
                 let them know they&apos;re live.
               </p>
 
-              <div className="mt-4 rounded-xl bg-gray-50 border border-gray-100 p-4 space-y-2">
+              <div className="mt-4 rounded-none bg-gray-50 border border-[#102C26]/12 p-4 space-y-2">
                 {[
                   "Merchant goes live on Hyperzod — visible to customers",
                   "HalalMe status changes to “live”",
@@ -1402,7 +1592,7 @@ export default function MerchantDetailPage() {
               </div>
 
               {publishError && (
-                <div className="mt-4 flex items-start gap-2 rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700">
+                <div className="mt-4 flex items-start gap-2 rounded-none bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700">
                   <AlertTriangle size={15} className="mt-0.5 shrink-0" />
                   <span>{publishError}</span>
                 </div>
@@ -1410,7 +1600,7 @@ export default function MerchantDetailPage() {
             </div>
 
             {/* Footer */}
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-3">
+            <div className="px-6 py-4 bg-gray-50 border-t border-[#102C26]/12 flex items-center justify-end gap-3">
               <button
                 onClick={() => setShowPublishConfirm(false)}
                 disabled={publishing}
@@ -1421,7 +1611,7 @@ export default function MerchantDetailPage() {
               <button
                 onClick={handlePublish}
                 disabled={publishing}
-                className="flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white rounded-xl text-sm font-semibold hover:bg-green-700 transition-colors disabled:opacity-60"
+                className="flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white rounded-none text-sm font-semibold hover:bg-green-700 transition-colors disabled:opacity-60"
               >
                 {publishing ? (
                   <><Loader2 size={14} className="animate-spin" /> Publishing…</>

@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -683,6 +683,179 @@ export type Database = {
           },
         ]
       }
+      merchant_documents: {
+        Row: {
+          cloudinary_public_id: string
+          created_at: string
+          doc_type: string
+          expires_at: string | null
+          file_name: string | null
+          format: string | null
+          id: string
+          merchant_id: string
+          rejection_reason: string | null
+          resource_type: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          uploaded_at: string
+        }
+        Insert: {
+          cloudinary_public_id: string
+          created_at?: string
+          doc_type: string
+          expires_at?: string | null
+          file_name?: string | null
+          format?: string | null
+          id?: string
+          merchant_id: string
+          rejection_reason?: string | null
+          resource_type?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          uploaded_at?: string
+        }
+        Update: {
+          cloudinary_public_id?: string
+          created_at?: string
+          doc_type?: string
+          expires_at?: string | null
+          file_name?: string | null
+          format?: string | null
+          id?: string
+          merchant_id?: string
+          rejection_reason?: string | null
+          resource_type?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          uploaded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_documents_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchants: {
+        Row: {
+          activated_at: string | null
+          address: string | null
+          assigned_rep: string | null
+          business_email: string | null
+          category_ids: string[] | null
+          city: string | null
+          commission_fixed: number | null
+          commission_percentage: number | null
+          contacted_at: string | null
+          country: string
+          country_code: string
+          created_at: string
+          email: string
+          followup_count: number
+          hyperzod_merchant_id: string | null
+          hyperzod_sync_failed: boolean
+          id: string
+          invited_at: string | null
+          last_followup_at: string | null
+          name: string
+          next_followup_on: string | null
+          notes: string | null
+          order_types: string[] | null
+          owner_name: string | null
+          phone: string
+          post_code: string | null
+          readiness_checklist: Json | null
+          source_attribution: string | null
+          state: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+          website: string | null
+          welcome_sent_at: string | null
+        }
+        Insert: {
+          activated_at?: string | null
+          address?: string | null
+          assigned_rep?: string | null
+          business_email?: string | null
+          category_ids?: string[] | null
+          city?: string | null
+          commission_fixed?: number | null
+          commission_percentage?: number | null
+          contacted_at?: string | null
+          country?: string
+          country_code?: string
+          created_at?: string
+          email: string
+          followup_count?: number
+          hyperzod_merchant_id?: string | null
+          hyperzod_sync_failed?: boolean
+          id?: string
+          invited_at?: string | null
+          last_followup_at?: string | null
+          name: string
+          next_followup_on?: string | null
+          notes?: string | null
+          order_types?: string[] | null
+          owner_name?: string | null
+          phone: string
+          post_code?: string | null
+          readiness_checklist?: Json | null
+          source_attribution?: string | null
+          state?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          website?: string | null
+          welcome_sent_at?: string | null
+        }
+        Update: {
+          activated_at?: string | null
+          address?: string | null
+          assigned_rep?: string | null
+          business_email?: string | null
+          category_ids?: string[] | null
+          city?: string | null
+          commission_fixed?: number | null
+          commission_percentage?: number | null
+          contacted_at?: string | null
+          country?: string
+          country_code?: string
+          created_at?: string
+          email?: string
+          followup_count?: number
+          hyperzod_merchant_id?: string | null
+          hyperzod_sync_failed?: boolean
+          id?: string
+          invited_at?: string | null
+          last_followup_at?: string | null
+          name?: string
+          next_followup_on?: string | null
+          notes?: string | null
+          order_types?: string[] | null
+          owner_name?: string | null
+          phone?: string
+          post_code?: string | null
+          readiness_checklist?: Json | null
+          source_attribution?: string | null
+          state?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          website?: string | null
+          welcome_sent_at?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           actor_id: string
@@ -840,6 +1013,7 @@ export type Database = {
           id: string
           is_published: boolean
           like_count: number
+          media_public_ids: string[] | null
           media_urls: string[] | null
           post_type: string
           recipe_id: string | null
@@ -854,6 +1028,7 @@ export type Database = {
           id?: string
           is_published?: boolean
           like_count?: number
+          media_public_ids?: string[] | null
           media_urls?: string[] | null
           post_type?: string
           recipe_id?: string | null
@@ -868,6 +1043,7 @@ export type Database = {
           id?: string
           is_published?: boolean
           like_count?: number
+          media_public_ids?: string[] | null
           media_urls?: string[] | null
           post_type?: string
           recipe_id?: string | null
@@ -894,13 +1070,16 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_public_id: string | null
           avatar_url: string | null
           bio: string | null
           created_at: string
           full_name: string
+          hyperzod_customer_id: string | null
           id: string
           is_verified: boolean
           location: string | null
+          phone: string | null
           reward_points: number
           reward_tier: string
           role: string
@@ -908,13 +1087,16 @@ export type Database = {
           username: string | null
         }
         Insert: {
+          avatar_public_id?: string | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
           full_name: string
+          hyperzod_customer_id?: string | null
           id: string
           is_verified?: boolean
           location?: string | null
+          phone?: string | null
           reward_points?: number
           reward_tier?: string
           role?: string
@@ -922,13 +1104,16 @@ export type Database = {
           username?: string | null
         }
         Update: {
+          avatar_public_id?: string | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
           full_name?: string
+          hyperzod_customer_id?: string | null
           id?: string
           is_verified?: boolean
           location?: string | null
+          phone?: string | null
           reward_points?: number
           reward_tier?: string
           role?: string
@@ -1024,6 +1209,7 @@ export type Database = {
           description: string | null
           difficulty: string | null
           id: string
+          image_public_id: string | null
           image_url: string | null
           ingredients: Json
           instructions: Json
@@ -1048,6 +1234,7 @@ export type Database = {
           description?: string | null
           difficulty?: string | null
           id?: string
+          image_public_id?: string | null
           image_url?: string | null
           ingredients?: Json
           instructions?: Json
@@ -1072,6 +1259,7 @@ export type Database = {
           description?: string | null
           difficulty?: string | null
           id?: string
+          image_public_id?: string | null
           image_url?: string | null
           ingredients?: Json
           instructions?: Json

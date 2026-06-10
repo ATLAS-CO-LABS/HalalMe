@@ -25,7 +25,7 @@ function VerifyOtpContent() {
   const { refreshUser } = useAuth();
 
   const rawEmail  = params.get("email") ?? "";
-  const type      = (params.get("type") ?? "signup") as "signup" | "reset";
+  const type      = (params.get("type") ?? "signup") as "signup" | "reset" | "merchant";
   const redirect  = params.get("redirect") ?? null;
   const email     = rawEmail.toLowerCase().trim();
 
@@ -66,6 +66,10 @@ function VerifyOtpContent() {
         // into AuthContext before navigating to the protected dashboard.
         await refreshUser();
         router.push(redirect ?? "/dashboard");
+      } else if (type === "merchant") {
+        await minDelay(authService.verifyMerchantLoginOtp(email, otp));
+        await refreshUser();
+        router.push(redirect ?? "/merchant");
       } else {
         await minDelay(authService.verifyPasswordResetOtp(email, otp));
         // Same - reset-password page checks useAuth().user; sync first.
@@ -90,6 +94,8 @@ function VerifyOtpContent() {
     try {
       if (type === "signup") {
         await authService.resendSignupOtp(email);
+      } else if (type === "merchant") {
+        await authService.sendMerchantLoginOtp(email);
       } else {
         await authService.sendPasswordResetOtp(email);
       }

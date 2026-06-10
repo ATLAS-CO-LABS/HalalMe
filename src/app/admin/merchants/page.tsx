@@ -97,7 +97,7 @@ function relativeTime(iso: string) {
 function StatusBadge({ status }: { status: string }) {
   const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.pending;
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${cfg.badge}`}>
+    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide whitespace-nowrap ${cfg.badge}`}>
       <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${cfg.dot}`} />
       {cfg.label}
     </span>
@@ -120,7 +120,7 @@ function DaysCell({ days, status }: { days: number; status: string }) {
 
 function Avatar({ name }: { name: string }) {
   return (
-    <div className="w-9 h-9 rounded-xl bg-[#102C26]/8 border border-[#102C26]/10 flex items-center justify-center shrink-0">
+    <div className="w-9 h-9 rounded-none bg-[#102C26]/8 border border-[#102C26]/10 flex items-center justify-center shrink-0">
       <span className="text-[#102C26] text-xs font-bold">{initials(name)}</span>
     </div>
   );
@@ -160,10 +160,10 @@ function Donut({ segments, total }: { segments: { key: string; count: number; he
 
 function TableSkeleton() {
   return (
-    <div className="animate-pulse divide-y divide-gray-50">
+    <div className="animate-pulse divide-y divide-[#102C26]/8">
       {Array.from({ length: 5 }).map((_, i) => (
         <div key={i} className="flex items-center gap-6 px-6 py-4">
-          <div className="w-9 h-9 bg-gray-200 rounded-xl" />
+          <div className="w-9 h-9 bg-gray-200 rounded-none" />
           <div className="space-y-1.5 flex-1">
             <div className="h-4 bg-gray-200 rounded w-36" />
             <div className="h-3 bg-gray-100 rounded w-24" />
@@ -186,7 +186,7 @@ function MerchantCard({ m, onClick, selected, onSelect }: {
   const critical = m.status === "pending" && days > 7;
 
   return (
-    <div className={`px-4 py-4 transition-colors border-b border-gray-50 last:border-0 ${
+    <div className={`px-4 py-4 transition-colors border-b border-[#102C26]/8 last:border-0 ${
       selected ? "bg-[#102C26]/3" :
       critical ? "border-l-2 border-l-red-400" :
       urgent   ? "border-l-2 border-l-amber-400" : ""
@@ -231,16 +231,16 @@ function StatCard({ label, value, sub, icon: Icon, tone, onClick, active }: {
 }) {
   const tones = {
     green:  "bg-green-50 text-green-600",
-    amber:  "bg-amber-50 text-amber-600",
-    blue:   "bg-blue-50 text-blue-600",
-    purple: "bg-purple-50 text-purple-500",
+    amber:  "bg-[#F59E0B]/10 text-[#F59E0B]",
+    blue:   "bg-[#102C26]/8 text-[#102C26]",
+    purple: "bg-[#F03E9E]/10 text-[#F03E9E]",
   };
   const Tag = onClick ? "button" : "div";
   return (
     <Tag
       onClick={onClick}
-      className={`text-left w-full bg-white rounded-2xl border shadow-sm p-4 sm:p-5 transition-all ${
-        active ? "border-amber-300 ring-2 ring-amber-200" : "border-gray-100"
+      className={`text-left w-full bg-white rounded-none border p-4 sm:p-5 transition-all ${
+        active ? "border-[#F59E0B] ring-2 ring-[#F59E0B]/20" : "border-[#102C26]/12"
       } ${onClick ? "hover:border-gray-300 cursor-pointer" : ""}`}
     >
       <div className="flex items-start justify-between">
@@ -249,7 +249,7 @@ function StatCard({ label, value, sub, icon: Icon, tone, onClick, active }: {
           <p className={`${display.className} text-2xl font-bold text-[#102C26] mt-1`}>{value}</p>
           <p className="text-xs text-gray-400 mt-0.5 truncate">{sub}</p>
         </div>
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${tones[tone]}`}>
+        <div className={`w-10 h-10 rounded-none flex items-center justify-center shrink-0 ${tones[tone]}`}>
           <Icon size={18} />
         </div>
       </div>
@@ -426,29 +426,33 @@ export default function MerchantPipelinePage() {
     <div className="bg-[#F3E9D6] min-h-full">
 
       {/* ── Header ── */}
-      <div className="bg-white border-b border-gray-100 px-4 sm:px-8 py-4 sm:py-5 flex items-center justify-between gap-4">
-        <div>
-          <h1 className={`${display.className} text-xl sm:text-2xl font-bold text-[#102C26] tracking-tight`}>Merchant CRM</h1>
-          <p className="text-xs sm:text-sm text-gray-500 mt-0.5">Manage and grow your restaurant partners</p>
+      <div className="bg-white border-b border-[#102C26]/12 px-4 sm:px-8 py-4 sm:py-5 flex items-center justify-between gap-4">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2.5 mb-1.5">
+            <div className="w-5 h-px bg-[#F59E0B]" />
+            <span className="text-[#F59E0B] text-[9px] font-bold uppercase tracking-[0.3em]">Merchant CRM</span>
+          </div>
+          <h1 className={`${display.className} text-xl sm:text-2xl font-extrabold uppercase tracking-tighter text-[#102C26] leading-none`}>Pipeline</h1>
+          <p className="text-xs sm:text-sm text-gray-500 mt-1">Manage and grow your restaurant partners</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={exportCSV}
-            className="flex items-center gap-2 px-3 sm:px-4 py-2 text-sm font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-xl hover:bg-gray-100 transition-colors"
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-bold uppercase tracking-wide text-[#102C26]/70 bg-[#102C26]/5 border border-[#102C26]/15 rounded-none hover:bg-[#102C26]/10 transition-colors"
           >
             <Download size={14} />
             <span className="hidden sm:inline">Export</span>
           </button>
           <button
             onClick={() => { fetchMerchants(statusFilter, search); refreshAll(); }}
-            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-xl hover:bg-gray-100 transition-colors"
+            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#102C26]/70 bg-[#102C26]/5 border border-[#102C26]/15 rounded-none hover:bg-[#102C26]/10 transition-colors"
             title="Refresh"
           >
             <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
           </button>
           <button
             onClick={() => setShowAdd(true)}
-            className="flex items-center gap-2 px-3 sm:px-4 py-2 text-sm font-semibold text-white bg-[#102C26] rounded-xl hover:bg-[#102C26]/90 transition-colors"
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-extrabold uppercase tracking-tighter text-[#F7E7CE] bg-[#102C26] rounded-none hover:bg-[#102C26]/90 transition-colors"
           >
             <Plus size={15} />
             <span className="hidden sm:inline">Add Merchant</span>
@@ -485,15 +489,15 @@ export default function MerchantPipelinePage() {
         <div className="min-w-0">
 
           {/* Filters */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <div className="px-4 sm:px-5 pt-3 pb-3 border-b border-gray-50">
+          <div className="bg-white rounded-none border border-[#102C26]/12 overflow-hidden">
+            <div className="px-4 sm:px-5 pt-3 pb-3 border-b border-[#102C26]/8">
               <div className="flex items-center gap-0.5 overflow-x-auto pb-0.5 scrollbar-none">
                 {STATUSES.map(({ key, label }) => {
                   const active = statusFilter === key;
                   return (
                     <button key={key} onClick={() => { setStatusFilter(key); setAttentionOnly(false); }}
-                      className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
-                        active ? "bg-[#102C26] text-white shadow-sm" : "text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+                      className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-none text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
+                        active ? "bg-[#102C26] text-[#F7E7CE]" : "text-gray-500 hover:text-[#102C26] hover:bg-[#102C26]/8"
                       }`}>
                       {label}
                       <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${active ? "bg-white/20 text-white" : "bg-gray-100 text-gray-500"}`}>
@@ -508,7 +512,7 @@ export default function MerchantPipelinePage() {
                 <input
                   type="text" value={search} onChange={(e) => handleSearchChange(e.target.value)}
                   placeholder="Search by restaurant name or email…"
-                  className="w-full pl-8 pr-4 py-2 text-sm border border-gray-200 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#102C26]/15 focus:border-[#102C26] focus:bg-white placeholder:text-gray-400 transition-colors"
+                  className="w-full pl-8 pr-4 py-2 text-sm border border-gray-200 bg-gray-50 rounded-none focus:outline-none focus:ring-2 focus:ring-[#102C26]/15 focus:border-[#102C26] focus:bg-white placeholder:text-gray-400 transition-colors"
                 />
               </div>
             </div>
@@ -526,16 +530,16 @@ export default function MerchantPipelinePage() {
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <button onClick={() => { setShowAssign((v) => !v); setConfirmingBulkReject(false); }} disabled={!!bulkBusy}
-                      className="flex items-center gap-1.5 px-3 py-2 bg-white/10 text-white rounded-lg text-sm font-semibold hover:bg-white/20 transition-colors disabled:opacity-50">
+                      className="flex items-center gap-1.5 px-3 py-2 bg-white/10 text-white rounded-none text-sm font-semibold hover:bg-white/20 transition-colors disabled:opacity-50">
                       <UserCog size={14} /> Assign rep
                     </button>
                     <button onClick={() => { setConfirmingBulkReject((v) => !v); setShowAssign(false); }} disabled={!!bulkBusy}
-                      className="flex items-center gap-1.5 px-3 py-2 bg-white/10 text-white rounded-lg text-sm font-semibold hover:bg-white/20 transition-colors disabled:opacity-50">
+                      className="flex items-center gap-1.5 px-3 py-2 bg-white/10 text-white rounded-none text-sm font-semibold hover:bg-white/20 transition-colors disabled:opacity-50">
                       <Ban size={14} /> Reject
                     </button>
                     <button onClick={() => runBulk("invite")} disabled={!!bulkBusy || selectedPendingCount === 0}
                       title={selectedPendingCount === 0 ? "No pending merchants selected" : ""}
-                      className="flex items-center gap-1.5 px-3 py-2 bg-[#F7E7CE] text-[#102C26] rounded-lg text-sm font-semibold hover:bg-white transition-colors disabled:opacity-40">
+                      className="flex items-center gap-1.5 px-3 py-2 bg-[#F7E7CE] text-[#102C26] rounded-none text-sm font-semibold hover:bg-white transition-colors disabled:opacity-40">
                       <Mail size={14} />
                       {bulkBusy === "invite" ? "Marking…" : `Mark Invited${selectedPendingCount ? ` (${selectedPendingCount})` : ""}`}
                     </button>
@@ -545,20 +549,20 @@ export default function MerchantPipelinePage() {
                   <div className="mt-3 flex items-center gap-2 flex-wrap">
                     <input type="text" value={assignRep} onChange={(e) => setAssignRep(e.target.value)}
                       placeholder="Rep name (leave blank to unassign)"
-                      className="flex-1 min-w-50 px-3 py-2 text-sm bg-white/10 text-white border border-white/20 rounded-lg placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#F7E7CE]/40" />
+                      className="flex-1 min-w-50 px-3 py-2 text-sm bg-white/10 text-white border border-white/20 rounded-none placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#F7E7CE]/40" />
                     <button onClick={() => runBulk("assign", { rep: assignRep })} disabled={!!bulkBusy}
-                      className="px-4 py-2 bg-[#F7E7CE] text-[#102C26] rounded-lg text-sm font-semibold hover:bg-white transition-colors disabled:opacity-50">
+                      className="px-4 py-2 bg-[#F7E7CE] text-[#102C26] rounded-none text-sm font-semibold hover:bg-white transition-colors disabled:opacity-50">
                       {bulkBusy === "assign" ? "Assigning…" : "Apply"}
                     </button>
                   </div>
                 )}
                 {confirmingBulkReject && (
-                  <div className="mt-3 flex items-center justify-between gap-2 bg-white/10 rounded-lg px-3 py-2.5 flex-wrap">
+                  <div className="mt-3 flex items-center justify-between gap-2 bg-white/10 rounded-none px-3 py-2.5 flex-wrap">
                     <span className="text-sm text-white/90">Reject {selectedIds.size} merchant{selectedIds.size !== 1 ? "s" : ""}? (Live merchants are skipped.)</span>
                     <div className="flex items-center gap-2">
                       <button onClick={() => setConfirmingBulkReject(false)} className="text-sm font-medium text-white/60 hover:text-white px-2 py-1">Cancel</button>
                       <button onClick={() => runBulk("reject")} disabled={!!bulkBusy}
-                        className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-sm font-semibold hover:bg-red-600 transition-colors disabled:opacity-50">
+                        className="px-3 py-1.5 bg-red-500 text-white rounded-none text-sm font-semibold hover:bg-red-600 transition-colors disabled:opacity-50">
                         {bulkBusy === "reject" ? "Rejecting…" : "Yes, reject"}
                       </button>
                     </div>
@@ -581,14 +585,14 @@ export default function MerchantPipelinePage() {
 
             {/* Table / states */}
             {error ? (
-              <div className="flex items-center gap-3 m-4 px-4 py-4 bg-red-50 border border-red-100 rounded-xl text-red-700 text-sm font-medium">
+              <div className="flex items-center gap-3 m-4 px-4 py-4 bg-red-50 border border-red-100 rounded-none text-red-700 text-sm font-medium">
                 <AlertCircle size={16} className="shrink-0" /> {error}
               </div>
             ) : loading ? (
               <TableSkeleton />
             ) : displayed.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-center px-6">
-                <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center mb-4"><Store size={22} className="text-gray-400" /></div>
+                <div className="w-14 h-14 bg-gray-100 rounded-none flex items-center justify-center mb-4"><Store size={22} className="text-gray-400" /></div>
                 <p className="text-base font-semibold text-gray-700">
                   {attentionOnly ? "Nothing needs attention 🎉" : (search || statusFilter !== "all") ? "No results" : "No merchants yet"}
                 </p>
@@ -610,24 +614,24 @@ export default function MerchantPipelinePage() {
                 {/* Desktop table */}
                 <table className="hidden md:table w-full text-sm">
                   <thead>
-                    <tr className="border-b border-gray-100 bg-gray-50/60">
+                    <tr className="border-b border-[#102C26]/12 bg-gray-50/60">
                       <th className="pl-4 lg:pl-5 pr-3 py-3 w-12 cursor-pointer" onClick={toggleSelectAll} title="Select / deselect all">
                         <div className="flex items-center justify-center">
                           <input type="checkbox" checked={displayed.length > 0 && selectedIds.size === displayed.length} readOnly
                             disabled={displayed.length === 0} className="w-4 h-4 rounded border-gray-300 accent-[#102C26] pointer-events-none disabled:opacity-30" />
                         </div>
                       </th>
-                      <th className="px-2 py-3 text-left text-xs font-semibold text-gray-500 tracking-wide">Restaurant</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 tracking-wide hidden lg:table-cell">Contact</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 tracking-wide hidden xl:table-cell">Location</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 tracking-wide">Status</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 tracking-wide hidden lg:table-cell">Rep</th>
-                      <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 tracking-wide">Days</th>
-                      <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 tracking-wide hidden lg:table-cell">Comm %</th>
+                      <th className="px-2 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500">Restaurant</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500 hidden lg:table-cell">Contact</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500 hidden xl:table-cell">Location</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500">Status</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500 hidden lg:table-cell">Rep</th>
+                      <th className="px-4 py-3 text-center text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500">Days</th>
+                      <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500 hidden lg:table-cell">Comm %</th>
                       <th className="px-4 lg:px-5 py-3 w-12" />
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-50">
+                  <tbody className="divide-y divide-[#102C26]/8">
                     {displayed.map((m) => {
                       const days = daysSince(m.created_at);
                       const isSelected = selectedIds.has(m.id);
@@ -698,7 +702,7 @@ export default function MerchantPipelinePage() {
 
                           {/* Action */}
                           <td className="px-4 lg:px-5 py-3.5 text-right">
-                            <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 group-hover:bg-[#102C26] group-hover:text-white transition-all" title="Open">
+                            <span className="inline-flex items-center justify-center w-8 h-8 rounded-none text-gray-400 group-hover:bg-[#102C26] group-hover:text-white transition-all" title="Open">
                               <MoreVertical size={15} />
                             </span>
                           </td>
@@ -709,7 +713,7 @@ export default function MerchantPipelinePage() {
                 </table>
 
                 {/* Footer count */}
-                <div className="px-5 py-3 border-t border-gray-50 text-xs text-gray-400">
+                <div className="px-5 py-3 border-t border-[#102C26]/8 text-xs text-gray-400">
                   Showing {displayed.length} merchant{displayed.length !== 1 ? "s" : ""}
                   {attentionOnly ? " · needs attention" : statusFilter !== "all" ? ` · filtered by ${STATUS_CONFIG[statusFilter]?.label ?? statusFilter}` : ""}
                 </div>
@@ -722,8 +726,8 @@ export default function MerchantPipelinePage() {
         <aside className="space-y-5">
 
           {/* Pipeline overview */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-            <h3 className={`${display.className} text-[15px] font-bold text-[#102C26] tracking-tight mb-4`}>Pipeline Overview</h3>
+          <div className="bg-white rounded-none border border-[#102C26]/12 p-5">
+            <h3 className={`${display.className} text-[13px] font-extrabold uppercase tracking-wide text-[#102C26] mb-4`}>Pipeline Overview</h3>
             <div className="flex items-center gap-5">
               <Donut segments={pipeline} total={total} />
               <div className="flex-1 min-w-0 space-y-1.5">
@@ -740,10 +744,10 @@ export default function MerchantPipelinePage() {
           </div>
 
           {/* Top cities */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          <div className="bg-white rounded-none border border-[#102C26]/12 p-5">
             <div className="flex items-center gap-2 mb-3">
               <MapPin size={15} className="text-[#102C26]" />
-              <h3 className={`${display.className} text-[15px] font-bold text-[#102C26] tracking-tight`}>Top Cities</h3>
+              <h3 className={`${display.className} text-[13px] font-extrabold uppercase tracking-wide text-[#102C26]`}>Top Cities</h3>
             </div>
             {topCities.length === 0 ? (
               <p className="text-xs text-gray-400">No city data yet.</p>
@@ -765,10 +769,10 @@ export default function MerchantPipelinePage() {
           </div>
 
           {/* Recent activity */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          <div className="bg-white rounded-none border border-[#102C26]/12 p-5">
             <div className="flex items-center gap-2 mb-3">
               <Clock size={15} className="text-[#102C26]" />
-              <h3 className={`${display.className} text-[15px] font-bold text-[#102C26] tracking-tight`}>Recent Activity</h3>
+              <h3 className={`${display.className} text-[13px] font-extrabold uppercase tracking-wide text-[#102C26]`}>Recent Activity</h3>
             </div>
             {recentActivity.length === 0 ? (
               <p className="text-xs text-gray-400">No activity yet.</p>
@@ -788,16 +792,16 @@ export default function MerchantPipelinePage() {
           </div>
 
           {/* Quick actions */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-            <h3 className={`${display.className} text-[15px] font-bold text-[#102C26] tracking-tight mb-3`}>Quick Actions</h3>
+          <div className="bg-white rounded-none border border-[#102C26]/12 p-5">
+            <h3 className={`${display.className} text-[13px] font-extrabold uppercase tracking-wide text-[#102C26] mb-3`}>Quick Actions</h3>
             <div className="space-y-2">
               <button onClick={() => setStatusFilter("pending")}
-                className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-none border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
                 <span className="flex items-center gap-2"><Mail size={14} className="text-gray-400" /> Review pending</span>
                 <ArrowRight size={14} className="text-gray-300" />
               </button>
               <button onClick={exportCSV}
-                className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-none border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
                 <span className="flex items-center gap-2"><Download size={14} className="text-gray-400" /> Export report</span>
                 <ArrowRight size={14} className="text-gray-300" />
               </button>

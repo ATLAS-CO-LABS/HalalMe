@@ -3,7 +3,10 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { authService } from "@/services/authService";
+import { startCooldown } from "@/lib/otpCooldown";
 import {
   Store,
   MapPin,
@@ -12,7 +15,6 @@ import {
   ChevronRight,
   ChevronLeft,
   Check,
-  CheckCircle2,
   Loader2,
 } from "lucide-react";
 
@@ -69,12 +71,12 @@ const slideVariants = {
 };
 
 export default function MerchantSignupPage() {
+  const router = useRouter();
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [form, setForm] = useState<FormData>({
@@ -174,6 +176,7 @@ export default function MerchantSignupPage() {
 
     const selectedCountry = COUNTRY_OPTIONS.find((c) => c.value === form.country);
     const fullPhone = `${form.phone_country_code}${form.phone.replace(/^0+/, "")}`;
+    const emailLower = form.email.trim().toLowerCase();
 
     try {
       const res = await fetch("/api/hyperzod/provision-merchant", {
@@ -182,7 +185,7 @@ export default function MerchantSignupPage() {
         body: JSON.stringify({
           name: form.name.trim(),
           owner_name: form.owner_name.trim(),
-          email: form.email.trim().toLowerCase(),
+          email: emailLower,
           phone: fullPhone,
           address: form.address.trim(),
           city: form.city.trim(),
@@ -195,7 +198,7 @@ export default function MerchantSignupPage() {
         }),
       });
 
-      const json = await res.json() as { error?: string; success?: boolean };
+      const json = await res.json() as { error?: string; success?: boolean; requiresLogin?: boolean };
 
       if (!res.ok) {
         if (json.error === "email_already_registered") {
@@ -206,42 +209,27 @@ export default function MerchantSignupPage() {
         return;
       }
 
-      setSubmitted(true);
+      // Already signed in (existing user becoming a merchant) → straight to dashboard.
+      if (!json.requiresLogin) {
+        router.push("/merchant");
+        return;
+      }
+
+      // New merchant → send a passwordless login code, then the OTP screen.
+      try {
+        await authService.sendMerchantLoginOtp(emailLower);
+        startCooldown(emailLower, "merchant");
+      } catch {
+        // Even if the code send hiccups, the OTP page lets them resend.
+      }
+      router.push(
+        `/verify-otp?email=${encodeURIComponent(emailLower)}&type=merchant&redirect=${encodeURIComponent("/merchant")}`,
+      );
     } catch {
       setError("Network error. Please check your connection and try again.");
     } finally {
       setSubmitting(false);
     }
-  }
-
-  if (submitted) {
-    return (
-      <div className="h-screen overflow-hidden bg-[#102C26] flex items-center justify-center px-4">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="max-w-md w-full text-center"
-        >
-          <div className="w-16 h-16 bg-emerald-500/20 border border-emerald-500/30 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle2 className="w-8 h-8 text-emerald-400" />
-          </div>
-          <h1 className="text-2xl font-extrabold uppercase tracking-tighter text-[#F7E7CE] mb-3">
-            Application Submitted!
-          </h1>
-          <p className="text-[#F7E7CE]/55 text-sm leading-relaxed mb-8">
-            Thank you for partnering with HalalMe. Our team will review your
-            application and you&apos;ll receive an email invite to access your
-            merchant dashboard once approved.
-          </p>
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#F7E7CE]/40 hover:text-[#F7E7CE]/70 transition-colors"
-          >
-            ← Back to Home
-          </Link>
-        </motion.div>
-      </div>
-    );
   }
 
   return (

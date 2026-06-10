@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { cldUrl, CLD_POST_IMG } from "@/lib/cldUrl";
+import { cldUrl, CLD_POST_IMG, isVideoUrl, cldVideoUrl, cldVideoPoster } from "@/lib/cldUrl";
 import {
   Heart,
   MessageCircle,
@@ -57,7 +57,11 @@ export default function PostCard({
   const username = post.profiles?.username ? `@${post.profiles.username}` : null;
   const avatarUrl = post.profiles?.avatar_url ?? undefined;
   const isVerified = post.profiles?.is_verified ?? false;
-  const firstImage = cldUrl(post.media_urls?.[0], CLD_POST_IMG) ?? null;
+  const firstMedia = post.media_urls?.[0] ?? null;
+  const mediaIsVideo = isVideoUrl(firstMedia);
+  const firstImage = !mediaIsVideo ? (cldUrl(firstMedia, CLD_POST_IMG) ?? null) : null;
+  const videoSrc = mediaIsVideo ? (cldVideoUrl(firstMedia) ?? null) : null;
+  const videoPoster = mediaIsVideo ? cldVideoPoster(firstMedia) : undefined;
 
   const [copied, setCopied] = useState(false);
 
@@ -244,16 +248,29 @@ export default function PostCard({
         </div>
       )}
 
-      {/* Post image (first from media_urls) */}
-      {firstImage && (
+      {/* Post media — video plays inline; image shows uncropped (natural aspect, capped height) */}
+      {videoSrc ? (
+        <div className="w-full bg-black flex items-center justify-center">
+          <video
+            src={videoSrc}
+            poster={videoPoster}
+            controls
+            playsInline
+            preload="metadata"
+            className="w-full max-h-[75vh] object-contain bg-black"
+          />
+        </div>
+      ) : firstImage ? (
         <Link href={`/hub/post/${post.id}`}>
-          <div className="relative w-full aspect-16/10 bg-gray-700 cursor-pointer overflow-hidden group">
+          <div className="relative w-full bg-[#0B0D0F] flex items-center justify-center cursor-pointer overflow-hidden group">
             <Image
               src={firstImage}
               alt="Post image"
-              fill
+              width={0}
+              height={0}
+              sizes="100vw"
               unoptimized
-              className="object-cover group-hover:scale-105 transition-transform duration-300"
+              className="w-full h-auto max-h-[75vh] object-contain group-hover:opacity-95 transition-opacity duration-300"
             />
             {/* Multi-image indicator */}
             {(post.media_urls?.length ?? 0) > 1 && (
@@ -263,7 +280,7 @@ export default function PostCard({
             )}
           </div>
         </Link>
-      )}
+      ) : null}
 
       {/* Actions */}
       <div className="p-4 md:p-5 border-t border-gray-800">

@@ -6,6 +6,7 @@ import { X, Image as ImageIcon, Loader2 } from "lucide-react";
 import Image from "next/image";
 import type { PostType, Profile } from "@/types";
 import { withTimeout } from "@/lib/withTimeout";
+import { friendlyError } from "@/lib/friendlyError";
 import Avatar from "./Avatar";
 
 interface CreatePostModalProps {
@@ -65,12 +66,14 @@ export default function CreatePostModal({
     setIsSubmitting(true);
     setError(null);
     try {
-      // 30s timeout - media uploads can take several seconds on slow connections
-      await withTimeout(onSubmit(content.trim(), selectedFile ?? undefined, postType), 30_000);
+      // Media uploads (esp. video on mobile) can take a while — give them room.
+      // Text-only posts keep the tight 30s timeout.
+      const timeoutMs = selectedFile ? 120_000 : 30_000;
+      await withTimeout(onSubmit(content.trim(), selectedFile ?? undefined, postType), timeoutMs);
       handleClose();
     } catch (err) {
       console.error("[CreatePost]", err);
-      setError(err instanceof Error ? err.message : "Failed to create post. Please try again.");
+      setError(friendlyError(err, "Failed to create post. Please try again."));
     } finally {
       setIsSubmitting(false);
     }
@@ -214,7 +217,7 @@ export default function CreatePostModal({
                     <input
                       ref={fileInputRef}
                       type="file"
-                      accept="image/*,video/mp4"
+                      accept="image/*,video/mp4,video/quicktime"
                       onChange={handleImageSelect}
                       className="hidden"
                       disabled={isSubmitting}

@@ -1,7 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServiceClient } from "@/lib/supabase-server";
+import { createServiceClient, createServerClient } from "@/lib/supabase-server";
 import { createHyperzodMerchant } from "@/services/hyperzodService";
-import { sendMerchantWelcomeEmail } from "@/services/emailService";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+/**
+ * Resolves the auth-user id to attach this merchant to.
+ * - Creates a new passwordless account (email_confirm so OTP login works immediately).
+ * - If the email already has an account, links to that existing user instead of
+ *   creating a duplicate.
+ * Returns null only if we genuinely can't create or find a user.
+ */
+async function resolveAuthUserId(
+  serviceClient: SupabaseClient,
+  email: string,
+  fullName: string,
+): Promise<string | null> {
+  const { data, error } = await serviceClient.auth.admin.createUser({
+    email,
+    email_confirm: true,
+    user_metadata: { full_name: fullName },
+  });
+  if (!error && data?.user) return data.user.id;
+
+  // Likely "email already registered" — find the existing user and link to it.
+  // NOTE: listUsers is paginated; fine at current scale. Revisit if user base is large.
+  const { data: list } = await serviceClient.auth.admin.listUsers({ page: 1, perPage: 1000 });
+  const found = list?.users.find(
+    (u) => u.email?.toLowerCase() === email.toLowerCase(),
+  );
+  return found?.id ?? null;
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -46,6 +74,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "email_already_registered" }, { status: 409 });
     }
 
+    // ── Resolve the account this merchant belongs to ──────────────────────────
+    // If the caller is already signed in (existing ecosystem user becoming a
+    // merchant) → link to that account, no OTP needed.
+    // Otherwise → create/link a passwordless account; the merchant logs in via OTP.
+    const authedClient = await createServerClient();
+    const { data: { user: sessionUser } } = await authedClient.auth.getUser();
+
+    let userId: string | null = sessionUser?.id ?? null;
+    const requiresLogin = !sessionUser;
+
+    if (!userId) {
+      userId = await resolveAuthUserId(serviceClient, email, owner_name ?? name);
+      if (!userId) {
+        console.error("[provision-merchant] could not create or resolve auth user");
+        return NextResponse.json({ error: "account_error" }, { status: 500 });
+      }
+    }
+
     const result = await createHyperzodMerchant({
       name, email, phone, address, city,
       state: state ?? "",
@@ -58,9 +104,11 @@ export async function POST(req: NextRequest) {
     const { data: merchant, error: dbError } = await serviceClient
       .from("merchants")
       .insert({
+        user_id: userId,
         name,
         owner_name: owner_name ?? null,
         email,
+        business_email: email,
         phone,
         address,
         city,
@@ -82,19 +130,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "db_error" }, { status: 500 });
     }
 
-    // Fire-and-forget — do not block the response on email delivery
-    sendMerchantWelcomeEmail({
-      to: email,
-      restaurantName: name,
-      ownerName: owner_name ?? undefined,
-    }).catch((err) =>
-      console.error("[provision-merchant] welcome email failed", err)
-    );
+    // NOTE: the welcome email is intentionally NOT sent here. It fires once the
+    // merchant verifies and reaches their dashboard (POST /api/merchant/welcome),
+    // so it doesn't arrive at the same time as the OTP login code.
 
     return NextResponse.json({
       success: true,
       merchant_id: merchant.id,
       hyperzod_id: result?.id ?? null,
+      // Tells the form whether to send the merchant through OTP login (new account)
+      // or straight to the dashboard (already signed in).
+      requiresLogin,
     });
   } catch (err) {
     console.error("[provision-merchant] error", err);

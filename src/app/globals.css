@@ -147,6 +147,21 @@ label {
   touch-action: manipulation;
 }
 
+/* Prevent iOS Safari from auto-zooming the page when a form field is focused.
+   iOS zooms in on any input with font-size < 16px and never zooms back out,
+   leaving the page stuck zoomed. Forcing 16px stops the jump (login/signup, OTP,
+   admin forms etc. that use text-sm = 14px).
+   Targeted at touch devices (pointer: coarse) OR narrow screens, so it covers
+   phones in any orientation while leaving mouse-driven desktops untouched.
+   !important is required to win over Tailwind's text-* utility classes. */
+@media (pointer: coarse), (max-width: 640px) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
 /* Custom animations for HalalMe */
 @keyframes fade-in-up {
   from {
@@ -513,7 +528,7 @@ main:has(.loading-header) {
   display: block;
 }
 
-/* ── Pulse ring ── */
+/* -- Pulse ring -- */
 .loading-logo-ring-wrap {
   position: relative;
   display: flex;
@@ -531,7 +546,7 @@ main:has(.loading-header) {
   will-change: transform, opacity;
 }
 
-/* ── Tagline ── */
+/* -- Tagline -- */
 .loading-tagline {
   font-size: 0.62rem;
   font-weight: 500;

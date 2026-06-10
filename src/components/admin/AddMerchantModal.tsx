@@ -11,9 +11,9 @@ const ORDER_TYPES = [
 ];
 
 const inputCls =
-  "w-full text-sm text-gray-900 bg-white border border-gray-300 rounded-xl px-3.5 py-2.5 " +
+  "w-full text-sm text-gray-900 bg-white border border-gray-300 rounded-none px-3.5 py-2.5 " +
   "focus:outline-none focus:ring-2 focus:ring-[#102C26]/20 focus:border-[#102C26] " +
-  "placeholder:text-gray-400 transition-colors shadow-sm";
+  "placeholder:text-gray-400 transition-colors";
 
 function Label({ children }: { children: React.ReactNode }) {
   return <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">{children}</label>;
@@ -115,12 +115,12 @@ export default function AddMerchantModal({
       onClick={() => !saving && onClose()}
     >
       <div
-        className="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden"
+        className="bg-white rounded-none shadow-xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="bg-[#102C26] px-6 py-5 flex items-center gap-3 shrink-0">
-          <div className="w-10 h-10 rounded-xl bg-[#F7E7CE]/15 flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-none bg-[#F7E7CE]/15 flex items-center justify-center shrink-0">
             <Store size={17} className="text-[#F7E7CE]" />
           </div>
           <div className="flex-1">
@@ -149,7 +149,7 @@ export default function AddMerchantModal({
             </div>
             <div>
               <Label>Phone *</Label>
-              <div className="flex items-stretch border border-gray-300 rounded-xl overflow-hidden shadow-sm focus-within:ring-2 focus-within:ring-[#102C26]/20 focus-within:border-[#102C26] bg-white">
+              <div className="flex items-stretch border border-gray-300 rounded-none overflow-hidden focus-within:ring-2 focus-within:ring-[#102C26]/20 focus-within:border-[#102C26] bg-white">
                 <span className="flex items-center px-3 bg-gray-50 border-r border-gray-200 text-sm font-medium text-gray-500">+44</span>
                 <input className="flex-1 text-sm text-gray-900 bg-transparent px-3 py-2.5 focus:outline-none placeholder:text-gray-400"
                   value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="7784 093793" />
@@ -179,8 +179,8 @@ export default function AddMerchantModal({
                 const on = orderTypes.includes(t.value);
                 return (
                   <button key={t.value} type="button" onClick={() => toggleType(t.value)}
-                    className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-medium border transition-colors ${
-                      on ? "bg-[#102C26] text-white border-[#102C26]" : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
+                    className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-none text-sm font-medium border transition-colors ${
+                      on ? "bg-[#102C26] text-[#F7E7CE] border-[#102C26]" : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
                     }`}>
                     {on && <Check size={14} />} {t.label}
                   </button>
@@ -204,8 +204,8 @@ export default function AddMerchantModal({
                   const on = categoryIds.includes(c._id);
                   return (
                     <button key={c._id} type="button" onClick={() => toggleCat(c._id)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                        on ? "bg-[#102C26] text-white border-[#102C26]" : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
+                      className={`px-3 py-1.5 rounded-none text-xs font-medium border transition-colors ${
+                        on ? "bg-[#102C26] text-[#F7E7CE] border-[#102C26]" : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
                       }`}>
                       {c.name}
                     </button>
@@ -216,7 +216,7 @@ export default function AddMerchantModal({
           </div>
 
           {error && (
-            <div className="flex items-start gap-2 rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700">
+            <div className="flex items-start gap-2 rounded-none bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700">
               <AlertTriangle size={15} className="mt-0.5 shrink-0" />
               <span>{error}</span>
             </div>
@@ -229,7 +229,7 @@ export default function AddMerchantModal({
             Cancel
           </button>
           <button onClick={handleSubmit} disabled={saving}
-            className="flex items-center gap-2 px-5 py-2.5 bg-[#102C26] text-white rounded-xl text-sm font-semibold hover:bg-[#102C26]/90 transition-colors disabled:opacity-60">
+            className="flex items-center gap-2 px-5 py-2.5 bg-[#102C26] text-[#F7E7CE] rounded-none text-sm font-semibold hover:bg-[#102C26]/90 transition-colors disabled:opacity-60">
             {saving ? <><Loader2 size={14} className="animate-spin" /> Creating…</> : <><Plus size={14} /> Add Merchant</>}
           </button>
         </div>

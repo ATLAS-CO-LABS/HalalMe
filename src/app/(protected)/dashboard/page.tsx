@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Truck, X } from "lucide-react";
 import { supabase } from "@/services/supabase";
+import { merchantService } from "@/services/merchantService";
 import {
   ArrowRight,
   ShieldCheck,
@@ -17,6 +18,7 @@ import {
   Coins,
   HandHeart,
   Bookmark,
+  Store,
 } from "lucide-react";
 
 const services = [
@@ -71,6 +73,7 @@ export default function DashboardPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [showDeliveryBanner, setShowDeliveryBanner] = useState(false);
+  const [isMerchant, setIsMerchant] = useState(false);
 
   useEffect(() => {
     if (searchParams.get("delivery") === "ready") {
@@ -78,6 +81,17 @@ export default function DashboardPage() {
       router.replace("/dashboard");
     }
   }, [searchParams, router]);
+
+  // Show a "Restaurant" switcher if this account also owns a merchant.
+  useEffect(() => {
+    if (!user?.id) return;
+    let active = true;
+    merchantService
+      .getMyMerchant()
+      .then((m) => { if (active) setIsMerchant(!!m); })
+      .catch(() => {});
+    return () => { active = false; };
+  }, [user?.id]);
 
   const [stats, setStats] = useState<DashboardStats>({
     rewardPoints: 0,
@@ -183,6 +197,16 @@ export default function DashboardPage() {
               </span>
             </Link>
             <div className="flex items-center gap-1">
+              {isMerchant && (
+                <Link
+                  href="/merchant"
+                  className="flex items-center gap-1.5 px-3 py-2 text-[#F7E7CE]/45 hover:text-[#F7E7CE]/80 hover:bg-[#F7E7CE]/6 transition-colors text-xs font-bold uppercase tracking-wide"
+                  title="Switch to your restaurant dashboard"
+                >
+                  <Store className="w-4 h-4" />
+                  <span className="hidden sm:inline">Restaurant</span>
+                </Link>
+              )}
               <Link
                 href="/profile"
                 className="p-2.5 text-[#F7E7CE]/40 hover:text-[#F7E7CE]/80 hover:bg-[#F7E7CE]/6 transition-colors"

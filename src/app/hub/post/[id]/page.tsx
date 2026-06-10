@@ -4,7 +4,7 @@ import { useState, useEffect, use, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
-import { cldUrl, CLD_POST_IMG } from "@/lib/cldUrl";
+import { cldUrl, CLD_POST_IMG, isVideoUrl, cldVideoUrl, cldVideoPoster } from "@/lib/cldUrl";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -397,7 +397,11 @@ function PostDetailContent({ id }: { id: string }) {
   const displayName = post.profiles?.full_name ?? post.profiles?.username ?? "Unknown";
   const username = post.profiles?.username ? `@${post.profiles.username}` : null;
   const isVerified = post.profiles?.is_verified ?? false;
-  const firstImage = cldUrl(post.media_urls?.[0], CLD_POST_IMG) ?? null;
+  const firstMedia = post.media_urls?.[0] ?? null;
+  const mediaIsVideo = isVideoUrl(firstMedia);
+  const firstImage = !mediaIsVideo ? (cldUrl(firstMedia, CLD_POST_IMG) ?? null) : null;
+  const videoSrc = mediaIsVideo ? (cldVideoUrl(firstMedia) ?? null) : null;
+  const videoPoster = mediaIsVideo ? cldVideoPoster(firstMedia) : undefined;
 
   return (
     <div className="min-h-screen bg-[#0B0D0F]">
@@ -495,11 +499,30 @@ function PostDetailContent({ id }: { id: string }) {
             </div>
           )}
 
-          {/* Images */}
-          {firstImage && (
+          {/* Media — video plays inline; image shows uncropped at natural aspect */}
+          {videoSrc ? (
+            <div className="w-full bg-black flex items-center justify-center">
+              <video
+                src={videoSrc}
+                poster={videoPoster}
+                controls
+                playsInline
+                preload="metadata"
+                className="w-full max-h-[80vh] object-contain bg-black"
+              />
+            </div>
+          ) : firstImage ? (
             <a href={firstImage} target="_blank" rel="noopener noreferrer" className="block">
-              <div className="relative w-full aspect-16/10 bg-gray-900 cursor-zoom-in overflow-hidden group">
-                <Image src={firstImage} alt="Post image" fill unoptimized className="object-cover group-hover:scale-105 transition-transform duration-300" />
+              <div className="relative w-full bg-[#0B0D0F] flex items-center justify-center cursor-zoom-in overflow-hidden group">
+                <Image
+                  src={firstImage}
+                  alt="Post image"
+                  width={0}
+                  height={0}
+                  sizes="100vw"
+                  unoptimized
+                  className="w-full h-auto max-h-[80vh] object-contain group-hover:opacity-95 transition-opacity duration-300"
+                />
                 {(post.media_urls?.length ?? 0) > 1 && (
                   <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm text-white text-xs font-semibold px-2 py-1 rounded-full">
                     1/{post.media_urls!.length}
@@ -507,7 +530,7 @@ function PostDetailContent({ id }: { id: string }) {
                 )}
               </div>
             </a>
-          )}
+          ) : null}
 
           {/* Actions */}
           <div className="p-4 md:p-5 border-t border-gray-800">

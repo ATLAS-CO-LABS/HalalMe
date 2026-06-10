@@ -1,5 +1,6 @@
 import {
   Body,
+  Button,
   Container,
   Head,
   Heading,
@@ -13,11 +14,13 @@ import {
 interface MerchantWelcomeEmailProps {
   restaurantName: string;
   ownerName?: string;
+  dashboardUrl?: string;
 }
 
 export default function MerchantWelcomeEmail({
   restaurantName,
   ownerName,
+  dashboardUrl = "https://halalme.co.uk/merchant",
 }: MerchantWelcomeEmailProps) {
   const greeting = ownerName ? `Hi ${ownerName},` : "Hi there,";
 
@@ -46,41 +49,33 @@ export default function MerchantWelcomeEmail({
             <Hr style={divider} />
 
             <Heading as="h2" style={h2}>
-              What happens next
+              Your next 2 steps
             </Heading>
 
             <Section style={stepList}>
               <Text style={step}>
                 <span style={stepNumber}>1</span>
                 <span style={stepText}>
-                  <strong>Our agent will call you within 24 hours</strong> to
-                  introduce themselves and walk you through the onboarding
-                  process.
+                  <strong>Access your merchant dashboard</strong> — track your
+                  onboarding status and manage your details in one place. Use the
+                  button below to open it.
                 </span>
               </Text>
               <Text style={step}>
                 <span style={stepNumber}>2</span>
                 <span style={stepText}>
-                  <strong>You will receive a Hyperzod dashboard invite</strong>{" "}
-                  — a separate email from Hyperzod — to set up your restaurant
-                  profile and menu.
+                  <strong>Complete your verification</strong> — upload your halal
+                  certificate, food hygiene rating and other documents in the
+                  dashboard so our team can verify <strong>{restaurantName}</strong>{" "}
+                  and get you live.
                 </span>
               </Text>
-              <Text style={step}>
-                <span style={stepNumber}>3</span>
-                <span style={stepText}>
-                  <strong>We&apos;ll review your setup</strong> with you before
-                  activating your listing on HalalMe.
-                </span>
-              </Text>
-              <Text style={step}>
-                <span style={stepNumber}>4</span>
-                <span style={stepText}>
-                  <strong>Go live</strong> — once everything is in place, your
-                  restaurant will appear on HalalMe and customers can start
-                  ordering.
-                </span>
-              </Text>
+            </Section>
+
+            <Section style={buttonWrap}>
+              <Button style={button} href={dashboardUrl}>
+                Open My Dashboard
+              </Button>
             </Section>
 
             <Hr style={divider} />
@@ -88,9 +83,8 @@ export default function MerchantWelcomeEmail({
             <Section style={notice}>
               <Text style={noticeText}>
                 <strong>Important:</strong> Your restaurant is{" "}
-                <em>not yet live</em> on HalalMe. You will only go live after
-                completing the steps above. Please do not assume your listing is
-                active until we confirm it with you.
+                <em>not yet live</em> on HalalMe. You&apos;ll go live once your
+                verification is complete and our team confirms it with you.
               </Text>
             </Section>
 
@@ -211,6 +205,22 @@ const stepNumber: React.CSSProperties = {
 
 const stepText: React.CSSProperties = {
   flex: 1,
+};
+
+const buttonWrap: React.CSSProperties = {
+  textAlign: "center",
+  margin: "8px 0 4px",
+};
+
+const button: React.CSSProperties = {
+  backgroundColor: "#102C26",
+  color: "#F7E7CE",
+  fontSize: "15px",
+  fontWeight: "600",
+  textDecoration: "none",
+  padding: "12px 28px",
+  borderRadius: "6px",
+  display: "inline-block",
 };
 
 const notice: React.CSSProperties = {

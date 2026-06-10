@@ -120,6 +120,31 @@ export const authService = {
     return data;
   },
 
+  // ── OTP: merchant passwordless login ──────────────────────────────────────
+
+  // Sends a 6-digit login code to a merchant. The account is created server-side
+  // (with email_confirm) by the provision route, so shouldCreateUser is false.
+  async sendMerchantLoginOtp(email: string) {
+    if (!supabaseConfigured)
+      throw new Error("Supabase is not configured. Add credentials to .env.local");
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: false },
+    });
+    if (error) throw new Error(error.message);
+  },
+
+  // Verifies the merchant login code and signs them in (type "email", same as reset).
+  async verifyMerchantLoginOtp(email: string, token: string) {
+    const { data, error } = await supabase.auth.verifyOtp({
+      email,
+      token,
+      type: "email",
+    });
+    if (error) throw new Error(error.message);
+    return data;
+  },
+
   // ── Password update ───────────────────────────────────────────────────────
 
   async updatePassword(newPassword: string) {
