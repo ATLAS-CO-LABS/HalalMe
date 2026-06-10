@@ -316,10 +316,17 @@ function DocumentsSection({
   }
 
   async function view(docId: string) {
+    // Open the tab synchronously while the click's user-activation is still
+    // valid. Opening after the await below would be treated as an unsolicited
+    // popup and silently blocked by the browser.
+    const win = window.open("about:blank", "_blank");
+    if (win) win.opener = null; // sever opener for security (replaces noopener)
     try {
       const url = await merchantService.getDocumentUrl(docId);
-      window.open(url, "_blank", "noopener,noreferrer");
+      if (win) win.location.href = url;
+      else window.location.href = url; // popup blocked entirely → use current tab
     } catch {
+      if (win) win.close();
       setError("Couldn't open the document. Please try again.");
     }
   }
