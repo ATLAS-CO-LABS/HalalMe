@@ -78,8 +78,14 @@ export async function POST(req: NextRequest) {
       resource_type: resourceType,
     });
   } catch (err) {
-    console.error("[merchant/documents] upload failed", err);
-    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+    // Cloudinary errors carry { message, http_code } or { error: { message } }.
+    const e = err as { message?: string; http_code?: number; error?: { message?: string } };
+    const detail = e?.error?.message ?? e?.message ?? String(err);
+    console.error("[merchant/documents] upload failed", { detail, http_code: e?.http_code, err });
+    return NextResponse.json(
+      { error: "Upload failed", detail, http_code: e?.http_code ?? null },
+      { status: 500 },
+    );
   }
 
   // Insert the new document row.
