@@ -36,7 +36,7 @@ export default function MerchantInviteSentEmail({
 
             <Text style={paragraph}>{greeting}</Text>
             <Text style={paragraph}>
-              Great news — we&apos;ve sent your merchant dashboard invite for{" "}
+              Great news - we&apos;ve sent your merchant dashboard invite for{" "}
               <strong>{restaurantName}</strong>. You should receive a separate
               email from <strong>Hyperzod</strong> shortly.
             </Text>
@@ -52,7 +52,7 @@ export default function MerchantInviteSentEmail({
                 <span style={stepNumber}>1</span>
                 <span style={stepText}>
                   <strong>Check your inbox for an email from Hyperzod.</strong>{" "}
-                  This is a separate email — look for it in your inbox and your
+                  This is a separate email - look for it in your inbox and your
                   spam / junk folder.
                 </span>
               </Text>
@@ -67,7 +67,7 @@ export default function MerchantInviteSentEmail({
               <Text style={step}>
                 <span style={stepNumber}>3</span>
                 <span style={stepText}>
-                  <strong>Start preparing your menu</strong> — add your
+                  <strong>Start preparing your menu</strong> - add your
                   categories, dishes, prices, and opening hours inside the
                   Hyperzod dashboard.
                 </span>
@@ -95,9 +95,9 @@ export default function MerchantInviteSentEmail({
             <Section style={spamNote}>
               <Text style={spamText}>
                 <strong>Can&apos;t find the Hyperzod email?</strong> Check your
-                spam or junk folder — it may have been filtered automatically.
-                If you still can&apos;t find it, reply to this email and we
-                will resend it.
+                spam or junk folder - it may have been filtered automatically.
+                If you still can&apos;t find it, reply to this email and we will
+                resend it.
               </Text>
             </Section>
 

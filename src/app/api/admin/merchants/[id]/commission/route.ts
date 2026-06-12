@@ -1,7 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient, createServiceClient } from "@/lib/supabase-server";
-import { sendMerchantAgreementEmail } from "@/services/emailService";
+import {
+  sendMerchantAgreementEmail,
+  sendMerchantCounterOfferEmail,
+  sendMerchantReviewDeclinedEmail,
+} from "@/services/emailService";
 import { COMMISSION_PROTECTED_THRESHOLD } from "@/lib/merchantStages";
+
+// Default shape so a null readiness_checklist isn't clobbered when we tick a flag.
+const DEFAULT_CHECKLIST = {
+  invite_accepted: false,
+  commission_agreed: false,
+  notes_completed: false,
+  onboarding_verified: false,
+};
 
 async function requireAdmin() {
   const serverClient = await createServerClient();
@@ -62,7 +74,7 @@ export async function POST(
 
   const { data: merchant } = await service
     .from("merchants")
-    .select("id, status, name, email, owner_name")
+    .select("id, status, name, email, owner_name, readiness_checklist")
     .eq("id", id)
     .single();
   if (!merchant) return NextResponse.json({ error: "Merchant not found" }, { status: 404 });
@@ -91,11 +103,20 @@ export async function POST(
       })
       .eq("merchant_id", id);
 
-    // Advance the merchant to Agreed (forward-only) + sync the agreed rate.
+    // Advance the merchant to Agreed (forward-only) + sync the agreed rate +
+    // auto-tick the "commission agreed" readiness item.
     if (merchant.status !== "live") {
       await service
         .from("merchants")
-        .update({ status: "agreed", commission_percentage: rate })
+        .update({
+          status: "agreed",
+          commission_percentage: rate,
+          readiness_checklist: {
+            ...DEFAULT_CHECKLIST,
+            ...(merchant.readiness_checklist ?? {}),
+            commission_agreed: true,
+          },
+        })
         .eq("id", id);
 
       sendMerchantAgreementEmail({
@@ -123,6 +144,14 @@ export async function POST(
       })
       .eq("merchant_id", id);
 
+    // Tell the merchant there's a counter waiting for them to accept.
+    sendMerchantCounterOfferEmail({
+      to: merchant.email,
+      restaurantName: merchant.name,
+      ownerName: merchant.owner_name ?? undefined,
+      commission: rate,
+    }).catch((err) => console.error("[admin/commission] counter email failed", err));
+
     return NextResponse.json({ ok: true });
   }
 
@@ -135,6 +164,14 @@ export async function POST(
         decided_by:    userId,
       })
       .eq("merchant_id", id);
+
+    // Let the merchant know their standard rate stands.
+    sendMerchantReviewDeclinedEmail({
+      to: merchant.email,
+      restaurantName: merchant.name,
+      ownerName: merchant.owner_name ?? undefined,
+      standardRate: row.recommended_commission,
+    }).catch((err) => console.error("[admin/commission] decline email failed", err));
 
     return NextResponse.json({ ok: true });
   }

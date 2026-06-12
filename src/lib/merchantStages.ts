@@ -24,7 +24,7 @@ export interface MerchantJourney {
   stages: MerchantStage[];
   /** One-line call to action for the current stage. */
   cta: string;
-  /** True when the merchant was rejected — render a graceful "closed" view instead. */
+  /** True when the merchant was rejected - render a graceful "closed" view instead. */
   isClosed: boolean;
 }
 
@@ -63,12 +63,12 @@ function ctaFor(index: number, docsApproved: boolean): string {
   switch (index) {
     case 1:
       return docsApproved
-        ? "Your documents are verified — we'll send your dashboard invite shortly."
+        ? "Your documents are verified - we'll send your dashboard invite shortly."
         : "Upload your verification documents below to continue onboarding.";
     case 2:
       return "Check your email for the Hyperzod dashboard invite (don't forget your spam folder).";
     case 3:
-      return "Our team is in touch about commission — we'll be in contact shortly.";
+      return "Our team is in touch about commission - we'll be in contact shortly.";
     case 4:
       return "Final checks are underway. You'll be live on HalalMe very soon.";
     case 5:
@@ -150,32 +150,32 @@ export const MERCHANT_DOC_TYPES: DocTypeDef[] = [
   {
     key: "food_business_reg",
     label: "Food Business Registration",
-    hint: "Proof of registration with your local council.",
-    required: true,
+    hint: "Proof of registration with your local council (optional).",
+    required: false,
     hasExpiry: false,
     group: "verification",
   },
   {
     key: "public_liability",
     label: "Public Liability Insurance",
-    hint: "Current public liability insurance certificate.",
-    required: true,
+    hint: "Current public liability insurance certificate (optional).",
+    required: false,
     hasExpiry: true,
     group: "verification",
   },
   {
     key: "business_proof",
     label: "Proof of Business",
-    hint: "Companies House record or proof of ownership (optional).",
-    required: false,
+    hint: "Companies House record or proof of ownership.",
+    required: true,
     hasExpiry: false,
     group: "verification",
   },
   {
     key: "owner_id",
     label: "Owner ID",
-    hint: "Photo ID of the business owner (optional).",
-    required: false,
+    hint: "Photo ID of the business owner.",
+    required: true,
     hasExpiry: false,
     group: "verification",
   },
@@ -183,7 +183,7 @@ export const MERCHANT_DOC_TYPES: DocTypeDef[] = [
   {
     key: "competitor_evidence",
     label: "Competitor Evidence",
-    hint: "Proof of a cheaper rate elsewhere (UberEats, Deliveroo, JustEat) — contract or statement.",
+    hint: "Proof of a cheaper rate elsewhere (UberEats, Deliveroo, JustEat) - contract or statement.",
     required: false,
     hasExpiry: false,
     group: "commission",
@@ -221,7 +221,7 @@ export function areRequiredDocsApproved(
 // Deterministic, rules-based. The merchant taps answers; we add up points; the
 // total lands on a FIXED rate. No free-text, no AI deciding money. Every output
 // is explainable from the breakdown. This is the single source of truth for the
-// scoring — the server recomputes it on submit so the client can never inflate.
+// scoring - the server recomputes it on submit so the client can never inflate.
 //
 // Policy (locked):
 //   Opening 30% · standard range 27.5–25% · protected threshold 22%
@@ -298,7 +298,7 @@ export const COMMISSION_QUESTIONS: CommissionQuestion[] = [
     ],
   },
   {
-    // Q4 — special: a ROUTING TRIGGER, not points. Claiming a sharp rate elsewhere
+    // Q4 - special: a ROUTING TRIGGER, not points. Claiming a sharp rate elsewhere
     // sends the case to review (Price-Promise) regardless of the total score.
     key: "existing_commission_band",
     prompt: "What commission do you currently pay elsewhere?",
@@ -388,21 +388,21 @@ export function evaluateCommission(answers: CommissionAnswers): CommissionResult
     }
   }
 
-  // Q4 routing triggers — independent of points.
+  // Q4 routing triggers - independent of points.
   let forcedReview = false;
   let reviewTrigger: string | null = null;
   if (answers.existing_commission_band === "lt22") {
     forcedReview = true;
-    reviewTrigger = "Claims sub-22% elsewhere — Price-Promise review";
+    reviewTrigger = "Claims sub-22% elsewhere - Price-Promise review";
   } else if (answers.existing_commission_band === "22_2499") {
     forcedReview = true;
-    reviewTrigger = "Claims 22–24.99% elsewhere — commercial review";
+    reviewTrigger = "Claims 22–24.99% elsewhere - commercial review";
   }
 
   const recommended = recommendFromScore(score);
   if (recommended === null) {
     forcedReview = true;
-    reviewTrigger = reviewTrigger ?? "High qualification score — review required";
+    reviewTrigger = reviewTrigger ?? "High qualification score - review required";
   }
 
   return {

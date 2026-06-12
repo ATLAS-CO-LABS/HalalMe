@@ -26,7 +26,9 @@ export default function MerchantLiveEmail({
   return (
     <Html>
       <Head />
-      <Preview>You&apos;re live on HalalMe — customers can now order from you</Preview>
+      <Preview>
+        You&apos;re live on HalalMe - customers can now order from you
+      </Preview>
       <Body style={main}>
         <Container style={container}>
           <Section style={header}>
@@ -41,7 +43,7 @@ export default function MerchantLiveEmail({
 
             <Text style={paragraph}>{greeting}</Text>
             <Text style={paragraph}>
-              Congratulations — <strong>{restaurantName}</strong> is now live on
+              Congratulations - <strong>{restaurantName}</strong> is now live on
               HalalMe. Customers in your area can find your restaurant and start
               placing orders right away.
             </Text>
@@ -57,8 +59,8 @@ export default function MerchantLiveEmail({
                 <span style={stepNumber}>1</span>
                 <span style={stepText}>
                   <strong>Keep your dashboard open.</strong> New orders come
-                  through your Hyperzod merchant dashboard — make sure someone is
-                  watching it during opening hours.
+                  through your Hyperzod merchant dashboard - make sure someone
+                  is watching it during opening hours.
                 </span>
               </Text>
               <Text style={step}>
@@ -73,8 +75,8 @@ export default function MerchantLiveEmail({
                 <span style={stepNumber}>3</span>
                 <span style={stepText}>
                   <strong>Keep your menu fresh.</strong> Update availability and
-                  prices in your dashboard so customers always see what&apos;s in
-                  stock.
+                  prices in your dashboard so customers always see what&apos;s
+                  in stock.
                 </span>
               </Text>
             </Section>
@@ -89,8 +91,8 @@ export default function MerchantLiveEmail({
 
             <Text style={paragraph}>
               Need a hand getting started, or have a question about your first
-              orders? We&apos;re here to help — just reply to this email or contact
-              us at{" "}
+              orders? We&apos;re here to help - just reply to this email or
+              contact us at{" "}
               <a href="mailto:support@halalme.co.uk" style={link}>
                 support@halalme.co.uk
               </a>
@@ -98,7 +100,7 @@ export default function MerchantLiveEmail({
             </Text>
 
             <Text style={paragraph}>
-              Welcome to the HalalMe family — here&apos;s to your first of many
+              Welcome to the HalalMe family - here&apos;s to your first of many
               orders.
             </Text>
 

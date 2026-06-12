@@ -11,10 +11,10 @@ export interface FollowUpInput {
 
 export interface FollowUp {
   key: string;
-  label: string;      // short reason shown in the UI
-  action: string;     // what the team should do
+  label: string; // short reason shown in the UI
+  action: string; // what the team should do
   severity: "warn" | "urgent";
-  days: number;       // days overdue in the current stage
+  days: number; // days overdue in the current stage
 }
 
 function daysSince(iso: string): number {
@@ -30,10 +30,10 @@ function isPastDate(iso: string): boolean {
 
 // Thresholds (days)
 export const THRESHOLDS = {
-  pending: 2,      // registered, not invited within 48h
-  invited: 3,      // invited, no movement within 72h
-  contacted: 5,    // spoken to, stalled for 5 days
-  negotiating: 5,  // negotiation dragging for 5 days
+  pending: 2, // registered, not invited within 48h
+  invited: 3, // invited, no movement within 72h
+  contacted: 5, // spoken to, stalled for 5 days
+  negotiating: 5, // negotiation dragging for 5 days
 };
 
 /**
@@ -42,8 +42,12 @@ export const THRESHOLDS = {
  */
 export function getFollowUp(m: FollowUpInput): FollowUp | null {
   // Manual reminder date takes priority — if it's due, surface it
-  if (m.next_followup_on && isPastDate(m.next_followup_on) &&
-      m.status !== "live" && m.status !== "rejected") {
+  if (
+    m.next_followup_on &&
+    isPastDate(m.next_followup_on) &&
+    m.status !== "live" &&
+    m.status !== "rejected"
+  ) {
     return {
       key: "manual",
       label: "Follow-up due",
@@ -72,20 +76,27 @@ export function getFollowUp(m: FollowUpInput): FollowUp | null {
       return {
         key: "invited",
         label: "Invite ignored",
-        action: "Chase the merchant — they haven't set up their dashboard",
+        action: "Chase the merchant - they haven't set up their dashboard",
         severity: d >= 7 ? "urgent" : "warn",
         days: d,
       };
     }
   }
 
-  if ((m.status === "contacted" || m.status === "negotiating") && m.contacted_at) {
+  if (
+    (m.status === "contacted" || m.status === "negotiating") &&
+    m.contacted_at
+  ) {
     const d = daysSince(m.contacted_at);
-    const threshold = m.status === "contacted" ? THRESHOLDS.contacted : THRESHOLDS.negotiating;
+    const threshold =
+      m.status === "contacted" ? THRESHOLDS.contacted : THRESHOLDS.negotiating;
     if (d >= threshold) {
       return {
         key: m.status,
-        label: m.status === "contacted" ? "Stalled after contact" : "Negotiation stalled",
+        label:
+          m.status === "contacted"
+            ? "Stalled after contact"
+            : "Negotiation stalled",
         action: "Follow up to keep the deal moving",
         severity: "urgent",
         days: d,

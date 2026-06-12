@@ -74,7 +74,7 @@ export default function AgreedSection({
           <div>
             <p className="text-sm font-bold text-[#F7E7CE] mb-1">Agreement signed</p>
             <p className="text-sm text-[#F7E7CE]/55 leading-relaxed">
-              Thank you — we&apos;ve emailed you a copy for your records. Our team is
+              Thank you - we&apos;ve emailed you a copy for your records. Our team is
               completing the final checks and you&apos;ll be live on HalalMe very soon.
             </p>
           </div>

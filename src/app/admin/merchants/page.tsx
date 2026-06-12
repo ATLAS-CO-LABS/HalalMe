@@ -43,6 +43,20 @@ interface Merchant {
   activated_at: string | null;
   hyperzod_merchant_id: string | null;
   hyperzod_sync_failed: boolean;
+  commission_review_status: string | null;
+}
+
+// Small badge for a merchant's commission-review state on the list.
+function ReviewBadge({ status }: { status: string | null }) {
+  if (status !== "pending" && status !== "countered") return null;
+  const cfg = status === "pending"
+    ? { label: "Review", cls: "bg-orange-50 text-orange-700" }
+    : { label: "Countered", cls: "bg-blue-50 text-blue-700" };
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide whitespace-nowrap ${cfg.cls}`}>
+      {cfg.label}
+    </span>
+  );
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -203,6 +217,7 @@ function MerchantCard({ m, onClick, selected, onSelect }: {
               <p className="text-sm text-gray-500 truncate mt-0.5">{m.email}</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
+              <ReviewBadge status={m.commission_review_status} />
               <StatusBadge status={m.status} />
               <ChevronRight size={15} className="text-gray-300" />
             </div>
@@ -278,6 +293,7 @@ export default function MerchantPipelinePage() {
   const [confirmingBulkReject, setConfirmingBulkReject] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [attentionOnly, setAttentionOnly] = useState(false);
+  const [reviewOnly, setReviewOnly] = useState(false);
 
   async function fetchMerchants(status: string, q: string) {
     setLoading(true);
@@ -322,13 +338,20 @@ export default function MerchantPipelinePage() {
   // Merchants that need follow-up (across all statuses)
   const attentionMerchants = allMerchants.filter((m) => getFollowUp(m) !== null);
 
-  // What the table renders: overdue-only when the Needs-Attention filter is on
+  // Merchants waiting on a commission decision (pending review), across all statuses.
+  const reviewMerchants = allMerchants.filter((m) => m.commission_review_status === "pending");
+  const reviewPendingCount = reviewMerchants.length;
+
+  // What the table renders: overdue-only / review-only filters override the status list.
+  const matchesSearch = (m: Merchant) => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return m.name.toLowerCase().includes(q) || m.email.toLowerCase().includes(q);
+  };
   const displayed = attentionOnly
-    ? attentionMerchants.filter((m) => {
-        if (!search) return true;
-        const q = search.toLowerCase();
-        return m.name.toLowerCase().includes(q) || m.email.toLowerCase().includes(q);
-      })
+    ? attentionMerchants.filter(matchesSearch)
+    : reviewOnly
+    ? reviewMerchants.filter(matchesSearch)
     : merchants;
 
   // Selection helpers
@@ -475,7 +498,7 @@ export default function MerchantPipelinePage() {
             sub={attentionOnly ? "Showing — click to clear" : urgentCount ? "Click to review" : "All caught up"}
             icon={AlertCircle} tone="amber"
             active={attentionOnly}
-            onClick={() => setAttentionOnly((v) => !v)} />
+            onClick={() => { setAttentionOnly((v) => !v); setReviewOnly(false); }} />
           <StatCard label="Active (Live)" value={liveCount}
             sub={total ? `${Math.round((liveCount / total) * 100)}% of total` : "—"} icon={Activity} tone="green" />
           <StatCard label="New This Week" value={newThisWeek} sub="Registered ≤ 7 days" icon={Sparkles} tone="purple" />
@@ -495,7 +518,7 @@ export default function MerchantPipelinePage() {
                 {STATUSES.map(({ key, label }) => {
                   const active = statusFilter === key;
                   return (
-                    <button key={key} onClick={() => { setStatusFilter(key); setAttentionOnly(false); }}
+                    <button key={key} onClick={() => { setStatusFilter(key); setAttentionOnly(false); setReviewOnly(false); }}
                       className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-none text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
                         active ? "bg-[#102C26] text-[#F7E7CE]" : "text-gray-500 hover:text-[#102C26] hover:bg-[#102C26]/8"
                       }`}>
@@ -506,6 +529,21 @@ export default function MerchantPipelinePage() {
                     </button>
                   );
                 })}
+
+                {/* Commission-review filter (client-side; spans all statuses) */}
+                {reviewPendingCount > 0 && (
+                  <button
+                    onClick={() => { setReviewOnly((v) => !v); setAttentionOnly(false); }}
+                    className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-none text-xs sm:text-sm font-medium whitespace-nowrap transition-all ml-1 ${
+                      reviewOnly ? "bg-orange-600 text-white" : "text-orange-700 hover:bg-orange-50"
+                    }`}
+                  >
+                    Commission reviews
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${reviewOnly ? "bg-white/20 text-white" : "bg-orange-100 text-orange-700"}`}>
+                      {reviewPendingCount}
+                    </span>
+                  </button>
+                )}
               </div>
               <div className="relative mt-2.5">
                 <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
@@ -681,7 +719,12 @@ export default function MerchantPipelinePage() {
                           </td>
 
                           {/* Status */}
-                          <td className="px-4 py-3.5"><StatusBadge status={m.status} /></td>
+                          <td className="px-4 py-3.5">
+                            <div className="flex items-center gap-1.5">
+                              <StatusBadge status={m.status} />
+                              <ReviewBadge status={m.commission_review_status} />
+                            </div>
+                          </td>
 
                           {/* Rep */}
                           <td className="px-4 py-3.5 hidden lg:table-cell">
@@ -715,7 +758,7 @@ export default function MerchantPipelinePage() {
                 {/* Footer count */}
                 <div className="px-5 py-3 border-t border-[#102C26]/8 text-xs text-gray-400">
                   Showing {displayed.length} merchant{displayed.length !== 1 ? "s" : ""}
-                  {attentionOnly ? " · needs attention" : statusFilter !== "all" ? ` · filtered by ${STATUS_CONFIG[statusFilter]?.label ?? statusFilter}` : ""}
+                  {attentionOnly ? " · needs attention" : reviewOnly ? " · commission reviews pending" : statusFilter !== "all" ? ` · filtered by ${STATUS_CONFIG[statusFilter]?.label ?? statusFilter}` : ""}
                 </div>
               </>
             )}

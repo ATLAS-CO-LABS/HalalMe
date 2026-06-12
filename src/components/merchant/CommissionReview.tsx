@@ -31,7 +31,7 @@ const REVIEW_REASONS: { value: string; label: string }[] = [
 ];
 
 const fmt = (n: number | null | undefined) =>
-  n == null ? "—" : `${Number.isInteger(n) ? n : n.toFixed(1)}%`;
+  n == null ? "-" : `${Number.isInteger(n) ? n : n.toFixed(1)}%`;
 
 /**
  * The Commission stage's dedicated section. Looks conversational; the rate is
@@ -63,7 +63,9 @@ export default function CommissionReview({
     setBusy(true);
     setError(null);
     try {
-      const result = await merchantService.submitCommission(next as CommissionAnswers);
+      const result = await merchantService.submitCommission(
+        next as CommissionAnswers,
+      );
       onUpdate(result);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
@@ -76,7 +78,9 @@ export default function CommissionReview({
     <section className="bg-[#0A1C19] border border-[#F7E7CE]/8 p-5 sm:p-6">
       <div className="flex items-center gap-2.5 mb-1">
         <Bot className="w-4 h-4 text-[#F59E0B]" />
-        <h2 className="text-sm font-bold uppercase tracking-wide text-[#F7E7CE]">Commission review</h2>
+        <h2 className="text-sm font-bold uppercase tracking-wide text-[#F7E7CE]">
+          Commission review
+        </h2>
       </div>
 
       {/* The record drives which view we show. */}
@@ -125,8 +129,8 @@ function Questionnaire({
   return (
     <div>
       <p className="text-xs text-[#F7E7CE]/40 mb-4">
-        Every merchant starts at {COMMISSION_OPENING}%. Answer a few questions and we&apos;ll
-        check whether you qualify for a better rate.
+        Every merchant starts at {COMMISSION_OPENING}%. Answer a few questions
+        and we&apos;ll check whether you qualify for a better rate.
       </p>
 
       {/* progress */}
@@ -148,7 +152,9 @@ function Questionnaire({
           <Bot className="w-3.5 h-3.5 text-[#F59E0B]" />
         </div>
         <div className="bg-[#102C26] border border-[#F7E7CE]/8 px-3.5 py-3 rounded-r-lg rounded-bl-lg">
-          <p className="text-sm text-[#F7E7CE]/85 leading-relaxed">{q.prompt}</p>
+          <p className="text-sm text-[#F7E7CE]/85 leading-relaxed">
+            {q.prompt}
+          </p>
           {q.hint && <p className="text-xs text-[#F7E7CE]/35 mt-1">{q.hint}</p>}
         </div>
       </div>
@@ -251,7 +257,7 @@ function Result({
       <StatusNote
         icon={<Clock className="w-5 h-5 text-amber-400" />}
         title="Pending commercial review"
-        body="Thanks — our team is reviewing your request and will be in touch shortly. You'll get an email when there's an update."
+        body="Thanks - our team is reviewing your request and will be in touch shortly. You'll get an email when there's an update."
       />
     );
   }
@@ -263,12 +269,15 @@ function Result({
         title="Let's talk it through"
         body={`We couldn't approve that rate automatically. Your standard offer of ${fmt(
           commission.recommended_commission,
-        )} still stands — or reach out via support and we'll find the right fit.`}
+        )} still stands - or reach out via support and we'll find the right fit.`}
       />
     );
   }
 
-  if (commission.review_status === "countered" && commission.countered_commission != null) {
+  if (
+    commission.review_status === "countered" &&
+    commission.countered_commission != null
+  ) {
     return (
       <div>
         <ResultHeader
@@ -283,7 +292,11 @@ function Result({
             disabled={busy === "accept"}
             className="flex-1 inline-flex items-center justify-center gap-2 h-11 bg-[#F59E0B] text-[#102C26] text-xs font-extrabold uppercase tracking-tighter hover:bg-[#F59E0B]/90 disabled:opacity-60 transition-colors"
           >
-            {busy === "accept" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+            {busy === "accept" ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Check className="w-4 h-4" />
+            )}
             Accept {fmt(commission.countered_commission)}
           </button>
         </div>
@@ -305,7 +318,11 @@ function Result({
     <div>
       <ResultHeader
         rate={rate}
-        caption={canAccept ? "Your recommended commission" : "Your rate needs a quick review"}
+        caption={
+          canAccept
+            ? "Your recommended commission"
+            : "Your rate needs a quick review"
+        }
         breakdown={commission.score_breakdown}
       />
 
@@ -313,9 +330,20 @@ function Result({
         <div className="flex items-start gap-2.5 bg-[#F59E0B]/8 border border-[#F59E0B]/20 px-3.5 py-3 mt-4">
           <ShieldCheck className="w-4 h-4 text-[#F59E0B] mt-0.5 shrink-0" />
           <p className="text-xs text-[#F7E7CE]/70 leading-relaxed">
-            {canAccept
-              ? <>You can accept this rate now — or, if you&apos;re on cheaper terms elsewhere, request a review and attach proof so our Price Promise can match it.</>
-              : <>Your answers qualify you for a tailored commercial rate. Tell us a little more and our team will confirm it (attach proof if you&apos;re on cheaper terms elsewhere — our Price Promise can match it).</>}
+            {canAccept ? (
+              <>
+                You can accept this rate now - or, if you&apos;re on cheaper
+                terms elsewhere, request a review and attach proof so our Price
+                Promise can match it.
+              </>
+            ) : (
+              <>
+                Your answers qualify you for a tailored commercial rate. Tell us
+                a little more and our team will confirm it (attach proof if
+                you&apos;re on cheaper terms elsewhere - our Price Promise can
+                match it).
+              </>
+            )}
           </p>
         </div>
       )}
@@ -330,7 +358,11 @@ function Result({
               disabled={busy === "accept"}
               className="flex-1 inline-flex items-center justify-center gap-2 h-11 bg-[#F59E0B] text-[#102C26] text-xs font-extrabold uppercase tracking-tighter hover:bg-[#F59E0B]/90 disabled:opacity-60 transition-colors"
             >
-              {busy === "accept" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+              {busy === "accept" ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Check className="w-4 h-4" />
+              )}
               Accept {fmt(rate)}
             </button>
           )}
@@ -338,7 +370,13 @@ function Result({
             onClick={() => setShowReview(true)}
             className="flex-1 inline-flex items-center justify-center gap-2 h-11 border border-[#F7E7CE]/15 text-[#F7E7CE]/70 text-xs font-bold uppercase tracking-wide hover:border-[#F7E7CE]/30 hover:text-[#F7E7CE] transition-colors"
           >
-            {canAccept ? "Request review" : <>Continue <ArrowRight className="w-3.5 h-3.5" /></>}
+            {canAccept ? (
+              "Request review"
+            ) : (
+              <>
+                Continue <ArrowRight className="w-3.5 h-3.5" />
+              </>
+            )}
           </button>
         </div>
       ) : (
@@ -390,16 +428,29 @@ function Result({
                   type="file"
                   accept=".pdf,.jpg,.jpeg,.png,.webp"
                   className="hidden"
-                  onChange={(e) => { uploadEvidence(e.target.files?.[0]); e.target.value = ""; }}
+                  onChange={(e) => {
+                    uploadEvidence(e.target.files?.[0]);
+                    e.target.value = "";
+                  }}
                 />
-                {uploading
-                  ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Uploading…</>
-                  : evidenceName
-                  ? <><CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> {evidenceName}</>
-                  : <><Upload className="w-3.5 h-3.5" /> Upload proof</>}
+                {uploading ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> Uploading…
+                  </>
+                ) : evidenceName ? (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />{" "}
+                    {evidenceName}
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-3.5 h-3.5" /> Upload proof
+                  </>
+                )}
               </label>
               <p className="text-[11px] text-[#F7E7CE]/30 mt-1.5">
-                A contract or statement showing your current rate with UberEats, Deliveroo or JustEat.
+                A contract or statement showing your current rate with UberEats,
+                Deliveroo or JustEat.
               </p>
             </div>
           )}
@@ -410,11 +461,18 @@ function Result({
               disabled={busy === "review"}
               className="h-11 px-5 bg-[#F59E0B] text-[#102C26] text-xs font-extrabold uppercase tracking-tighter hover:bg-[#F59E0B]/90 disabled:opacity-60 transition-colors inline-flex items-center gap-2"
             >
-              {busy === "review" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+              {busy === "review" ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Check className="w-4 h-4" />
+              )}
               Submit for review
             </button>
             <button
-              onClick={() => { setShowReview(false); setError(null); }}
+              onClick={() => {
+                setShowReview(false);
+                setError(null);
+              }}
               className="h-11 px-4 text-xs font-bold uppercase tracking-wide text-[#F7E7CE]/40 hover:text-[#F7E7CE]/70 transition-colors"
             >
               Back
@@ -439,15 +497,22 @@ function ResultHeader({
 }) {
   return (
     <div className="bg-[#102C26] border border-[#F59E0B]/20 px-4 py-5 mt-4 text-center">
-      <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#F7E7CE]/40">{caption}</p>
+      <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#F7E7CE]/40">
+        {caption}
+      </p>
       <div className="flex items-center justify-center gap-2 mt-1">
         <Sparkles className="w-5 h-5 text-[#F59E0B]" />
-        <span className="text-4xl font-extrabold text-[#F7E7CE] tracking-tight">{fmt(rate)}</span>
+        <span className="text-4xl font-extrabold text-[#F7E7CE] tracking-tight">
+          {fmt(rate)}
+        </span>
       </div>
       {breakdown && breakdown.length > 0 && (
         <div className="mt-3 inline-flex flex-col items-start gap-1">
           {breakdown.map((b, i) => (
-            <span key={i} className="inline-flex items-center gap-1.5 text-xs text-[#F7E7CE]/55">
+            <span
+              key={i}
+              className="inline-flex items-center gap-1.5 text-xs text-[#F7E7CE]/55"
+            >
               <Check className="w-3 h-3 text-emerald-400 shrink-0" /> {b.label}
             </span>
           ))}
@@ -457,7 +522,15 @@ function ResultHeader({
   );
 }
 
-function StatusNote({ icon, title, body }: { icon: React.ReactNode; title: string; body: string }) {
+function StatusNote({
+  icon,
+  title,
+  body,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  body: string;
+}) {
   return (
     <div className="flex items-start gap-3 bg-[#102C26] border border-[#F7E7CE]/8 px-4 py-4 mt-4">
       <div className="shrink-0 mt-0.5">{icon}</div>

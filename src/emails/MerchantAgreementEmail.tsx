@@ -24,7 +24,7 @@ export default function MerchantAgreementEmail({
   return (
     <Html>
       <Head />
-      <Preview>Thanks for confirming — your HalalMe onboarding is underway</Preview>
+      <Preview>Thanks for confirming - your HalalMe onboarding is underway</Preview>
       <Body style={main}>
         <Container style={container}>
           <Section style={header}>

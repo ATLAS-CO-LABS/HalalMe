@@ -49,5 +49,18 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Failed to fetch merchants" }, { status: 500 });
   }
 
-  return NextResponse.json({ merchants: data ?? [] });
+  // Attach each merchant's commission review status (for the list badge/filter).
+  const { data: comms } = await serviceClient
+    .from("merchant_commission")
+    .select("merchant_id, review_status");
+  const reviewByMerchant = new Map(
+    (comms ?? []).map((c) => [c.merchant_id, c.review_status as string]),
+  );
+
+  const merchants = (data ?? []).map((m) => ({
+    ...m,
+    commission_review_status: reviewByMerchant.get(m.id) ?? null,
+  }));
+
+  return NextResponse.json({ merchants });
 }

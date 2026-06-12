@@ -13,12 +13,20 @@ const COMMISSION_STAGE_STATUSES = new Set(["contacted", "negotiating", "commissi
 
 const REVIEW_REASONS = new Set(["existing_provider", "expansion", "strategic", "other"]);
 
+// Default shape so a null readiness_checklist isn't clobbered when we tick a flag.
+const DEFAULT_CHECKLIST = {
+  invite_accepted: false,
+  commission_agreed: false,
+  notes_completed: false,
+  onboarding_verified: false,
+};
+
 /** Find the merchant owned by the signed-in user (scoped strictly by user_id). */
 async function ownedMerchant(userId: string) {
   const service = createServiceClient();
   const { data } = await service
     .from("merchants")
-    .select("id, status, name, email, owner_name")
+    .select("id, status, name, email, owner_name, readiness_checklist")
     .eq("user_id", userId)
     .order("created_at", { ascending: true })
     .limit(1)
@@ -168,7 +176,15 @@ export async function POST(req: NextRequest) {
     if (COMMISSION_STAGE_STATUSES.has(merchant.status)) {
       await service
         .from("merchants")
-        .update({ status: "agreed", commission_percentage: rate })
+        .update({
+          status: "agreed",
+          commission_percentage: rate,
+          readiness_checklist: {
+            ...DEFAULT_CHECKLIST,
+            ...((merchant.readiness_checklist as Record<string, boolean> | null) ?? {}),
+            commission_agreed: true,
+          },
+        })
         .eq("id", merchant.id);
 
       sendMerchantAgreementEmail({

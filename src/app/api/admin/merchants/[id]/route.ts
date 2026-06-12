@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient, createServiceClient } from "@/lib/supabase-server";
-import { sendMerchantAgreementEmail, sendMerchantInviteSentEmail } from "@/services/emailService";
+import {
+  sendMerchantAgreementEmail,
+  sendMerchantInviteSentEmail,
+  sendMerchantCommissionInviteEmail,
+} from "@/services/emailService";
 import { deleteHyperzodMerchant } from "@/services/hyperzodService";
 
 async function getAdminServiceClient() {
@@ -80,6 +84,7 @@ export async function PATCH(
 
   const enteringInvited = body.status === "invited" && movingForward;
   const enteringAgreed = body.status === "agreed" && movingForward;
+  const enteringNegotiating = body.status === "negotiating" && movingForward;
 
   const updates: Record<string, unknown> = {};
 
@@ -133,6 +138,18 @@ export async function PATCH(
       ownerName: current.owner_name ?? undefined,
     }).catch((err) =>
       console.error("[api/admin/merchants/[id]] invite email failed", err)
+    );
+  }
+
+  // Commission nudge — fire-and-forget when the merchant reaches "negotiating",
+  // prompting them to complete the commission review in their dashboard.
+  if (enteringNegotiating) {
+    sendMerchantCommissionInviteEmail({
+      to: current.email,
+      restaurantName: current.name,
+      ownerName: current.owner_name ?? undefined,
+    }).catch((err) =>
+      console.error("[api/admin/merchants/[id]] commission invite email failed", err)
     );
   }
 

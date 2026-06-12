@@ -56,18 +56,18 @@ export default function MerchantWelcomeEmail({
               <Text style={step}>
                 <span style={stepNumber}>1</span>
                 <span style={stepText}>
-                  <strong>Access your merchant dashboard</strong> — track your
-                  onboarding status and manage your details in one place. Use the
-                  button below to open it.
+                  <strong>Access your merchant dashboard</strong> - track your
+                  onboarding status and manage your details in one place. Use
+                  the button below to open it.
                 </span>
               </Text>
               <Text style={step}>
                 <span style={stepNumber}>2</span>
                 <span style={stepText}>
-                  <strong>Complete your verification</strong> — upload your halal
-                  certificate, food hygiene rating and other documents in the
-                  dashboard so our team can verify <strong>{restaurantName}</strong>{" "}
-                  and get you live.
+                  <strong>Complete your verification</strong> - upload your
+                  halal certificate, food hygiene rating and other documents in
+                  the dashboard so our team can verify{" "}
+                  <strong>{restaurantName}</strong> and get you live.
                 </span>
               </Text>
             </Section>

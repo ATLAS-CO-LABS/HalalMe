@@ -4,6 +4,9 @@ import MerchantWelcomeEmail from "@/emails/MerchantWelcomeEmail";
 import MerchantInviteSentEmail from "@/emails/MerchantInviteSentEmail";
 import MerchantAgreementEmail from "@/emails/MerchantAgreementEmail";
 import MerchantContractEmail from "@/emails/MerchantContractEmail";
+import MerchantCommissionInviteEmail from "@/emails/MerchantCommissionInviteEmail";
+import MerchantCounterOfferEmail from "@/emails/MerchantCounterOfferEmail";
+import MerchantReviewDeclinedEmail from "@/emails/MerchantReviewDeclinedEmail";
 import MerchantLiveEmail from "@/emails/MerchantLiveEmail";
 import MerchantChaseEmail from "@/emails/MerchantChaseEmail";
 import MerchantDocsApprovedEmail from "@/emails/MerchantDocsApprovedEmail";
@@ -40,7 +43,7 @@ export async function sendMerchantSupportEmail({
     <div style="font-family: Arial, sans-serif; font-size: 14px; color: #222;">
       <h2 style="margin:0 0 12px;">Merchant support request</h2>
       <p style="margin:0 0 4px;"><strong>Restaurant:</strong> ${escapeHtml(restaurantName)}</p>
-      <p style="margin:0 0 4px;"><strong>Owner:</strong> ${escapeHtml(ownerName ?? "—")}</p>
+      <p style="margin:0 0 4px;"><strong>Owner:</strong> ${escapeHtml(ownerName ?? "-")}</p>
       <p style="margin:0 0 4px;"><strong>Account:</strong> ${escapeHtml(fromEmail)}</p>
       <p style="margin:0 0 12px;"><strong>Merchant ID:</strong> ${escapeHtml(merchantId)}</p>
       <hr style="border:none;border-top:1px solid #eee;margin:12px 0;" />
@@ -78,7 +81,7 @@ export async function sendMerchantWelcomeEmail({
   const { error } = await resend.emails.send({
     from: FROM,
     to,
-    subject: `We've received your application — ${restaurantName}`,
+    subject: `We've received your application - ${restaurantName}`,
     html,
   });
 
@@ -104,7 +107,7 @@ export async function sendMerchantInviteSentEmail({
   const { error } = await resend.emails.send({
     from: FROM,
     to,
-    subject: `Your dashboard invite has been sent — ${restaurantName}`,
+    subject: `Your dashboard invite has been sent - ${restaurantName}`,
     html,
   });
 
@@ -130,7 +133,7 @@ export async function sendMerchantAgreementEmail({
   const { error } = await resend.emails.send({
     from: FROM,
     to,
-    subject: `Your onboarding is underway — ${restaurantName}`,
+    subject: `Your onboarding is underway - ${restaurantName}`,
     html,
   });
 
@@ -160,12 +163,92 @@ export async function sendMerchantContractEmail({
   const { error } = await resend.emails.send({
     from: FROM,
     to,
-    subject: `Your HalalMe Merchant Agreement — ${restaurantName}`,
+    subject: `Your HalalMe Merchant Agreement - ${restaurantName}`,
     html,
   });
 
   if (error) {
     console.error("[emailService] sendMerchantContractEmail failed", error);
+    throw new Error(`Email send failed: ${error.message}`);
+  }
+}
+
+export async function sendMerchantCommissionInviteEmail({
+  to,
+  restaurantName,
+  ownerName,
+}: {
+  to: string;
+  restaurantName: string;
+  ownerName?: string;
+}): Promise<void> {
+  const html = await render(MerchantCommissionInviteEmail({ restaurantName, ownerName }));
+
+  const { error } = await resend.emails.send({
+    from: FROM,
+    to,
+    subject: `Let's agree your commission — ${restaurantName}`,
+    html,
+  });
+
+  if (error) {
+    console.error("[emailService] sendMerchantCommissionInviteEmail failed", error);
+    throw new Error(`Email send failed: ${error.message}`);
+  }
+}
+
+export async function sendMerchantCounterOfferEmail({
+  to,
+  restaurantName,
+  ownerName,
+  commission,
+}: {
+  to: string;
+  restaurantName: string;
+  ownerName?: string;
+  commission: number;
+}): Promise<void> {
+  const html = await render(
+    MerchantCounterOfferEmail({ restaurantName, ownerName, commission }),
+  );
+
+  const { error } = await resend.emails.send({
+    from: FROM,
+    to,
+    subject: `We've made you a commission offer — ${restaurantName}`,
+    html,
+  });
+
+  if (error) {
+    console.error("[emailService] sendMerchantCounterOfferEmail failed", error);
+    throw new Error(`Email send failed: ${error.message}`);
+  }
+}
+
+export async function sendMerchantReviewDeclinedEmail({
+  to,
+  restaurantName,
+  ownerName,
+  standardRate,
+}: {
+  to: string;
+  restaurantName: string;
+  ownerName?: string;
+  standardRate?: number | null;
+}): Promise<void> {
+  const html = await render(
+    MerchantReviewDeclinedEmail({ restaurantName, ownerName, standardRate }),
+  );
+
+  const { error } = await resend.emails.send({
+    from: FROM,
+    to,
+    subject: `Update on your commission review — ${restaurantName}`,
+    html,
+  });
+
+  if (error) {
+    console.error("[emailService] sendMerchantReviewDeclinedEmail failed", error);
     throw new Error(`Email send failed: ${error.message}`);
   }
 }
@@ -184,7 +267,7 @@ export async function sendMerchantLiveEmail({
   const { error } = await resend.emails.send({
     from: FROM,
     to,
-    subject: `🎉 You're live on HalalMe — ${restaurantName}`,
+    subject: `🎉 You're live on HalalMe - ${restaurantName}`,
     html,
   });
 
@@ -210,7 +293,7 @@ export async function sendMerchantDocsApprovedEmail({
   const { error } = await resend.emails.send({
     from: FROM,
     to,
-    subject: `Your documents are verified — ${restaurantName}`,
+    subject: `Your documents are verified - ${restaurantName}`,
     html,
   });
 
@@ -234,18 +317,26 @@ export async function sendMerchantDocsActionNeededEmail({
   reason?: string;
 }): Promise<void> {
   const html = await render(
-    MerchantDocsActionNeededEmail({ restaurantName, ownerName, documentLabel, reason }),
+    MerchantDocsActionNeededEmail({
+      restaurantName,
+      ownerName,
+      documentLabel,
+      reason,
+    }),
   );
 
   const { error } = await resend.emails.send({
     from: FROM,
     to,
-    subject: `Action needed on your ${documentLabel} — ${restaurantName}`,
+    subject: `Action needed on your ${documentLabel} - ${restaurantName}`,
     html,
   });
 
   if (error) {
-    console.error("[emailService] sendMerchantDocsActionNeededEmail failed", error);
+    console.error(
+      "[emailService] sendMerchantDocsActionNeededEmail failed",
+      error,
+    );
     throw new Error(`Email send failed: ${error.message}`);
   }
 }
@@ -264,7 +355,7 @@ export async function sendMerchantChaseEmail({
   const { error } = await resend.emails.send({
     from: FROM,
     to,
-    subject: `Follow-up on your HalalMe application — ${restaurantName}`,
+    subject: `Follow-up on your HalalMe application - ${restaurantName}`,
     html,
   });
 
