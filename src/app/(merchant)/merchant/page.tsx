@@ -8,13 +8,17 @@ import {
   merchantService,
   type MerchantRecord,
   type MerchantDocument,
+  type MerchantCommission,
 } from "@/services/merchantService";
 import {
   getMerchantJourney,
   areRequiredDocsApproved,
-  MERCHANT_DOC_TYPES,
+  VERIFICATION_DOC_TYPES,
   REQUIRED_DOC_KEYS,
+  type MerchantStageKey,
 } from "@/lib/merchantStages";
+import CommissionReview from "@/components/merchant/CommissionReview";
+import AgreedSection from "@/components/merchant/AgreedSection";
 import {
   LogOut,
   LayoutGrid,
@@ -38,6 +42,7 @@ export default function MerchantDashboardPage() {
 
   const [merchant, setMerchant] = useState<MerchantRecord | null>(null);
   const [documents, setDocuments] = useState<MerchantDocument[]>([]);
+  const [commission, setCommission] = useState<MerchantCommission | null>(null);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
@@ -45,7 +50,12 @@ export default function MerchantDashboardPage() {
       const m = await merchantService.getMyMerchant();
       setMerchant(m);
       if (m) {
-        setDocuments(await merchantService.getMyDocuments(m.id));
+        const [docs, comm] = await Promise.all([
+          merchantService.getMyDocuments(m.id),
+          merchantService.getMyCommission().catch(() => null),
+        ]);
+        setDocuments(docs);
+        setCommission(comm);
         // Fire the welcome email now that the merchant has verified and landed
         // here. The endpoint is idempotent (sends once via welcome_sent_at).
         fetch("/api/merchant/welcome", { method: "POST" }).catch(() => {});
@@ -62,6 +72,13 @@ export default function MerchantDashboardPage() {
     setDocuments(await merchantService.getMyDocuments(merchant.id));
   }, [merchant]);
 
+  // A commission action can change the merchant's status (auto-lane Accept →
+  // Agreed), so refresh the merchant record too and let the stage switch.
+  const handleCommissionUpdate = useCallback(async (c: MerchantCommission) => {
+    setCommission(c);
+    setMerchant(await merchantService.getMyMerchant());
+  }, []);
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#102C26]">
@@ -74,6 +91,12 @@ export default function MerchantDashboardPage() {
 
   const docsApproved = areRequiredDocsApproved(documents);
   const journey = getMerchantJourney(merchant.status, docsApproved);
+  // The stage the merchant is actively in — drives which dedicated section shows.
+  const currentStage: MerchantStageKey | null = journey.isClosed
+    ? null
+    : merchant.status === "live"
+    ? "live"
+    : journey.stages.find((s) => s.current)?.key ?? "verification";
 
   return (
     <div className="min-h-screen bg-[#102C26]">
@@ -143,8 +166,23 @@ export default function MerchantDashboardPage() {
             {/* ── Status tracker ── */}
             <StatusTracker journey={journey} />
 
-            {/* ── Documents ── */}
-            <DocumentsSection documents={documents} onChange={reloadDocuments} />
+            {/* ── The dedicated section for the merchant's CURRENT stage ── */}
+            {(currentStage === "registered" || currentStage === "verification") && (
+              <DocumentsSection documents={documents} onChange={reloadDocuments} />
+            )}
+            {currentStage === "invited" && <InvitedSection />}
+            {currentStage === "commission" && (
+              <CommissionReview commission={commission} onUpdate={handleCommissionUpdate} />
+            )}
+            {currentStage === "agreed" && (
+              <AgreedSection
+                commission={commission}
+                restaurantName={merchant.name}
+                ownerName={merchant.owner_name}
+                onUpdate={handleCommissionUpdate}
+              />
+            )}
+            {currentStage === "live" && <LiveSection />}
 
             {/* ── Restaurant info ── */}
             <RestaurantInfo merchant={merchant} onSaved={setMerchant} />
@@ -359,7 +397,7 @@ function DocumentsSection({
       )}
 
       <div className="space-y-2">
-        {MERCHANT_DOC_TYPES.map((doc) => {
+        {VERIFICATION_DOC_TYPES.map((doc) => {
           const existing = byType(doc.key);
           const isUploading = uploadingKey === doc.key;
           // Can replace until it's approved — so a wrong file can be swapped
@@ -443,6 +481,39 @@ function DocumentsSection({
           );
         })}
       </div>
+    </section>
+  );
+}
+
+// ── Invited / Live info sections ───────────────────────────────────────────────
+
+function InvitedSection() {
+  return (
+    <section className="bg-[#0A1C19] border border-[#F7E7CE]/8 p-5 sm:p-6">
+      <div className="flex items-center gap-2.5 mb-3">
+        <CheckCircle2 className="w-4 h-4 text-[#F59E0B]" />
+        <h2 className="text-sm font-bold uppercase tracking-wide text-[#F7E7CE]">You&apos;re invited</h2>
+      </div>
+      <p className="text-sm text-[#F7E7CE]/55 leading-relaxed">
+        Check your email for your Hyperzod dashboard invite (don&apos;t forget your spam
+        folder). Once you&apos;ve accepted, our team will be in touch to agree your
+        commission — and you&apos;ll do that right here.
+      </p>
+    </section>
+  );
+}
+
+function LiveSection() {
+  return (
+    <section className="bg-[#0A1C19] border border-emerald-500/20 p-5 sm:p-6">
+      <div className="flex items-center gap-2.5 mb-3">
+        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+        <h2 className="text-sm font-bold uppercase tracking-wide text-[#F7E7CE]">You&apos;re live 🎉</h2>
+      </div>
+      <p className="text-sm text-[#F7E7CE]/55 leading-relaxed">
+        Your store is live on HalalMe. Manage your orders, menu and opening hours from
+        your Hyperzod dashboard. Welcome aboard!
+      </p>
     </section>
   );
 }

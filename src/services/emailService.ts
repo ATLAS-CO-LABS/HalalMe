@@ -3,6 +3,7 @@ import { render } from "@react-email/components";
 import MerchantWelcomeEmail from "@/emails/MerchantWelcomeEmail";
 import MerchantInviteSentEmail from "@/emails/MerchantInviteSentEmail";
 import MerchantAgreementEmail from "@/emails/MerchantAgreementEmail";
+import MerchantContractEmail from "@/emails/MerchantContractEmail";
 import MerchantLiveEmail from "@/emails/MerchantLiveEmail";
 import MerchantChaseEmail from "@/emails/MerchantChaseEmail";
 import MerchantDocsApprovedEmail from "@/emails/MerchantDocsApprovedEmail";
@@ -135,6 +136,36 @@ export async function sendMerchantAgreementEmail({
 
   if (error) {
     console.error("[emailService] sendMerchantAgreementEmail failed", error);
+    throw new Error(`Email send failed: ${error.message}`);
+  }
+}
+
+export async function sendMerchantContractEmail({
+  to,
+  restaurantName,
+  ownerName,
+  commission,
+  signedAt,
+}: {
+  to: string;
+  restaurantName: string;
+  ownerName?: string;
+  commission: number;
+  signedAt: string;
+}): Promise<void> {
+  const html = await render(
+    MerchantContractEmail({ restaurantName, ownerName, commission, signedAt }),
+  );
+
+  const { error } = await resend.emails.send({
+    from: FROM,
+    to,
+    subject: `Your HalalMe Merchant Agreement — ${restaurantName}`,
+    html,
+  });
+
+  if (error) {
+    console.error("[emailService] sendMerchantContractEmail failed", error);
     throw new Error(`Email send failed: ${error.message}`);
   }
 }

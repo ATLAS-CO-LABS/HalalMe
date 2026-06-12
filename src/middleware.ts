@@ -39,5 +39,7 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|logo|images|fonts).*)'],
+  // Exclude /api so request bodies (e.g. document uploads) aren't buffered and
+  // truncated by the middleware — the route handlers do their own size checks.
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|logo|images|fonts).*)'],
 };

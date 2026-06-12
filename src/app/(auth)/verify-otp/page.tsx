@@ -6,6 +6,7 @@ import { authService, isRateLimitError } from "@/services/authService";
 import { useAuth } from "@/hooks/useAuth";
 import { startCooldown, getCooldownRemaining, COOLDOWN_SECONDS } from "@/lib/otpCooldown";
 import { minDelay } from "@/lib/minDelay";
+import { resolvePostLoginDestination } from "@/lib/postLoginRedirect";
 import OtpForm from "@/components/auth/OtpForm";
 
 // ── Email masking ─────────────────────────────────────────────────────────────
@@ -25,7 +26,7 @@ function VerifyOtpContent() {
   const { refreshUser } = useAuth();
 
   const rawEmail  = params.get("email") ?? "";
-  const type      = (params.get("type") ?? "signup") as "signup" | "reset" | "merchant";
+  const type      = (params.get("type") ?? "signup") as "signup" | "reset" | "merchant" | "login";
   const redirect  = params.get("redirect") ?? null;
   const email     = rawEmail.toLowerCase().trim();
 
@@ -70,6 +71,12 @@ function VerifyOtpContent() {
         await minDelay(authService.verifyMerchantLoginOtp(email, otp));
         await refreshUser();
         router.push(redirect ?? "/merchant");
+      } else if (type === "login") {
+        // Returning passwordless login (merchant or customer). Route by role
+        // and profile state rather than a fixed destination.
+        await minDelay(authService.verifyLoginOtp(email, otp));
+        await refreshUser();
+        router.push(await resolvePostLoginDestination(redirect));
       } else {
         await minDelay(authService.verifyPasswordResetOtp(email, otp));
         // Same - reset-password page checks useAuth().user; sync first.
@@ -96,6 +103,8 @@ function VerifyOtpContent() {
         await authService.resendSignupOtp(email);
       } else if (type === "merchant") {
         await authService.sendMerchantLoginOtp(email);
+      } else if (type === "login") {
+        await authService.sendLoginOtp(email);
       } else {
         await authService.sendPasswordResetOtp(email);
       }

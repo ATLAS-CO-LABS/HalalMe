@@ -1,4 +1,10 @@
 import { supabase } from "./supabase";
+import type { CommissionAnswers } from "@/lib/merchantStages";
+
+// Mirrors the server limits in /api/merchant/documents — kept here so the client
+// can reject a bad file before uploading it.
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MB
+const ALLOWED_UPLOAD_FORMATS = ["pdf", "jpg", "jpeg", "png", "webp"];
 
 // Hand-typed (mirrors the admin detail page convention; not from generated types).
 export interface MerchantRecord {
@@ -40,6 +46,22 @@ export type MerchantContactUpdate = Partial<{
   business_email: string;
 }>;
 
+/** The commission record (Phase 1). Null until the merchant submits the review. */
+export interface MerchantCommission {
+  merchant_id: string;
+  qualification_score: number | null;
+  score_breakdown: { label: string; points: number }[] | null;
+  recommended_commission: number | null;
+  lane: "auto" | "review" | null;
+  requested_commission: number | null;
+  review_reason: string | null;
+  review_status: "none" | "pending" | "approved" | "rejected" | "countered";
+  countered_commission: number | null;
+  final_commission: number | null;
+  accepted_at: string | null;
+  contract_signed_at: string | null;
+}
+
 export const merchantService = {
   /** The merchant record owned by the signed-in user (null if they aren't a merchant). */
   async getMyMerchant(): Promise<MerchantRecord | null> {
@@ -75,6 +97,18 @@ export const merchantService = {
     docType: string,
     expiresAt?: string,
   ): Promise<MerchantDocument> {
+    // Validate in the browser first — gives an instant, friendly error and avoids
+    // a wasted upload. (A body over 10 MB is also truncated in transit, which would
+    // otherwise surface as a confusing generic failure.)
+    if (file.size > MAX_UPLOAD_BYTES) {
+      const mb = (file.size / (1024 * 1024)).toFixed(1);
+      throw new Error(`That file is ${mb} MB — the limit is 10 MB. Please upload a smaller file.`);
+    }
+    const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+    if (!ALLOWED_UPLOAD_FORMATS.includes(ext)) {
+      throw new Error("Unsupported file type. Please upload a PDF, JPG, PNG or WEBP.");
+    }
+
     const form = new FormData();
     form.append("file", file);
     form.append("doc_type", docType);
@@ -83,6 +117,10 @@ export const merchantService = {
     const res = await fetch("/api/merchant/documents", { method: "POST", body: form });
     const json = await res.json() as { document?: MerchantDocument; error?: string };
     if (!res.ok || !json.document) {
+      // 413 specifically means the body was rejected/truncated for size.
+      if (res.status === 413) {
+        throw new Error("That file is too large — the limit is 10 MB. Please upload a smaller file.");
+      }
       throw new Error(json.error ?? "Upload failed.");
     }
     return json.document;
@@ -120,4 +158,48 @@ export const merchantService = {
     }
     return json.merchant;
   },
+
+  // ── Commission review (Phase 1) ────────────────────────────────────────────
+
+  /** The caller's commission record, or null before they've started the review. */
+  async getMyCommission(): Promise<MerchantCommission | null> {
+    const res = await fetch("/api/merchant/commission");
+    const json = await res.json() as { commission?: MerchantCommission | null; error?: string };
+    if (!res.ok) throw new Error(json.error ?? "Could not load your commission.");
+    return json.commission ?? null;
+  },
+
+  /** Submit the Section A answers — the server scores them and returns the result. */
+  async submitCommission(answers: CommissionAnswers): Promise<MerchantCommission> {
+    return commissionAction({ action: "submit", answers });
+  },
+
+  /** Accept the recommended rate (auto lane) or an admin counter-offer. */
+  async acceptCommission(): Promise<MerchantCommission> {
+    return commissionAction({ action: "accept" });
+  },
+
+  /** Ask for a human review of the rate (does not advance the stage). */
+  async requestCommissionReview(
+    reason: string,
+    requestedCommission?: number,
+  ): Promise<MerchantCommission> {
+    return commissionAction({ action: "request_review", reason, requested_commission: requestedCommission });
+  },
+
+  /** Record the Agreed-stage signature (tick + timestamp). Admin reviews → Live. */
+  async signContract(): Promise<MerchantCommission> {
+    return commissionAction({ action: "sign_contract" });
+  },
 };
+
+async function commissionAction(payload: Record<string, unknown>): Promise<MerchantCommission> {
+  const res = await fetch("/api/merchant/commission", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const json = await res.json() as { commission?: MerchantCommission; error?: string };
+  if (!res.ok || !json.commission) throw new Error(json.error ?? "Something went wrong.");
+  return json.commission;
+}

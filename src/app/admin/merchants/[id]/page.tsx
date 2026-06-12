@@ -38,7 +38,8 @@ import {
   FileText,
   Eye,
 } from "lucide-react";
-import { MERCHANT_DOC_TYPES, REQUIRED_DOC_KEYS } from "@/lib/merchantStages";
+import { VERIFICATION_DOC_TYPES, REQUIRED_DOC_KEYS } from "@/lib/merchantStages";
+import AdminCommissionCard from "./AdminCommissionCard";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -891,7 +892,7 @@ export default function MerchantDetailPage() {
             }
           >
             <div className="space-y-2">
-              {MERCHANT_DOC_TYPES.map((dt) => {
+              {VERIFICATION_DOC_TYPES.map((dt) => {
                 const doc = documents.find((d) => d.doc_type === dt.key);
                 return (
                   <div key={dt.key} className="rounded-none border border-[#102C26]/12 bg-gray-50/50 p-3.5">
@@ -1097,6 +1098,13 @@ export default function MerchantDetailPage() {
               </button>
             </div>
           </Card>
+
+          {/* Commission Review (Phase 1 bot) */}
+          <AdminCommissionCard
+            merchantId={merchant.id}
+            documents={documents}
+            onDecision={load}
+          />
 
           {/* Merchant Journey */}
           <Card

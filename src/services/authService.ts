@@ -120,11 +120,12 @@ export const authService = {
     return data;
   },
 
-  // ── OTP: merchant passwordless login ──────────────────────────────────────
+  // ── OTP: passwordless login (any existing account) ────────────────────────
 
-  // Sends a 6-digit login code to a merchant. The account is created server-side
-  // (with email_confirm) by the provision route, so shouldCreateUser is false.
-  async sendMerchantLoginOtp(email: string) {
+  // Sends a 6-digit login code to an existing account. Works for any account
+  // type — password users (as a fallback) and passwordless merchants (their
+  // only way in). shouldCreateUser is false so it never silently creates one.
+  async sendLoginOtp(email: string) {
     if (!supabaseConfigured)
       throw new Error("Supabase is not configured. Add credentials to .env.local");
     const { error } = await supabase.auth.signInWithOtp({
@@ -134,8 +135,8 @@ export const authService = {
     if (error) throw new Error(error.message);
   },
 
-  // Verifies the merchant login code and signs them in (type "email", same as reset).
-  async verifyMerchantLoginOtp(email: string, token: string) {
+  // Verifies a login code and signs the user in (type "email", same as reset).
+  async verifyLoginOtp(email: string, token: string) {
     const { data, error } = await supabase.auth.verifyOtp({
       email,
       token,
@@ -143,6 +144,14 @@ export const authService = {
     });
     if (error) throw new Error(error.message);
     return data;
+  },
+
+  // Merchant signup flow aliases — identical OTP, kept for call-site clarity.
+  async sendMerchantLoginOtp(email: string) {
+    return this.sendLoginOtp(email);
+  },
+  async verifyMerchantLoginOtp(email: string, token: string) {
+    return this.verifyLoginOtp(email, token);
   },
 
   // ── Password update ───────────────────────────────────────────────────────
