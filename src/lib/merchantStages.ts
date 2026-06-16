@@ -277,6 +277,15 @@ export const COMMISSION_QUESTIONS: CommissionQuestion[] = [
     ],
   },
   {
+    key: "on_other_platform",
+    prompt: "Do you currently operate on another delivery platform?",
+    creditLabel: "Already operational",
+    options: [
+      { value: "no", label: "No", points: 0 },
+      { value: "yes", label: "Yes", points: 4 },
+    ],
+  },
+  {
     key: "monthly_volume_band",
     prompt: "Approximately how many delivery orders a month, across all platforms?",
     hint: "A rough estimate is fine.",
@@ -286,15 +295,6 @@ export const COMMISSION_QUESTIONS: CommissionQuestion[] = [
       { value: "200_500", label: "200–500", points: 4 },
       { value: "500_1000", label: "500–1,000", points: 8 },
       { value: "gt1000", label: "1,000+", points: 12 },
-    ],
-  },
-  {
-    key: "on_other_platform",
-    prompt: "Do you currently operate on another delivery platform?",
-    creditLabel: "Already operational",
-    options: [
-      { value: "no", label: "No", points: 0 },
-      { value: "yes", label: "Yes", points: 4 },
     ],
   },
   {
