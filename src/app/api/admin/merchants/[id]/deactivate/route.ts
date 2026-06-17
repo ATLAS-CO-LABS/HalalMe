@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient, createServiceClient } from "@/lib/supabase-server";
 import { updateHyperzodMerchant } from "@/services/hyperzodService";
-import { isStaffRole } from "@/lib/adminRoles";
+import { requireAdmin } from "@/lib/adminAuth";
 
 export async function POST(
   _req: NextRequest,
@@ -10,19 +9,9 @@ export async function POST(
   const { id } = await params;
 
   // ── Auth gate ──────────────────────────────────────────────────────────────
-  const serverClient = await createServerClient();
-  const { data: { user } } = await serverClient.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const serviceClient = createServiceClient();
-  const { data: profile } = await serviceClient
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-  if (!isStaffRole(profile?.role)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const gate = await requireAdmin("merchants", "manage");
+  if (!gate.ok) return NextResponse.json({ error: gate.error }, { status: gate.status });
+  const { serviceClient } = gate;
 
   // ── Load merchant ──────────────────────────────────────────────────────────
   const { data: merchant, error: fetchError } = await serviceClient

@@ -1,25 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient, createServiceClient } from "@/lib/supabase-server";
-import { isStaffRole } from "@/lib/adminRoles";
+import { requireAdmin } from "@/lib/adminAuth";
 
 export async function PATCH(req: NextRequest) {
   // ── Auth gate ──────────────────────────────────────────────────────────────
-  const serverClient = await createServerClient();
-  const { data: { user } } = await serverClient.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const serviceClient = createServiceClient();
-  const { data: profile } = await serviceClient
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-  if (!isStaffRole(profile?.role)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const gate = await requireAdmin("merchants", "manage");
+  if (!gate.ok) return NextResponse.json({ error: gate.error }, { status: gate.status });
+  const { serviceClient } = gate;
 
   // ── Validate body ──────────────────────────────────────────────────────────
-  const body = await req.json() as { action?: string; ids?: unknown; rep?: unknown };
+  const body = await req.json() as { action?: string; ids?: unknown; rep?: unknown; repId?: unknown };
   const ids = Array.isArray(body.ids)
     ? body.ids.filter((x): x is string => typeof x === "string")
     : [];
@@ -43,12 +32,25 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ updated: data?.length ?? 0 });
   }
 
-  // ── Assign rep ─────────────────────────────────────────────────────────────
+  // ── Assign rep (links to a real team member via assigned_rep_id) ───────────
   if (body.action === "assign") {
-    const rep = typeof body.rep === "string" && body.rep.trim() ? body.rep.trim() : null;
+    const repId = typeof body.repId === "string" && body.repId.trim() ? body.repId.trim() : null;
+
+    // Resolve the team member's name so the legacy text column stays a useful
+    // display fallback and clears to "Unassigned" when repId is null.
+    let repName: string | null = null;
+    if (repId) {
+      const { data: rep } = await serviceClient
+        .from("profiles")
+        .select("full_name")
+        .eq("id", repId)
+        .maybeSingle();
+      repName = rep?.full_name ?? null;
+    }
+
     const { data, error } = await serviceClient
       .from("merchants")
-      .update({ assigned_rep: rep })
+      .update({ assigned_rep_id: repId, assigned_rep: repName })
       .in("id", ids)
       .select("id");
 

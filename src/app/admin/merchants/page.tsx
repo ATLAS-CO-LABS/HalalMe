@@ -36,6 +36,8 @@ interface Merchant {
   post_code: string | null;
   status: string;
   assigned_rep: string | null;
+  assigned_rep_id: string | null;
+  assigned_rep_name: string | null;
   commission_percentage: number | null;
   created_at: string;
   invited_at: string | null;
@@ -44,6 +46,13 @@ interface Merchant {
   hyperzod_merchant_id: string | null;
   hyperzod_sync_failed: boolean;
   commission_review_status: string | null;
+}
+
+interface TeamMember {
+  id: string;
+  full_name: string;
+  email: string | null;
+  role: string;
 }
 
 // Small badge for a merchant's commission-review state on the list.
@@ -192,8 +201,8 @@ function TableSkeleton() {
 }
 
 // Mobile card row
-function MerchantCard({ m, onClick, selected, onSelect }: {
-  m: Merchant; onClick: () => void; selected: boolean; onSelect: () => void;
+function MerchantCard({ m, onClick, selected, onSelect, canManage }: {
+  m: Merchant; onClick: () => void; selected: boolean; onSelect: () => void; canManage: boolean;
 }) {
   const days = daysSince(m.created_at);
   const urgent   = m.status === "pending" && days > 2;
@@ -206,9 +215,11 @@ function MerchantCard({ m, onClick, selected, onSelect }: {
       urgent   ? "border-l-2 border-l-amber-400" : ""
     }`}>
       <div className="flex items-start gap-3">
-        <div className="flex items-center justify-center w-6 h-6 shrink-0 mt-1.5" onClick={(e) => { e.stopPropagation(); onSelect(); }}>
-          <input type="checkbox" checked={selected} readOnly className="w-4 h-4 rounded border-gray-300 accent-[#102C26] pointer-events-none" />
-        </div>
+        {canManage && (
+          <div className="flex items-center justify-center w-6 h-6 shrink-0 mt-1.5" onClick={(e) => { e.stopPropagation(); onSelect(); }}>
+            <input type="checkbox" checked={selected} readOnly className="w-4 h-4 rounded border-gray-300 accent-[#102C26] pointer-events-none" />
+          </div>
+        )}
         <Avatar name={m.name} />
         <div className="flex-1 min-w-0 cursor-pointer" onClick={onClick}>
           <div className="flex items-start justify-between gap-3">
@@ -230,7 +241,7 @@ function MerchantCard({ m, onClick, selected, onSelect }: {
               </span>
             )}
             <span className={`text-xs font-semibold ${critical ? "text-red-600" : urgent ? "text-amber-600" : "text-gray-400"}`}>{days}d ago</span>
-            {m.assigned_rep && <span className="text-xs text-gray-500">Rep: {m.assigned_rep}</span>}
+            {(m.assigned_rep_name ?? m.assigned_rep) && <span className="text-xs text-gray-500">Rep: {m.assigned_rep_name ?? m.assigned_rep}</span>}
             {m.hyperzod_sync_failed && <span className="text-xs text-amber-600 font-medium">⚠ Sync failed</span>}
           </div>
         </div>
@@ -294,14 +305,18 @@ export default function MerchantPipelinePage() {
   const [showAdd, setShowAdd] = useState(false);
   const [attentionOnly, setAttentionOnly] = useState(false);
   const [reviewOnly, setReviewOnly] = useState(false);
+  const [canManage, setCanManage] = useState(false);
+  const [team, setTeam] = useState<TeamMember[]>([]);
+  const [mineOnly, setMineOnly] = useState(false);
 
-  async function fetchMerchants(status: string, q: string) {
+  async function fetchMerchants(status: string, q: string, mine: boolean) {
     setLoading(true);
     setError(null);
     try {
       const params = new URLSearchParams();
       if (status !== "all") params.set("status", status);
       if (q) params.set("search", q);
+      if (mine) params.set("mine", "1");
       const res = await fetch(`/api/admin/merchants?${params}`);
       if (!res.ok) throw new Error();
       const json = await res.json() as { merchants: Merchant[] };
@@ -315,24 +330,43 @@ export default function MerchantPipelinePage() {
   }
 
   function refreshAll() {
-    fetch("/api/admin/merchants")
+    fetch(`/api/admin/merchants${mineOnly ? "?mine=1" : ""}`)
       .then((r) => r.json())
       .then((d: { merchants: Merchant[] }) => setAllMerchants(d.merchants))
       .catch(() => {});
   }
 
   useEffect(() => {
-    fetchMerchants(statusFilter, search);
+    fetchMerchants(statusFilter, search, mineOnly);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter]);
+  }, [statusFilter, mineOnly]);
 
-  useEffect(() => { refreshAll(); }, []);
+  useEffect(() => {
+    refreshAll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mineOnly]);
   useEffect(() => { setSelectedIds(new Set()); }, [statusFilter, search]);
+
+  // Viewer's merchants access — controls whether manage actions are shown.
+  useEffect(() => {
+    fetch("/api/admin/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setCanManage(d?.permissions?.merchants === "manage"))
+      .catch(() => {});
+  }, []);
+
+  // Team members for the rep-assignment picker.
+  useEffect(() => {
+    fetch("/api/admin/team")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (d?.team) setTeam(d.team); })
+      .catch(() => {});
+  }, []);
 
   function handleSearchChange(val: string) {
     setSearch(val);
     if (searchTimer.current) clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => fetchMerchants(statusFilter, val), 300);
+    searchTimer.current = setTimeout(() => fetchMerchants(statusFilter, val, mineOnly), 300);
   }
 
   // Merchants that need follow-up (across all statuses)
@@ -386,7 +420,7 @@ export default function MerchantPipelinePage() {
       const json = await res.json() as { updated: number };
       setBulkResult({ action, count: json.updated });
       clearSelection();
-      await fetchMerchants(statusFilter, search);
+      await fetchMerchants(statusFilter, search, mineOnly);
       refreshAll();
     } catch {
       alert("Bulk action failed. Please try again.");
@@ -399,7 +433,7 @@ export default function MerchantPipelinePage() {
     const header = ["Name", "Owner", "Email", "Phone", "City", "Postcode", "Status", "Rep", "Commission %", "Registered"];
     const rows = displayed.map((m) => [
       m.name, m.owner_name ?? "", m.email, m.phone, m.city ?? "", m.post_code ?? "",
-      m.status, m.assigned_rep ?? "", m.commission_percentage?.toString() ?? "",
+      m.status, m.assigned_rep_name ?? m.assigned_rep ?? "", m.commission_percentage?.toString() ?? "",
       new Date(m.created_at).toISOString().slice(0, 10),
     ]);
     const csv = [header, ...rows]
@@ -467,19 +501,21 @@ export default function MerchantPipelinePage() {
             <span className="hidden sm:inline">Export</span>
           </button>
           <button
-            onClick={() => { fetchMerchants(statusFilter, search); refreshAll(); }}
+            onClick={() => { fetchMerchants(statusFilter, search, mineOnly); refreshAll(); }}
             className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#102C26]/70 bg-[#102C26]/5 border border-[#102C26]/15 rounded-none hover:bg-[#102C26]/10 transition-colors"
             title="Refresh"
           >
             <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
           </button>
-          <button
-            onClick={() => setShowAdd(true)}
-            className="flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-extrabold uppercase tracking-tighter text-[#F7E7CE] bg-[#102C26] rounded-none hover:bg-[#102C26]/90 transition-colors"
-          >
-            <Plus size={15} />
-            <span className="hidden sm:inline">Add Merchant</span>
-          </button>
+          {canManage && (
+            <button
+              onClick={() => setShowAdd(true)}
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-extrabold uppercase tracking-tighter text-[#F7E7CE] bg-[#102C26] rounded-none hover:bg-[#102C26]/90 transition-colors"
+            >
+              <Plus size={15} />
+              <span className="hidden sm:inline">Add Merchant</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -530,6 +566,18 @@ export default function MerchantPipelinePage() {
                   );
                 })}
 
+                {/* My Merchants (server-side scope to assigned_rep_id = me) */}
+                {canManage && (
+                  <button
+                    onClick={() => { setMineOnly((v) => !v); setAttentionOnly(false); setReviewOnly(false); }}
+                    className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-none text-xs sm:text-sm font-medium whitespace-nowrap transition-all ml-1 ${
+                      mineOnly ? "bg-[#102C26] text-[#F7E7CE]" : "text-gray-500 hover:text-[#102C26] hover:bg-[#102C26]/8"
+                    }`}
+                  >
+                    My Merchants
+                  </button>
+                )}
+
                 {/* Commission-review filter (client-side; spans all statuses) */}
                 {reviewPendingCount > 0 && (
                   <button
@@ -556,7 +604,7 @@ export default function MerchantPipelinePage() {
             </div>
 
             {/* Bulk toolbar */}
-            {selectedIds.size > 0 && (
+            {canManage && selectedIds.size > 0 && (
               <div className="bg-[#102C26] px-4 sm:px-5 py-3">
                 <div className="flex items-center justify-between gap-4 flex-wrap">
                   <div className="flex items-center gap-3">
@@ -585,10 +633,14 @@ export default function MerchantPipelinePage() {
                 </div>
                 {showAssign && (
                   <div className="mt-3 flex items-center gap-2 flex-wrap">
-                    <input type="text" value={assignRep} onChange={(e) => setAssignRep(e.target.value)}
-                      placeholder="Rep name (leave blank to unassign)"
-                      className="flex-1 min-w-50 px-3 py-2 text-sm bg-white/10 text-white border border-white/20 rounded-none placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#F7E7CE]/40" />
-                    <button onClick={() => runBulk("assign", { rep: assignRep })} disabled={!!bulkBusy}
+                    <select value={assignRep} onChange={(e) => setAssignRep(e.target.value)}
+                      className="flex-1 min-w-50 px-3 py-2 text-sm bg-white/10 text-white border border-white/20 rounded-none focus:outline-none focus:ring-2 focus:ring-[#F7E7CE]/40 [&>option]:text-gray-900">
+                      <option value="">Unassign</option>
+                      {team.map((t) => (
+                        <option key={t.id} value={t.id}>{t.full_name}</option>
+                      ))}
+                    </select>
+                    <button onClick={() => runBulk("assign", { repId: assignRep })} disabled={!!bulkBusy}
                       className="px-4 py-2 bg-[#F7E7CE] text-[#102C26] rounded-none text-sm font-semibold hover:bg-white transition-colors disabled:opacity-50">
                       {bulkBusy === "assign" ? "Assigning…" : "Apply"}
                     </button>
@@ -645,7 +697,7 @@ export default function MerchantPipelinePage() {
                 {/* Mobile cards */}
                 <div className="md:hidden">
                   {displayed.map((m) => (
-                    <MerchantCard key={m.id} m={m} onClick={() => navigate(m.id)} selected={selectedIds.has(m.id)} onSelect={() => toggleSelect(m.id)} />
+                    <MerchantCard key={m.id} m={m} onClick={() => navigate(m.id)} selected={selectedIds.has(m.id)} onSelect={() => toggleSelect(m.id)} canManage={canManage} />
                   ))}
                 </div>
 
@@ -653,12 +705,14 @@ export default function MerchantPipelinePage() {
                 <table className="hidden md:table w-full text-sm">
                   <thead>
                     <tr className="border-b border-[#102C26]/12 bg-gray-50/60">
-                      <th className="pl-4 lg:pl-5 pr-3 py-3 w-12 cursor-pointer" onClick={toggleSelectAll} title="Select / deselect all">
-                        <div className="flex items-center justify-center">
-                          <input type="checkbox" checked={displayed.length > 0 && selectedIds.size === displayed.length} readOnly
-                            disabled={displayed.length === 0} className="w-4 h-4 rounded border-gray-300 accent-[#102C26] pointer-events-none disabled:opacity-30" />
-                        </div>
-                      </th>
+                      {canManage && (
+                        <th className="pl-4 lg:pl-5 pr-3 py-3 w-12 cursor-pointer" onClick={toggleSelectAll} title="Select / deselect all">
+                          <div className="flex items-center justify-center">
+                            <input type="checkbox" checked={displayed.length > 0 && selectedIds.size === displayed.length} readOnly
+                              disabled={displayed.length === 0} className="w-4 h-4 rounded border-gray-300 accent-[#102C26] pointer-events-none disabled:opacity-30" />
+                          </div>
+                        </th>
+                      )}
                       <th className="px-2 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500">Restaurant</th>
                       <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500 hidden lg:table-cell">Contact</th>
                       <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500 hidden xl:table-cell">Location</th>
@@ -678,11 +732,13 @@ export default function MerchantPipelinePage() {
                       return (
                         <tr key={m.id} onClick={() => navigate(m.id)}
                           className={`group cursor-pointer transition-colors ${isSelected ? "bg-[#102C26]/3" : "hover:bg-[#102C26]/2"}`}>
-                          <td className="pl-4 lg:pl-5 pr-3 py-3.5 w-12" onClick={(e) => { e.stopPropagation(); toggleSelect(m.id); }}>
-                            <div className="flex items-center justify-center h-full">
-                              <input type="checkbox" checked={isSelected} readOnly className="w-4 h-4 rounded border-gray-300 accent-[#102C26] pointer-events-none" />
-                            </div>
-                          </td>
+                          {canManage && (
+                            <td className="pl-4 lg:pl-5 pr-3 py-3.5 w-12" onClick={(e) => { e.stopPropagation(); toggleSelect(m.id); }}>
+                              <div className="flex items-center justify-center h-full">
+                                <input type="checkbox" checked={isSelected} readOnly className="w-4 h-4 rounded border-gray-300 accent-[#102C26] pointer-events-none" />
+                              </div>
+                            </td>
+                          )}
 
                           {/* Restaurant */}
                           <td className="px-2 py-3.5">
@@ -728,8 +784,8 @@ export default function MerchantPipelinePage() {
 
                           {/* Rep */}
                           <td className="px-4 py-3.5 hidden lg:table-cell">
-                            {m.assigned_rep
-                              ? <span className="text-gray-700 text-sm">{m.assigned_rep}</span>
+                            {(m.assigned_rep_name ?? m.assigned_rep)
+                              ? <span className="text-gray-700 text-sm">{m.assigned_rep_name ?? m.assigned_rep}</span>
                               : <span className="text-xs text-gray-400 bg-gray-50 border border-dashed border-gray-200 px-2 py-0.5 rounded-md">Unassigned</span>}
                           </td>
 

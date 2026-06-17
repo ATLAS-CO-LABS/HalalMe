@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient, createServiceClient } from "@/lib/supabase-server";
-import { isStaffRole } from "@/lib/adminRoles";
+import { requireAdmin, type AccessLevel } from "@/lib/adminAuth";
 import {
   sendMerchantAgreementEmail,
   sendMerchantInviteSentEmail,
@@ -8,24 +7,10 @@ import {
 } from "@/services/emailService";
 import { deleteHyperzodMerchant } from "@/services/hyperzodService";
 
-async function getAdminServiceClient() {
-  const serverClient = await createServerClient();
-  const {
-    data: { user },
-  } = await serverClient.auth.getUser();
-
-  if (!user) return { error: "Unauthorized", status: 401, serviceClient: null };
-
-  const serviceClient = createServiceClient();
-  const { data: profile } = await serviceClient
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  if (!isStaffRole(profile?.role)) return { error: "Forbidden", status: 403, serviceClient: null };
-
-  return { error: null, status: 200, serviceClient };
+async function getAdminServiceClient(level: AccessLevel) {
+  const gate = await requireAdmin("merchants", level);
+  if (!gate.ok) return { error: gate.error, status: gate.status, serviceClient: null };
+  return { error: null, status: 200, serviceClient: gate.serviceClient };
 }
 
 export async function GET(
@@ -33,7 +18,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const { error, status, serviceClient } = await getAdminServiceClient();
+  const { error, status, serviceClient } = await getAdminServiceClient("view");
   if (error || !serviceClient) return NextResponse.json({ error }, { status });
 
   const { data, error: dbError } = await serviceClient
@@ -54,12 +39,13 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const { error, status, serviceClient } = await getAdminServiceClient();
+  const { error, status, serviceClient } = await getAdminServiceClient("manage");
   if (error || !serviceClient) return NextResponse.json({ error }, { status });
 
   const body = await req.json() as {
     status?: string;
     assigned_rep?: string | null;
+    assigned_rep_id?: string | null;
     commission_percentage?: number | null;
     readiness_checklist?: Record<string, boolean>;
     note?: string;
@@ -104,6 +90,7 @@ export async function PATCH(
   }
 
   if ("assigned_rep" in body) updates.assigned_rep = body.assigned_rep ?? null;
+  if ("assigned_rep_id" in body) updates.assigned_rep_id = body.assigned_rep_id ?? null;
   if ("commission_percentage" in body) updates.commission_percentage = body.commission_percentage ?? null;
   if (body.readiness_checklist !== undefined) updates.readiness_checklist = body.readiness_checklist;
 
@@ -173,7 +160,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const { error, status, serviceClient } = await getAdminServiceClient();
+  const { error, status, serviceClient } = await getAdminServiceClient("manage");
   if (error || !serviceClient) return NextResponse.json({ error }, { status });
 
   // Load merchant to get the Hyperzod link

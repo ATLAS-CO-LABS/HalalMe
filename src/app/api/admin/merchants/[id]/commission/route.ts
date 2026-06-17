@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient, createServiceClient } from "@/lib/supabase-server";
 import {
   sendMerchantAgreementEmail,
   sendMerchantCounterOfferEmail,
   sendMerchantReviewDeclinedEmail,
 } from "@/services/emailService";
 import { COMMISSION_PROTECTED_THRESHOLD } from "@/lib/merchantStages";
-import { isStaffRole } from "@/lib/adminRoles";
+import { requireAdmin as requireAdminAccess, type AccessLevel } from "@/lib/adminAuth";
 
 // Default shape so a null readiness_checklist isn't clobbered when we tick a flag.
 const DEFAULT_CHECKLIST = {
@@ -16,20 +15,10 @@ const DEFAULT_CHECKLIST = {
   onboarding_verified: false,
 };
 
-async function requireAdmin() {
-  const serverClient = await createServerClient();
-  const { data: { user } } = await serverClient.auth.getUser();
-  if (!user) return { error: "Unauthorized", status: 401, service: null, userId: null };
-
-  const service = createServiceClient();
-  const { data: profile } = await service
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  if (!isStaffRole(profile?.role)) return { error: "Forbidden", status: 403, service: null, userId: null };
-  return { error: null, status: 200, service, userId: user.id };
+async function requireAdmin(level: AccessLevel) {
+  const gate = await requireAdminAccess("merchants", level);
+  if (!gate.ok) return { error: gate.error, status: gate.status, service: null, userId: null };
+  return { error: null, status: 200, service: gate.serviceClient, userId: gate.userId };
 }
 
 // GET → the merchant's commission record (null if they haven't started).
@@ -38,7 +27,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const { error, status, service } = await requireAdmin();
+  const { error, status, service } = await requireAdmin("view");
   if (error || !service) return NextResponse.json({ error }, { status });
 
   const { data } = await service
@@ -59,7 +48,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const { error, status, service, userId } = await requireAdmin();
+  const { error, status, service, userId } = await requireAdmin("manage");
   if (error || !service) return NextResponse.json({ error }, { status });
 
   const body = await req.json() as { action?: string; commission?: number; note?: string };

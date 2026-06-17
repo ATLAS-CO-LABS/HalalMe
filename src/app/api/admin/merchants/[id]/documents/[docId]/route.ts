@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient, createServiceClient } from "@/lib/supabase-server";
 import {
   sendMerchantDocsApprovedEmail,
   sendMerchantDocsActionNeededEmail,
@@ -8,24 +7,12 @@ import {
   MERCHANT_DOC_TYPES,
   REQUIRED_DOC_KEYS,
 } from "@/lib/merchantStages";
-import { isStaffRole } from "@/lib/adminRoles";
+import { requireAdmin as requireAdminAccess, type AccessLevel } from "@/lib/adminAuth";
 
-async function requireAdmin() {
-  const serverClient = await createServerClient();
-  const { data: { user } } = await serverClient.auth.getUser();
-  if (!user) return { error: "Unauthorized", status: 401, user: null, serviceClient: null };
-
-  const serviceClient = createServiceClient();
-  const { data: profile } = await serviceClient
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  if (!isStaffRole(profile?.role)) {
-    return { error: "Forbidden", status: 403, user: null, serviceClient: null };
-  }
-  return { error: null, status: 200, user, serviceClient };
+async function requireAdmin(level: AccessLevel) {
+  const gate = await requireAdminAccess("merchants", level);
+  if (!gate.ok) return { error: gate.error, status: gate.status, user: null, serviceClient: null };
+  return { error: null, status: 200, user: { id: gate.userId }, serviceClient: gate.serviceClient };
 }
 
 function docLabel(docType: string): string {
@@ -37,7 +24,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string; docId: string }> },
 ) {
   const { id, docId } = await params;
-  const { error, status, user, serviceClient } = await requireAdmin();
+  const { error, status, user, serviceClient } = await requireAdmin("manage");
   if (error || !serviceClient || !user) return NextResponse.json({ error }, { status });
 
   const body = await req.json() as { action?: "approve" | "reject"; reason?: string };

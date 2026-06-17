@@ -1,24 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient, createServiceClient } from "@/lib/supabase-server";
 import { signedDocUrl } from "@/lib/cloudinary";
-import { isStaffRole } from "@/lib/adminRoles";
+import { requireAdmin as requireAdminAccess, type AccessLevel } from "@/lib/adminAuth";
 
-async function requireAdmin() {
-  const serverClient = await createServerClient();
-  const { data: { user } } = await serverClient.auth.getUser();
-  if (!user) return { error: "Unauthorized", status: 401, user: null, serviceClient: null };
-
-  const serviceClient = createServiceClient();
-  const { data: profile } = await serviceClient
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  if (!isStaffRole(profile?.role)) {
-    return { error: "Forbidden", status: 403, user: null, serviceClient: null };
-  }
-  return { error: null, status: 200, user, serviceClient };
+async function requireAdmin(level: AccessLevel) {
+  const gate = await requireAdminAccess("merchants", level);
+  if (!gate.ok) return { error: gate.error, status: gate.status, serviceClient: null };
+  return { error: null, status: 200, serviceClient: gate.serviceClient };
 }
 
 export async function GET(
@@ -26,7 +13,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const { error, status, serviceClient } = await requireAdmin();
+  const { error, status, serviceClient } = await requireAdmin("view");
   if (error || !serviceClient) return NextResponse.json({ error }, { status });
 
   const { data, error: dbError } = await serviceClient

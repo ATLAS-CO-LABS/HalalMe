@@ -1,23 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient, createServiceClient } from "@/lib/supabase-server";
-import { isStaffRole } from "@/lib/adminRoles";
+import { requireAdmin } from "@/lib/adminAuth";
 import { createHyperzodMerchant } from "@/services/hyperzodService";
 
 export async function POST(req: NextRequest) {
   // ── Auth gate ──────────────────────────────────────────────────────────────
-  const serverClient = await createServerClient();
-  const { data: { user } } = await serverClient.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const serviceClient = createServiceClient();
-  const { data: profile } = await serviceClient
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-  if (!isStaffRole(profile?.role)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const gate = await requireAdmin("merchants", "manage");
+  if (!gate.ok) return NextResponse.json({ error: gate.error }, { status: gate.status });
+  const { serviceClient } = gate;
 
   const body = await req.json() as Record<string, unknown>;
   const {
