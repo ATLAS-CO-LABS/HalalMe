@@ -39,6 +39,7 @@ import {
   Eye,
 } from "lucide-react";
 import { VERIFICATION_DOC_TYPES, REQUIRED_DOC_KEYS } from "@/lib/merchantStages";
+import ThemedSelect from "@/components/admin/ThemedSelect";
 import AdminCommissionCard from "./AdminCommissionCard";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -1096,20 +1097,14 @@ export default function MerchantDetailPage() {
             <div className="space-y-4">
               <div>
                 <FieldLabel>Assigned Rep</FieldLabel>
-                <div className="relative">
-                  <UserIcon size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10" />
-                  <select
-                    value={assignedRepId}
-                    onChange={(e) => setAssignedRepId(e.target.value)}
-                    disabled={!canManage}
-                    className={`${inputCls} pl-9 disabled:bg-gray-50 disabled:text-gray-500`}
-                  >
-                    <option value="">Unassigned</option>
-                    {team.map((t) => (
-                      <option key={t.id} value={t.id}>{t.full_name}</option>
-                    ))}
-                  </select>
-                </div>
+                <ThemedSelect
+                  value={assignedRepId}
+                  onChange={setAssignedRepId}
+                  disabled={!canManage}
+                  leftIcon={<UserIcon size={15} />}
+                  placeholder="Unassigned"
+                  options={[{ value: "", label: "Unassigned" }, ...team.map((t) => ({ value: t.id, label: t.full_name }))]}
+                />
               </div>
 
               <div>

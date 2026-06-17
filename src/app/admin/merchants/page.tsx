@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { display } from "../_fonts";
 import AddMerchantModal from "@/components/admin/AddMerchantModal";
 import { getFollowUp } from "@/lib/followUps";
+import ThemedSelect from "@/components/admin/ThemedSelect";
 import {
   Search,
   RefreshCw,
@@ -633,13 +634,14 @@ export default function MerchantPipelinePage() {
                 </div>
                 {showAssign && (
                   <div className="mt-3 flex items-center gap-2 flex-wrap">
-                    <select value={assignRep} onChange={(e) => setAssignRep(e.target.value)}
-                      className="flex-1 min-w-50 px-3 py-2 text-sm bg-white/10 text-white border border-white/20 rounded-none focus:outline-none focus:ring-2 focus:ring-[#F7E7CE]/40 [&>option]:text-gray-900">
-                      <option value="">Unassign</option>
-                      {team.map((t) => (
-                        <option key={t.id} value={t.id}>{t.full_name}</option>
-                      ))}
-                    </select>
+                    <ThemedSelect
+                      value={assignRep}
+                      onChange={setAssignRep}
+                      variant="dark"
+                      className="flex-1 min-w-50"
+                      placeholder="Assign to…"
+                      options={[{ value: "", label: "Unassign" }, ...team.map((t) => ({ value: t.id, label: t.full_name }))]}
+                    />
                     <button onClick={() => runBulk("assign", { repId: assignRep })} disabled={!!bulkBusy}
                       className="px-4 py-2 bg-[#F7E7CE] text-[#102C26] rounded-none text-sm font-semibold hover:bg-white transition-colors disabled:opacity-50">
                       {bulkBusy === "assign" ? "Assigning…" : "Apply"}

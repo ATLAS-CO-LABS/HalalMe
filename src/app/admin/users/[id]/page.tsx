@@ -24,6 +24,7 @@ import {
   Trash2,
   Save,
 } from "lucide-react";
+import ThemedSelect from "@/components/admin/ThemedSelect";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 type Access = "none" | "view" | "manage";
@@ -381,9 +382,12 @@ export default function UserDetailPage() {
 
             <div className="flex items-center gap-3 flex-wrap">
               <label className="text-sm font-medium text-gray-700">Role</label>
-              <select value={roleDraft} onChange={(e) => setRoleDraft(e.target.value)} className="px-3 py-2 text-sm text-gray-900 border border-gray-200 bg-gray-50 rounded-none focus:outline-none focus:ring-2 focus:ring-[#102C26]/15 focus:border-[#102C26]">
-                <option value="user">User</option><option value="admin">Admin</option>
-              </select>
+              <ThemedSelect
+                value={roleDraft}
+                onChange={setRoleDraft}
+                className="w-44"
+                options={[{ value: "user", label: "User" }, { value: "admin", label: "Admin" }]}
+              />
               {roleDraft !== user.role && (
                 <button onClick={saveRole} disabled={savingRole}
                   className="inline-flex items-center gap-2 px-4 py-2 text-sm font-bold uppercase tracking-tight text-[#F7E7CE] bg-[#102C26] hover:bg-[#102C26]/90 rounded-none disabled:opacity-50 transition-colors">
