@@ -6,6 +6,7 @@ import {
   sendMerchantReviewDeclinedEmail,
 } from "@/services/emailService";
 import { COMMISSION_PROTECTED_THRESHOLD } from "@/lib/merchantStages";
+import { isStaffRole } from "@/lib/adminRoles";
 
 // Default shape so a null readiness_checklist isn't clobbered when we tick a flag.
 const DEFAULT_CHECKLIST = {
@@ -27,7 +28,7 @@ async function requireAdmin() {
     .eq("id", user.id)
     .single();
 
-  if (profile?.role !== "admin") return { error: "Forbidden", status: 403, service: null, userId: null };
+  if (!isStaffRole(profile?.role)) return { error: "Forbidden", status: 403, service: null, userId: null };
   return { error: null, status: 200, service, userId: user.id };
 }
 

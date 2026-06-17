@@ -17,24 +17,39 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { isStaffRole } from "@/lib/adminRoles";
 import { display } from "./_fonts";
 
-const NAV = [
-  { label: "Merchant CRM",    href: "/admin/merchants", icon: Store },
-  { label: "User Management", href: "/admin/users",     icon: Users,         soon: true },
-  { label: "Kitchen",         href: "/admin/kitchen",   icon: ChefHat,       soon: true },
-  { label: "Hub",             href: "/admin/hub",       icon: MessageSquare, soon: true },
-  { label: "Rewards",         href: "/admin/rewards",   icon: Gift,          soon: true },
-  { label: "Analytics",       href: "/admin/analytics", icon: BarChart3,     soon: true },
+type Access = "none" | "view" | "manage";
+type Module = "merchants" | "users" | "kitchen" | "hub" | "rewards" | "analytics";
+type Permissions = Record<Module, Access>;
+
+// `module` ties each nav item to an admin_permissions key. Items with no module
+// (none yet) are always shown to any staff role.
+const NAV: {
+  label: string;
+  href: string;
+  icon: typeof Store;
+  module?: Module;
+  soon?: boolean;
+}[] = [
+  { label: "Merchant CRM",    href: "/admin/merchants", icon: Store,         module: "merchants" },
+  { label: "User Management", href: "/admin/users",     icon: Users,         module: "users" },
+  { label: "Kitchen",         href: "/admin/kitchen",   icon: ChefHat,       module: "kitchen",   soon: true },
+  { label: "Hub",             href: "/admin/hub",       icon: MessageSquare, module: "hub",       soon: true },
+  { label: "Rewards",         href: "/admin/rewards",   icon: Gift,          module: "rewards",   soon: true },
+  { label: "Analytics",       href: "/admin/analytics", icon: BarChart3,     module: "analytics", soon: true },
 ];
 
 function Sidebar({
   pathname,
   user,
+  permissions,
   onClose,
 }: {
   pathname: string;
   user: { email?: string; full_name?: string };
+  permissions: Permissions | null;
   onClose?: () => void;
 }) {
   const initials = (user.full_name ?? user.email ?? "A")
@@ -44,13 +59,19 @@ function Sidebar({
     .slice(0, 2)
     .toUpperCase();
 
+  // Hide modules the current admin has no access to. While permissions are
+  // still loading (null) show everything to avoid a collapse/flash.
+  const navItems = NAV.filter(
+    (item) => !item.module || !permissions || permissions[item.module] !== "none",
+  );
+
   return (
     <aside className="w-64 md:w-56 bg-[#0e2420] flex flex-col h-full relative">
       {/* Subtle texture */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(247,231,206,0.04),transparent_60%)] pointer-events-none" />
 
       {/* Brand */}
-      <div className="relative px-5 pt-5 pb-4 border-b border-white/[0.08] flex items-center justify-between">
+      <div className="relative px-5 pt-5 pb-4 border-b border-white/8 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2.5">
           <span className="relative inline-flex w-8 h-8 shrink-0">
             <span className="absolute inset-0 bg-white/90 rounded-full" />
@@ -84,7 +105,7 @@ function Sidebar({
           Modules
         </p>
 
-        {NAV.map(({ label, href, icon: Icon, soon }) => {
+        {navItems.map(({ label, href, icon: Icon, soon }) => {
           const active = pathname.startsWith(href);
 
           if (soon) {
@@ -95,7 +116,7 @@ function Sidebar({
               >
                 <Icon size={15} className="text-white/20 shrink-0" />
                 <span className="text-sm text-white/25 flex-1 font-medium">{label}</span>
-                <span className="text-[9px] font-bold tracking-wide uppercase bg-white/[0.06] text-white/20 px-2 py-0.5 rounded-full">
+                <span className="text-[9px] font-bold tracking-wide uppercase bg-white/6 text-white/20 px-2 py-0.5 rounded-full">
                   Soon
                 </span>
               </div>
@@ -109,7 +130,7 @@ function Sidebar({
               onClick={onClose}
               className={`relative flex items-center gap-3 px-3 py-2.5 rounded-none text-sm font-medium transition-all duration-150 ${
                 active
-                  ? "bg-[#F7E7CE]/[0.12] text-[#F7E7CE] border border-[#F7E7CE]/[0.12]"
+                  ? "bg-[#F7E7CE]/12 text-[#F7E7CE] border border-[#F7E7CE]/12"
                   : "text-white/55 hover:bg-white/[0.07] hover:text-white border border-transparent"
               }`}
             >
@@ -130,7 +151,7 @@ function Sidebar({
       </nav>
 
       {/* Footer */}
-      <div className="relative px-3 py-3 border-t border-white/[0.08] space-y-1">
+      <div className="relative px-3 py-3 border-t border-white/8 space-y-1">
         {/* User */}
         <div className="flex items-center gap-3 px-3 py-2.5 rounded-none">
           <div className="w-7 h-7 rounded-full bg-[#F7E7CE]/15 border border-[#F7E7CE]/20 flex items-center justify-center shrink-0">
@@ -148,7 +169,7 @@ function Sidebar({
         <Link
           href="/"
           onClick={onClose}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-none text-white/35 hover:text-white/70 hover:bg-white/[0.06] text-sm transition-all group"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-none text-white/35 hover:text-white/70 hover:bg-white/6 text-sm transition-all group"
         >
           <ExternalLink size={14} className="shrink-0" />
           <span className="font-medium">Back to HalalMe</span>
@@ -163,12 +184,28 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [permissions, setPermissions] = useState<Permissions | null>(null);
 
   useEffect(() => {
     if (!isLoading && !user) {
       router.replace("/login");
     }
   }, [isLoading, user, router]);
+
+  // Load the current admin's per-module access for sidebar filtering.
+  useEffect(() => {
+    if (isLoading || !user || !isStaffRole(user.role)) return;
+    let active = true;
+    fetch("/api/admin/me")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (active && data?.permissions) setPermissions(data.permissions);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [isLoading, user]);
 
   if (isLoading) {
     return (
@@ -183,7 +220,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  if (!user || user.role !== "admin") {
+  if (!user || !isStaffRole(user.role)) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#F3E9D6]">
         <div className="text-center max-w-sm px-6">
@@ -228,6 +265,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <Sidebar
           pathname={pathname}
           user={user}
+          permissions={permissions}
           onClose={() => setSidebarOpen(false)}
         />
       </div>

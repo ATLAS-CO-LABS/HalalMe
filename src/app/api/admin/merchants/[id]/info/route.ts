@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient, createServiceClient } from "@/lib/supabase-server";
 import { updateHyperzodMerchant, type HyperzodMerchantOverrides } from "@/services/hyperzodService";
+import { isStaffRole } from "@/lib/adminRoles";
 
 // Fields shared with Hyperzod (a change here must sync)
 const SHARED_FIELDS = [
@@ -28,7 +29,7 @@ export async function PATCH(
     .select("role")
     .eq("id", user.id)
     .single();
-  if (profile?.role !== "admin") {
+  if (!isStaffRole(profile?.role)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

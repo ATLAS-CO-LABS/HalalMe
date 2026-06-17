@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient, createServiceClient } from "@/lib/supabase-server";
+import { isStaffRole } from "@/lib/adminRoles";
 import {
   sendMerchantAgreementEmail,
   sendMerchantInviteSentEmail,
@@ -22,7 +23,7 @@ async function getAdminServiceClient() {
     .eq("id", user.id)
     .single();
 
-  if (profile?.role !== "admin") return { error: "Forbidden", status: 403, serviceClient: null };
+  if (!isStaffRole(profile?.role)) return { error: "Forbidden", status: 403, serviceClient: null };
 
   return { error: null, status: 200, serviceClient };
 }

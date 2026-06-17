@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient, createServiceClient } from "@/lib/supabase-server";
 import { signedDocUrl } from "@/lib/cloudinary";
+import { isStaffRole } from "@/lib/adminRoles";
 
 async function requireAdmin() {
   const serverClient = await createServerClient();
@@ -14,7 +15,7 @@ async function requireAdmin() {
     .eq("id", user.id)
     .single();
 
-  if (profile?.role !== "admin") {
+  if (!isStaffRole(profile?.role)) {
     return { error: "Forbidden", status: 403, user: null, serviceClient: null };
   }
   return { error: null, status: 200, user, serviceClient };

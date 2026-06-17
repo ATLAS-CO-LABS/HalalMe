@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient, createServiceClient } from "@/lib/supabase-server";
+import { isStaffRole } from "@/lib/adminRoles";
 
 export async function GET(req: NextRequest) {
   const serverClient = await createServerClient();
@@ -19,7 +20,7 @@ export async function GET(req: NextRequest) {
     .eq("id", user.id)
     .single();
 
-  if (profile?.role !== "admin") {
+  if (!isStaffRole(profile?.role)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

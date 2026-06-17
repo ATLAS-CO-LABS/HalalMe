@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient, createServiceClient } from "@/lib/supabase-server";
 import { updateHyperzodMerchant } from "@/services/hyperzodService";
 import { sendMerchantLiveEmail } from "@/services/emailService";
+import { isStaffRole } from "@/lib/adminRoles";
 
 const CHECKLIST_KEYS = [
   "invite_accepted",
@@ -27,7 +28,7 @@ export async function POST(
     .select("role")
     .eq("id", user.id)
     .single();
-  if (profile?.role !== "admin") {
+  if (!isStaffRole(profile?.role)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

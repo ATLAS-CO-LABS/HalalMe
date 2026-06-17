@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient, createServiceClient } from "@/lib/supabase-server";
+import { isStaffRole } from "@/lib/adminRoles";
 
 export async function PATCH(req: NextRequest) {
   // ── Auth gate ──────────────────────────────────────────────────────────────
@@ -13,7 +14,7 @@ export async function PATCH(req: NextRequest) {
     .select("role")
     .eq("id", user.id)
     .single();
-  if (profile?.role !== "admin") {
+  if (!isStaffRole(profile?.role)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
