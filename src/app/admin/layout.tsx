@@ -15,30 +15,61 @@ import {
   Menu,
   X,
   ExternalLink,
+  LayoutDashboard,
+  LifeBuoy,
+  ShieldCheck,
+  ScrollText,
+  Settings,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { isStaffRole } from "@/lib/adminRoles";
-import { display } from "./_fonts";
 
 type Access = "none" | "view" | "manage";
 type Module = "merchants" | "users" | "kitchen" | "hub" | "rewards" | "analytics";
 type Permissions = Record<Module, Access>;
 
-// `module` ties each nav item to an admin_permissions key. Items with no module
-// (none yet) are always shown to any staff role.
-const NAV: {
+type NavItem = {
   label: string;
   href: string;
   icon: typeof Store;
-  module?: Module;
+  module?: Module; // ties the item to an admin_permissions key (the 6 gated modules)
   soon?: boolean;
-}[] = [
-  { label: "Merchant CRM",    href: "/admin/merchants", icon: Store,         module: "merchants" },
-  { label: "User Management", href: "/admin/users",     icon: Users,         module: "users" },
-  { label: "Kitchen",         href: "/admin/kitchen",   icon: ChefHat,       module: "kitchen",   soon: true },
-  { label: "Hub",             href: "/admin/hub",       icon: MessageSquare, module: "hub",       soon: true },
-  { label: "Rewards",         href: "/admin/rewards",   icon: Gift,          module: "rewards",   soon: true },
-  { label: "Analytics",       href: "/admin/analytics", icon: BarChart3,     module: "analytics", soon: true },
+};
+
+// Grouped navigation (per OPERATIONS_WORKSPACES_PLAN.md). Operations workspaces
+// are Phase 2 and intentionally not listed yet. Items with no `module` are always
+// shown to any staff role; `soon` items aren't built yet.
+const NAV_GROUPS: { heading?: string; items: NavItem[] }[] = [
+  {
+    items: [
+      { label: "Overview", href: "/admin", icon: LayoutDashboard, soon: true },
+    ],
+  },
+  {
+    heading: "Domains",
+    items: [
+      { label: "Merchants",         href: "/admin/merchants", icon: Store,         module: "merchants" },
+      { label: "Users",             href: "/admin/users",     icon: Users,         module: "users" },
+      { label: "Rewards & Charity", href: "/admin/rewards",   icon: Gift,          module: "rewards",   soon: true },
+      { label: "Kitchen",           href: "/admin/kitchen",   icon: ChefHat,       module: "kitchen",   soon: true },
+      { label: "Hub",               href: "/admin/hub",       icon: MessageSquare, module: "hub",       soon: true },
+      { label: "Support",           href: "/admin/support",   icon: LifeBuoy,                           soon: true },
+    ],
+  },
+  {
+    heading: "Intelligence",
+    items: [
+      { label: "Analytics", href: "/admin/analytics", icon: BarChart3, module: "analytics", soon: true },
+    ],
+  },
+  {
+    heading: "System",
+    items: [
+      { label: "Permissions", href: "/admin/users",     icon: ShieldCheck, soon: true },
+      { label: "Audit",       href: "/admin/audit",     icon: ScrollText,  soon: true },
+      { label: "Settings",    href: "/admin/settings",  icon: Settings,    soon: true },
+    ],
+  },
 ];
 
 function Sidebar({
@@ -59,11 +90,55 @@ function Sidebar({
     .slice(0, 2)
     .toUpperCase();
 
-  // Hide modules the current admin has no access to. While permissions are
-  // still loading (null) show everything to avoid a collapse/flash.
-  const navItems = NAV.filter(
-    (item) => !item.module || !permissions || permissions[item.module] !== "none",
-  );
+  // Hide modules the current admin has no access to (empty groups drop out).
+  // While permissions are still loading (null) show everything to avoid a flash.
+  const visibleGroups = NAV_GROUPS
+    .map((g) => ({
+      ...g,
+      items: g.items.filter(
+        (item) => !item.module || !permissions || permissions[item.module] !== "none",
+      ),
+    }))
+    .filter((g) => g.items.length > 0);
+
+  function renderItem({ label, href, icon: Icon, soon }: NavItem) {
+    const active = pathname.startsWith(href) && href !== "/admin";
+    if (soon) {
+      return (
+        <div
+          key={label}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-none cursor-not-allowed select-none"
+        >
+          <Icon size={15} className="text-white/20 shrink-0" />
+          <span className="text-sm text-white/25 flex-1 font-medium">{label}</span>
+          <span className="text-[9px] font-bold tracking-wide uppercase bg-white/6 text-white/20 px-2 py-0.5 rounded-full">
+            Soon
+          </span>
+        </div>
+      );
+    }
+    return (
+      <Link
+        key={label}
+        href={href}
+        onClick={onClose}
+        className={`relative flex items-center gap-3 px-3 py-2.5 rounded-none text-sm font-medium transition-all duration-150 ${
+          active
+            ? "bg-[#F7E7CE]/12 text-[#F7E7CE] border border-[#F7E7CE]/12"
+            : "text-white/55 hover:bg-white/[0.07] hover:text-white border border-transparent"
+        }`}
+      >
+        {active && (
+          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-full bg-[#F03E9E]" />
+        )}
+        <Icon size={15} className={`shrink-0 ${active ? "text-[#F7E7CE]" : ""}`} />
+        {label}
+        {active && (
+          <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#F03E9E] shrink-0" />
+        )}
+      </Link>
+    );
+  }
 
   return (
     <aside className="w-64 md:w-56 bg-[#0e2420] flex flex-col h-full relative">
@@ -100,54 +175,19 @@ function Sidebar({
       </div>
 
       {/* Nav */}
-      <nav className="relative flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
-        <p className="text-[9px] font-bold text-white/20 tracking-[0.15em] uppercase px-3 mb-2 mt-1">
-          Modules
-        </p>
-
-        {navItems.map(({ label, href, icon: Icon, soon }) => {
-          const active = pathname.startsWith(href);
-
-          if (soon) {
-            return (
-              <div
-                key={href}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-none cursor-not-allowed select-none"
-              >
-                <Icon size={15} className="text-white/20 shrink-0" />
-                <span className="text-sm text-white/25 flex-1 font-medium">{label}</span>
-                <span className="text-[9px] font-bold tracking-wide uppercase bg-white/6 text-white/20 px-2 py-0.5 rounded-full">
-                  Soon
-                </span>
-              </div>
-            );
-          }
-
-          return (
-            <Link
-              key={href}
-              href={href}
-              onClick={onClose}
-              className={`relative flex items-center gap-3 px-3 py-2.5 rounded-none text-sm font-medium transition-all duration-150 ${
-                active
-                  ? "bg-[#F7E7CE]/12 text-[#F7E7CE] border border-[#F7E7CE]/12"
-                  : "text-white/55 hover:bg-white/[0.07] hover:text-white border border-transparent"
-              }`}
-            >
-              {active && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-full bg-[#F03E9E]" />
-              )}
-              <Icon
-                size={15}
-                className={`shrink-0 ${active ? "text-[#F7E7CE]" : ""}`}
-              />
-              {label}
-              {active && (
-                <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#F03E9E] shrink-0" />
-              )}
-            </Link>
-          );
-        })}
+      <nav className="relative flex-1 px-3 py-3 overflow-y-auto">
+        {visibleGroups.map((group, gi) => (
+          <div key={group.heading ?? `grp-${gi}`} className={gi > 0 ? "mt-4" : "mt-1"}>
+            {group.heading && (
+              <p className="text-[9px] font-bold text-white/20 tracking-[0.15em] uppercase px-3 mb-2">
+                {group.heading}
+              </p>
+            )}
+            <div className="space-y-0.5">
+              {group.items.map((item) => renderItem(item))}
+            </div>
+          </div>
+        ))}
       </nav>
 
       {/* Footer */}

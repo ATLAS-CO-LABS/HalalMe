@@ -91,6 +91,7 @@ support_conversations
   -- closed   = admin closed, no further replies expected
   priority        text check in ('low','normal','high') default 'normal'
   assigned_to     uuid references profiles(id) null    -- team member handling it
+  delivery_reference text null                          -- Evermile order ref (delivery escalations); deep-link only in P1
   last_message_at timestamptz not null default now()
   created_at, updated_at
 
@@ -106,6 +107,12 @@ support_messages
 - New message from user → if conversation `status='resolved'/'closed'`, reopen to `'open'`. If `status='pending'`, set to `'open'`.
 - New message from admin → set `status='pending'`, `assigned_to = sender_id` if unassigned.
 - A trigger keeps `support_conversations.last_message_at` in sync on `support_messages` insert (mirrors the existing `like_count`/`comment_count` sync-trigger pattern in `004_hub.sql`).
+
+### Delivery escalations & call hooks (founder Doc 2 — see `OPERATIONS_WORKSPACES_PLAN.md`)
+
+Phase 1 keeps these as lightweight **hooks** — no telephony, no Evermile API:
+- **Delivery reference**: the `delivery_reference` column above. When set, the thread shows an **"Open in Evermile" deep link** (env `NEXT_PUBLIC_EVERMILE_ORDER_URL` + the ref) so an agent can check delivery status externally and reply. Live timeline/driver-location via the Evermile API is **Phase 2**.
+- **Call outcomes**: manual outbound calls are logged as a normal admin `support_messages` entry for now (e.g. "Called merchant — resolved"). A dedicated call-telemetry table (`call_duration`, `resolution_status`, `first_contact_resolution`, etc.) and click-to-call/recording are **Phase 1.5 / Phase 2** — do **not** build telephony here.
 
 ### RLS
 
@@ -159,6 +166,7 @@ create table if not exists public.support_conversations (
   priority        text not null default 'normal'
                     check (priority in ('low','normal','high')),
   assigned_to     uuid references public.profiles(id) on delete set null,
+  delivery_reference text,  -- Evermile order ref for delivery escalations (P1: deep-link only)
   last_message_at timestamptz not null default now(),
   created_at      timestamptz not null default now(),
   updated_at      timestamptz not null default now()
