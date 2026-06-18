@@ -50,7 +50,7 @@ const NAV_GROUPS: { heading?: string; items: NavItem[] }[] = [
     items: [
       { label: "Merchants",         href: "/admin/merchants", icon: Store,         module: "merchants" },
       { label: "Users",             href: "/admin/users",     icon: Users,         module: "users" },
-      { label: "Rewards & Charity", href: "/admin/rewards",   icon: Gift,          module: "rewards",   soon: true },
+      { label: "Rewards & Charity", href: "/admin/rewards",   icon: Gift,          module: "rewards" },
       { label: "Kitchen",           href: "/admin/kitchen",   icon: ChefHat,       module: "kitchen",   soon: true },
       { label: "Hub",               href: "/admin/hub",       icon: MessageSquare, module: "hub",       soon: true },
       { label: "Support",           href: "/admin/support",   icon: LifeBuoy,                           soon: true },
