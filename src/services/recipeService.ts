@@ -49,6 +49,8 @@ export const recipeService = {
       .select("*, profiles!user_id(username, avatar_url, is_verified)", { count: "exact" })
       .eq("is_published", true)
       .range(from, to)
+      // Featured recipes float to the top, then newest first.
+      .order("is_featured", { ascending: false })
       .order("created_at", { ascending: false });
 
     if (rest.cuisine) query = query.eq("cuisine", rest.cuisine);

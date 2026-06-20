@@ -7,7 +7,7 @@ import {
 import { display } from "../_fonts";
 import {
   fmtDateTime, fmtMoney, useToast, ToastView, StatCard, TableSkeleton, EmptyState, Pagination, FilterPills, Badge,
-} from "./_ui";
+} from "../_ui";
 
 type JoinedObj = {
   id: string; full_name?: string; email?: string; name?: string;

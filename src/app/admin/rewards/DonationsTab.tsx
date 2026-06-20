@@ -7,7 +7,7 @@ import {
 import ThemedSelect from "@/components/admin/ThemedSelect";
 import {
   fmtDateTime, fmtMoney, useToast, ToastView, StatCard, TableSkeleton, EmptyState, Pagination, FilterPills, Badge,
-} from "./_ui";
+} from "../_ui";
 
 type Joined = { id: string; full_name?: string; email?: string; name?: string } | { id: string; full_name?: string; email?: string; name?: string }[] | null;
 function one(j: Joined) { return Array.isArray(j) ? j[0] : j; }

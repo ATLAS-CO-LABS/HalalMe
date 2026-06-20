@@ -8,7 +8,7 @@ import {
 import { display } from "../_fonts";
 import {
   fmtDate, useToast, ToastView, StatCard, TableSkeleton, EmptyState, Pagination, FilterPills, Badge,
-} from "./_ui";
+} from "../_ui";
 
 interface AppRow {
   id: string;

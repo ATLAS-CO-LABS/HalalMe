@@ -8,7 +8,7 @@ import {
 import { display } from "../_fonts";
 import {
   fmtMoney, useToast, ToastView, StatCard, TableSkeleton, EmptyState, Pagination, FilterPills, Badge,
-} from "./_ui";
+} from "../_ui";
 
 interface CharityRow {
   id: string;

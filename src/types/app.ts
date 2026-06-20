@@ -1680,6 +1680,7 @@ export interface Recipe {
   is_ai_generated:  boolean;
   is_halal_verified: boolean;
   is_published:     boolean;
+  is_featured?:     boolean;
   avg_rating:       number | null;
   review_count:     number;
   view_count:       number;

@@ -2,7 +2,10 @@
 
 import { useState, useCallback } from "react";
 import { CheckCircle2, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
-import { display } from "../_fonts";
+import { display } from "./_fonts";
+
+// Shared admin UI primitives — used across the Rewards, Kitchen and Hub modules
+// so every admin table/card/toast looks and behaves the same.
 
 // ─── Formatting ───────────────────────────────────────────────────────────────
 export function fmtDate(iso: string) {

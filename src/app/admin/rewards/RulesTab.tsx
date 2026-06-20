@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { RefreshCw, AlertCircle, Coins, Loader2, Save, X, Pencil } from "lucide-react";
 import ThemedSelect from "@/components/admin/ThemedSelect";
 import { display } from "../_fonts";
-import { fmtDate, useToast, ToastView, TableSkeleton, EmptyState, Badge } from "./_ui";
+import { fmtDate, useToast, ToastView, TableSkeleton, EmptyState, Badge } from "../_ui";
 
 interface Rule {
   id: string;
