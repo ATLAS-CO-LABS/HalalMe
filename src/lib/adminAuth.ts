@@ -19,7 +19,8 @@ export type AdminModule =
   | "kitchen"
   | "hub"
   | "rewards"
-  | "analytics";
+  | "analytics"
+  | "support";
 
 export type AccessLevel = "view" | "manage";
 

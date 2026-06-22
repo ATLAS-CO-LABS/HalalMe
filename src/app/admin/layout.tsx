@@ -25,7 +25,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { isStaffRole } from "@/lib/adminRoles";
 
 type Access = "none" | "view" | "manage";
-type Module = "merchants" | "users" | "kitchen" | "hub" | "rewards" | "analytics";
+type Module = "merchants" | "users" | "kitchen" | "hub" | "rewards" | "analytics" | "support";
 type Permissions = Record<Module, Access>;
 
 type NavItem = {
@@ -42,7 +42,7 @@ type NavItem = {
 const NAV_GROUPS: { heading?: string; items: NavItem[] }[] = [
   {
     items: [
-      { label: "Overview", href: "/admin", icon: LayoutDashboard, soon: true },
+      { label: "Overview", href: "/admin", icon: LayoutDashboard },
     ],
   },
   {
@@ -53,13 +53,13 @@ const NAV_GROUPS: { heading?: string; items: NavItem[] }[] = [
       { label: "Rewards & Charity", href: "/admin/rewards",   icon: Gift,          module: "rewards" },
       { label: "Kitchen",           href: "/admin/kitchen",   icon: ChefHat,       module: "kitchen" },
       { label: "Hub",               href: "/admin/hub",       icon: MessageSquare, module: "hub" },
-      { label: "Support",           href: "/admin/support",   icon: LifeBuoy,                           soon: true },
+      { label: "Support",           href: "/admin/chat",      icon: LifeBuoy,      module: "support" },
     ],
   },
   {
     heading: "Intelligence",
     items: [
-      { label: "Analytics", href: "/admin/analytics", icon: BarChart3, module: "analytics", soon: true },
+      { label: "Analytics", href: "/admin/analytics", icon: BarChart3, module: "analytics" },
     ],
   },
   {
@@ -76,11 +76,13 @@ function Sidebar({
   pathname,
   user,
   permissions,
+  counts,
   onClose,
 }: {
   pathname: string;
   user: { email?: string; full_name?: string };
   permissions: Permissions | null;
+  counts: Record<string, number>;
   onClose?: () => void;
 }) {
   const initials = (user.full_name ?? user.email ?? "A")
@@ -101,8 +103,9 @@ function Sidebar({
     }))
     .filter((g) => g.items.length > 0);
 
-  function renderItem({ label, href, icon: Icon, soon }: NavItem) {
-    const active = pathname.startsWith(href) && href !== "/admin";
+  function renderItem({ label, href, icon: Icon, soon, module }: NavItem) {
+    const active = href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
+    const badge = module && counts[module] ? counts[module] : 0;
     if (soon) {
       return (
         <div
@@ -129,13 +132,17 @@ function Sidebar({
         }`}
       >
         {active && (
-          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-full bg-[#F03E9E]" />
+          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-full bg-[#F59E0B]" />
         )}
         <Icon size={15} className={`shrink-0 ${active ? "text-[#F7E7CE]" : ""}`} />
         {label}
-        {active && (
-          <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#F03E9E] shrink-0" />
-        )}
+        {badge > 0 ? (
+          <span className="ml-auto min-w-4.5 h-4.5 px-1 flex items-center justify-center rounded-full bg-[#F59E0B] text-white text-[10px] font-bold leading-none shrink-0">
+            {badge > 99 ? "99+" : badge}
+          </span>
+        ) : active ? (
+          <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#F59E0B] shrink-0" />
+        ) : null}
       </Link>
     );
   }
@@ -225,6 +232,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [permissions, setPermissions] = useState<Permissions | null>(null);
+  const [counts, setCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -232,18 +240,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   }, [isLoading, user, router]);
 
-  // Load the current admin's per-module access for sidebar filtering.
+  // Load the current admin's per-module access (for sidebar filtering) + badge
+  // counts. Polled every 30s and on tab focus so the open-ticket badge stays
+  // roughly live without realtime sockets.
   useEffect(() => {
     if (isLoading || !user || !isStaffRole(user.role)) return;
     let active = true;
-    fetch("/api/admin/me")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (active && data?.permissions) setPermissions(data.permissions);
-      })
-      .catch(() => {});
+    const refresh = () => {
+      if (document.hidden) return;
+      fetch("/api/admin/me")
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (!active || !data) return;
+          if (data.permissions) setPermissions(data.permissions);
+          setCounts(data.counts ?? {});
+        })
+        .catch(() => {});
+    };
+    refresh();
+    const interval = setInterval(refresh, 30000);
+    window.addEventListener("focus", refresh);
     return () => {
       active = false;
+      clearInterval(interval);
+      window.removeEventListener("focus", refresh);
     };
   }, [isLoading, user]);
 
@@ -306,6 +326,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           pathname={pathname}
           user={user}
           permissions={permissions}
+          counts={counts}
           onClose={() => setSidebarOpen(false)}
         />
       </div>

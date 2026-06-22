@@ -57,7 +57,7 @@ const STATUS_FILTERS = [
 const ROLE_CONFIG: Record<string, { label: string; cls: string }> = {
   user: { label: "User", cls: "bg-gray-100 text-gray-700" },
   admin: { label: "Admin", cls: "bg-[#102C26]/10 text-[#102C26]" },
-  super_admin: { label: "Super Admin", cls: "bg-[#F03E9E]/10 text-[#F03E9E]" },
+  super_admin: { label: "Super Admin", cls: "bg-[#F59E0B]/10 text-[#F59E0B]" },
 };
 const STATUS_CONFIG: Record<string, { label: string; dot: string; cls: string }> = {
   active: { label: "Active", dot: "bg-green-500", cls: "bg-green-50 text-green-700" },
@@ -101,7 +101,7 @@ function StatCard({ label, value, sub, icon: Icon, tone }: {
 }) {
   const tones = {
     green: "bg-green-50 text-green-600", amber: "bg-[#F59E0B]/10 text-[#F59E0B]",
-    blue: "bg-[#102C26]/8 text-[#102C26]", purple: "bg-[#F03E9E]/10 text-[#F03E9E]",
+    blue: "bg-[#102C26]/8 text-[#102C26]", purple: "bg-[#F59E0B]/10 text-[#F59E0B]",
   };
   return (
     <div className="bg-white rounded-none border border-[#102C26]/12 p-4 sm:p-5">

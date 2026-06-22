@@ -41,9 +41,9 @@ export default function RewardsPage() {
             return (
               <button key={key} onClick={() => setTab(key)}
                 className={`flex items-center gap-2 px-3.5 py-2.5 text-sm font-semibold whitespace-nowrap border-b-2 transition-colors ${
-                  active ? "border-[#F03E9E] text-[#102C26]" : "border-transparent text-gray-500 hover:text-[#102C26]"
+                  active ? "border-[#F59E0B] text-[#102C26]" : "border-transparent text-gray-500 hover:text-[#102C26]"
                 }`}>
-                <Icon size={15} className={active ? "text-[#F03E9E]" : ""} /> {label}
+                <Icon size={15} className={active ? "text-[#F59E0B]" : ""} /> {label}
               </button>
             );
           })}

@@ -23,6 +23,10 @@ import {
   Pencil,
   Trash2,
   Save,
+  Heart,
+  FileText,
+  ChefHat,
+  LifeBuoy,
 } from "lucide-react";
 import ThemedSelect from "@/components/admin/ThemedSelect";
 
@@ -41,11 +45,19 @@ interface UserDetail {
   role: string; status: string; suspended_reason: string | null; suspended_at: string | null; suspended_by: string | null;
   is_verified: boolean; reward_points: number; reward_tier: string; created_at: string;
 }
+interface Activity {
+  donations: { count: number; total: number; spark: number[]; recent: { amount: number; status: string; created_at: string; charity: string }[] };
+  posts: { count: number; spark: number[]; recent: { id: string; content: string; created_at: string; like_count: number; comment_count: number }[] };
+  recipes: { count: number; spark: number[]; recent: { id: string; title: string; created_at: string; is_published: boolean }[] };
+  support: { count: number; open: number; spark: number[]; recent: { id: string; subject: string; status: string; last_message_at: string }[] };
+  rewards: { recent: { points: number; action: string; description: string | null; created_at: string }[] };
+}
 interface DetailResponse {
   user: UserDetail;
   linkedMerchant: { id: string; name: string; status: string } | null;
   suspendedByName: string | null;
   permissions: Record<Module, Access>;
+  activity: Activity;
   viewer: { id: string; role: string; canManage: boolean };
 }
 
@@ -64,7 +76,7 @@ const STATUS_CONFIG: Record<string, { label: string; dot: string; cls: string }>
 const ROLE_CONFIG: Record<string, { label: string; cls: string }> = {
   user: { label: "User", cls: "bg-gray-100 text-gray-700" },
   admin: { label: "Admin", cls: "bg-[#102C26]/10 text-[#102C26]" },
-  super_admin: { label: "Super Admin", cls: "bg-[#F03E9E]/10 text-[#F03E9E]" },
+  super_admin: { label: "Super Admin", cls: "bg-[#F59E0B]/10 text-[#F59E0B]" },
 };
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -202,7 +214,7 @@ export default function UserDetailPage() {
     );
   }
 
-  const { user, linkedMerchant, suspendedByName, viewer } = data;
+  const { user, linkedMerchant, suspendedByName, activity, viewer } = data;
   const isSuperViewer = viewer.role === "super_admin";
   const isOwnRow = viewer.id === user.id;
   const targetIsSuper = user.role === "super_admin";
@@ -324,6 +336,66 @@ export default function UserDetailPage() {
           </Link>
         )}
 
+        {/* Activity overview */}
+        <div className="bg-white rounded-none border border-[#102C26]/12 p-5 sm:p-6">
+          <h2 className={`${display.className} text-[13px] font-extrabold uppercase tracking-wide text-[#102C26] mb-4`}>Activity</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <Chip icon={Heart} label="Donated" value={`£${activity.donations.total.toLocaleString()}`} sub={`${activity.donations.count} completed`} spark={activity.donations.spark} sparkColor="#F59E0B" />
+            <Chip icon={FileText} label="Posts" value={activity.posts.count} sub="Hub" spark={activity.posts.spark} />
+            <Chip icon={ChefHat} label="Recipes" value={activity.recipes.count} sub="Kitchen" spark={activity.recipes.spark} />
+            <Chip icon={LifeBuoy} label="Tickets" value={activity.support.count} sub={`${activity.support.open} open`} spark={activity.support.spark} sparkColor="#F59E0B" />
+          </div>
+        </div>
+
+        <div className="grid lg:grid-cols-2 gap-5">
+          {/* Recent donations */}
+          <ListCard title="Recent Donations" empty="No donations yet">
+            {activity.donations.recent.map((d, i) => (
+              <Row key={i} left={`£${Math.round(d.amount).toLocaleString()} to ${d.charity}`}
+                sub={fmtDate(d.created_at)}
+                right={<span className={`text-[10px] font-bold uppercase ${d.status === "completed" ? "text-green-600" : "text-gray-400"}`}>{d.status}</span>} />
+            ))}
+          </ListCard>
+
+          {/* Support tickets */}
+          <ListCard title="Support Tickets" empty="No support tickets">
+            {activity.support.recent.map((t) => (
+              <Link key={t.id} href={`/admin/chat/${t.id}`} className="block hover:bg-[#102C26]/2 -mx-1 px-1 transition-colors">
+                <Row left={t.subject} sub={fmtDate(t.last_message_at)}
+                  right={<span className="text-[10px] font-bold uppercase text-gray-500">{t.status}</span>} />
+              </Link>
+            ))}
+          </ListCard>
+        </div>
+
+        <div className="grid lg:grid-cols-2 gap-5">
+          {/* Recent posts */}
+          <ListCard title="Recent Posts" empty="No posts">
+            {activity.posts.recent.map((p) => (
+              <Row key={p.id} left={p.content?.trim() || "(no text)"} sub={fmtDate(p.created_at)}
+                right={<span className="text-[11px] text-gray-400 whitespace-nowrap">♥ {p.like_count} · 💬 {p.comment_count}</span>} />
+            ))}
+          </ListCard>
+
+          {/* Recent recipes */}
+          <ListCard title="Recent Recipes" empty="No recipes">
+            {activity.recipes.recent.map((r) => (
+              <Row key={r.id} left={r.title} sub={fmtDate(r.created_at)}
+                right={<span className={`text-[10px] font-bold uppercase ${r.is_published ? "text-green-600" : "text-gray-400"}`}>{r.is_published ? "Published" : "Hidden"}</span>} />
+            ))}
+          </ListCard>
+        </div>
+
+        {/* Reward history */}
+        {activity.rewards.recent.length > 0 && (
+          <ListCard title="Reward History" empty="No reward activity">
+            {activity.rewards.recent.map((t, i) => (
+              <Row key={i} left={t.description ?? t.action} sub={fmtDate(t.created_at)}
+                right={<span className={`text-sm font-bold tabular-nums ${t.points >= 0 ? "text-[#102C26]" : "text-red-600"}`}>{t.points >= 0 ? "+" : ""}{t.points.toLocaleString()}</span>} />
+            ))}
+          </ListCard>
+        )}
+
         {/* Account status / moderation */}
         {canManage && (
           <div className="bg-white rounded-none border border-[#102C26]/12 p-5 sm:p-6">
@@ -375,7 +447,7 @@ export default function UserDetailPage() {
         {canManageRole && (
           <div className="bg-white rounded-none border border-[#102C26]/12 p-5 sm:p-6">
             <div className="flex items-center gap-2 mb-1">
-              <ShieldCheck size={16} className="text-[#F03E9E]" />
+              <ShieldCheck size={16} className="text-[#F59E0B]" />
               <h2 className={`${display.className} text-[13px] font-extrabold uppercase tracking-wide text-[#102C26]`}>Role &amp; Permissions</h2>
             </div>
             <p className="text-xs text-gray-500 mb-4">Only super admins can change these. Promote a member to Admin, then choose what each module allows.</p>
@@ -410,7 +482,7 @@ export default function UserDetailPage() {
                               className={`px-3 py-1.5 text-xs font-semibold capitalize rounded-none transition-all border ${active
                                 ? lvl === "none" ? "bg-gray-100 text-gray-700 border-gray-300"
                                   : lvl === "view" ? "bg-[#102C26]/10 text-[#102C26] border-[#102C26]/30"
-                                  : "bg-[#F03E9E]/10 text-[#F03E9E] border-[#F03E9E]/30"
+                                  : "bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]/30"
                                 : "bg-white text-gray-500 border-gray-200 hover:border-gray-300"}`}>
                               {lvl === "none" ? "No access" : lvl}
                             </button>
@@ -488,6 +560,60 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     <div>
       <label className="text-[11px] font-bold uppercase tracking-wide text-gray-500 mb-1 block">{label}</label>
       {children}
+    </div>
+  );
+}
+
+function Chip({ icon: Icon, label, value, sub, spark, sparkColor = "#102C26" }: { icon: React.ElementType; label: string; value: React.ReactNode; sub?: string; spark?: number[]; sparkColor?: string }) {
+  return (
+    <div className="border border-[#102C26]/10 rounded-none p-3">
+      <div className="flex items-center gap-1.5 text-gray-500 mb-1.5">
+        <Icon size={13} /> <span className="text-[10px] font-bold uppercase tracking-wide">{label}</span>
+      </div>
+      <div className="flex items-end justify-between gap-2">
+        <div className="min-w-0">
+          <p className={`${display.className} text-lg font-bold text-[#102C26] leading-none`}>{value}</p>
+          {sub && <p className="text-[11px] text-gray-500 mt-1">{sub}</p>}
+        </div>
+        {spark && <Sparkline data={spark} color={sparkColor} />}
+      </div>
+    </div>
+  );
+}
+
+// Tiny inline trend line (last 6 months). Hidden when there's not enough signal.
+function Sparkline({ data, color = "#102C26" }: { data: number[]; color?: string }) {
+  if (!data || data.length < 2 || data.every((v) => v === 0)) return null;
+  const w = 60, h = 20, max = Math.max(1, ...data);
+  const pts = data.map((v, i) => `${((i / (data.length - 1)) * w).toFixed(1)},${(h - (v / max) * (h - 3) - 1.5).toFixed(1)}`).join(" ");
+  const last = data[data.length - 1];
+  return (
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="shrink-0 overflow-visible">
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+      {last > 0 && <circle cx={w} cy={h - (last / max) * (h - 3) - 1.5} r="1.8" fill={color} />}
+    </svg>
+  );
+}
+
+function ListCard({ title, empty, children }: { title: string; empty: string; children: React.ReactNode }) {
+  const items = Array.isArray(children) ? children.flat().filter(Boolean) : children;
+  const isEmpty = Array.isArray(items) ? items.length === 0 : !items;
+  return (
+    <div className="bg-white rounded-none border border-[#102C26]/12 p-5 sm:p-6">
+      <h2 className={`${display.className} text-[13px] font-extrabold uppercase tracking-wide text-[#102C26] mb-3`}>{title}</h2>
+      {isEmpty ? <p className="text-sm text-gray-400 py-2">{empty}</p> : <div className="divide-y divide-gray-100">{children}</div>}
+    </div>
+  );
+}
+
+function Row({ left, sub, right }: { left: string; sub?: string; right?: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-3 py-2.5">
+      <div className="min-w-0">
+        <p className="text-sm text-gray-800 truncate">{left}</p>
+        {sub && <p className="text-[11px] text-gray-400">{sub}</p>}
+      </div>
+      {right && <div className="shrink-0">{right}</div>}
     </div>
   );
 }

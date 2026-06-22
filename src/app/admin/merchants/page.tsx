@@ -260,7 +260,7 @@ function StatCard({ label, value, sub, icon: Icon, tone, onClick, active }: {
     green:  "bg-green-50 text-green-600",
     amber:  "bg-[#F59E0B]/10 text-[#F59E0B]",
     blue:   "bg-[#102C26]/8 text-[#102C26]",
-    purple: "bg-[#F03E9E]/10 text-[#F03E9E]",
+    purple: "bg-[#F59E0B]/10 text-[#F59E0B]",
   };
   const Tag = onClick ? "button" : "div";
   return (
@@ -881,7 +881,7 @@ export default function MerchantPipelinePage() {
               <div className="space-y-3.5">
                 {recentActivity.map((m) => (
                   <button key={m.id} onClick={() => navigate(m.id)} className="flex items-start gap-2.5 w-full text-left group">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#F03E9E] mt-1.5 shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B] mt-1.5 shrink-0" />
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-gray-800 truncate group-hover:text-[#102C26]">{m.name}</p>
                       <p className="text-xs text-gray-400">Added to CRM · {relativeTime(m.created_at)}</p>

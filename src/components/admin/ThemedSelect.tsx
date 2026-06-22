@@ -97,7 +97,7 @@ export default function ThemedSelect({
                   }`}
                 >
                   <span className="truncate">{o.label}</span>
-                  {active && <Check size={14} className="text-[#F03E9E] shrink-0" />}
+                  {active && <Check size={14} className="text-[#F59E0B] shrink-0" />}
                 </button>
               );
             })

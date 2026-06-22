@@ -47,7 +47,7 @@ export function StatCard({ label, value, sub, icon: Icon, tone }: {
     green: "bg-green-50 text-green-600",
     amber: "bg-[#F59E0B]/10 text-[#F59E0B]",
     blue: "bg-[#102C26]/8 text-[#102C26]",
-    purple: "bg-[#F03E9E]/10 text-[#F03E9E]",
+    purple: "bg-[#F59E0B]/10 text-[#F59E0B]",
     red: "bg-red-50 text-red-600",
   };
   return (
@@ -131,7 +131,7 @@ export function Badge({ label, tone }: { label: string; tone: "green" | "amber" 
     red: "bg-red-50 text-red-700",
     gray: "bg-gray-100 text-gray-700",
     blue: "bg-[#102C26]/10 text-[#102C26]",
-    purple: "bg-[#F03E9E]/10 text-[#F03E9E]",
+    purple: "bg-[#F59E0B]/10 text-[#F59E0B]",
   };
   return <span className={`inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide whitespace-nowrap ${tones[tone]}`}>{label}</span>;
 }

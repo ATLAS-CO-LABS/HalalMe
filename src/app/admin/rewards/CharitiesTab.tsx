@@ -207,7 +207,7 @@ export default function CharitiesTab() {
                       <td className="pl-4 lg:pl-5 px-2 py-3.5">
                         <div className="flex items-center gap-1.5">
                           <p className="font-semibold text-gray-900 truncate max-w-52 group-hover:text-[#102C26]">{c.name}</p>
-                          {c.is_featured && <Star size={13} className="text-[#F03E9E] shrink-0 fill-[#F03E9E]" />}
+                          {c.is_featured && <Star size={13} className="text-[#F59E0B] shrink-0 fill-[#F59E0B]" />}
                           {c.is_zakat_eligible && <Badge label="Zakat" tone="purple" />}
                         </div>
                         <p className="text-xs text-gray-600 truncate capitalize">{c.category} · {c.donor_count} donor{c.donor_count !== 1 ? "s" : ""}</p>

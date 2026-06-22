@@ -2,7 +2,25 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin, type AdminModule } from "@/lib/adminAuth";
 import { isSuperAdmin } from "@/lib/adminRoles";
 
-const MODULES: AdminModule[] = ["merchants", "users", "kitchen", "hub", "rewards", "analytics"];
+const MODULES: AdminModule[] = ["merchants", "users", "kitchen", "hub", "rewards", "analytics", "support"];
+
+// Last `months` months as a tiny series (oldest → newest) for profile sparklines.
+function monthlySpark(items: { date: string | null; value: number }[], months = 6): number[] {
+  const now = new Date();
+  const keys: string[] = [];
+  for (let i = months - 1; i >= 0; i--) {
+    const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1));
+    keys.push(`${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`);
+  }
+  const totals: Record<string, number> = {};
+  for (const it of items) {
+    if (!it.date) continue;
+    const d = new Date(it.date);
+    totals[`${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`] =
+      (totals[`${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`] ?? 0) + it.value;
+  }
+  return keys.map((k) => Math.round((totals[k] ?? 0) * 100) / 100);
+}
 const ACCESS_LEVELS = ["none", "view", "manage"];
 const STATUSES = ["active", "suspended", "banned"];
 
@@ -78,11 +96,65 @@ export async function GET(
     canManage = vp?.access === "manage";
   }
 
+  // ── Cross-platform activity (richer profile) ────────────────────────────────
+  const [{ data: dons }, postRes, recipeRes, convRes, { data: rts }, { data: postDates }, { data: recipeDates }, { data: ticketDates }] = await Promise.all([
+    serviceClient.from("donations").select("amount, status, created_at, charity_id").eq("user_id", id).order("created_at", { ascending: false }),
+    serviceClient.from("posts").select("id, content, created_at, like_count, comment_count", { count: "exact" }).eq("user_id", id).order("created_at", { ascending: false }).limit(5),
+    serviceClient.from("recipes").select("id, title, created_at, is_published", { count: "exact" }).eq("user_id", id).order("created_at", { ascending: false }).limit(5),
+    serviceClient.from("support_conversations").select("id, subject, status, last_message_at", { count: "exact" }).eq("user_id", id).order("last_message_at", { ascending: false }).limit(5),
+    serviceClient.from("reward_transactions").select("points, action, description, created_at").eq("user_id", id).order("created_at", { ascending: false }).limit(6),
+    serviceClient.from("posts").select("created_at").eq("user_id", id),
+    serviceClient.from("recipes").select("created_at").eq("user_id", id),
+    serviceClient.from("support_conversations").select("created_at").eq("user_id", id),
+  ]);
+
+  const donations = dons ?? [];
+  const completed = donations.filter((d) => d.status === "completed");
+  const recentDon = donations.slice(0, 5);
+  const charityIds = [...new Set(recentDon.map((d) => d.charity_id).filter(Boolean))] as string[];
+  const charityNames = new Map<string, string>();
+  if (charityIds.length > 0) {
+    const { data: cs } = await serviceClient.from("charities").select("id, name").in("id", charityIds);
+    for (const c of cs ?? []) charityNames.set(c.id, c.name);
+  }
+
+  const activity = {
+    donations: {
+      count: completed.length,
+      total: Math.round(completed.reduce((s, d) => s + Number(d.amount ?? 0), 0)),
+      recent: recentDon.map((d) => ({
+        amount: Number(d.amount ?? 0),
+        status: d.status,
+        created_at: d.created_at,
+        charity: d.charity_id ? charityNames.get(d.charity_id) ?? "Charity" : "Charity",
+      })),
+      spark: monthlySpark(completed.map((d) => ({ date: d.created_at, value: Number(d.amount ?? 0) }))),
+    },
+    posts: {
+      count: postRes.count ?? 0,
+      recent: postRes.data ?? [],
+      spark: monthlySpark((postDates ?? []).map((p) => ({ date: p.created_at, value: 1 }))),
+    },
+    recipes: {
+      count: recipeRes.count ?? 0,
+      recent: recipeRes.data ?? [],
+      spark: monthlySpark((recipeDates ?? []).map((r) => ({ date: r.created_at, value: 1 }))),
+    },
+    support: {
+      count: convRes.count ?? 0,
+      open: (convRes.data ?? []).filter((c) => c.status === "open" || c.status === "pending").length,
+      recent: convRes.data ?? [],
+      spark: monthlySpark((ticketDates ?? []).map((t) => ({ date: t.created_at, value: 1 }))),
+    },
+    rewards: { recent: rts ?? [] },
+  };
+
   return NextResponse.json({
     user,
     linkedMerchant: merchant ?? null,
     suspendedByName,
     permissions,
+    activity,
     viewer: { id: gate.userId, role: gate.role, canManage },
   });
 }

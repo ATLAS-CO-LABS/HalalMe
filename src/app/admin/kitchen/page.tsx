@@ -364,7 +364,7 @@ export default function KitchenPage() {
                         <td className={`px-2 py-3.5 ${canManage ? "" : "pl-4 lg:pl-5"}`}>
                           <div className="flex items-center gap-1.5">
                             <p title={r.title} className={`font-semibold truncate max-w-64 ${r.is_published ? "text-gray-900" : "text-gray-400 line-through"}`}>{r.title}</p>
-                            {r.is_featured && <Star size={13} className="text-[#F03E9E] shrink-0 fill-[#F03E9E]" />}
+                            {r.is_featured && <Star size={13} className="text-[#F59E0B] shrink-0 fill-[#F59E0B]" />}
                           </div>
                           <p className="text-xs text-gray-600 truncate capitalize">{r.cuisine ?? "—"}{r.difficulty ? ` · ${r.difficulty}` : ""}</p>
                         </td>

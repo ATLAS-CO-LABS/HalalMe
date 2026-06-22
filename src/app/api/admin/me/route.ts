@@ -4,7 +4,7 @@ import { isStaffRole, isSuperAdmin } from "@/lib/adminRoles";
 
 // Modules governed by admin_permissions (mirrors 036_admin_roles.sql).
 // "Overview" has no module key — it's always visible to any staff role.
-const MODULES = ["merchants", "users", "kitchen", "hub", "rewards", "analytics"] as const;
+const MODULES = ["merchants", "users", "kitchen", "hub", "rewards", "analytics", "support"] as const;
 type Module = (typeof MODULES)[number];
 type Access = "none" | "view" | "manage";
 
@@ -36,29 +36,41 @@ export async function GET() {
 
   const role = profile!.role as "admin" | "super_admin";
 
-  // super_admin → implicit full access, no table lookup.
+  let permissions: Record<Module, Access>;
+
   if (isSuperAdmin(role)) {
-    const permissions = Object.fromEntries(
+    // super_admin → implicit full access, no table lookup.
+    permissions = Object.fromEntries(
       MODULES.map((m) => [m, "manage" as Access]),
     ) as Record<Module, Access>;
-    return NextResponse.json({ role, permissions });
-  }
+  } else {
+    // admin → read explicit grants; any module without a row defaults to 'none'.
+    const { data: rows } = await serviceClient
+      .from("admin_permissions")
+      .select("module, access")
+      .eq("user_id", user.id);
 
-  // admin → read explicit grants; any module without a row defaults to 'none'.
-  const { data: rows } = await serviceClient
-    .from("admin_permissions")
-    .select("module, access")
-    .eq("user_id", user.id);
+    permissions = Object.fromEntries(
+      MODULES.map((m) => [m, "none" as Access]),
+    ) as Record<Module, Access>;
 
-  const permissions = Object.fromEntries(
-    MODULES.map((m) => [m, "none" as Access]),
-  ) as Record<Module, Access>;
-
-  for (const row of rows ?? []) {
-    if ((MODULES as readonly string[]).includes(row.module)) {
-      permissions[row.module as Module] = row.access as Access;
+    for (const row of rows ?? []) {
+      if ((MODULES as readonly string[]).includes(row.module)) {
+        permissions[row.module as Module] = row.access as Access;
+      }
     }
   }
 
-  return NextResponse.json({ role, permissions });
+  // Sidebar badge counts. Only the open-support count today; computed only when
+  // the viewer can see the support module (avoids leaking counts).
+  const counts: Record<string, number> = {};
+  if (permissions.support !== "none") {
+    const { count } = await serviceClient
+      .from("support_conversations")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "open");
+    counts.support = count ?? 0;
+  }
+
+  return NextResponse.json({ role, permissions, counts });
 }
