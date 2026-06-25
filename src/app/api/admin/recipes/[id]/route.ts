@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
+import { logAdminAction } from "@/lib/adminAudit";
 
 const BOOL_FLAGS = ["is_published", "is_halal_verified", "is_featured"] as const;
 
@@ -62,6 +63,12 @@ export async function PATCH(
     return NextResponse.json({ error: "Failed to update recipe" }, { status: 500 });
   }
 
+  await logAdminAction(gate, {
+    action: "recipe.update", module: "kitchen", targetType: "recipe", targetId: id,
+    summary: `Updated recipe flags: ${Object.entries(update).map(([k, v]) => `${k}=${v}`).join(", ")}`,
+    metadata: update,
+  });
+
   return NextResponse.json({ ok: true });
 }
 
@@ -76,11 +83,19 @@ export async function DELETE(
   const gate = await requireAdmin("kitchen", "manage");
   if (!gate.ok) return NextResponse.json({ error: gate.error }, { status: gate.status });
 
+  const { data: recipe } = await gate.serviceClient.from("recipes").select("title").eq("id", id).single();
+
   const { error } = await gate.serviceClient.from("recipes").delete().eq("id", id);
   if (error) {
     console.error("[api/admin/recipes/[id]] delete error", error);
     return NextResponse.json({ error: "Failed to delete recipe" }, { status: 500 });
   }
+
+  await logAdminAction(gate, {
+    action: "recipe.delete", module: "kitchen", targetType: "recipe", targetId: id,
+    summary: `Deleted recipe ${recipe?.title ?? id}`,
+    metadata: { title: recipe?.title ?? null },
+  });
 
   return NextResponse.json({ ok: true });
 }

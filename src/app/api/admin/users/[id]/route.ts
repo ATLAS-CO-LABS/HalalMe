@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin, type AdminModule } from "@/lib/adminAuth";
 import { isSuperAdmin } from "@/lib/adminRoles";
+import { logAdminAction } from "@/lib/adminAudit";
 
 const MODULES: AdminModule[] = ["merchants", "users", "kitchen", "hub", "rewards", "analytics", "support"];
 
@@ -251,6 +252,11 @@ export async function PATCH(
     if (newRole === "user") {
       await serviceClient.from("admin_permissions").delete().eq("user_id", id);
     }
+    await logAdminAction(gate, {
+      action: "user.role_change", module: "users", targetType: "user", targetId: id,
+      summary: `Changed role to ${newRole}${newRole === "user" ? " (permissions cleared)" : ""}`,
+      metadata: { from: target.role, to: newRole },
+    });
   }
 
   // ── Apply permission grid ──────────────────────────────────────────────────
@@ -266,6 +272,11 @@ export async function PATCH(
         console.error("[api/admin/users/[id]] permission upsert error", permErr);
         return NextResponse.json({ error: "Failed to update permissions" }, { status: 500 });
       }
+      await logAdminAction(gate, {
+        action: "user.permissions_change", module: "users", targetType: "user", targetId: id,
+        summary: "Updated module permissions",
+        metadata: { permissions: body.permissions },
+      });
     }
   }
 
@@ -317,6 +328,11 @@ export async function PATCH(
       console.error("[api/admin/users/[id]] status update error", statusErr);
       return NextResponse.json({ error: "Failed to update status" }, { status: 500 });
     }
+    await logAdminAction(gate, {
+      action: `user.${status}`, module: "users", targetType: "user", targetId: id,
+      summary: status === "active" ? "Reactivated account" : `${status === "banned" ? "Banned" : "Suspended"} account`,
+      metadata: { from: target.status, to: status, reason: reason ?? null },
+    });
   }
 
   return NextResponse.json({ ok: true });
@@ -342,7 +358,7 @@ export async function DELETE(
 
   const { data: target } = await serviceClient
     .from("profiles")
-    .select("role")
+    .select("role, full_name, email")
     .eq("id", id)
     .single();
 
@@ -361,6 +377,12 @@ export async function DELETE(
     console.error("[api/admin/users/[id]] delete error", error);
     return NextResponse.json({ error: "Failed to delete user" }, { status: 500 });
   }
+
+  await logAdminAction(gate, {
+    action: "user.delete", module: "users", targetType: "user", targetId: id,
+    summary: `Deleted user ${target.full_name ?? target.email ?? id}`,
+    metadata: { full_name: target.full_name, email: target.email },
+  });
 
   return NextResponse.json({ ok: true });
 }

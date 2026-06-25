@@ -35,7 +35,7 @@ export async function GET(
   const { data: messages } = await serviceClient
     .from("support_messages")
     .select(
-      "id, sender_role, body, created_at, " +
+      "id, sender_role, body, created_at, is_internal, " +
         "sender:profiles!support_messages_sender_id_fkey(id, full_name, avatar_url)",
     )
     .eq("conversation_id", id)

@@ -19,9 +19,11 @@ import {
   AlertCircle,
   CornerDownRight,
   Trash2,
+  Flag,
 } from "lucide-react";
 import type { Post, Comment } from "@/types";
 import { hubService } from "@/services/hubService";
+import ReportModal from "@/components/common/ReportModal";
 import { withTimeout, TimeoutError } from "@/lib/withTimeout";
 import { useAuth } from "@/hooks/useAuth";
 import { useResumeKey } from "@/context/AppResumeContext";
@@ -59,6 +61,7 @@ function PostDetailContent({ id }: { id: string }) {
   const [newComment, setNewComment] = useState("");
   const [replyingTo, setReplyingTo] = useState<{ id: string; username: string } | null>(null);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [reportTarget, setReportTarget] = useState<{ type: "post" | "comment"; id: string } | null>(null);
 
   // ---------------------------------------------------------------------------
   // Load post + comments
@@ -340,12 +343,21 @@ function PostDetailContent({ id }: { id: string }) {
                 Reply
               </button>
             )}
-            {user?.id === comment.user_id && (
+            {user?.id === comment.user_id ? (
               <button
                 onClick={() => handleDeleteComment(comment.id, comment.parent_id)}
+                aria-label="Delete comment"
                 className="text-xs text-gray-500 hover:text-red-400 transition-colors flex items-center gap-1"
               >
                 <Trash2 className="w-3 h-3" />
+              </button>
+            ) : (
+              <button
+                onClick={() => setReportTarget({ type: "comment", id: comment.id })}
+                aria-label="Report comment"
+                className="text-xs text-gray-500 hover:text-red-400 transition-colors flex items-center gap-1"
+              >
+                <Flag className="w-3 h-3" />
               </button>
             )}
           </div>
@@ -664,6 +676,14 @@ function PostDetailContent({ id }: { id: string }) {
           </div>
         </motion.div>
       </div>
+
+      <ReportModal
+        open={!!reportTarget}
+        onClose={() => setReportTarget(null)}
+        contentType={reportTarget?.type ?? "comment"}
+        contentId={reportTarget?.id ?? ""}
+        contentLabel={reportTarget?.type === "post" ? "post" : "comment"}
+      />
     </div>
   );
 }

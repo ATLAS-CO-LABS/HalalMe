@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
+import { ilikeTerm } from "@/lib/adminSearch";
 
 const PAGE_SIZE = 25;
+
+// Canonical post types — mirrors the posts.post_type CHECK constraint
+// (004_hub.sql). Returned to the client so the filter is stable and complete
+// regardless of which types happen to appear on the current page.
+const POST_TYPES = ["general", "recipe", "question", "review"] as const;
 
 // GET /api/admin/hub/posts
 //   ?page=0&type=all|<post_type>&published=all|published|unpublished&search=
@@ -35,9 +41,9 @@ export async function GET(req: NextRequest) {
   if (published === "published") query = query.eq("is_published", true);
   else if (published === "unpublished") query = query.eq("is_published", false);
 
-  if (search) {
+  const term = ilikeTerm(search);
+  if (term) {
     // Match post content OR the author's name/username.
-    const term = `%${search}%`;
     const { data: authors } = await serviceClient
       .from("profiles")
       .select("id")
@@ -103,6 +109,7 @@ export async function GET(req: NextRequest) {
     pageSize: PAGE_SIZE,
     canManage,
     topPosters,
+    postTypes: POST_TYPES,
     stats: {
       total: totalRes.count ?? 0,
       published: publishedRes.count ?? 0,

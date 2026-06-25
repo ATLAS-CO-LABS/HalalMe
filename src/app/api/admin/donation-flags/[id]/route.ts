@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
+import { logAdminAction } from "@/lib/adminAudit";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PATCH /api/admin/donation-flags/[id]
@@ -72,6 +73,12 @@ export async function PATCH(
       return NextResponse.json({ error: "Rewards released but failed to update flag" }, { status: 500 });
     }
 
+    await logAdminAction(gate, {
+      action: "donation_flag.cleared", module: "rewards", targetType: "donation_flag", targetId: id,
+      summary: "Cleared donation flag as safe — rewards released",
+      metadata: { donation_id: flag.donation_id, notes },
+    });
+
     return NextResponse.json({ ok: true, status: "reviewed_safe", reward: result });
   }
 
@@ -128,6 +135,12 @@ export async function PATCH(
     console.error("[donation-flags PATCH] update (blocked) error", updErr);
     return NextResponse.json({ error: "Refund issued but failed to update flag" }, { status: 500 });
   }
+
+  await logAdminAction(gate, {
+    action: "donation_flag.blocked", module: "rewards", targetType: "donation_flag", targetId: id,
+    summary: `Blocked donation flag${refundRef ? " — Stripe refund issued" : ""}`,
+    metadata: { donation_id: flag.donation_id, refund_ref: refundRef, notes },
+  });
 
   return NextResponse.json({ ok: true, status: "reviewed_blocked", refund_ref: refundRef });
 }

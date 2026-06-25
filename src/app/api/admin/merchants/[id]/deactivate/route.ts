@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { updateHyperzodMerchant } from "@/services/hyperzodService";
 import { requireAdmin } from "@/lib/adminAuth";
+import { logAdminAction } from "@/lib/adminAudit";
 
 export async function POST(
   _req: NextRequest,
@@ -74,6 +75,11 @@ export async function POST(
       { status: 500 }
     );
   }
+
+  await logAdminAction(gate, {
+    action: "merchant.deactivate", module: "merchants", targetType: "merchant", targetId: id,
+    summary: "Took merchant offline (reverted to agreed)",
+  });
 
   return NextResponse.json({ merchant: updated });
 }

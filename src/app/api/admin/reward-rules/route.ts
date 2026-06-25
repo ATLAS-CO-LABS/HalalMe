@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
+import { logAdminAction } from "@/lib/adminAudit";
 
 // Fields an admin may edit inline on a reward rule.
 const NUMERIC_FIELDS = ["points_per_unit", "max_per_day", "max_lifetime"] as const;
@@ -100,6 +101,12 @@ export async function PATCH(req: NextRequest) {
     console.error("[api/admin/reward-rules] update error", error);
     return NextResponse.json({ error: "Failed to update reward rule" }, { status: 500 });
   }
+
+  await logAdminAction(gate, {
+    action: "reward_rule.update", module: "rewards", targetType: "reward_rule", targetId: id,
+    summary: `Updated reward rule: ${Object.keys(update).join(", ")}`,
+    metadata: update,
+  });
 
   return NextResponse.json({ ok: true });
 }

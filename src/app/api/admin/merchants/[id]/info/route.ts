@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { updateHyperzodMerchant, type HyperzodMerchantOverrides } from "@/services/hyperzodService";
 import { requireAdmin } from "@/lib/adminAuth";
+import { logAdminAction } from "@/lib/adminAudit";
 
 // Fields shared with Hyperzod (a change here must sync)
 const SHARED_FIELDS = [
@@ -89,6 +90,12 @@ export async function PATCH(
     console.error("[merchants/info] update error", updateError);
     return NextResponse.json({ error: "Failed to save changes" }, { status: 500 });
   }
+
+  await logAdminAction(gate, {
+    action: "merchant.info_edit", module: "merchants", targetType: "merchant", targetId: id,
+    summary: `Edited merchant details: ${Object.keys(updates).filter((k) => k !== "hyperzod_sync_failed").join(", ")}`,
+    metadata: { fields: Object.keys(updates), hyperzod_synced: !hyperzodWarning },
+  });
 
   return NextResponse.json({ merchant: updated, warning: hyperzodWarning });
 }

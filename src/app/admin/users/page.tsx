@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { display } from "../_fonts";
+import { Modal } from "../_ui";
 import {
   Search,
   RefreshCw,
@@ -566,25 +567,24 @@ export default function UsersPage() {
             </button>
           )}
           {canManage && menu.user.status !== "suspended" && menu.user.role !== "super_admin" && (
-            <button onClick={() => { setModal({ kind: "suspend", user: menu.user }); setMenu(null); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-amber-700 hover:bg-amber-50 transition-colors"><Ban size={14} /> Suspend</button>
+            <button onClick={() => { setModalReason(""); setModal({ kind: "suspend", user: menu.user }); setMenu(null); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-amber-700 hover:bg-amber-50 transition-colors"><Ban size={14} /> Suspend</button>
           )}
           {canManage && menu.user.role === "user" && (
-            <button onClick={() => { setModal({ kind: "delete", user: menu.user }); setMenu(null); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-red-700 hover:bg-red-50 transition-colors"><Trash2 size={14} /> Delete</button>
+            <button onClick={() => { setModalReason(""); setModal({ kind: "delete", user: menu.user }); setMenu(null); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-red-700 hover:bg-red-50 transition-colors"><Trash2 size={14} /> Delete</button>
           )}
         </div>
       )}
 
       {/* Confirm modal (suspend / delete) */}
       {modal && (
-        <div className="fixed inset-0 z-55 bg-black/40 flex items-center justify-center p-4" onClick={() => !modalBusy && (setModal(null), setModalReason(""))}>
-          <div className="bg-white rounded-none border border-[#102C26]/15 shadow-2xl w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
+        <Modal open busy={modalBusy} onClose={() => { setModal(null); setModalReason(""); }} labelledBy="user-modal-title" describedBy="user-modal-desc" className="p-6">
             <div className="flex items-start gap-3">
               <div className={`w-10 h-10 rounded-none flex items-center justify-center shrink-0 ${modal.kind === "delete" ? "bg-red-50 text-red-600" : "bg-amber-50 text-amber-600"}`}>
                 {modal.kind === "delete" ? <Trash2 size={18} /> : <Ban size={18} />}
               </div>
               <div className="min-w-0">
-                <h3 className={`${display.className} text-lg font-bold text-[#102C26]`}>{modal.kind === "delete" ? "Delete user?" : "Suspend user?"}</h3>
-                <p className="text-sm text-gray-600 mt-1">
+                <h3 id="user-modal-title" className={`${display.className} text-lg font-bold text-[#102C26]`}>{modal.kind === "delete" ? "Delete user?" : "Suspend user?"}</h3>
+                <p id="user-modal-desc" className="text-sm text-gray-600 mt-1">
                   {modal.kind === "delete"
                     ? <>This permanently removes <span className="font-semibold">{modal.user.full_name}</span> and all of their content. This cannot be undone.</>
                     : <>Suspend <span className="font-semibold">{modal.user.full_name}</span>. They&apos;ll be hidden until reactivated.</>}
@@ -595,16 +595,22 @@ export default function UsersPage() {
               <textarea value={modalReason} onChange={(e) => setModalReason(e.target.value)} rows={3} placeholder="Reason for suspension (required)…"
                 className="mt-4 w-full px-3 py-2 text-sm text-gray-900 border border-gray-200 bg-gray-50 rounded-none focus:outline-none focus:ring-2 focus:ring-[#102C26]/15 focus:border-[#102C26] focus:bg-white placeholder:text-gray-500" />
             )}
+            {modal.kind === "delete" && (
+              <div className="mt-4">
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">Type <span className="font-bold text-red-600">DELETE</span> to confirm</label>
+                <input type="text" value={modalReason} onChange={(e) => setModalReason(e.target.value)} placeholder="DELETE" autoComplete="off"
+                  className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-200 bg-gray-50 rounded-none focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 focus:bg-white placeholder:text-gray-400" />
+              </div>
+            )}
             <div className="mt-5 flex items-center justify-end gap-2">
               <button onClick={() => { setModal(null); setModalReason(""); }} disabled={modalBusy} className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">Cancel</button>
-              <button onClick={confirmModal} disabled={modalBusy || (modal.kind === "suspend" && !modalReason.trim())}
+              <button onClick={confirmModal} disabled={modalBusy || (modal.kind === "suspend" && !modalReason.trim()) || (modal.kind === "delete" && modalReason.trim().toUpperCase() !== "DELETE")}
                 className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-bold uppercase tracking-tight text-white rounded-none disabled:opacity-50 transition-colors ${modal.kind === "delete" ? "bg-red-600 hover:bg-red-700" : "bg-amber-600 hover:bg-amber-700"}`}>
                 {modalBusy ? <Loader2 size={14} className="animate-spin" /> : modal.kind === "delete" ? <Trash2 size={14} /> : <Ban size={14} />}
                 {modal.kind === "delete" ? "Delete" : "Suspend"}
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

@@ -23,10 +23,9 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { isStaffRole } from "@/lib/adminRoles";
+import { AdminProvider, useAdmin } from "./AdminProvider";
 
-type Access = "none" | "view" | "manage";
 type Module = "merchants" | "users" | "kitchen" | "hub" | "rewards" | "analytics" | "support";
-type Permissions = Record<Module, Access>;
 
 type NavItem = {
   label: string;
@@ -34,6 +33,7 @@ type NavItem = {
   icon: typeof Store;
   module?: Module; // ties the item to an admin_permissions key (the 6 gated modules)
   soon?: boolean;
+  superAdminOnly?: boolean; // only shown to super_admin (e.g. Audit log)
 };
 
 // Grouped navigation (per OPERATIONS_WORKSPACES_PLAN.md). Operations workspaces
@@ -66,7 +66,7 @@ const NAV_GROUPS: { heading?: string; items: NavItem[] }[] = [
     heading: "System",
     items: [
       { label: "Permissions", href: "/admin/users",     icon: ShieldCheck, soon: true },
-      { label: "Audit",       href: "/admin/audit",     icon: ScrollText,  soon: true },
+      { label: "Audit",       href: "/admin/audit",     icon: ScrollText,  superAdminOnly: true },
       { label: "Settings",    href: "/admin/settings",  icon: Settings,    soon: true },
     ],
   },
@@ -75,16 +75,13 @@ const NAV_GROUPS: { heading?: string; items: NavItem[] }[] = [
 function Sidebar({
   pathname,
   user,
-  permissions,
-  counts,
   onClose,
 }: {
   pathname: string;
   user: { email?: string; full_name?: string };
-  permissions: Permissions | null;
-  counts: Record<string, number>;
   onClose?: () => void;
 }) {
+  const { permissions, counts, isSuper } = useAdmin();
   const initials = (user.full_name ?? user.email ?? "A")
     .split(" ")
     .map((w) => w[0])
@@ -98,7 +95,9 @@ function Sidebar({
     .map((g) => ({
       ...g,
       items: g.items.filter(
-        (item) => !item.module || !permissions || permissions[item.module] !== "none",
+        (item) =>
+          (!item.module || !permissions || permissions[item.module] !== "none") &&
+          (!item.superAdminOnly || isSuper),
       ),
     }))
     .filter((g) => g.items.length > 0);
@@ -231,41 +230,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [permissions, setPermissions] = useState<Permissions | null>(null);
-  const [counts, setCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
     if (!isLoading && !user) {
       router.replace("/login");
     }
   }, [isLoading, user, router]);
-
-  // Load the current admin's per-module access (for sidebar filtering) + badge
-  // counts. Polled every 30s and on tab focus so the open-ticket badge stays
-  // roughly live without realtime sockets.
-  useEffect(() => {
-    if (isLoading || !user || !isStaffRole(user.role)) return;
-    let active = true;
-    const refresh = () => {
-      if (document.hidden) return;
-      fetch("/api/admin/me")
-        .then((res) => (res.ok ? res.json() : null))
-        .then((data) => {
-          if (!active || !data) return;
-          if (data.permissions) setPermissions(data.permissions);
-          setCounts(data.counts ?? {});
-        })
-        .catch(() => {});
-    };
-    refresh();
-    const interval = setInterval(refresh, 30000);
-    window.addEventListener("focus", refresh);
-    return () => {
-      active = false;
-      clearInterval(interval);
-      window.removeEventListener("focus", refresh);
-    };
-  }, [isLoading, user]);
 
   if (isLoading) {
     return (
@@ -304,6 +274,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
+    <AdminProvider>
     <div className="min-h-dvh bg-[#F3E9D6]">
 
       {/* ── Mobile backdrop ── */}
@@ -325,8 +296,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <Sidebar
           pathname={pathname}
           user={user}
-          permissions={permissions}
-          counts={counts}
           onClose={() => setSidebarOpen(false)}
         />
       </div>
@@ -358,5 +327,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <main className="flex-1">{children}</main>
       </div>
     </div>
+    </AdminProvider>
   );
 }

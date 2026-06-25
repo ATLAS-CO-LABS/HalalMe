@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
+import { logAdminAction } from "@/lib/adminAudit";
 
 // PATCH /api/admin/users/bulk
 //   { action: "verify" | "unverify" | "suspend" | "activate", ids: string[], reason?: string }
@@ -68,6 +69,12 @@ export async function PATCH(req: NextRequest) {
     console.error("[api/admin/users/bulk] update error", error);
     return NextResponse.json({ error: "Bulk action failed" }, { status: 500 });
   }
+
+  await logAdminAction(gate, {
+    action: `user.bulk_${action}`, module: "users", targetType: "user",
+    summary: `Bulk ${action} on ${eligible.length} user${eligible.length !== 1 ? "s" : ""}`,
+    metadata: { count: eligible.length, ids: eligible, reason: reason ?? null },
+  });
 
   return NextResponse.json({ updated: eligible.length });
 }

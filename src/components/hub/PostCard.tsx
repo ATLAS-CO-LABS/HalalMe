@@ -17,9 +17,12 @@ import {
   Check,
   Trash2,
   X,
+  Flag,
 } from "lucide-react";
 import type { Post } from "@/types";
 import { formatRelativeTime } from "@/lib/relativeTime";
+import { useAuthGate } from "@/hooks/useAuthGate";
+import ReportModal from "@/components/common/ReportModal";
 import Avatar from "./Avatar";
 
 interface PostCardProps {
@@ -43,6 +46,8 @@ export default function PostCard({
 }: PostCardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+  const { requireAuth } = useAuthGate();
 
   const isOwnPost = !!currentUserId && currentUserId === post.user_id;
   const isRecipePost = post.post_type === "recipe";
@@ -132,30 +137,31 @@ export default function PostCard({
           </div>
         </div>
 
-        {/* Three-dot menu - own posts only */}
-        {isOwnPost && (
-          <div className="relative shrink-0">
-            <motion.button
-              onClick={() => {
-                setMenuOpen(!menuOpen);
-                setConfirmingDelete(false);
-              }}
-              className="text-gray-400 hover:text-white p-2 rounded-full hover:bg-gray-700 transition-colors"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-            >
-              <MoreHorizontal className="w-5 h-5" />
-            </motion.button>
+        {/* Three-dot menu — own posts: edit/delete · others: report */}
+        <div className="relative shrink-0">
+          <motion.button
+            onClick={() => {
+              setMenuOpen(!menuOpen);
+              setConfirmingDelete(false);
+            }}
+            aria-label="Post options"
+            className="text-gray-400 hover:text-white p-2 rounded-full hover:bg-gray-700 transition-colors"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            <MoreHorizontal className="w-5 h-5" />
+          </motion.button>
 
-            <AnimatePresence>
-              {menuOpen && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95, y: -8 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: -8 }}
-                  className="absolute right-0 mt-2 w-52 bg-[#0D1012] rounded-xl border border-gray-800 shadow-xl overflow-hidden z-10"
-                >
-                  {!confirmingDelete ? (
+          <AnimatePresence>
+            {menuOpen && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: -8 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: -8 }}
+                className="absolute right-0 mt-2 w-52 bg-[#0D1012] rounded-xl border border-gray-800 shadow-xl overflow-hidden z-10"
+              >
+                {isOwnPost ? (
+                  !confirmingDelete ? (
                     <>
                       <button
                         onClick={() => {
@@ -197,13 +203,32 @@ export default function PostCard({
                         </button>
                       </div>
                     </div>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        )}
+                  )
+                ) : (
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      requireAuth(() => setReportOpen(true), "Sign in to report content");
+                    }}
+                    className="flex items-center gap-3 w-full px-4 py-3 text-left text-red-400 hover:bg-gray-800/60 transition-colors"
+                  >
+                    <Flag className="w-4 h-4" />
+                    <span className="text-sm font-semibold">Report Post</span>
+                  </button>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
+
+      <ReportModal
+        open={reportOpen}
+        onClose={() => setReportOpen(false)}
+        contentType="post"
+        contentId={post.id}
+        contentLabel="post"
+      />
 
       {/* Post Content */}
       <div className="px-4 md:px-5 pb-4">

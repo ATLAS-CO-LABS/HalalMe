@@ -17,7 +17,7 @@ export async function POST(
   if (!gate.ok) return NextResponse.json({ error: gate.error }, { status: gate.status });
   const { serviceClient } = gate;
 
-  let body: { message?: string };
+  let body: { message?: string; internal?: boolean };
   try {
     body = await req.json();
   } catch {
@@ -28,6 +28,9 @@ export async function POST(
   if (!message) {
     return NextResponse.json({ error: "Message is required" }, { status: 400 });
   }
+  // Internal notes are staff-only: stored with is_internal=true (hidden from the
+  // requester by RLS) and never emailed out.
+  const isInternal = body.internal === true;
 
   // Load the conversation + requester for the notification email. A guest ticket
   // has no linked profile — fall back to the typed requester_email/name.
@@ -48,11 +51,17 @@ export async function POST(
     sender_id: gate.userId,
     sender_role: "admin",
     body: message,
+    is_internal: isInternal,
   });
 
   if (msgErr) {
     console.error("[api/admin/support/.../messages] insert error", msgErr);
     return NextResponse.json({ error: "Failed to send reply" }, { status: 500 });
+  }
+
+  // Internal notes are never emailed to the requester.
+  if (isInternal) {
+    return NextResponse.json({ ok: true, internal: true });
   }
 
   // Notify the requester (non-blocking — reply already saved). Prefer the linked

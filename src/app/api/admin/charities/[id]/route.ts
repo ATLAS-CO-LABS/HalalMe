@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
+import { logAdminAction } from "@/lib/adminAudit";
 
 // Editable scalar fields (directory edit form).
 const NUMERIC_FIELDS = ["goal_amount", "minimum_donation", "platform_fee_pct"] as const;
@@ -90,6 +91,12 @@ export async function PATCH(
       notes: typeof body.notes === "string" ? body.notes.trim() || null : null,
     });
 
+    await logAdminAction(gate, {
+      action: suspending ? "charity.suspend" : "charity.reinstate", module: "rewards", targetType: "charity", targetId: id,
+      summary: suspending ? "Suspended charity" : "Reinstated charity",
+      metadata: { from: charity.verification_status, to: update.verification_status },
+    });
+
     return NextResponse.json({ ok: true, verification_status: update.verification_status });
   }
 
@@ -127,6 +134,12 @@ export async function PATCH(
     console.error("[charities PATCH] update error", error);
     return NextResponse.json({ error: "Failed to update charity" }, { status: 500 });
   }
+
+  await logAdminAction(gate, {
+    action: "charity.update", module: "rewards", targetType: "charity", targetId: id,
+    summary: `Updated charity fields: ${Object.keys(update).join(", ")}`,
+    metadata: update,
+  });
 
   return NextResponse.json({ ok: true });
 }

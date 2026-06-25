@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
+import { logAdminAction } from "@/lib/adminAudit";
 
 // GET /api/admin/hub/posts/[id] — full post + author + a sample of recent
 // comments, via service role so admins can preview even hidden posts.
@@ -64,6 +65,12 @@ export async function PATCH(
     return NextResponse.json({ error: "Failed to update post" }, { status: 500 });
   }
 
+  await logAdminAction(gate, {
+    action: body.is_published ? "post.publish" : "post.unpublish", module: "hub", targetType: "post", targetId: id,
+    summary: body.is_published ? "Published post" : "Hid post",
+    metadata: { is_published: body.is_published },
+  });
+
   return NextResponse.json({ ok: true });
 }
 
@@ -83,6 +90,11 @@ export async function DELETE(
     console.error("[api/admin/hub/posts/[id]] delete error", error);
     return NextResponse.json({ error: "Failed to delete post" }, { status: 500 });
   }
+
+  await logAdminAction(gate, {
+    action: "post.delete", module: "hub", targetType: "post", targetId: id,
+    summary: "Deleted post and all its comments/likes",
+  });
 
   return NextResponse.json({ ok: true });
 }

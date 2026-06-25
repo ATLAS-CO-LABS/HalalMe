@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
+import { ilikeTerm } from "@/lib/adminSearch";
 
 const PAGE_SIZE = 25;
 
@@ -42,10 +43,10 @@ export async function GET(req: NextRequest) {
   if (source === "ai") query = query.eq("is_ai_generated", true);
   else if (source === "user") query = query.eq("is_ai_generated", false);
 
-  if (search) {
+  const term = ilikeTerm(search);
+  if (term) {
     // Match the recipe title OR the author's name/username. The author lives in
     // a joined table, so we first resolve matching author ids, then OR them in.
-    const term = `%${search}%`;
     const { data: authors } = await serviceClient
       .from("profiles")
       .select("id")

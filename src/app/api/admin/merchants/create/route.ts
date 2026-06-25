@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
+import { logAdminAction } from "@/lib/adminAudit";
 import { createHyperzodMerchant } from "@/services/hyperzodService";
 
 export async function POST(req: NextRequest) {
@@ -74,6 +75,12 @@ export async function POST(req: NextRequest) {
     console.error("[admin/merchants/create] db insert error", dbError);
     return NextResponse.json({ error: "db_error" }, { status: 500 });
   }
+
+  await logAdminAction(gate, {
+    action: "merchant.create", module: "merchants", targetType: "merchant", targetId: merchant.id,
+    summary: `Added merchant ${name}`,
+    metadata: { name, email, city, hyperzod_sync_failed: !result },
+  });
 
   // No welcome email — an admin-added lead didn't apply themselves.
   return NextResponse.json({

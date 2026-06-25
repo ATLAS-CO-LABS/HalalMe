@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
+import { ilikeTerm } from "@/lib/adminSearch";
+import { logAdminAction } from "@/lib/adminAudit";
 
 const PAGE_SIZE = 25;
 
@@ -36,8 +38,8 @@ export async function GET(req: NextRequest) {
   if (category) {
     query = query.eq("category", category);
   }
-  if (search) {
-    const term = `%${search}%`;
+  const term = ilikeTerm(search);
+  if (term) {
     query = query.or(`name.ilike.${term},legal_name.ilike.${term},registration_number.ilike.${term}`);
   }
 
@@ -161,6 +163,12 @@ export async function POST(req: NextRequest) {
     new_status: "approved",
     source: "admin_manual",
     notes: "Created directly by admin (seed)",
+  });
+
+  await logAdminAction(gate, {
+    action: "charity.create", module: "rewards", targetType: "charity", targetId: charity.id,
+    summary: `Created charity ${name}`,
+    metadata: { name, category, goal_amount: goalAmount },
   });
 
   return NextResponse.json({ ok: true, id: charity.id });

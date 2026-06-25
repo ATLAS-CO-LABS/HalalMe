@@ -6,6 +6,7 @@ import {
 } from "@/services/emailService";
 import { COMMISSION_PROTECTED_THRESHOLD } from "@/lib/merchantStages";
 import { requireAdmin as requireAdminAccess, type AccessLevel } from "@/lib/adminAuth";
+import { logAdminAction } from "@/lib/adminAudit";
 
 // Default shape so a null readiness_checklist isn't clobbered when we tick a flag.
 const DEFAULT_CHECKLIST = {
@@ -17,8 +18,8 @@ const DEFAULT_CHECKLIST = {
 
 async function requireAdmin(level: AccessLevel) {
   const gate = await requireAdminAccess("merchants", level);
-  if (!gate.ok) return { error: gate.error, status: gate.status, service: null, userId: null };
-  return { error: null, status: 200, service: gate.serviceClient, userId: gate.userId };
+  if (!gate.ok) return { error: gate.error, status: gate.status, service: null, userId: null, gate: null };
+  return { error: null, status: 200, service: gate.serviceClient, userId: gate.userId, gate };
 }
 
 // GET → the merchant's commission record (null if they haven't started).
@@ -48,7 +49,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const { error, status, service, userId } = await requireAdmin("manage");
+  const { error, status, service, userId, gate } = await requireAdmin("manage");
   if (error || !service) return NextResponse.json({ error }, { status });
 
   const body = await req.json() as { action?: string; commission?: number; note?: string };
@@ -116,6 +117,12 @@ export async function POST(
       }).catch((err) => console.error("[admin/commission] agreement email failed", err));
     }
 
+    if (gate) await logAdminAction(gate, {
+      action: "merchant.commission_approve", module: "merchants", targetType: "merchant", targetId: id,
+      summary: `Approved commission ${rate}% for ${merchant.name}`,
+      metadata: { rate, requested: row.requested_commission, recommended: row.recommended_commission },
+    });
+
     return NextResponse.json({ ok: true, belowThreshold: rate < COMMISSION_PROTECTED_THRESHOLD });
   }
 
@@ -142,6 +149,12 @@ export async function POST(
       commission: rate,
     }).catch((err) => console.error("[admin/commission] counter email failed", err));
 
+    if (gate) await logAdminAction(gate, {
+      action: "merchant.commission_counter", module: "merchants", targetType: "merchant", targetId: id,
+      summary: `Countered commission at ${rate}% for ${merchant.name}`,
+      metadata: { rate },
+    });
+
     return NextResponse.json({ ok: true });
   }
 
@@ -162,6 +175,12 @@ export async function POST(
       ownerName: merchant.owner_name ?? undefined,
       standardRate: row.recommended_commission,
     }).catch((err) => console.error("[admin/commission] decline email failed", err));
+
+    if (gate) await logAdminAction(gate, {
+      action: "merchant.commission_reject", module: "merchants", targetType: "merchant", targetId: id,
+      summary: `Declined commission review for ${merchant.name} (standard rate stands)`,
+      metadata: { standardRate: row.recommended_commission },
+    });
 
     return NextResponse.json({ ok: true });
   }

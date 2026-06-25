@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { display } from "../../_fonts";
+import { useToast, ToastView } from "../../_ui";
+import { useAdmin } from "../../AdminProvider";
 import {
   ArrowLeft,
   ArrowRight,
@@ -281,16 +283,18 @@ function Skeleton() {
 export default function MerchantDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const { toast, flash } = useToast();
+
+  const { can, team } = useAdmin();
+  const canManage = can("merchants", "manage");
 
   const [merchant, setMerchant] = useState<Merchant | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const [canManage, setCanManage] = useState(false);
 
   // Details form (rep + commission)
   const [assignedRepId, setAssignedRepId] = useState("");
   const [commission, setCommission] = useState("");
-  const [team, setTeam] = useState<{ id: string; full_name: string }[]>([]);
   // Checklist (optimistic, persisted immediately on toggle)
   const [checklist, setChecklist] = useState<ReadinessChecklist>(DEFAULT_CHECKLIST);
 
@@ -371,21 +375,7 @@ export default function MerchantDetailPage() {
 
   useEffect(() => { loadDocuments(); }, [loadDocuments]);
 
-  // Viewer's merchants access — controls whether manage actions are shown.
-  useEffect(() => {
-    fetch("/api/admin/me")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => setCanManage(d?.permissions?.merchants === "manage"))
-      .catch(() => {});
-  }, []);
-
-  // Team members for the rep-assignment picker.
-  useEffect(() => {
-    fetch("/api/admin/team")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => { if (d?.team) setTeam(d.team); })
-      .catch(() => {});
-  }, []);
+  // (Manage-access + team roster now come from the shared admin context — useAdmin().)
 
   async function reviewDocument(docId: string, action: "approve" | "reject", reason?: string) {
     if (!canManage) return;
@@ -398,14 +388,14 @@ export default function MerchantDetailPage() {
       });
       if (!res.ok) {
         const json = await res.json().catch(() => ({})) as { error?: string };
-        alert(json.error ?? "Couldn't update the document. Please try again.");
+        flash("err", json.error ?? "Couldn't update the document. Please try again.");
         return;
       }
       setRejectingId(null);
       setRejectReason("");
       await loadDocuments();
     } catch {
-      alert("Something went wrong. Please try again.");
+      flash("err", "Something went wrong. Please try again.");
     } finally {
       setReviewingId(null);
     }
@@ -507,7 +497,7 @@ export default function MerchantDetailPage() {
       if (json.merchant) setMerchant(json.merchant);
       if (json.warning) {
         // Saved locally but Hyperzod sync failed — surface, keep modal closable
-        alert(json.warning);
+        flash("err", json.warning);
       }
       setShowEdit(false);
     } catch {
@@ -532,7 +522,7 @@ export default function MerchantDetailPage() {
       setMerchant(m);
       setConfirmingReject(false);
     } catch {
-      alert("Couldn't update the stage. Please try again.");
+      flash("err", "Couldn't update the stage. Please try again.");
     } finally {
       setTransitioning(false);
     }
@@ -546,13 +536,13 @@ export default function MerchantDetailPage() {
       const res = await fetch(`/api/admin/merchants/${id}/deactivate`, { method: "POST" });
       const json = await res.json() as { merchant?: Merchant; message?: string };
       if (!res.ok) {
-        alert(json.message ?? "Couldn't deactivate. Please try again.");
+        flash("err", json.message ?? "Couldn't deactivate. Please try again.");
         return;
       }
       if (json.merchant) setMerchant(json.merchant);
       setConfirmingDeactivate(false);
     } catch {
-      alert("Something went wrong. Please try again.");
+      flash("err", "Something went wrong. Please try again.");
     } finally {
       setDeactivating(false);
     }
@@ -574,7 +564,7 @@ export default function MerchantDetailPage() {
       setMerchant(m);
     } catch {
       setChecklist(checklist); // revert on failure
-      alert("Couldn't save that change. Please try again.");
+      flash("err", "Couldn't save that change. Please try again.");
     }
   }
 
@@ -593,7 +583,7 @@ export default function MerchantDetailPage() {
       setMerchant(m);
       setNote("");
     } catch {
-      alert("Failed to save note — please try again.");
+      flash("err", "Failed to save note — please try again.");
     } finally {
       setAddingNote(false);
     }
@@ -673,6 +663,7 @@ export default function MerchantDetailPage() {
 
   return (
     <div className="bg-[#F3E9D6] min-h-full">
+      <ToastView toast={toast} />
 
       {/* ── Header ── */}
       <div className="bg-white border-b border-[#102C26]/12 px-4 sm:px-8 py-3 sm:py-4 sticky top-14 md:top-0 z-20">

@@ -3,12 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import {
   Search, RefreshCw, AlertCircle, ChefHat, BadgeCheck, Sparkles, Star, EyeOff, Eye,
-  MoreVertical, Trash2, Loader2, Bot, Users, TrendingUp, CheckSquare, X, FileText, Clock,
+  MoreVertical, Trash2, Loader2, Bot, Users, TrendingUp, CheckSquare, X, FileText, Clock, Flag,
 } from "lucide-react";
 import { display } from "../_fonts";
 import {
-  fmtDate, useToast, ToastView, StatCard, TableSkeleton, EmptyState, Pagination, FilterPills, Badge,
+  fmtDate, useToast, ToastView, StatCard, TableSkeleton, EmptyState, Pagination, FilterPills, Badge, Modal,
 } from "../_ui";
+import ReportsQueue from "../_ReportsQueue";
 
 type Author = { id: string; full_name?: string; username?: string } | { id: string; full_name?: string; username?: string }[] | null;
 function oneAuthor(a: Author) { return Array.isArray(a) ? a[0] : a; }
@@ -72,6 +73,7 @@ const SOURCE_FILTERS = [
 
 export default function KitchenPage() {
   const { toast, flash } = useToast();
+  const [tab, setTab] = useState<"recipes" | "reported">("recipes");
   const [rows, setRows] = useState<RecipeRow[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [total, setTotal] = useState(0);
@@ -219,24 +221,18 @@ export default function KitchenPage() {
     if (ids.length === 0) return;
     setBulkBusy(action);
     try {
-      const results = await Promise.allSettled(ids.map((id) => {
-        if (action === "delete") return fetch(`/api/admin/recipes/${id}`, { method: "DELETE" });
-        const body =
-          action === "publish" ? { is_published: true }
-          : action === "unpublish" ? { is_published: false }
-          : action === "feature" ? { is_featured: true }
-          : action === "unfeature" ? { is_featured: false }
-          : { is_halal_verified: true };
-        return fetch(`/api/admin/recipes/${id}`, {
-          method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
-        });
-      }));
-      const ok = results.filter((r) => r.status === "fulfilled" && (r.value as Response).ok).length;
-      const failed = ids.length - ok;
-      flash(failed === 0 ? "ok" : "err", `${ok} updated${failed ? `, ${failed} failed` : ""}.`);
+      const res = await fetch("/api/admin/recipes/bulk", {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, ids }),
+      });
+      if (!res.ok) throw new Error();
+      const json = await res.json() as { updated: number };
+      flash("ok", `${json.updated} recipe${json.updated !== 1 ? "s" : ""} ${action === "delete" ? "deleted" : "updated"}.`);
       setSelectedIds(new Set());
       setBulkDelete(false);
       fetchRows(page, published, halal, source, search);
+    } catch {
+      flash("err", "Bulk action failed.");
     } finally {
       setBulkBusy(null);
     }
@@ -262,6 +258,25 @@ export default function KitchenPage() {
         </button>
       </div>
 
+      {/* Recipes / Reported toggle */}
+      <div className="bg-white border-b border-[#102C26]/12 px-4 sm:px-8">
+        <div className="flex items-center gap-0.5 -mb-px">
+          {([["recipes", "Recipes", ChefHat], ["reported", "Reported", Flag]] as const).map(([key, label, Icon]) => {
+            const active = tab === key;
+            return (
+              <button key={key} onClick={() => setTab(key)}
+                className={`flex items-center gap-2 px-3.5 py-2.5 text-sm font-semibold whitespace-nowrap border-b-2 transition-colors ${active ? "border-[#F59E0B] text-[#102C26]" : "border-transparent text-gray-500 hover:text-[#102C26]"}`}>
+                <Icon size={15} className={active ? "text-[#F59E0B]" : ""} /> {label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {tab === "reported" ? (
+        <div className="px-4 sm:px-8 py-5"><ReportsQueue type="recipe" /></div>
+      ) : (
+      <>
       {/* Stat cards */}
       <div className="px-4 sm:px-8 pt-5">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -426,6 +441,8 @@ export default function KitchenPage() {
           )}
         </div>
       </div>
+      </>
+      )}
 
       {/* Row action menu */}
       {menu && (
@@ -455,24 +472,22 @@ export default function KitchenPage() {
 
       {/* Delete confirm */}
       {modal && (
-        <div className="fixed inset-0 z-55 bg-black/40 flex items-center justify-center p-4" onClick={() => !modalBusy && setModal(null)}>
-          <div className="bg-white rounded-none border border-[#102C26]/15 shadow-2xl w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-none flex items-center justify-center shrink-0 bg-red-50 text-red-600"><Trash2 size={18} /></div>
-              <div className="min-w-0">
-                <h3 className={`${display.className} text-lg font-bold text-[#102C26]`}>Delete recipe?</h3>
-                <p className="text-sm text-gray-600 mt-1">This permanently removes <span className="font-semibold">{modal.title}</span> and all of its reviews and favourites. This cannot be undone.</p>
-              </div>
-            </div>
-            <div className="mt-5 flex items-center justify-end gap-2">
-              <button onClick={() => setModal(null)} disabled={modalBusy} className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">Cancel</button>
-              <button onClick={confirmDelete} disabled={modalBusy}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-bold uppercase tracking-tight text-white rounded-none disabled:opacity-50 bg-red-600 hover:bg-red-700 transition-colors">
-                {modalBusy ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />} Delete
-              </button>
+        <Modal open busy={modalBusy} onClose={() => setModal(null)} labelledBy="kitchen-del-title" describedBy="kitchen-del-desc" className="p-6">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-none flex items-center justify-center shrink-0 bg-red-50 text-red-600"><Trash2 size={18} /></div>
+            <div className="min-w-0">
+              <h3 id="kitchen-del-title" className={`${display.className} text-lg font-bold text-[#102C26]`}>Delete recipe?</h3>
+              <p id="kitchen-del-desc" className="text-sm text-gray-600 mt-1">This permanently removes <span className="font-semibold">{modal.title}</span> and all of its reviews and favourites. This cannot be undone.</p>
             </div>
           </div>
-        </div>
+          <div className="mt-5 flex items-center justify-end gap-2">
+            <button onClick={() => setModal(null)} disabled={modalBusy} className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">Cancel</button>
+            <button onClick={confirmDelete} disabled={modalBusy}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-bold uppercase tracking-tight text-white rounded-none disabled:opacity-50 bg-red-600 hover:bg-red-700 transition-colors">
+              {modalBusy ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />} Delete
+            </button>
+          </div>
+        </Modal>
       )}
 
       {/* Recipe preview */}

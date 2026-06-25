@@ -4,10 +4,11 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
-  ArrowLeft, Loader2, Send, Store, User as UserIcon, ExternalLink, Mail, AlertCircle,
+  ArrowLeft, Loader2, Send, Store, User as UserIcon, ExternalLink, Mail, AlertCircle, Lock,
 } from "lucide-react";
 import { display } from "../../_fonts";
 import { useToast, ToastView, Badge } from "../../_ui";
+import { useAdmin } from "../../AdminProvider";
 import ThemedSelect from "@/components/admin/ThemedSelect";
 
 type Ref = { id: string; full_name?: string | null; username?: string | null; avatar_url?: string | null; email?: string | null };
@@ -21,6 +22,7 @@ interface Message {
   sender_role: "user" | "admin";
   body: string;
   created_at: string;
+  is_internal?: boolean;
   sender: Ref | Ref[] | null;
 }
 interface Conversation {
@@ -37,7 +39,6 @@ interface Conversation {
   assignee: Ref | Ref[] | null;
   merchant: MerchantRef | MerchantRef[] | null;
 }
-interface TeamMember { id: string; full_name?: string | null; email?: string | null }
 
 const STATUS_TONE: Record<Conversation["status"], "amber" | "blue" | "green" | "gray"> = {
   open: "amber", pending: "blue", resolved: "green", closed: "gray",
@@ -62,15 +63,16 @@ export default function AdminThreadPage() {
   const { id } = useParams<{ id: string }>();
   const { toast, flash } = useToast();
 
+  const { team } = useAdmin();
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [canManage, setCanManage] = useState(false);
   const [evermileUrl, setEvermileUrl] = useState<string | null>(null);
-  const [team, setTeam] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
   const [reply, setReply] = useState("");
+  const [replyInternal, setReplyInternal] = useState(false);
   const [sending, setSending] = useState(false);
   const [savingField, setSavingField] = useState<string | null>(null);
   const [deliveryRef, setDeliveryRef] = useState("");
@@ -110,13 +112,6 @@ export default function AdminThreadPage() {
     return () => { clearInterval(interval); window.removeEventListener("focus", tick); };
   }, [load]);
 
-  useEffect(() => {
-    fetch("/api/admin/team")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => { if (d?.team) setTeam(d.team); })
-      .catch(() => {});
-  }, []);
-
   useEffect(() => { bottomRef.current?.scrollIntoView(); }, [messages]);
 
   async function patch(body: Record<string, unknown>, field: string) {
@@ -140,10 +135,11 @@ export default function AdminThreadPage() {
     setSending(true);
     try {
       const res = await fetch(`/api/admin/support/conversations/${id}/messages`, {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: m }),
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: m, internal: replyInternal }),
       });
       if (!res.ok) { const j = await res.json().catch(() => null); flash("err", j?.error ?? "Could not send reply."); return; }
       setReply("");
+      flash("ok", replyInternal ? "Internal note added." : "Reply sent.");
       await load();
     } finally {
       setSending(false);
@@ -213,6 +209,21 @@ export default function AdminThreadPage() {
             {messages.map((msg) => {
               const isAdmin = msg.sender_role === "admin";
               const s = one(msg.sender);
+              // Internal notes are staff-only — render as a centred amber card so
+              // they're visually distinct from the customer-facing thread.
+              if (msg.is_internal) {
+                return (
+                  <div key={msg.id} className="flex justify-center">
+                    <div className="max-w-[85%] w-full px-4 py-3 rounded-none bg-amber-50 border border-amber-200 border-l-4 border-l-amber-400">
+                      <p className="text-[10px] font-bold uppercase tracking-wider mb-1 text-amber-700 flex items-center gap-1.5">
+                        <Lock size={11} /> Internal note · {s?.full_name ?? "Staff"}
+                      </p>
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed text-amber-900">{msg.body}</p>
+                      <p className="mt-1.5 text-[10px] text-amber-600/70">{fmtTime(msg.created_at)} · only your team can see this</p>
+                    </div>
+                  </div>
+                );
+              }
               return (
                 <div key={msg.id} className={`flex ${isAdmin ? "justify-end" : "justify-start"}`}>
                   <div className={`max-w-[80%] px-4 py-3 rounded-none ${isAdmin ? "bg-[#102C26] text-[#F7E7CE]" : "bg-gray-100 text-gray-900"}`}>
@@ -230,18 +241,22 @@ export default function AdminThreadPage() {
 
           {/* Reply */}
           {canManage ? (
-            <form onSubmit={handleSend} className="border-t border-[#102C26]/8 p-4">
+            <form onSubmit={handleSend} className={`border-t p-4 transition-colors ${replyInternal ? "border-amber-200 bg-amber-50/40" : "border-[#102C26]/8"}`}>
               <textarea
                 value={reply}
                 onChange={(e) => setReply(e.target.value)}
                 rows={3}
-                placeholder="Type your reply…"
-                className="w-full px-3 py-2.5 text-sm text-gray-900 border border-gray-200 bg-gray-50 rounded-none focus:outline-none focus:ring-2 focus:ring-[#102C26]/15 focus:border-[#102C26] focus:bg-white placeholder:text-gray-500 resize-none transition-colors"
+                placeholder={replyInternal ? "Write a private note for your team…" : "Type your reply…"}
+                className={`w-full px-3 py-2.5 text-sm text-gray-900 border bg-gray-50 rounded-none focus:outline-none focus:ring-2 focus:bg-white placeholder:text-gray-500 resize-none transition-colors ${replyInternal ? "border-amber-300 focus:ring-amber-400/30 focus:border-amber-500" : "border-gray-200 focus:ring-[#102C26]/15 focus:border-[#102C26]"}`}
               />
-              <div className="mt-3 flex justify-end">
+              <div className="mt-3 flex items-center justify-between gap-3 flex-wrap">
+                <button type="button" onClick={() => setReplyInternal((v) => !v)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-none text-xs font-semibold border transition-colors ${replyInternal ? "bg-amber-100 border-amber-300 text-amber-800" : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"}`}>
+                  <Lock size={13} /> {replyInternal ? "Internal note" : "Reply to customer"}
+                </button>
                 <button type="submit" disabled={sending || !reply.trim()}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#102C26] text-[#F7E7CE] rounded-none text-sm font-bold uppercase tracking-tight hover:bg-[#102C26]/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-                  {sending ? <Loader2 size={14} className="animate-spin" /> : <><Send size={14} /> Send reply</>}
+                  className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-none text-sm font-bold uppercase tracking-tight disabled:opacity-40 disabled:cursor-not-allowed transition-colors ${replyInternal ? "bg-amber-600 text-white hover:bg-amber-700" : "bg-[#102C26] text-[#F7E7CE] hover:bg-[#102C26]/90"}`}>
+                  {sending ? <Loader2 size={14} className="animate-spin" /> : replyInternal ? <><Lock size={14} /> Add note</> : <><Send size={14} /> Send reply</>}
                 </button>
               </div>
             </form>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { CheckCircle2, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { display } from "./_fonts";
 
@@ -119,6 +119,110 @@ export function FilterPills({ options, value, onChange }: {
         <button key={key} onClick={() => onChange(key)}
           className={`px-3 py-1.5 rounded-none text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${value === key ? "bg-[#102C26] text-[#F7E7CE]" : "text-gray-600 hover:text-[#102C26] hover:bg-[#102C26]/8"}`}>{label}</button>
       ))}
+    </div>
+  );
+}
+
+// ─── Accessible modal ──────────────────────────────────────────────────────────
+// One dialog primitive for the admin panel: backdrop + centred card with proper
+// dialog semantics (role="dialog", aria-modal), Escape-to-close, a focus trap,
+// and focus restore to the trigger on close. Pass `labelledBy` = the id of the
+// heading inside, and `describedBy` for the body text, so screen readers announce
+// the dialog. `onClose` fires on Escape and backdrop click (not while `busy`).
+export function Modal({
+  open,
+  onClose,
+  labelledBy,
+  describedBy,
+  maxWidth = "max-w-md",
+  busy = false,
+  className = "",
+  children,
+}: {
+  open: boolean;
+  onClose: () => void;
+  labelledBy?: string;
+  describedBy?: string;
+  maxWidth?: string;
+  busy?: boolean;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  // Latest onClose/busy held in refs so the focus-trap effect can depend on
+  // `open` alone — re-running it on every render would steal focus mid-typing.
+  const onCloseRef = useRef(onClose);
+  const busyRef = useRef(busy);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+    busyRef.current = busy;
+  });
+
+  useEffect(() => {
+    if (!open) return;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const panel = panelRef.current;
+
+    const getFocusable = () =>
+      Array.from(
+        panel?.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ) ?? [],
+      ).filter((el) => el.offsetParent !== null);
+
+    // Focus the first field/control inside the dialog.
+    requestAnimationFrame(() => {
+      const items = getFocusable();
+      (items[0] ?? panel)?.focus();
+    });
+
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        if (!busyRef.current) onCloseRef.current();
+        return;
+      }
+      if (e.key === "Tab") {
+        const items = getFocusable();
+        if (items.length === 0) { e.preventDefault(); return; }
+        const first = items[0];
+        const last = items[items.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+
+    document.addEventListener("keydown", onKeyDown, true);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown, true);
+      previouslyFocused?.focus?.();
+    };
+  }, [open]);
+
+  if (!open) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-60 bg-black/40 flex items-center justify-center p-4"
+      onClick={() => { if (!busy) onClose(); }}
+    >
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={labelledBy}
+        aria-describedby={describedBy}
+        tabIndex={-1}
+        onClick={(e) => e.stopPropagation()}
+        className={`bg-white rounded-none border border-[#102C26]/15 shadow-2xl w-full ${maxWidth} focus:outline-none ${className}`}
+      >
+        {children}
+      </div>
     </div>
   );
 }

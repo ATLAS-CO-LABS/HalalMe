@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
+import { logAdminAction } from "@/lib/adminAudit";
 
 // DELETE /api/admin/hub/comments/[id] — delete a comment (cascades to replies
 // via the parent_id self-FK ON DELETE CASCADE). Manage-only.
@@ -17,6 +18,11 @@ export async function DELETE(
     console.error("[api/admin/hub/comments/[id]] delete error", error);
     return NextResponse.json({ error: "Failed to delete comment" }, { status: 500 });
   }
+
+  await logAdminAction(gate, {
+    action: "comment.delete", module: "hub", targetType: "comment", targetId: id,
+    summary: "Deleted comment and any replies",
+  });
 
   return NextResponse.json({ ok: true });
 }

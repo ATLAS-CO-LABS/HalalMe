@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
+import { ilikeTerm } from "@/lib/adminSearch";
 
 const PAGE_SIZE = 25;
 
@@ -28,9 +29,9 @@ export async function GET(req: NextRequest) {
     .order("created_at", { ascending: false })
     .range(from, to);
 
-  if (search) {
+  const term = ilikeTerm(search);
+  if (term) {
     // Match comment content OR the author's name/username.
-    const term = `%${search}%`;
     const { data: authors } = await serviceClient
       .from("profiles")
       .select("id")

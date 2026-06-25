@@ -6,6 +6,8 @@ import { display } from "../_fonts";
 import AddMerchantModal from "@/components/admin/AddMerchantModal";
 import { getFollowUp } from "@/lib/followUps";
 import ThemedSelect from "@/components/admin/ThemedSelect";
+import { Pagination, useToast, ToastView } from "../_ui";
+import { useAdmin } from "../AdminProvider";
 import {
   Search,
   RefreshCw,
@@ -49,11 +51,15 @@ interface Merchant {
   commission_review_status: string | null;
 }
 
-interface TeamMember {
-  id: string;
-  full_name: string;
-  email: string | null;
-  role: string;
+interface PipelineStats {
+  total: number;
+  byStatus: Record<string, number>;
+  live: number;
+  newThisWeek: number;
+  topCities: [string, number][];
+  recent: { id: string; name: string; created_at: string }[];
+  attention: { count: number; ids: string[] };
+  reviewPending: { count: number; ids: string[] };
 }
 
 // Small badge for a merchant's commission-review state on the list.
@@ -288,8 +294,12 @@ function StatCard({ label, value, sub, icon: Icon, tone, onClick, active }: {
 
 export default function MerchantPipelinePage() {
   const router = useRouter();
+  const { toast, flash } = useToast();
   const [merchants, setMerchants] = useState<Merchant[]>([]);
-  const [allMerchants, setAllMerchants] = useState<Merchant[]>([]);
+  const [stats, setStats] = useState<PipelineStats | null>(null);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(25);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState("all");
@@ -306,23 +316,39 @@ export default function MerchantPipelinePage() {
   const [showAdd, setShowAdd] = useState(false);
   const [attentionOnly, setAttentionOnly] = useState(false);
   const [reviewOnly, setReviewOnly] = useState(false);
-  const [canManage, setCanManage] = useState(false);
-  const [team, setTeam] = useState<TeamMember[]>([]);
   const [mineOnly, setMineOnly] = useState(false);
 
-  async function fetchMerchants(status: string, q: string, mine: boolean) {
+  // Identity, manage-access and the team roster all come from the shared admin
+  // context (loaded once by the layout), not per-page fetches.
+  const { can, team } = useAdmin();
+  const canManage = can("merchants", "manage");
+
+  // Load the paginated table for the current view. The "needs attention" and
+  // "commission review" views fetch a specific id-set (computed by the stats
+  // endpoint); every other view is server-paginated by status/search.
+  async function fetchMerchants(
+    status: string, q: string, mine: boolean, pageNum: number,
+    attention: boolean, review: boolean, statsData: PipelineStats | null,
+  ) {
     setLoading(true);
     setError(null);
     try {
       const params = new URLSearchParams();
-      if (status !== "all") params.set("status", status);
-      if (q) params.set("search", q);
       if (mine) params.set("mine", "1");
+      if (attention || review) {
+        const ids = attention ? statsData?.attention.ids : statsData?.reviewPending.ids;
+        params.set("ids", (ids ?? []).join(","));
+      } else {
+        if (status !== "all") params.set("status", status);
+        if (q) params.set("search", q);
+        params.set("page", String(pageNum));
+      }
       const res = await fetch(`/api/admin/merchants?${params}`);
       if (!res.ok) throw new Error();
-      const json = await res.json() as { merchants: Merchant[] };
+      const json = await res.json() as { merchants: Merchant[]; total: number; pageSize: number };
       setMerchants(json.merchants);
-      if (status === "all" && !q) setAllMerchants(json.merchants);
+      setTotal(json.total);
+      setPageSize(json.pageSize);
     } catch {
       setError("Could not load merchants. Try refreshing.");
     } finally {
@@ -330,64 +356,66 @@ export default function MerchantPipelinePage() {
     }
   }
 
-  function refreshAll() {
-    fetch(`/api/admin/merchants${mineOnly ? "?mine=1" : ""}`)
-      .then((r) => r.json())
-      .then((d: { merchants: Merchant[] }) => setAllMerchants(d.merchants))
-      .catch(() => {});
+  async function fetchStats(mine: boolean) {
+    try {
+      const res = await fetch(`/api/admin/merchants/stats${mine ? "?mine=1" : ""}`);
+      if (!res.ok) return;
+      setStats(await res.json() as PipelineStats);
+    } catch {
+      // Non-fatal — the table still works without the rail aggregates.
+    }
   }
 
-  useEffect(() => {
-    fetchMerchants(statusFilter, search, mineOnly);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter, mineOnly]);
+  // Re-load both the table and the aggregates (after a mutation / manual refresh).
+  function reload() {
+    fetchMerchants(statusFilter, search, mineOnly, page, attentionOnly, reviewOnly, stats);
+    fetchStats(mineOnly);
+  }
 
+  // In the id-set views the table refetches when the computed ids change; in the
+  // normal view this key stays empty so stat refreshes don't retrigger the table.
+  const viewIdsKey = attentionOnly
+    ? (stats?.attention.ids.join(",") ?? "")
+    : reviewOnly
+    ? (stats?.reviewPending.ids.join(",") ?? "")
+    : "";
+
+  // Aggregates — on mount and when the scope (mine) changes.
   useEffect(() => {
-    refreshAll();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    fetchStats(mineOnly);
   }, [mineOnly]);
-  useEffect(() => { setSelectedIds(new Set()); }, [statusFilter, search]);
 
-  // Viewer's merchants access — controls whether manage actions are shown.
+  // Table — reacts to filters, page and the active id-set view.
   useEffect(() => {
-    fetch("/api/admin/me")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => setCanManage(d?.permissions?.merchants === "manage"))
-      .catch(() => {});
-  }, []);
+    fetchMerchants(statusFilter, search, mineOnly, page, attentionOnly, reviewOnly, stats);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter, mineOnly, page, attentionOnly, reviewOnly, viewIdsKey]);
 
-  // Team members for the rep-assignment picker.
-  useEffect(() => {
-    fetch("/api/admin/team")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => { if (d?.team) setTeam(d.team); })
-      .catch(() => {});
-  }, []);
+  // Reset to the first page whenever the filter context changes.
+  useEffect(() => { setPage(0); }, [statusFilter, mineOnly, attentionOnly, reviewOnly]);
+  useEffect(() => { setSelectedIds(new Set()); }, [statusFilter, search, page, attentionOnly, reviewOnly]);
 
   function handleSearchChange(val: string) {
     setSearch(val);
+    // In the id-set views search filters the loaded rows client-side (below).
+    if (attentionOnly || reviewOnly) return;
     if (searchTimer.current) clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => fetchMerchants(statusFilter, val, mineOnly), 300);
+    searchTimer.current = setTimeout(() => {
+      setPage(0);
+      fetchMerchants(statusFilter, val, mineOnly, 0, false, false, stats);
+    }, 300);
   }
 
-  // Merchants that need follow-up (across all statuses)
-  const attentionMerchants = allMerchants.filter((m) => getFollowUp(m) !== null);
+  const reviewPendingCount = stats?.reviewPending.count ?? 0;
 
-  // Merchants waiting on a commission decision (pending review), across all statuses.
-  const reviewMerchants = allMerchants.filter((m) => m.commission_review_status === "pending");
-  const reviewPendingCount = reviewMerchants.length;
-
-  // What the table renders: overdue-only / review-only filters override the status list.
+  // In the id-set views (attention / review), the small returned set is filtered
+  // by search client-side; the normal view already had search applied server-side.
   const matchesSearch = (m: Merchant) => {
     if (!search) return true;
     const q = search.toLowerCase();
     return m.name.toLowerCase().includes(q) || m.email.toLowerCase().includes(q);
   };
-  const displayed = attentionOnly
-    ? attentionMerchants.filter(matchesSearch)
-    : reviewOnly
-    ? reviewMerchants.filter(matchesSearch)
-    : merchants;
+  const displayed = (attentionOnly || reviewOnly) ? merchants.filter(matchesSearch) : merchants;
 
   // Selection helpers
   const selectedPendingCount = displayed.filter((m) => selectedIds.has(m.id) && m.status === "pending").length;
@@ -421,10 +449,9 @@ export default function MerchantPipelinePage() {
       const json = await res.json() as { updated: number };
       setBulkResult({ action, count: json.updated });
       clearSelection();
-      await fetchMerchants(statusFilter, search, mineOnly);
-      refreshAll();
+      reload();
     } catch {
-      alert("Bulk action failed. Please try again.");
+      flash("err", "Bulk action failed. Please try again.");
     } finally {
       setBulkBusy(null);
     }
@@ -450,38 +477,31 @@ export default function MerchantPipelinePage() {
   }
 
   function getCount(key: string) {
-    return key === "all" ? allMerchants.length : allMerchants.filter((m) => m.status === key).length;
+    return key === "all" ? (stats?.total ?? 0) : (stats?.byStatus[key] ?? 0);
   }
 
-  // ── Derived stats / rail data ─────────────────────────────────────────────
-  const total = allMerchants.length;
-  const liveCount = allMerchants.filter((m) => m.status === "live").length;
-  const urgentCount = attentionMerchants.length;
-  const newThisWeek = allMerchants.filter((m) => daysSince(m.created_at) <= 7).length;
+  // ── Derived stats / rail data (from the aggregate endpoint) ───────────────
+  const statTotal = stats?.total ?? 0;
+  const liveCount = stats?.live ?? 0;
+  const urgentCount = stats?.attention.count ?? 0;
+  const newThisWeek = stats?.newThisWeek ?? 0;
 
   const pipeline = PIPELINE_ORDER.map((key) => ({
     key,
-    count: allMerchants.filter((m) => m.status === key).length,
+    count: stats?.byStatus[key] ?? 0,
     hex: STATUS_CONFIG[key].hex,
     label: STATUS_CONFIG[key].label,
   }));
 
-  const topCities = Object.entries(
-    allMerchants.reduce<Record<string, number>>((acc, m) => {
-      const c = m.city?.trim();
-      if (c) acc[c] = (acc[c] ?? 0) + 1;
-      return acc;
-    }, {})
-  ).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const topCities = stats?.topCities ?? [];
 
-  const recentActivity = [...allMerchants]
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    .slice(0, 4);
+  const recentActivity = stats?.recent ?? [];
 
   const navigate = (id: string) => router.push(`/admin/merchants/${id}`);
 
   return (
     <div className="bg-[#F3E9D6] min-h-full">
+      <ToastView toast={toast} />
 
       {/* ── Header ── */}
       <div className="bg-white border-b border-[#102C26]/12 px-4 sm:px-8 py-4 sm:py-5 flex items-center justify-between gap-4">
@@ -502,7 +522,7 @@ export default function MerchantPipelinePage() {
             <span className="hidden sm:inline">Export</span>
           </button>
           <button
-            onClick={() => { fetchMerchants(statusFilter, search, mineOnly); refreshAll(); }}
+            onClick={reload}
             className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#102C26]/70 bg-[#102C26]/5 border border-[#102C26]/15 rounded-none hover:bg-[#102C26]/10 transition-colors"
             title="Refresh"
           >
@@ -530,14 +550,14 @@ export default function MerchantPipelinePage() {
       {/* ── Stat cards ── */}
       <div className="px-4 sm:px-8 pt-5">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <StatCard label="Total Merchants" value={total} sub="All time" icon={Store} tone="green" />
+          <StatCard label="Total Merchants" value={statTotal} sub="All time" icon={Store} tone="green" />
           <StatCard label="Needs Attention" value={urgentCount}
             sub={attentionOnly ? "Showing — click to clear" : urgentCount ? "Click to review" : "All caught up"}
             icon={AlertCircle} tone="amber"
             active={attentionOnly}
             onClick={() => { setAttentionOnly((v) => !v); setReviewOnly(false); }} />
           <StatCard label="Active (Live)" value={liveCount}
-            sub={total ? `${Math.round((liveCount / total) * 100)}% of total` : "—"} icon={Activity} tone="green" />
+            sub={statTotal ? `${Math.round((liveCount / statTotal) * 100)}% of total` : "—"} icon={Activity} tone="green" />
           <StatCard label="New This Week" value={newThisWeek} sub="Registered ≤ 7 days" icon={Sparkles} tone="purple" />
         </div>
       </div>
@@ -813,11 +833,20 @@ export default function MerchantPipelinePage() {
                   </tbody>
                 </table>
 
-                {/* Footer count */}
-                <div className="px-5 py-3 border-t border-[#102C26]/8 text-xs text-gray-400">
-                  Showing {displayed.length} merchant{displayed.length !== 1 ? "s" : ""}
-                  {attentionOnly ? " · needs attention" : reviewOnly ? " · commission reviews pending" : statusFilter !== "all" ? ` · filtered by ${STATUS_CONFIG[statusFilter]?.label ?? statusFilter}` : ""}
-                </div>
+                {/* Footer — id-set views show a simple count; the paginated
+                    status/search view gets full pagination controls. */}
+                {(attentionOnly || reviewOnly) ? (
+                  <div className="px-5 py-3 border-t border-[#102C26]/8 text-xs text-gray-400">
+                    Showing {displayed.length} merchant{displayed.length !== 1 ? "s" : ""}
+                    {attentionOnly ? " · needs attention" : " · commission reviews pending"}
+                  </div>
+                ) : (
+                  <Pagination
+                    page={page} pageSize={pageSize} total={total} noun="merchant"
+                    onPrev={() => setPage((p) => Math.max(0, p - 1))}
+                    onNext={() => setPage((p) => p + 1)}
+                  />
+                )}
               </>
             )}
           </div>
@@ -830,14 +859,14 @@ export default function MerchantPipelinePage() {
           <div className="bg-white rounded-none border border-[#102C26]/12 p-5">
             <h3 className={`${display.className} text-[13px] font-extrabold uppercase tracking-wide text-[#102C26] mb-4`}>Pipeline Overview</h3>
             <div className="flex items-center gap-5">
-              <Donut segments={pipeline} total={total} />
+              <Donut segments={pipeline} total={statTotal} />
               <div className="flex-1 min-w-0 space-y-1.5">
                 {pipeline.map((s) => (
                   <div key={s.key} className="flex items-center gap-2 text-xs">
                     <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: s.hex }} />
                     <span className="text-gray-600 flex-1 truncate">{s.label}</span>
                     <span className="font-semibold text-gray-900 tabular-nums">{s.count}</span>
-                    <span className="text-gray-400 tabular-nums w-9 text-right">{total ? Math.round((s.count / total) * 100) : 0}%</span>
+                    <span className="text-gray-400 tabular-nums w-9 text-right">{statTotal ? Math.round((s.count / statTotal) * 100) : 0}%</span>
                   </div>
                 ))}
               </div>
@@ -858,10 +887,10 @@ export default function MerchantPipelinePage() {
                   <div key={city}>
                     <div className="flex items-center justify-between text-xs mb-1">
                       <span className="text-gray-700 font-medium truncate">{city}</span>
-                      <span className="text-gray-400">{count} · {Math.round((count / total) * 100)}%</span>
+                      <span className="text-gray-400">{count} · {Math.round((count / statTotal) * 100)}%</span>
                     </div>
                     <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-[#102C26] rounded-full" style={{ width: `${(count / total) * 100}%` }} />
+                      <div className="h-full bg-[#102C26] rounded-full" style={{ width: `${(count / statTotal) * 100}%` }} />
                     </div>
                   </div>
                 ))}

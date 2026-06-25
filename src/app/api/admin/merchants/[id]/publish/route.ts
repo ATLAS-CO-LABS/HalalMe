@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { updateHyperzodMerchant } from "@/services/hyperzodService";
 import { sendMerchantLiveEmail } from "@/services/emailService";
 import { requireAdmin } from "@/lib/adminAuth";
+import { logAdminAction } from "@/lib/adminAudit";
 
 const CHECKLIST_KEYS = [
   "invite_accepted",
@@ -98,6 +99,12 @@ export async function POST(
       { status: 500 }
     );
   }
+
+  await logAdminAction(gate, {
+    action: "merchant.publish", module: "merchants", targetType: "merchant", targetId: id,
+    summary: `Published ${merchant.name} live on Hyperzod`,
+    metadata: { commission_percentage: merchant.commission_percentage },
+  });
 
   // ── Email #4 — fire-and-forget ─────────────────────────────────────────────
   sendMerchantLiveEmail({

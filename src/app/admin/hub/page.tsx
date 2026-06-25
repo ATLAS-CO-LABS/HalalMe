@@ -4,12 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import {
   Search, AlertCircle, MessageSquare, FileText, MessagesSquare, Users,
   Image as ImageIcon, EyeOff, Eye, MoreVertical, Trash2, Loader2, TrendingUp,
-  CheckSquare, X, Crown,
+  CheckSquare, X, Crown, Flag,
 } from "lucide-react";
 import { display } from "../_fonts";
 import {
-  fmtDateTime, useToast, ToastView, StatCard, TableSkeleton, EmptyState, Pagination, FilterPills, Badge,
+  fmtDateTime, useToast, ToastView, StatCard, TableSkeleton, EmptyState, Pagination, FilterPills, Badge, Modal,
 } from "../_ui";
+import ReportsQueue from "../_ReportsQueue";
 
 type Author = { id: string; full_name?: string; username?: string } | { id: string; full_name?: string; username?: string }[] | null;
 function oneAuthor(a: Author) { return Array.isArray(a) ? a[0] : a; }
@@ -48,13 +49,13 @@ const PUBLISHED_FILTERS = [
   { key: "published", label: "Published" },
   { key: "unpublished", label: "Hidden" },
 ];
-const POST_TYPE_TONE: Record<string, "blue" | "purple" | "amber" | "gray"> = {
-  recipe: "purple", text: "blue", image: "amber",
+const POST_TYPE_TONE: Record<string, "blue" | "purple" | "amber" | "gray" | "green"> = {
+  general: "blue", recipe: "purple", question: "amber", review: "green",
 };
 
 export default function HubPage() {
   const { toast, flash } = useToast();
-  const [view, setView] = useState<"posts" | "comments">("posts");
+  const [view, setView] = useState<"posts" | "comments" | "reported">("posts");
 
   return (
     <div className="bg-[#F3E9D6] min-h-full">
@@ -70,7 +71,7 @@ export default function HubPage() {
         <p className="text-xs sm:text-sm text-gray-600 mt-1">Moderate the community feed — posts and comments</p>
 
         <div className="flex items-center gap-0.5 mt-4 -mb-px">
-          {([["posts", "Posts", FileText], ["comments", "Comments", MessagesSquare]] as const).map(([key, label, Icon]) => {
+          {([["posts", "Posts", FileText], ["comments", "Comments", MessagesSquare], ["reported", "Reported", Flag]] as const).map(([key, label, Icon]) => {
             const active = view === key;
             return (
               <button key={key} onClick={() => setView(key)}
@@ -83,7 +84,9 @@ export default function HubPage() {
       </div>
 
       <div className="px-4 sm:px-8 py-5">
-        {view === "posts" ? <PostsView flash={flash} /> : <CommentsView flash={flash} />}
+        {view === "posts" ? <PostsView flash={flash} />
+          : view === "comments" ? <CommentsView flash={flash} />
+          : <div className="space-y-5"><ReportsQueue type="post" /><ReportsQueue type="comment" /></div>}
       </div>
     </div>
   );
@@ -145,8 +148,8 @@ function PostsView({ flash }: { flash: (k: "ok" | "err", m: string) => void }) {
       setRows(json.posts); setStats(json.stats); setTotal(json.total);
       setPageSize(json.pageSize); setCanManage(!!json.canManage);
       setTopPosters(json.topPosters ?? []);
-      // Collect post types seen for the filter (best-effort, from the page).
-      setTypes((prev) => [...new Set([...prev, ...json.posts.map((p: PostRow) => p.post_type)])]);
+      // Canonical, complete type list from the API (mirrors the DB constraint).
+      if (json.postTypes) setTypes(json.postTypes);
     } catch {
       setError("Could not load posts. Try refreshing.");
     } finally {
@@ -175,19 +178,17 @@ function PostsView({ flash }: { flash: (k: "ok" | "err", m: string) => void }) {
     if (ids.length === 0) return;
     setBulkBusy(action);
     try {
-      const results = await Promise.allSettled(ids.map((id) =>
-        action === "delete"
-          ? fetch(`/api/admin/hub/posts/${id}`, { method: "DELETE" })
-          : fetch(`/api/admin/hub/posts/${id}`, {
-              method: "PATCH", headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ is_published: action === "publish" }),
-            }),
-      ));
-      const ok = results.filter((r) => r.status === "fulfilled" && (r.value as Response).ok).length;
-      const failed = ids.length - ok;
-      flash(failed === 0 ? "ok" : "err", `${ok} updated${failed ? `, ${failed} failed` : ""}.`);
+      const res = await fetch("/api/admin/hub/posts/bulk", {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, ids }),
+      });
+      if (!res.ok) throw new Error();
+      const json = await res.json() as { updated: number };
+      flash("ok", `${json.updated} post${json.updated !== 1 ? "s" : ""} ${action === "delete" ? "deleted" : "updated"}.`);
       setSelectedIds(new Set()); setBulkDelete(false);
       fetchRows(page, type, published, search);
+    } catch {
+      flash("err", "Bulk action failed.");
     } finally {
       setBulkBusy(null);
     }
@@ -393,24 +394,22 @@ function PostsView({ flash }: { flash: (k: "ok" | "err", m: string) => void }) {
       )}
 
       {modal && (
-        <div className="fixed inset-0 z-55 bg-black/40 flex items-center justify-center p-4" onClick={() => !modalBusy && setModal(null)}>
-          <div className="bg-white rounded-none border border-[#102C26]/15 shadow-2xl w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-none flex items-center justify-center shrink-0 bg-red-50 text-red-600"><Trash2 size={18} /></div>
-              <div className="min-w-0">
-                <h3 className={`${display.className} text-lg font-bold text-[#102C26]`}>Delete post?</h3>
-                <p className="text-sm text-gray-600 mt-1">This permanently removes the post and all its comments, likes and bookmarks. This cannot be undone.</p>
-              </div>
-            </div>
-            <div className="mt-5 flex items-center justify-end gap-2">
-              <button onClick={() => setModal(null)} disabled={modalBusy} className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">Cancel</button>
-              <button onClick={confirmDelete} disabled={modalBusy}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-bold uppercase tracking-tight text-white rounded-none disabled:opacity-50 bg-red-600 hover:bg-red-700 transition-colors">
-                {modalBusy ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />} Delete
-              </button>
+        <Modal open busy={modalBusy} onClose={() => setModal(null)} labelledBy="post-del-title" describedBy="post-del-desc" className="p-6">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-none flex items-center justify-center shrink-0 bg-red-50 text-red-600"><Trash2 size={18} /></div>
+            <div className="min-w-0">
+              <h3 id="post-del-title" className={`${display.className} text-lg font-bold text-[#102C26]`}>Delete post?</h3>
+              <p id="post-del-desc" className="text-sm text-gray-600 mt-1">This permanently removes the post and all its comments, likes and bookmarks. This cannot be undone.</p>
             </div>
           </div>
-        </div>
+          <div className="mt-5 flex items-center justify-end gap-2">
+            <button onClick={() => setModal(null)} disabled={modalBusy} className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">Cancel</button>
+            <button onClick={confirmDelete} disabled={modalBusy}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-bold uppercase tracking-tight text-white rounded-none disabled:opacity-50 bg-red-600 hover:bg-red-700 transition-colors">
+              {modalBusy ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />} Delete
+            </button>
+          </div>
+        </Modal>
       )}
 
       {/* Post preview */}
@@ -543,12 +542,17 @@ function CommentsView({ flash }: { flash: (k: "ok" | "err", m: string) => void }
     if (ids.length === 0) return;
     setBulkBusy(true);
     try {
-      const results = await Promise.allSettled(ids.map((id) => fetch(`/api/admin/hub/comments/${id}`, { method: "DELETE" })));
-      const ok = results.filter((r) => r.status === "fulfilled" && (r.value as Response).ok).length;
-      const failed = ids.length - ok;
-      flash(failed === 0 ? "ok" : "err", `${ok} deleted${failed ? `, ${failed} failed` : ""}.`);
+      const res = await fetch("/api/admin/hub/comments/bulk", {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "delete", ids }),
+      });
+      if (!res.ok) throw new Error();
+      const json = await res.json() as { updated: number };
+      flash("ok", `${json.updated} comment${json.updated !== 1 ? "s" : ""} deleted.`);
       setSelectedIds(new Set()); setBulkDelete(false);
       fetchRows(page, search);
+    } catch {
+      flash("err", "Bulk delete failed.");
     } finally {
       setBulkBusy(false);
     }
@@ -668,25 +672,23 @@ function CommentsView({ flash }: { flash: (k: "ok" | "err", m: string) => void }
       </div>
 
       {modal && (
-        <div className="fixed inset-0 z-55 bg-black/40 flex items-center justify-center p-4" onClick={() => !modalBusy && setModal(null)}>
-          <div className="bg-white rounded-none border border-[#102C26]/15 shadow-2xl w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-none flex items-center justify-center shrink-0 bg-red-50 text-red-600"><Trash2 size={18} /></div>
-              <div className="min-w-0">
-                <h3 className={`${display.className} text-lg font-bold text-[#102C26]`}>Delete comment?</h3>
-                <p className="text-sm text-gray-600 mt-1 wrap-break-word">&ldquo;{modal.content.slice(0, 120)}{modal.content.length > 120 ? "…" : ""}&rdquo;</p>
-                <p className="text-xs text-gray-500 mt-1.5">Any replies to this comment will also be removed.</p>
-              </div>
-            </div>
-            <div className="mt-5 flex items-center justify-end gap-2">
-              <button onClick={() => setModal(null)} disabled={modalBusy} className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">Cancel</button>
-              <button onClick={confirmDelete} disabled={modalBusy}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-bold uppercase tracking-tight text-white rounded-none disabled:opacity-50 bg-red-600 hover:bg-red-700 transition-colors">
-                {modalBusy ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />} Delete
-              </button>
+        <Modal open busy={modalBusy} onClose={() => setModal(null)} labelledBy="comment-del-title" describedBy="comment-del-desc" className="p-6">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-none flex items-center justify-center shrink-0 bg-red-50 text-red-600"><Trash2 size={18} /></div>
+            <div className="min-w-0">
+              <h3 id="comment-del-title" className={`${display.className} text-lg font-bold text-[#102C26]`}>Delete comment?</h3>
+              <p id="comment-del-desc" className="text-sm text-gray-600 mt-1 wrap-break-word">&ldquo;{modal.content.slice(0, 120)}{modal.content.length > 120 ? "…" : ""}&rdquo;</p>
+              <p className="text-xs text-gray-500 mt-1.5">Any replies to this comment will also be removed.</p>
             </div>
           </div>
-        </div>
+          <div className="mt-5 flex items-center justify-end gap-2">
+            <button onClick={() => setModal(null)} disabled={modalBusy} className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">Cancel</button>
+            <button onClick={confirmDelete} disabled={modalBusy}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-bold uppercase tracking-tight text-white rounded-none disabled:opacity-50 bg-red-600 hover:bg-red-700 transition-colors">
+              {modalBusy ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />} Delete
+            </button>
+          </div>
+        </Modal>
       )}
     </>
   );

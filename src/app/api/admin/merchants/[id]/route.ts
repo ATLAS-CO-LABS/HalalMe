@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin, type AccessLevel } from "@/lib/adminAuth";
+import { logAdminAction } from "@/lib/adminAudit";
 import {
   sendMerchantAgreementEmail,
   sendMerchantInviteSentEmail,
@@ -9,8 +10,8 @@ import { deleteHyperzodMerchant } from "@/services/hyperzodService";
 
 async function getAdminServiceClient(level: AccessLevel) {
   const gate = await requireAdmin("merchants", level);
-  if (!gate.ok) return { error: gate.error, status: gate.status, serviceClient: null };
-  return { error: null, status: 200, serviceClient: gate.serviceClient };
+  if (!gate.ok) return { error: gate.error, status: gate.status, serviceClient: null, gate: null };
+  return { error: null, status: 200, serviceClient: gate.serviceClient, gate };
 }
 
 export async function GET(
@@ -39,7 +40,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const { error, status, serviceClient } = await getAdminServiceClient("manage");
+  const { error, status, serviceClient, gate } = await getAdminServiceClient("manage");
   if (error || !serviceClient) return NextResponse.json({ error }, { status });
 
   const body = await req.json() as {
@@ -118,6 +119,23 @@ export async function PATCH(
     return NextResponse.json({ error: "Update failed" }, { status: 500 });
   }
 
+  // Audit — describe the most significant change (status transition wins, else
+  // whichever fields were edited).
+  const changed: string[] = [];
+  if (body.status !== undefined && body.status !== current.status) changed.push(`status ${current.status} → ${body.status}`);
+  if ("commission_percentage" in body) changed.push(`commission → ${body.commission_percentage ?? "unset"}%`);
+  if ("assigned_rep_id" in body) changed.push("rep reassigned");
+  if (body.readiness_checklist !== undefined) changed.push("checklist updated");
+  if (body.note?.trim()) changed.push("note added");
+  if (changed.length > 0 && gate) {
+    await logAdminAction(gate, {
+      action: body.status !== undefined && body.status !== current.status ? "merchant.status_change" : "merchant.update",
+      module: "merchants", targetType: "merchant", targetId: id,
+      summary: `${current.name}: ${changed.join(", ")}`,
+      metadata: { status: body.status, commission_percentage: body.commission_percentage, from_status: current.status },
+    });
+  }
+
   // Email #2 — fire-and-forget when the merchant first reaches "invited"
   if (enteringInvited) {
     sendMerchantInviteSentEmail({
@@ -160,13 +178,13 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const { error, status, serviceClient } = await getAdminServiceClient("manage");
+  const { error, status, serviceClient, gate } = await getAdminServiceClient("manage");
   if (error || !serviceClient) return NextResponse.json({ error }, { status });
 
   // Load merchant to get the Hyperzod link
   const { data: merchant } = await serviceClient
     .from("merchants")
-    .select("id, hyperzod_merchant_id")
+    .select("id, name, hyperzod_merchant_id")
     .eq("id", id)
     .single();
 
@@ -203,6 +221,14 @@ export async function DELETE(
       },
       { status: 500 }
     );
+  }
+
+  if (gate) {
+    await logAdminAction(gate, {
+      action: "merchant.delete", module: "merchants", targetType: "merchant", targetId: id,
+      summary: `Deleted merchant ${merchant.name}`,
+      metadata: { name: merchant.name, hyperzod_merchant_id: merchant.hyperzod_merchant_id },
+    });
   }
 
   return NextResponse.json({ success: true });

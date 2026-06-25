@@ -8,11 +8,12 @@ import {
   REQUIRED_DOC_KEYS,
 } from "@/lib/merchantStages";
 import { requireAdmin as requireAdminAccess, type AccessLevel } from "@/lib/adminAuth";
+import { logAdminAction } from "@/lib/adminAudit";
 
 async function requireAdmin(level: AccessLevel) {
   const gate = await requireAdminAccess("merchants", level);
-  if (!gate.ok) return { error: gate.error, status: gate.status, user: null, serviceClient: null };
-  return { error: null, status: 200, user: { id: gate.userId }, serviceClient: gate.serviceClient };
+  if (!gate.ok) return { error: gate.error, status: gate.status, user: null, serviceClient: null, gate: null };
+  return { error: null, status: 200, user: { id: gate.userId }, serviceClient: gate.serviceClient, gate };
 }
 
 function docLabel(docType: string): string {
@@ -24,7 +25,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string; docId: string }> },
 ) {
   const { id, docId } = await params;
-  const { error, status, user, serviceClient } = await requireAdmin("manage");
+  const { error, status, user, serviceClient, gate } = await requireAdmin("manage");
   if (error || !serviceClient || !user) return NextResponse.json({ error }, { status });
 
   const body = await req.json() as { action?: "approve" | "reject"; reason?: string };
@@ -64,6 +65,15 @@ export async function PATCH(
   if (updErr) {
     console.error("[admin/documents] update error", updErr);
     return NextResponse.json({ error: "Update failed" }, { status: 500 });
+  }
+
+  if (gate) {
+    await logAdminAction(gate, {
+      action: body.action === "approve" ? "merchant_document.approve" : "merchant_document.reject",
+      module: "merchants", targetType: "merchant", targetId: id,
+      summary: `${body.action === "approve" ? "Approved" : "Rejected"} ${docLabel(doc.doc_type)}`,
+      metadata: { doc_id: docId, doc_type: doc.doc_type, reason: body.action === "reject" ? body.reason?.trim() : null },
+    });
   }
 
   // ── Notify the merchant (fire-and-forget) ──────────────────────────────────

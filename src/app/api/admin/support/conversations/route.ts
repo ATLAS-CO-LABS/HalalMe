@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
+import { ilikeTerm } from "@/lib/adminSearch";
 
 const PAGE_SIZE = 25;
 
@@ -36,6 +37,7 @@ export async function GET(req: NextRequest) {
   const status = searchParams.get("status") ?? "all";
   const source = searchParams.get("source") ?? "all";
   const assigned = searchParams.get("assigned") ?? "all";
+  const search = searchParams.get("search")?.trim();
 
   const from = page * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
@@ -58,6 +60,12 @@ export async function GET(req: NextRequest) {
   if (assigned === "me") query = query.eq("assigned_to", gate.userId);
   else if (assigned === "unassigned") query = query.is("assigned_to", null);
 
+  // Search across subject + the guest/denormalised requester fields + delivery ref.
+  const term = ilikeTerm(search);
+  if (term) {
+    query = query.or(`subject.ilike.${term},requester_name.ilike.${term},requester_email.ilike.${term},delivery_reference.ilike.${term}`);
+  }
+
   const { data, count, error } = await query;
 
   if (error) {
@@ -75,6 +83,7 @@ export async function GET(req: NextRequest) {
       .from("support_messages")
       .select("conversation_id, body, created_at")
       .in("conversation_id", ids)
+      .eq("is_internal", false)
       .order("created_at", { ascending: false });
     for (const m of msgs ?? []) {
       if (!previews[m.conversation_id]) previews[m.conversation_id] = m.body;
