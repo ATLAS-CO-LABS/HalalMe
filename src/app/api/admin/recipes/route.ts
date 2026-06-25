@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
 import { ilikeTerm } from "@/lib/adminSearch";
-
-const PAGE_SIZE = 25;
+import { parsePageSize } from "@/lib/adminPaging";
 
 // GET /api/admin/recipes
 //   ?page=0&published=all|published|unpublished&halal=all|verified|unverified
@@ -15,6 +14,7 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const page = Math.max(0, parseInt(searchParams.get("page") ?? "0", 10) || 0);
+  const PAGE_SIZE = parsePageSize(searchParams);
   const published = searchParams.get("published") ?? "all";
   const halal = searchParams.get("halal") ?? "all";
   const source = searchParams.get("source") ?? "all";

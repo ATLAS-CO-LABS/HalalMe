@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
 import { ilikeTerm } from "@/lib/adminSearch";
-
-const PAGE_SIZE = 25;
+import { parsePageSize } from "@/lib/adminPaging";
 
 export async function GET(req: NextRequest) {
   const gate = await requireAdmin("merchants", "view");
@@ -14,6 +13,7 @@ export async function GET(req: NextRequest) {
   const search = searchParams.get("search")?.trim();
   const mine = searchParams.get("mine") === "1";
   const page = Math.max(0, parseInt(searchParams.get("page") ?? "0", 10) || 0);
+  const PAGE_SIZE = parsePageSize(searchParams);
   // Explicit id set — used by the "needs attention" / "commission review" views,
   // whose membership is computed by the stats endpoint.
   const idsParam = searchParams.get("ids");

@@ -90,7 +90,7 @@ export default function AdminChatPage() {
   async function fetchRows(p: number, st: string, sr: string, asg: string, q: string, silent = false) {
     if (!silent) { setLoading(true); setError(null); }
     try {
-      const params = new URLSearchParams({ page: String(p) });
+      const params = new URLSearchParams({ page: String(p), pageSize: String(pageSize) });
       if (st !== "all") params.set("status", st);
       if (sr !== "all") params.set("source", sr);
       if (asg !== "all") params.set("assigned", asg);
@@ -108,7 +108,7 @@ export default function AdminChatPage() {
 
   useEffect(() => {
     fetchRows(page, status, source, assigned, search);
-  }, [page, status, source, assigned]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [page, pageSize, status, source, assigned]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { setPage(0); }, [status, source, assigned]);
 
   function handleSearchChange(val: string) {
@@ -123,7 +123,7 @@ export default function AdminChatPage() {
     const interval = setInterval(tick, 25000);
     window.addEventListener("focus", tick);
     return () => { clearInterval(interval); window.removeEventListener("focus", tick); };
-  }, [page, status, source, assigned, search]);
+  }, [page, pageSize, status, source, assigned, search]);
 
   return (
     <div className="bg-[#F3E9D6] min-h-full">
@@ -217,7 +217,7 @@ export default function AdminChatPage() {
                   );
                 })}
               </div>
-              <Pagination page={page} pageSize={pageSize} total={total} noun="conversation" onPrev={() => setPage((p) => Math.max(0, p - 1))} onNext={() => setPage((p) => p + 1)} />
+              <Pagination page={page} pageSize={pageSize} total={total} noun="conversation" onPrev={() => setPage((p) => Math.max(0, p - 1))} onNext={() => setPage((p) => p + 1)} onPageSize={(s) => { setPageSize(s); setPage(0); }} onJump={(p) => setPage(p)} />
             </>
           )}
         </div>

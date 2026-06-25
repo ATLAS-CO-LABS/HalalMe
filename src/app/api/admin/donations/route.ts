@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
-
-const PAGE_SIZE = 25;
+import { parsePageSize } from "@/lib/adminPaging";
+import { parseDateRange } from "@/lib/adminFilters";
 
 // GET /api/admin/donations
 //   ?page=0&status=all|pending|completed|failed|refunded&charity=<id>&search=
@@ -15,9 +15,11 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const page = Math.max(0, parseInt(searchParams.get("page") ?? "0", 10) || 0);
+  const PAGE_SIZE = parsePageSize(searchParams);
   const status = searchParams.get("status") ?? "all";
   const charity = searchParams.get("charity")?.trim();
   const search = searchParams.get("search")?.trim();
+  const { fromISO, toISO } = parseDateRange(searchParams);
 
   const from = page * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
@@ -36,6 +38,8 @@ export async function GET(req: NextRequest) {
 
   if (status !== "all") query = query.eq("status", status);
   if (charity) query = query.eq("charity_id", charity);
+  if (fromISO) query = query.gte("created_at", fromISO);
+  if (toISO) query = query.lte("created_at", toISO);
 
   const { data, count, error } = await query;
 

@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import ThemedSelect from "@/components/admin/ThemedSelect";
 import {
-  fmtDateTime, fmtMoney, useToast, ToastView, StatCard, TableSkeleton, EmptyState, Pagination, FilterPills, Badge,
+  fmtDateTime, fmtMoney, useToast, ToastView, StatCard, TableSkeleton, EmptyState, Pagination, FilterPills, Badge, DateRange,
 } from "../_ui";
 
 type Joined = { id: string; full_name?: string; email?: string; name?: string } | { id: string; full_name?: string; email?: string; name?: string }[] | null;
@@ -48,6 +48,8 @@ export default function DonationsTab() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [charity, setCharity] = useState("all");
   const [search, setSearch] = useState("");
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -55,10 +57,12 @@ export default function DonationsTab() {
   async function fetchRows(p: number, s: string, c: string, q: string) {
     setLoading(true); setError(null);
     try {
-      const params = new URLSearchParams({ page: String(p) });
+      const params = new URLSearchParams({ page: String(p), pageSize: String(pageSize) });
       if (s !== "all") params.set("status", s);
       if (c !== "all") params.set("charity", c);
       if (q) params.set("search", q);
+      if (dateFrom) params.set("dateFrom", dateFrom);
+      if (dateTo) params.set("dateTo", dateTo);
       const res = await fetch(`/api/admin/donations?${params}`);
       if (!res.ok) throw new Error();
       const json = await res.json();
@@ -74,8 +78,8 @@ export default function DonationsTab() {
   useEffect(() => {
     fetchRows(page, status, charity, search);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, status, charity]);
-  useEffect(() => { setPage(0); }, [status, charity]);
+  }, [page, pageSize, status, charity, dateFrom, dateTo]);
+  useEffect(() => { setPage(0); }, [status, charity, dateFrom, dateTo]);
 
   function handleSearch(val: string) {
     setSearch(val);
@@ -98,7 +102,8 @@ export default function DonationsTab() {
         <div className="px-4 sm:px-5 pt-3 pb-3 border-b border-[#102C26]/8 space-y-2.5">
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <FilterPills options={STATUS_FILTERS} value={status} onChange={setStatus} />
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <DateRange from={dateFrom} to={dateTo} onChange={(f, t) => { setDateFrom(f); setDateTo(t); }} label="Donated" />
               <div className="w-44">
                 <ThemedSelect value={charity} onChange={setCharity}
                   options={[{ value: "all", label: "All charities" }, ...charities.map((c) => ({ value: c.id, label: c.name }))]} />
@@ -156,7 +161,7 @@ export default function DonationsTab() {
                 })}
               </tbody>
             </table>
-            <Pagination page={page} pageSize={pageSize} total={total} noun="donation" onPrev={() => setPage((p) => Math.max(0, p - 1))} onNext={() => setPage((p) => p + 1)} />
+            <Pagination page={page} pageSize={pageSize} total={total} noun="donation" onPrev={() => setPage((p) => Math.max(0, p - 1))} onNext={() => setPage((p) => p + 1)} onPageSize={(s) => { setPageSize(s); setPage(0); }} onJump={(p) => setPage(p)} />
           </>
         )}
       </div>

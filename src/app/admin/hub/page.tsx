@@ -138,7 +138,7 @@ function PostsView({ flash }: { flash: (k: "ok" | "err", m: string) => void }) {
   async function fetchRows(p: number, t: string, pub: string, q: string) {
     setLoading(true); setError(null);
     try {
-      const params = new URLSearchParams({ page: String(p) });
+      const params = new URLSearchParams({ page: String(p), pageSize: String(pageSize) });
       if (t !== "all") params.set("type", t);
       if (pub !== "all") params.set("published", pub);
       if (q) params.set("search", q);
@@ -160,7 +160,7 @@ function PostsView({ flash }: { flash: (k: "ok" | "err", m: string) => void }) {
   useEffect(() => {
     fetchRows(page, type, published, search);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, type, published]);
+  }, [page, pageSize, type, published]);
   useEffect(() => { setPage(0); }, [type, published]);
   useEffect(() => { setSelectedIds(new Set()); setBulkDelete(false); }, [page, type, published, search]);
 
@@ -313,7 +313,44 @@ function PostsView({ flash }: { flash: (k: "ok" | "err", m: string) => void }) {
           <EmptyState icon={MessageSquare} title="No posts found" hint="Posts from the community feed will appear here for moderation." />
         ) : (
           <>
-            <div className="overflow-x-auto">
+            {/* Mobile cards */}
+            <div className="md:hidden divide-y divide-[#102C26]/8">
+              {rows.map((p) => {
+                const a = oneAuthor(p.author);
+                const authorName = a?.full_name ?? (a?.username ? `@${a.username}` : "—");
+                const hasMedia = (p.media_urls?.length ?? 0) > 0;
+                const sel = selectedIds.has(p.id);
+                return (
+                  <div key={p.id} className={`px-4 py-4 ${sel ? "bg-[#102C26]/3" : ""}`}>
+                    <div className="flex items-start gap-3">
+                      {canManage && (
+                        <div className="flex items-center justify-center w-6 h-6 shrink-0 mt-1" onClick={() => toggleSelect(p.id)}>
+                          <input type="checkbox" checked={sel} readOnly className="w-4 h-4 rounded border-gray-300 accent-[#102C26] pointer-events-none" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0 cursor-pointer" onClick={() => openPreview(p.id)}>
+                        <div className="flex items-start gap-1.5">
+                          {hasMedia && <ImageIcon size={13} className="text-gray-400 shrink-0 mt-0.5" />}
+                          <p className={`line-clamp-2 text-[15px] ${p.is_published ? "text-gray-900" : "text-gray-400"}`}>{p.content?.trim() || <span className="italic text-gray-400">(no text)</span>}</p>
+                        </div>
+                        <div className="flex items-center gap-1 flex-wrap mt-2">
+                          <Badge label={p.post_type} tone={POST_TYPE_TONE[p.post_type] ?? "gray"} />
+                          {!p.is_published && <Badge label="Hidden" tone="gray" />}
+                          <span className="text-[10px] text-gray-600">{authorName} · {p.like_count} ♥ · {p.comment_count} 💬</span>
+                        </div>
+                      </div>
+                      {canManage && (
+                        <button onClick={(e) => openMenu(e, p)} title="Actions"
+                          className="inline-flex items-center justify-center w-8 h-8 shrink-0 rounded-none text-gray-500 hover:bg-[#102C26] hover:text-white transition-all"><MoreVertical size={15} /></button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm min-w-[560px]">
               <thead>
                 <tr className="border-b border-[#102C26]/12 bg-gray-50/60">
@@ -374,7 +411,7 @@ function PostsView({ flash }: { flash: (k: "ok" | "err", m: string) => void }) {
               </tbody>
             </table>
             </div>
-            <Pagination page={page} pageSize={pageSize} total={total} noun="post" onPrev={() => setPage((p) => Math.max(0, p - 1))} onNext={() => setPage((p) => p + 1)} />
+            <Pagination page={page} pageSize={pageSize} total={total} noun="post" onPrev={() => setPage((p) => Math.max(0, p - 1))} onNext={() => setPage((p) => p + 1)} onPageSize={(s) => { setPageSize(s); setPage(0); }} onJump={(p) => setPage(p)} />
           </>
         )}
       </div>
@@ -502,7 +539,7 @@ function CommentsView({ flash }: { flash: (k: "ok" | "err", m: string) => void }
   async function fetchRows(p: number, q: string) {
     setLoading(true); setError(null);
     try {
-      const params = new URLSearchParams({ page: String(p) });
+      const params = new URLSearchParams({ page: String(p), pageSize: String(pageSize) });
       if (q) params.set("search", q);
       const res = await fetch(`/api/admin/hub/comments?${params}`);
       if (!res.ok) throw new Error();
@@ -519,7 +556,7 @@ function CommentsView({ flash }: { flash: (k: "ok" | "err", m: string) => void }
   useEffect(() => {
     fetchRows(page, search);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page]);
+  }, [page, pageSize]);
   useEffect(() => { setSelectedIds(new Set()); setBulkDelete(false); }, [page, search]);
 
   function handleSearch(val: string) {
@@ -616,7 +653,39 @@ function CommentsView({ flash }: { flash: (k: "ok" | "err", m: string) => void }
           <EmptyState icon={MessagesSquare} title="No comments found" hint="Comments left on posts will appear here for moderation." />
         ) : (
           <>
-            <div className="overflow-x-auto">
+            {/* Mobile cards */}
+            <div className="md:hidden divide-y divide-[#102C26]/8">
+              {rows.map((c) => {
+                const a = oneAuthor(c.author);
+                const authorName = a?.full_name ?? (a?.username ? `@${a.username}` : "—");
+                const sel = selectedIds.has(c.id);
+                return (
+                  <div key={c.id} className={`px-4 py-4 ${sel ? "bg-[#102C26]/3" : ""}`}>
+                    <div className="flex items-start gap-3">
+                      {canManage && (
+                        <div className="flex items-center justify-center w-6 h-6 shrink-0 mt-1" onClick={() => toggleSelect(c.id)}>
+                          <input type="checkbox" checked={sel} readOnly className="w-4 h-4 rounded border-gray-300 accent-[#102C26] pointer-events-none" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-gray-900 line-clamp-2 text-[15px]">{c.content}</p>
+                        <div className="flex items-center gap-1.5 flex-wrap mt-2">
+                          {c.parent_id && <Badge label="Reply" tone="gray" />}
+                          <span className="text-[10px] text-gray-600">{authorName} · {c.like_count} ♥ · {fmtDateTime(c.created_at)}</span>
+                        </div>
+                      </div>
+                      {canManage && (
+                        <button onClick={() => setModal(c)} title="Delete"
+                          className="inline-flex items-center justify-center w-8 h-8 shrink-0 rounded-none text-gray-500 hover:bg-red-600 hover:text-white transition-all"><Trash2 size={15} /></button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm min-w-[520px]">
               <thead>
                 <tr className="border-b border-[#102C26]/12 bg-gray-50/60">
@@ -666,7 +735,7 @@ function CommentsView({ flash }: { flash: (k: "ok" | "err", m: string) => void }
               </tbody>
             </table>
             </div>
-            <Pagination page={page} pageSize={pageSize} total={total} noun="comment" onPrev={() => setPage((p) => Math.max(0, p - 1))} onNext={() => setPage((p) => p + 1)} />
+            <Pagination page={page} pageSize={pageSize} total={total} noun="comment" onPrev={() => setPage((p) => Math.max(0, p - 1))} onNext={() => setPage((p) => p + 1)} onPageSize={(s) => { setPageSize(s); setPage(0); }} onJump={(p) => setPage(p)} />
           </>
         )}
       </div>

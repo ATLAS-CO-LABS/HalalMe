@@ -72,7 +72,7 @@ export default function ApplicationsTab() {
   async function fetchRows(p: number, s: string, q: string) {
     setLoading(true); setError(null);
     try {
-      const params = new URLSearchParams({ page: String(p) });
+      const params = new URLSearchParams({ page: String(p), pageSize: String(pageSize) });
       if (s !== "all") params.set("status", s);
       if (q) params.set("search", q);
       const res = await fetch(`/api/admin/charity-applications?${params}`);
@@ -90,7 +90,7 @@ export default function ApplicationsTab() {
   useEffect(() => {
     fetchRows(page, status, search);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, status]);
+  }, [page, pageSize, status]);
   useEffect(() => { setPage(0); }, [status]);
 
   function handleSearch(val: string) {
@@ -194,7 +194,7 @@ export default function ApplicationsTab() {
                 ))}
               </tbody>
             </table>
-            <Pagination page={page} pageSize={pageSize} total={total} noun="application" onPrev={() => setPage((p) => Math.max(0, p - 1))} onNext={() => setPage((p) => p + 1)} />
+            <Pagination page={page} pageSize={pageSize} total={total} noun="application" onPrev={() => setPage((p) => Math.max(0, p - 1))} onNext={() => setPage((p) => p + 1)} onPageSize={(s) => { setPageSize(s); setPage(0); }} onJump={(p) => setPage(p)} />
           </>
         )}
       </div>

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
-
-const PAGE_SIZE = 25;
+import { parsePageSize } from "@/lib/adminPaging";
 
 // GET /api/admin/charity-applications
 //   ?page=0&status=all|pending|under_review|approved|rejected&search=
@@ -14,6 +13,7 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const page = Math.max(0, parseInt(searchParams.get("page") ?? "0", 10) || 0);
+  const PAGE_SIZE = parsePageSize(searchParams);
   const status = searchParams.get("status") ?? "all";
   const search = searchParams.get("search")?.trim();
 

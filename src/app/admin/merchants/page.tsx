@@ -6,7 +6,7 @@ import { display } from "../_fonts";
 import AddMerchantModal from "@/components/admin/AddMerchantModal";
 import { getFollowUp } from "@/lib/followUps";
 import ThemedSelect from "@/components/admin/ThemedSelect";
-import { Pagination, useToast, ToastView } from "../_ui";
+import { Pagination, useToast, ToastView, StatCard } from "../_ui";
 import { useAdmin } from "../AdminProvider";
 import {
   Search,
@@ -24,7 +24,6 @@ import {
   Sparkles,
   MapPin,
   Clock,
-  MoreVertical,
   ArrowRight,
   Plus,
 } from "lucide-react";
@@ -257,39 +256,6 @@ function MerchantCard({ m, onClick, selected, onSelect, canManage }: {
   );
 }
 
-function StatCard({ label, value, sub, icon: Icon, tone, onClick, active }: {
-  label: string; value: React.ReactNode; sub: string; icon: React.ElementType;
-  tone: "green" | "amber" | "blue" | "purple";
-  onClick?: () => void; active?: boolean;
-}) {
-  const tones = {
-    green:  "bg-green-50 text-green-600",
-    amber:  "bg-[#F59E0B]/10 text-[#F59E0B]",
-    blue:   "bg-[#102C26]/8 text-[#102C26]",
-    purple: "bg-[#F59E0B]/10 text-[#F59E0B]",
-  };
-  const Tag = onClick ? "button" : "div";
-  return (
-    <Tag
-      onClick={onClick}
-      className={`text-left w-full bg-white rounded-none border p-4 sm:p-5 transition-all ${
-        active ? "border-[#F59E0B] ring-2 ring-[#F59E0B]/20" : "border-[#102C26]/12"
-      } ${onClick ? "hover:border-gray-300 cursor-pointer" : ""}`}
-    >
-      <div className="flex items-start justify-between">
-        <div className="min-w-0">
-          <p className="text-xs font-medium text-gray-500">{label}</p>
-          <p className={`${display.className} text-2xl font-bold text-[#102C26] mt-1`}>{value}</p>
-          <p className="text-xs text-gray-400 mt-0.5 truncate">{sub}</p>
-        </div>
-        <div className={`w-10 h-10 rounded-none flex items-center justify-center shrink-0 ${tones[tone]}`}>
-          <Icon size={18} />
-        </div>
-      </div>
-    </Tag>
-  );
-}
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function MerchantPipelinePage() {
@@ -342,6 +308,7 @@ export default function MerchantPipelinePage() {
         if (status !== "all") params.set("status", status);
         if (q) params.set("search", q);
         params.set("page", String(pageNum));
+        params.set("pageSize", String(pageSize));
       }
       const res = await fetch(`/api/admin/merchants?${params}`);
       if (!res.ok) throw new Error();
@@ -389,7 +356,7 @@ export default function MerchantPipelinePage() {
   useEffect(() => {
     fetchMerchants(statusFilter, search, mineOnly, page, attentionOnly, reviewOnly, stats);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter, mineOnly, page, attentionOnly, reviewOnly, viewIdsKey]);
+  }, [statusFilter, mineOnly, page, pageSize, attentionOnly, reviewOnly, viewIdsKey]);
 
   // Reset to the first page whenever the filter context changes.
   useEffect(() => { setPage(0); }, [statusFilter, mineOnly, attentionOnly, reviewOnly]);
@@ -550,15 +517,15 @@ export default function MerchantPipelinePage() {
       {/* ── Stat cards ── */}
       <div className="px-4 sm:px-8 pt-5">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <StatCard label="Total Merchants" value={statTotal} sub="All time" icon={Store} tone="green" />
+          <StatCard label="Total Merchants" value={statTotal} sub="All time" icon={Store} tone="success" />
           <StatCard label="Needs Attention" value={urgentCount}
             sub={attentionOnly ? "Showing — click to clear" : urgentCount ? "Click to review" : "All caught up"}
-            icon={AlertCircle} tone="amber"
+            icon={AlertCircle} tone="warning"
             active={attentionOnly}
             onClick={() => { setAttentionOnly((v) => !v); setReviewOnly(false); }} />
           <StatCard label="Active (Live)" value={liveCount}
-            sub={statTotal ? `${Math.round((liveCount / statTotal) * 100)}% of total` : "—"} icon={Activity} tone="green" />
-          <StatCard label="New This Week" value={newThisWeek} sub="Registered ≤ 7 days" icon={Sparkles} tone="purple" />
+            sub={statTotal ? `${Math.round((liveCount / statTotal) * 100)}% of total` : "—"} icon={Activity} tone="success" />
+          <StatCard label="New This Week" value={newThisWeek} sub="Registered ≤ 7 days" icon={Sparkles} tone="accent" />
         </div>
       </div>
 
@@ -821,10 +788,10 @@ export default function MerchantPipelinePage() {
                               : <span className="text-gray-400 text-xs italic">Not set</span>}
                           </td>
 
-                          {/* Action */}
+                          {/* Action — whole row navigates to detail; chevron signals that (matches Users/Kitchen/Hub) */}
                           <td className="px-4 lg:px-5 py-3.5 text-right">
                             <span className="inline-flex items-center justify-center w-8 h-8 rounded-none text-gray-400 group-hover:bg-[#102C26] group-hover:text-white transition-all" title="Open">
-                              <MoreVertical size={15} />
+                              <ChevronRight size={15} />
                             </span>
                           </td>
                         </tr>
@@ -845,6 +812,8 @@ export default function MerchantPipelinePage() {
                     page={page} pageSize={pageSize} total={total} noun="merchant"
                     onPrev={() => setPage((p) => Math.max(0, p - 1))}
                     onNext={() => setPage((p) => p + 1)}
+                    onPageSize={(s) => { setPageSize(s); setPage(0); }}
+                    onJump={(p) => setPage(p)}
                   />
                 )}
               </>

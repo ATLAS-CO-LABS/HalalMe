@@ -121,7 +121,7 @@ export default function KitchenPage() {
   async function fetchRows(p: number, pub: string, hal: string, src: string, q: string) {
     setLoading(true); setError(null);
     try {
-      const params = new URLSearchParams({ page: String(p) });
+      const params = new URLSearchParams({ page: String(p), pageSize: String(pageSize) });
       if (pub !== "all") params.set("published", pub);
       if (hal !== "all") params.set("halal", hal);
       if (src !== "all") params.set("source", src);
@@ -141,7 +141,7 @@ export default function KitchenPage() {
   useEffect(() => {
     fetchRows(page, published, halal, source, search);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, published, halal, source]);
+  }, [page, pageSize, published, halal, source]);
   useEffect(() => { setPage(0); }, [published, halal, source]);
   useEffect(() => { setSelectedIds(new Set()); setBulkDelete(false); }, [page, published, halal, source, search]);
 
@@ -342,7 +342,49 @@ export default function KitchenPage() {
             <EmptyState icon={ChefHat} title="No recipes found" hint="Recipes created by users or the AI chat will appear here for moderation." />
           ) : (
             <>
-              <div className="overflow-x-auto">
+              {/* Mobile cards */}
+              <div className="md:hidden divide-y divide-[#102C26]/8">
+                {rows.map((r) => {
+                  const a = oneAuthor(r.author);
+                  const authorName = a?.full_name ?? (a?.username ? `@${a.username}` : "—");
+                  const sel = selectedIds.has(r.id);
+                  return (
+                    <div key={r.id} className={`px-4 py-4 ${sel ? "bg-[#102C26]/3" : ""}`}>
+                      <div className="flex items-start gap-3">
+                        {canManage && (
+                          <div className="flex items-center justify-center w-6 h-6 shrink-0 mt-1" onClick={() => toggleSelect(r.id)}>
+                            <input type="checkbox" checked={sel} readOnly className="w-4 h-4 rounded border-gray-300 accent-[#102C26] pointer-events-none" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0 cursor-pointer" onClick={() => openPreview(r.id)}>
+                          <div className="flex items-center gap-1.5">
+                            <p title={r.title} className={`font-semibold truncate text-[15px] ${r.is_published ? "text-gray-900" : "text-gray-400 line-through"}`}>{r.title}</p>
+                            {r.is_featured && <Star size={13} className="text-[#F59E0B] shrink-0 fill-[#F59E0B]" />}
+                          </div>
+                          <p className="text-xs text-gray-600 truncate capitalize mt-0.5">
+                            {r.cuisine ?? "—"}{r.difficulty ? ` · ${r.difficulty}` : ""} · {authorName}
+                          </p>
+                          <div className="flex items-center gap-1 flex-wrap mt-2">
+                            {r.is_halal_verified ? <Badge label="Halal ✓" tone="green" /> : <Badge label="Unverified" tone="amber" />}
+                            {r.is_ai_generated && <Badge label="AI" tone="purple" />}
+                            {!r.is_published && <Badge label="Hidden" tone="gray" />}
+                            {r.review_count > 0 && <span className="text-[10px] text-gray-600">★ {Number(r.avg_rating).toFixed(1)} ({r.review_count})</span>}
+                          </div>
+                        </div>
+                        {canManage && (
+                          <button onClick={(e) => openMenu(e, r)} title="Actions"
+                            className="inline-flex items-center justify-center w-8 h-8 shrink-0 rounded-none text-gray-500 hover:bg-[#102C26] hover:text-white transition-all">
+                            <MoreVertical size={15} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop table */}
+              <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-sm min-w-[560px]">
                 <thead>
                   <tr className="border-b border-[#102C26]/12 bg-gray-50/60">
@@ -408,7 +450,7 @@ export default function KitchenPage() {
                 </tbody>
               </table>
               </div>
-              <Pagination page={page} pageSize={pageSize} total={total} noun="recipe" onPrev={() => setPage((p) => Math.max(0, p - 1))} onNext={() => setPage((p) => p + 1)} />
+              <Pagination page={page} pageSize={pageSize} total={total} noun="recipe" onPrev={() => setPage((p) => Math.max(0, p - 1))} onNext={() => setPage((p) => p + 1)} onPageSize={(s) => { setPageSize(s); setPage(0); }} onJump={(p) => setPage(p)} />
             </>
           )}
         </div>

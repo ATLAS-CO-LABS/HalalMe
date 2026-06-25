@@ -64,7 +64,7 @@ export default function CharitiesTab() {
   async function fetchRows(p: number, s: string, q: string) {
     setLoading(true); setError(null);
     try {
-      const params = new URLSearchParams({ page: String(p) });
+      const params = new URLSearchParams({ page: String(p), pageSize: String(pageSize) });
       if (s !== "all") params.set("status", s);
       if (q) params.set("search", q);
       const res = await fetch(`/api/admin/charities?${params}`);
@@ -82,7 +82,7 @@ export default function CharitiesTab() {
   useEffect(() => {
     fetchRows(page, status, search);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, status]);
+  }, [page, pageSize, status]);
   useEffect(() => { setPage(0); }, [status]);
 
   function handleSearch(val: string) {
@@ -189,7 +189,36 @@ export default function CharitiesTab() {
           <EmptyState icon={Heart} title="No charities found" hint="Approve an application or add a charity directly to seed the directory." />
         ) : (
           <>
-            <table className="w-full text-sm">
+            {/* Mobile cards */}
+            <div className="md:hidden divide-y divide-[#102C26]/8">
+              {rows.map((c) => {
+                const pct = c.goal_amount > 0 ? Math.min(100, Math.round((c.raised_amount / c.goal_amount) * 100)) : 0;
+                return (
+                  <div key={c.id} className="px-4 py-4 cursor-pointer" onClick={() => openEdit(c.id)}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5">
+                          <p className="font-semibold text-gray-900 truncate text-[15px]">{c.name}</p>
+                          {c.is_featured && <Star size={13} className="text-[#F59E0B] shrink-0 fill-[#F59E0B]" />}
+                        </div>
+                        <p className="text-xs text-gray-600 truncate capitalize mt-0.5">{c.category} · {c.donor_count} donor{c.donor_count !== 1 ? "s" : ""}</p>
+                        <div className="flex items-center gap-1.5 flex-wrap mt-2">
+                          <Badge label={c.verification_status} tone={STATUS_TONE[c.verification_status] ?? "gray"} />
+                          <Badge label={`L${c.verification_level}`} tone={c.verification_level >= 2 ? "green" : c.verification_level === 1 ? "amber" : "gray"} />
+                          {c.is_zakat_eligible && <Badge label="Zakat" tone="purple" />}
+                        </div>
+                        <p className="text-gray-900 font-medium tabular-nums text-sm mt-2">{fmtMoney(c.raised_amount, c.currency)} <span className="text-gray-400 font-normal">/ {fmtMoney(c.goal_amount, c.currency)}</span></p>
+                        <div className="mt-1 h-1.5 w-full max-w-48 bg-gray-100 rounded-full overflow-hidden"><div className="h-full bg-[#102C26]" style={{ width: `${pct}%` }} /></div>
+                      </div>
+                      <ChevronRight size={15} className="text-gray-400 mt-1 shrink-0" />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop table */}
+            <table className="hidden md:table w-full text-sm">
               <thead>
                 <tr className="border-b border-[#102C26]/12 bg-gray-50/60">
                   <th className="pl-4 lg:pl-5 px-2 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600">Charity</th>
@@ -227,7 +256,7 @@ export default function CharitiesTab() {
                 })}
               </tbody>
             </table>
-            <Pagination page={page} pageSize={pageSize} total={total} noun="charity" onPrev={() => setPage((p) => Math.max(0, p - 1))} onNext={() => setPage((p) => p + 1)} />
+            <Pagination page={page} pageSize={pageSize} total={total} noun="charity" onPrev={() => setPage((p) => Math.max(0, p - 1))} onNext={() => setPage((p) => p + 1)} onPageSize={(s) => { setPageSize(s); setPage(0); }} onJump={(p) => setPage(p)} />
           </>
         )}
       </div>

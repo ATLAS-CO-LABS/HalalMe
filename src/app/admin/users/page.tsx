@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { display } from "../_fonts";
-import { Modal } from "../_ui";
+import { Modal, StatCard, Pagination, DateRange } from "../_ui";
 import {
   Search,
   RefreshCw,
@@ -13,7 +13,6 @@ import {
   ShieldCheck,
   Ban,
   ChevronRight,
-  ChevronLeft,
   MoreVertical,
   BadgeCheck,
   Store,
@@ -97,26 +96,6 @@ function Avatar({ name }: { name: string }) {
     </div>
   );
 }
-function StatCard({ label, value, sub, icon: Icon, tone }: {
-  label: string; value: React.ReactNode; sub: string; icon: React.ElementType; tone: "green" | "amber" | "blue" | "purple";
-}) {
-  const tones = {
-    green: "bg-green-50 text-green-600", amber: "bg-[#F59E0B]/10 text-[#F59E0B]",
-    blue: "bg-[#102C26]/8 text-[#102C26]", purple: "bg-[#F59E0B]/10 text-[#F59E0B]",
-  };
-  return (
-    <div className="bg-white rounded-none border border-[#102C26]/12 p-4 sm:p-5">
-      <div className="flex items-start justify-between">
-        <div className="min-w-0">
-          <p className="text-xs font-semibold text-gray-600">{label}</p>
-          <p className={`${display.className} text-2xl font-bold text-[#102C26] mt-1`}>{value}</p>
-          <p className="text-xs text-gray-500 mt-0.5 truncate">{sub}</p>
-        </div>
-        <div className={`w-10 h-10 rounded-none flex items-center justify-center shrink-0 ${tones[tone]}`}><Icon size={18} /></div>
-      </div>
-    </div>
-  );
-}
 function TableSkeleton() {
   return (
     <div className="animate-pulse divide-y divide-[#102C26]/8">
@@ -142,8 +121,14 @@ export default function UsersPage() {
   const [canManage, setCanManage] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [roleFilter, setRoleFilter] = useState("all");
+  // Pre-filter to staff when arrived from the "Permissions" nav entry (?role=admin).
+  const initialRole = useSearchParams().get("role");
+  const [roleFilter, setRoleFilter] = useState(
+    initialRole === "admin" || initialRole === "user" ? initialRole : "all",
+  );
   const [statusFilter, setStatusFilter] = useState("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [search, setSearch] = useState("");
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -169,13 +154,16 @@ export default function UsersPage() {
     try {
       const params = new URLSearchParams();
       params.set("page", String(p));
+      params.set("pageSize", String(pageSize));
       if (role !== "all") params.set("role", role);
       if (status !== "all") params.set("status", status);
       if (q) params.set("search", q);
+      if (dateFrom) params.set("dateFrom", dateFrom);
+      if (dateTo) params.set("dateTo", dateTo);
       const res = await fetch(`/api/admin/users?${params}`);
       if (!res.ok) throw new Error();
       const json = await res.json();
-      setUsers(json.users); setStats(json.stats); setTotal(json.total); setPageSize(json.pageSize); setCanManage(!!json.canManage);
+      setUsers(json.users); setStats(json.stats); setTotal(json.total); setCanManage(!!json.canManage);
     } catch {
       setError("Could not load users. Try refreshing.");
     } finally {
@@ -186,8 +174,8 @@ export default function UsersPage() {
   useEffect(() => {
     fetchUsers(page, roleFilter, statusFilter, search);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, roleFilter, statusFilter]);
-  useEffect(() => { setPage(0); }, [roleFilter, statusFilter]);
+  }, [page, pageSize, roleFilter, statusFilter, dateFrom, dateTo]);
+  useEffect(() => { setPage(0); }, [roleFilter, statusFilter, dateFrom, dateTo]);
   useEffect(() => { setSelectedIds(new Set()); }, [page, roleFilter, statusFilter, search]);
 
   // Close the row menu on any outside click / scroll / resize.
@@ -290,6 +278,8 @@ export default function UsersPage() {
       if (roleFilter !== "all") params.set("role", roleFilter);
       if (statusFilter !== "all") params.set("status", statusFilter);
       if (search) params.set("search", search);
+      if (dateFrom) params.set("dateFrom", dateFrom);
+      if (dateTo) params.set("dateTo", dateTo);
       const res = await fetch(`/api/admin/users?${params}`);
       if (!res.ok) throw new Error();
       const json = await res.json() as { users: UserRow[] };
@@ -318,9 +308,6 @@ export default function UsersPage() {
     setMenu({ user: u, top: r.bottom + 4, left: Math.max(8, r.right - 180) });
   }
 
-  const from = total === 0 ? 0 : page * pageSize + 1;
-  const to = Math.min((page + 1) * pageSize, total);
-  const hasNext = (page + 1) * pageSize < total;
   const allSelected = users.length > 0 && selectedIds.size === users.length;
 
   return (
@@ -358,10 +345,10 @@ export default function UsersPage() {
       {/* Stat cards */}
       <div className="px-4 sm:px-8 pt-5">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <StatCard label="Total Users" value={stats?.total ?? "—"} sub="All time" icon={Users} tone="green" />
-          <StatCard label="New This Week" value={stats?.newThisWeek ?? "—"} sub="Joined ≤ 7 days" icon={UserPlus} tone="purple" />
-          <StatCard label="Team Members" value={stats?.team ?? "—"} sub="Admins & super admins" icon={ShieldCheck} tone="blue" />
-          <StatCard label="Suspended / Banned" value={stats?.suspended ?? "—"} sub="Restricted accounts" icon={Ban} tone="amber" />
+          <StatCard label="Total Users" value={stats?.total ?? "—"} sub="All time" icon={Users} tone="success" />
+          <StatCard label="New This Week" value={stats?.newThisWeek ?? "—"} sub="Joined ≤ 7 days" icon={UserPlus} tone="accent" />
+          <StatCard label="Team Members" value={stats?.team ?? "—"} sub="Admins & super admins" icon={ShieldCheck} tone="brand" />
+          <StatCard label="Suspended / Banned" value={stats?.suspended ?? "—"} sub="Restricted accounts" icon={Ban} tone="warning" />
         </div>
       </div>
 
@@ -383,6 +370,9 @@ export default function UsersPage() {
                   <button key={key} onClick={() => setStatusFilter(key)}
                     className={`px-3 py-1.5 rounded-none text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${statusFilter === key ? "bg-[#102C26] text-[#F7E7CE]" : "text-gray-600 hover:text-[#102C26] hover:bg-[#102C26]/8"}`}>{label}</button>
                 ))}
+              </div>
+              <div className="sm:ml-auto">
+                <DateRange from={dateFrom} to={dateTo} onChange={(f, t) => { setDateFrom(f); setDateTo(t); }} label="Joined" />
               </div>
             </div>
             <div className="relative">
@@ -542,15 +532,13 @@ export default function UsersPage() {
               </table>
 
               {/* Pagination footer */}
-              <div className="px-5 py-3 border-t border-[#102C26]/8 flex items-center justify-between gap-4">
-                <p className="text-xs text-gray-600">Showing {from}–{to} of {total.toLocaleString()} user{total !== 1 ? "s" : ""}</p>
-                <div className="flex items-center gap-1">
-                  <button onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-gray-700 border border-gray-200 rounded-none hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"><ChevronLeft size={14} /> Prev</button>
-                  <button onClick={() => setPage((p) => p + 1)} disabled={!hasNext}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-gray-700 border border-gray-200 rounded-none hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">Next <ChevronRight size={14} /></button>
-                </div>
-              </div>
+              <Pagination
+                page={page} pageSize={pageSize} total={total} noun="user"
+                onPrev={() => setPage((p) => Math.max(0, p - 1))}
+                onNext={() => setPage((p) => p + 1)}
+                onPageSize={(s) => { setPageSize(s); setPage(0); }}
+                onJump={(p) => setPage(p)}
+              />
             </>
           )}
         </div>

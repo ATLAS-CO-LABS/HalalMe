@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
 import { ilikeTerm } from "@/lib/adminSearch";
 import { logAdminAction } from "@/lib/adminAudit";
-
-const PAGE_SIZE = 25;
+import { parsePageSize } from "@/lib/adminPaging";
 
 // GET /api/admin/charities
 //   ?page=0&status=all|approved|suspended|pending&category=&search=
@@ -16,6 +15,7 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const page = Math.max(0, parseInt(searchParams.get("page") ?? "0", 10) || 0);
+  const PAGE_SIZE = parsePageSize(searchParams);
   const status = searchParams.get("status") ?? "all";
   const category = searchParams.get("category")?.trim();
   const search = searchParams.get("search")?.trim();

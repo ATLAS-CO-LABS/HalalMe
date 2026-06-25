@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
 import { ilikeTerm } from "@/lib/adminSearch";
-
-const PAGE_SIZE = 25;
+import { parsePageSize } from "@/lib/adminPaging";
 
 // Canonical post types — mirrors the posts.post_type CHECK constraint
 // (004_hub.sql). Returned to the client so the filter is stable and complete
@@ -20,6 +19,7 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const page = Math.max(0, parseInt(searchParams.get("page") ?? "0", 10) || 0);
+  const PAGE_SIZE = parsePageSize(searchParams);
   const type = searchParams.get("type") ?? "all";
   const published = searchParams.get("published") ?? "all";
   const search = searchParams.get("search")?.trim();

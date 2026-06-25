@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient, createServiceClient } from "@/lib/supabase-server";
 import { isSuperAdmin } from "@/lib/adminRoles";
 import { ilikeTerm } from "@/lib/adminSearch";
+import { parsePageSize } from "@/lib/adminPaging";
 
-const PAGE_SIZE = 30;
+const AUDIT_PAGE_SIZES = [30, 60, 120];
 
 // GET /api/admin/audit?page=0&module=all&action=&search=
 // The admin action history. Super-admin only — this is the accountability record
@@ -21,6 +22,7 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const page = Math.max(0, parseInt(searchParams.get("page") ?? "0", 10) || 0);
+  const PAGE_SIZE = parsePageSize(searchParams, AUDIT_PAGE_SIZES, 30);
   const moduleFilter = searchParams.get("module") ?? "all";
   const search = searchParams.get("search");
   const from = page * PAGE_SIZE;

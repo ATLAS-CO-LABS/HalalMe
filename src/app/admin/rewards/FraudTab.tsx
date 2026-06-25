@@ -69,7 +69,7 @@ export default function FraudTab() {
   async function fetchRows(p: number, s: string) {
     setLoading(true); setError(null);
     try {
-      const params = new URLSearchParams({ page: String(p), status: s });
+      const params = new URLSearchParams({ page: String(p), pageSize: String(pageSize), status: s });
       const res = await fetch(`/api/admin/donation-flags?${params}`);
       if (!res.ok) throw new Error();
       const json = await res.json();
@@ -82,7 +82,7 @@ export default function FraudTab() {
     }
   }
 
-  useEffect(() => { fetchRows(page, status); }, [page, status]);
+  useEffect(() => { fetchRows(page, status); }, [page, pageSize, status]);
   useEffect(() => { setPage(0); }, [status]);
 
   async function review(action: "safe" | "blocked") {
@@ -128,7 +128,32 @@ export default function FraudTab() {
           <EmptyState icon={ShieldCheck} title="No flags here" hint="Donations that trip the risk rules land in this queue for manual review." />
         ) : (
           <>
-            <table className="w-full text-sm">
+            {/* Mobile cards */}
+            <div className="md:hidden divide-y divide-[#102C26]/8">
+              {rows.map((f) => {
+                const don = one(f.donation); const u = one(don?.user); const c = one(don?.charity);
+                const high = (f.risk_score_at_flag ?? 0) >= 75;
+                return (
+                  <div key={f.id} className="px-4 py-4 cursor-pointer" onClick={() => { setDetail(f); setNotes(""); }}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-gray-900 truncate text-[15px]">{don ? fmtMoney(don.amount ?? 0, don.currency) : "—"} <span className="font-normal text-gray-500">to {c?.name ?? "—"}</span></p>
+                        <p className="text-xs text-gray-600 truncate mt-0.5">{u?.full_name ?? u?.email ?? "—"} · {f.flag_type.replace(/_/g, " ")}</p>
+                        <div className="flex items-center gap-1.5 flex-wrap mt-2">
+                          <Badge label={STATUS_LABEL[f.status] ?? f.status} tone={STATUS_TONE[f.status] ?? "gray"} />
+                          <span className={`tabular-nums text-[10px] font-bold px-1.5 py-0.5 rounded-md ${high ? "bg-red-50 text-red-600" : "bg-amber-50 text-amber-600"}`}>Risk {f.risk_score_at_flag ?? "—"}</span>
+                          <span className="text-[10px] text-gray-500">{fmtDateTime(f.created_at)}</span>
+                        </div>
+                      </div>
+                      <ChevronRight size={15} className="text-gray-400 mt-1 shrink-0" />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop table */}
+            <table className="hidden md:table w-full text-sm">
               <thead>
                 <tr className="border-b border-[#102C26]/12 bg-gray-50/60">
                   <th className="pl-4 lg:pl-5 px-2 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600">Donation</th>
@@ -160,7 +185,7 @@ export default function FraudTab() {
                 })}
               </tbody>
             </table>
-            <Pagination page={page} pageSize={pageSize} total={total} noun="flag" onPrev={() => setPage((p) => Math.max(0, p - 1))} onNext={() => setPage((p) => p + 1)} />
+            <Pagination page={page} pageSize={pageSize} total={total} noun="flag" onPrev={() => setPage((p) => Math.max(0, p - 1))} onNext={() => setPage((p) => p + 1)} onPageSize={(s) => { setPageSize(s); setPage(0); }} onJump={(p) => setPage(p)} />
           </>
         )}
       </div>

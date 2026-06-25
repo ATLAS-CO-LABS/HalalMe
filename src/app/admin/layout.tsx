@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -65,7 +65,7 @@ const NAV_GROUPS: { heading?: string; items: NavItem[] }[] = [
   {
     heading: "System",
     items: [
-      { label: "Permissions", href: "/admin/users",     icon: ShieldCheck, soon: true },
+      { label: "Permissions", href: "/admin/users?role=admin", icon: ShieldCheck, superAdminOnly: true },
       { label: "Audit",       href: "/admin/audit",     icon: ScrollText,  superAdminOnly: true },
       { label: "Settings",    href: "/admin/settings",  icon: Settings,    soon: true },
     ],
@@ -82,6 +82,7 @@ function Sidebar({
   onClose?: () => void;
 }) {
   const { permissions, counts, isSuper } = useAdmin();
+  const roleQ = useSearchParams().get("role");
   const initials = (user.full_name ?? user.email ?? "A")
     .split(" ")
     .map((w) => w[0])
@@ -103,7 +104,18 @@ function Sidebar({
     .filter((g) => g.items.length > 0);
 
   function renderItem({ label, href, icon: Icon, soon, module }: NavItem) {
-    const active = href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
+    const hrefPath = href.split("?")[0];
+    // "Users" and "Permissions" both live at /admin/users; the ?role=admin query
+    // disambiguates which one is highlighted.
+    let active: boolean;
+    if (hrefPath === "/admin") {
+      active = pathname === "/admin";
+    } else if (hrefPath === "/admin/users") {
+      const wantsStaff = href.includes("role=admin");
+      active = pathname.startsWith("/admin/users") && wantsStaff === (roleQ === "admin");
+    } else {
+      active = pathname.startsWith(hrefPath);
+    }
     const badge = module && counts[module] ? counts[module] : 0;
     if (soon) {
       return (

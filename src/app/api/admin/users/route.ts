@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
 import { ilikeTerm } from "@/lib/adminSearch";
-
-const PAGE_SIZE = 25;
+import { parsePageSize } from "@/lib/adminPaging";
+import { parseDateRange } from "@/lib/adminFilters";
 
 // GET /api/admin/users
 //   ?page=0&role=all|user|admin&status=all|active|suspended|banned&search=
@@ -16,9 +16,11 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const page = Math.max(0, parseInt(searchParams.get("page") ?? "0", 10) || 0);
+  const PAGE_SIZE = parsePageSize(searchParams);
   const role = searchParams.get("role") ?? "all";
   const status = searchParams.get("status") ?? "all";
   const search = searchParams.get("search")?.trim();
+  const { fromISO, toISO } = parseDateRange(searchParams);
   // export mode returns the full filtered set (capped) for CSV — no pagination/stats.
   const isExport = searchParams.get("export") === "1";
   const EXPORT_CAP = 2000;
@@ -44,6 +46,9 @@ export async function GET(req: NextRequest) {
   if (status !== "all") {
     query = query.eq("status", status);
   }
+
+  if (fromISO) query = query.gte("created_at", fromISO);
+  if (toISO) query = query.lte("created_at", toISO);
 
   const term = ilikeTerm(search);
   if (term) {

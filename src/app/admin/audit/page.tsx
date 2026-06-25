@@ -56,7 +56,7 @@ export default function AuditPage() {
   async function fetchRows(p: number, mod: string, q: string) {
     setLoading(true); setError(null);
     try {
-      const params = new URLSearchParams({ page: String(p) });
+      const params = new URLSearchParams({ page: String(p), pageSize: String(pageSize) });
       if (mod !== "all") params.set("module", mod);
       if (q) params.set("search", q);
       const res = await fetch(`/api/admin/audit?${params}`);
@@ -74,7 +74,7 @@ export default function AuditPage() {
   useEffect(() => {
     fetchRows(page, moduleFilter, search);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, moduleFilter]);
+  }, [page, pageSize, moduleFilter]);
   useEffect(() => { setPage(0); }, [moduleFilter]);
 
   function handleSearch(val: string) {
@@ -157,7 +157,7 @@ export default function AuditPage() {
                   );
                 })}
               </div>
-              <Pagination page={page} pageSize={pageSize} total={total} noun="record" onPrev={() => setPage((p) => Math.max(0, p - 1))} onNext={() => setPage((p) => p + 1)} />
+              <Pagination page={page} pageSize={pageSize} total={total} noun="record" onPrev={() => setPage((p) => Math.max(0, p - 1))} onNext={() => setPage((p) => p + 1)} onPageSize={(s) => { setPageSize(s); setPage(0); }} pageSizeOptions={[30, 60, 120]} onJump={(p) => setPage(p)} />
             </>
           )}
         </div>
