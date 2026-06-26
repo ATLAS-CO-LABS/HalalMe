@@ -23,6 +23,7 @@ export async function GET(req: NextRequest) {
   const type = searchParams.get("type") ?? "all";
   const published = searchParams.get("published") ?? "all";
   const search = searchParams.get("search")?.trim();
+  const deleted = searchParams.get("deleted") === "1"; // Trash view
 
   const from = page * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
@@ -30,12 +31,15 @@ export async function GET(req: NextRequest) {
   let query = serviceClient
     .from("posts")
     .select(
-      "id, content, post_type, media_urls, is_published, like_count, comment_count, view_count, created_at, " +
+      "id, content, post_type, media_urls, is_published, like_count, comment_count, view_count, created_at, deleted_at, " +
         "author:profiles!posts_user_id_fkey(id, full_name, username)",
       { count: "exact" },
     )
-    .order("created_at", { ascending: false })
+    .order(deleted ? "deleted_at" : "created_at", { ascending: false })
     .range(from, to);
+
+  // Default list hides the Trash; ?deleted=1 shows only soft-deleted posts.
+  query = deleted ? query.not("deleted_at", "is", null) : query.is("deleted_at", null);
 
   if (type !== "all") query = query.eq("post_type", type);
   if (published === "published") query = query.eq("is_published", true);
@@ -65,11 +69,12 @@ export async function GET(req: NextRequest) {
   }
 
   const dayAgo = new Date(Date.now() - 86_400_000).toISOString();
-  const [totalRes, publishedRes, todayRes, followsRes] = await Promise.all([
-    serviceClient.from("posts").select("id", { count: "exact", head: true }),
-    serviceClient.from("posts").select("id", { count: "exact", head: true }).eq("is_published", true),
-    serviceClient.from("posts").select("id", { count: "exact", head: true }).gte("created_at", dayAgo),
+  const [totalRes, publishedRes, todayRes, followsRes, deletedRes] = await Promise.all([
+    serviceClient.from("posts").select("id", { count: "exact", head: true }).is("deleted_at", null),
+    serviceClient.from("posts").select("id", { count: "exact", head: true }).eq("is_published", true).is("deleted_at", null),
+    serviceClient.from("posts").select("id", { count: "exact", head: true }).gte("created_at", dayAgo).is("deleted_at", null),
     serviceClient.from("follows").select("follower_id", { count: "exact", head: true }),
+    serviceClient.from("posts").select("id", { count: "exact", head: true }).not("deleted_at", "is", null),
   ]);
 
   let canManage = gate.role === "super_admin";
@@ -115,6 +120,7 @@ export async function GET(req: NextRequest) {
       published: publishedRes.count ?? 0,
       today: todayRes.count ?? 0,
       follows: followsRes.count ?? 0,
+      deleted: deletedRes.count ?? 0,
     },
   });
 }

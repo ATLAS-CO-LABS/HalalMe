@@ -15,6 +15,7 @@ export async function GET(req: NextRequest) {
   const page = Math.max(0, parseInt(searchParams.get("page") ?? "0", 10) || 0);
   const PAGE_SIZE = parsePageSize(searchParams);
   const search = searchParams.get("search")?.trim();
+  const deleted = searchParams.get("deleted") === "1"; // Trash view
 
   const from = page * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
@@ -22,12 +23,15 @@ export async function GET(req: NextRequest) {
   let query = serviceClient
     .from("comments")
     .select(
-      "id, content, post_id, parent_id, like_count, created_at, " +
+      "id, content, post_id, parent_id, like_count, created_at, deleted_at, " +
         "author:profiles!comments_user_id_fkey(id, full_name, username)",
       { count: "exact" },
     )
-    .order("created_at", { ascending: false })
+    .order(deleted ? "deleted_at" : "created_at", { ascending: false })
     .range(from, to);
+
+  // Default list hides the Trash; ?deleted=1 shows only soft-deleted comments.
+  query = deleted ? query.not("deleted_at", "is", null) : query.is("deleted_at", null);
 
   const term = ilikeTerm(search);
   if (term) {
@@ -52,9 +56,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Failed to fetch comments" }, { status: 500 });
   }
 
-  const { count: totalComments } = await serviceClient
-    .from("comments")
-    .select("id", { count: "exact", head: true });
+  const [{ count: totalComments }, { count: deletedComments }] = await Promise.all([
+    serviceClient.from("comments").select("id", { count: "exact", head: true }).is("deleted_at", null),
+    serviceClient.from("comments").select("id", { count: "exact", head: true }).not("deleted_at", "is", null),
+  ]);
 
   let canManage = gate.role === "super_admin";
   if (!canManage) {
@@ -68,6 +73,7 @@ export async function GET(req: NextRequest) {
     comments: data ?? [],
     total: count ?? 0,
     totalComments: totalComments ?? 0,
+    deletedComments: deletedComments ?? 0,
     page,
     pageSize: PAGE_SIZE,
     canManage,

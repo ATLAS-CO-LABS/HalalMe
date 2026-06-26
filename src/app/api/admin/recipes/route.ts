@@ -19,6 +19,7 @@ export async function GET(req: NextRequest) {
   const halal = searchParams.get("halal") ?? "all";
   const source = searchParams.get("source") ?? "all";
   const search = searchParams.get("search")?.trim();
+  const deleted = searchParams.get("deleted") === "1"; // Trash view
 
   const from = page * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
@@ -27,12 +28,15 @@ export async function GET(req: NextRequest) {
     .from("recipes")
     .select(
       "id, title, cuisine, difficulty, image_url, is_published, is_halal_verified, is_ai_generated, is_featured, " +
-        "avg_rating, review_count, view_count, created_at, " +
+        "avg_rating, review_count, view_count, created_at, deleted_at, " +
         "author:profiles!recipes_user_id_fkey(id, full_name, username)",
       { count: "exact" },
     )
-    .order("created_at", { ascending: false })
+    .order(deleted ? "deleted_at" : "created_at", { ascending: false })
     .range(from, to);
+
+  // Default list hides the Trash; ?deleted=1 shows only soft-deleted recipes.
+  query = deleted ? query.not("deleted_at", "is", null) : query.is("deleted_at", null);
 
   if (published === "published") query = query.eq("is_published", true);
   else if (published === "unpublished") query = query.eq("is_published", false);
@@ -67,12 +71,13 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Failed to fetch recipes" }, { status: 500 });
   }
 
-  // Global stats (independent of filters).
-  const [totalRes, publishedRes, unverifiedRes, aiRes] = await Promise.all([
-    serviceClient.from("recipes").select("id", { count: "exact", head: true }),
-    serviceClient.from("recipes").select("id", { count: "exact", head: true }).eq("is_published", true),
-    serviceClient.from("recipes").select("id", { count: "exact", head: true }).eq("is_halal_verified", false),
-    serviceClient.from("recipes").select("id", { count: "exact", head: true }).eq("is_ai_generated", true),
+  // Global stats (independent of filters) — exclude the Trash.
+  const [totalRes, publishedRes, unverifiedRes, aiRes, deletedRes] = await Promise.all([
+    serviceClient.from("recipes").select("id", { count: "exact", head: true }).is("deleted_at", null),
+    serviceClient.from("recipes").select("id", { count: "exact", head: true }).eq("is_published", true).is("deleted_at", null),
+    serviceClient.from("recipes").select("id", { count: "exact", head: true }).eq("is_halal_verified", false).is("deleted_at", null),
+    serviceClient.from("recipes").select("id", { count: "exact", head: true }).eq("is_ai_generated", true).is("deleted_at", null),
+    serviceClient.from("recipes").select("id", { count: "exact", head: true }).not("deleted_at", "is", null),
   ]);
 
   let canManage = gate.role === "super_admin";
@@ -94,6 +99,7 @@ export async function GET(req: NextRequest) {
       published: publishedRes.count ?? 0,
       unverified: unverifiedRes.count ?? 0,
       aiGenerated: aiRes.count ?? 0,
+      deleted: deletedRes.count ?? 0,
     },
   });
 }

@@ -52,6 +52,23 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
+  // Restore from the Trash — clears the soft-delete marker (stays unpublished).
+  if ((body as { restore?: boolean }).restore === true) {
+    const { error } = await gate.serviceClient
+      .from("posts")
+      .update({ deleted_at: null, deleted_by: null })
+      .eq("id", id);
+    if (error) {
+      console.error("[api/admin/hub/posts/[id]] restore error", error);
+      return NextResponse.json({ error: "Failed to restore post" }, { status: 500 });
+    }
+    await logAdminAction(gate, {
+      action: "post.restore", module: "hub", targetType: "post", targetId: id,
+      summary: "Restored post from Trash",
+    });
+    return NextResponse.json({ ok: true });
+  }
+
   if (typeof body.is_published !== "boolean") {
     return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
   }
@@ -74,26 +91,45 @@ export async function PATCH(
   return NextResponse.json({ ok: true });
 }
 
-// DELETE /api/admin/hub/posts/[id] — hard delete (cascades to comments, likes,
-// bookmarks, notifications via FK ON DELETE CASCADE).
+// DELETE /api/admin/hub/posts/[id]
+//   default  → soft delete (Trash): set deleted_at, hide from public.
+//   ?hard=1  → permanent delete (cascades to comments, likes, bookmarks,
+//              notifications via FK ON DELETE CASCADE).
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  const hard = new URL(req.url).searchParams.get("hard") === "1";
 
   const gate = await requireAdmin("hub", "manage");
   if (!gate.ok) return NextResponse.json({ error: gate.error }, { status: gate.status });
 
-  const { error } = await gate.serviceClient.from("posts").delete().eq("id", id);
+  if (hard) {
+    const { error } = await gate.serviceClient.from("posts").delete().eq("id", id);
+    if (error) {
+      console.error("[api/admin/hub/posts/[id]] purge error", error);
+      return NextResponse.json({ error: "Failed to delete post" }, { status: 500 });
+    }
+    await logAdminAction(gate, {
+      action: "post.purge", module: "hub", targetType: "post", targetId: id,
+      summary: "Permanently deleted post and all its comments/likes",
+    });
+    return NextResponse.json({ ok: true });
+  }
+
+  const { error } = await gate.serviceClient
+    .from("posts")
+    .update({ deleted_at: new Date().toISOString(), deleted_by: gate.userId, is_published: false })
+    .eq("id", id);
   if (error) {
-    console.error("[api/admin/hub/posts/[id]] delete error", error);
+    console.error("[api/admin/hub/posts/[id]] soft-delete error", error);
     return NextResponse.json({ error: "Failed to delete post" }, { status: 500 });
   }
 
   await logAdminAction(gate, {
     action: "post.delete", module: "hub", targetType: "post", targetId: id,
-    summary: "Deleted post and all its comments/likes",
+    summary: "Moved post to Trash",
   });
 
   return NextResponse.json({ ok: true });

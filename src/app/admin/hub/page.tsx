@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   Search, AlertCircle, MessageSquare, FileText, MessagesSquare, Users,
   Image as ImageIcon, EyeOff, Eye, MoreVertical, Trash2, Loader2, TrendingUp,
-  CheckSquare, X, Crown, Flag,
+  CheckSquare, X, Crown, Flag, RotateCcw,
 } from "lucide-react";
 import { display } from "../_fonts";
 import {
@@ -55,7 +55,7 @@ const POST_TYPE_TONE: Record<string, "blue" | "purple" | "amber" | "gray" | "gre
 
 export default function HubPage() {
   const { toast, flash } = useToast();
-  const [view, setView] = useState<"posts" | "comments" | "reported">("posts");
+  const [view, setView] = useState<"posts" | "comments" | "reported" | "deleted">("posts");
 
   return (
     <div className="bg-[#F3E9D6] min-h-full">
@@ -71,7 +71,7 @@ export default function HubPage() {
         <p className="text-xs sm:text-sm text-gray-600 mt-1">Moderate the community feed — posts and comments</p>
 
         <div className="flex items-center gap-0.5 mt-4 -mb-px">
-          {([["posts", "Posts", FileText], ["comments", "Comments", MessagesSquare], ["reported", "Reported", Flag]] as const).map(([key, label, Icon]) => {
+          {([["posts", "Posts", FileText], ["comments", "Comments", MessagesSquare], ["reported", "Reported", Flag], ["deleted", "Trash", Trash2]] as const).map(([key, label, Icon]) => {
             const active = view === key;
             return (
               <button key={key} onClick={() => setView(key)}
@@ -86,6 +86,18 @@ export default function HubPage() {
       <div className="px-4 sm:px-8 py-5">
         {view === "posts" ? <PostsView flash={flash} />
           : view === "comments" ? <CommentsView flash={flash} />
+          : view === "deleted" ? (
+            <div className="space-y-8">
+              <div>
+                <h2 className={`${display.className} text-sm font-bold uppercase tracking-wide text-[#102C26]/70 mb-3`}>Deleted posts</h2>
+                <PostsView flash={flash} deleted />
+              </div>
+              <div>
+                <h2 className={`${display.className} text-sm font-bold uppercase tracking-wide text-[#102C26]/70 mb-3`}>Deleted comments</h2>
+                <CommentsView flash={flash} deleted />
+              </div>
+            </div>
+          )
           : <div className="space-y-5"><ReportsQueue type="post" /><ReportsQueue type="comment" /></div>}
       </div>
     </div>
@@ -93,7 +105,7 @@ export default function HubPage() {
 }
 
 // ─── Posts ────────────────────────────────────────────────────────────────────
-function PostsView({ flash }: { flash: (k: "ok" | "err", m: string) => void }) {
+function PostsView({ flash, deleted = false }: { flash: (k: "ok" | "err", m: string) => void; deleted?: boolean }) {
   const [rows, setRows] = useState<PostRow[]>([]);
   const [stats, setStats] = useState<PostStats | null>(null);
   const [types, setTypes] = useState<string[]>([]);
@@ -139,6 +151,7 @@ function PostsView({ flash }: { flash: (k: "ok" | "err", m: string) => void }) {
     setLoading(true); setError(null);
     try {
       const params = new URLSearchParams({ page: String(p), pageSize: String(pageSize) });
+      if (deleted) params.set("deleted", "1");
       if (t !== "all") params.set("type", t);
       if (pub !== "all") params.set("published", pub);
       if (q) params.set("search", q);
@@ -160,7 +173,7 @@ function PostsView({ flash }: { flash: (k: "ok" | "err", m: string) => void }) {
   useEffect(() => {
     fetchRows(page, type, published, search);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize, type, published]);
+  }, [page, pageSize, type, published, deleted]);
   useEffect(() => { setPage(0); }, [type, published]);
   useEffect(() => { setSelectedIds(new Set()); setBulkDelete(false); }, [page, type, published, search]);
 
@@ -173,7 +186,7 @@ function PostsView({ flash }: { flash: (k: "ok" | "err", m: string) => void }) {
   }
   const allSelected = rows.length > 0 && selectedIds.size === rows.length;
 
-  async function runBulk(action: "publish" | "unpublish" | "delete") {
+  async function runBulk(action: "publish" | "unpublish" | "delete" | "restore" | "purge") {
     const ids = Array.from(selectedIds);
     if (ids.length === 0) return;
     setBulkBusy(action);
@@ -184,7 +197,8 @@ function PostsView({ flash }: { flash: (k: "ok" | "err", m: string) => void }) {
       });
       if (!res.ok) throw new Error();
       const json = await res.json() as { updated: number };
-      flash("ok", `${json.updated} post${json.updated !== 1 ? "s" : ""} ${action === "delete" ? "deleted" : "updated"}.`);
+      const verb = action === "delete" ? "moved to Trash" : action === "restore" ? "restored" : action === "purge" ? "permanently deleted" : "updated";
+      flash("ok", `${json.updated} post${json.updated !== 1 ? "s" : ""} ${verb}.`);
       setSelectedIds(new Set()); setBulkDelete(false);
       fetchRows(page, type, published, search);
     } catch {
@@ -192,6 +206,15 @@ function PostsView({ flash }: { flash: (k: "ok" | "err", m: string) => void }) {
     } finally {
       setBulkBusy(null);
     }
+  }
+
+  async function restoreOne(p: PostRow) {
+    setMenu(null);
+    const res = await fetch(`/api/admin/hub/posts/${p.id}`, {
+      method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ restore: true }),
+    });
+    if (res.ok) { flash("ok", "Post restored."); fetchRows(page, type, published, search); }
+    else flash("err", "Restore failed.");
   }
 
   useEffect(() => {
@@ -226,8 +249,8 @@ function PostsView({ flash }: { flash: (k: "ok" | "err", m: string) => void }) {
     if (!modal) return;
     setModalBusy(true);
     try {
-      const res = await fetch(`/api/admin/hub/posts/${modal.id}`, { method: "DELETE" });
-      if (res.ok) { flash("ok", "Post deleted."); setModal(null); fetchRows(page, type, published, search); }
+      const res = await fetch(`/api/admin/hub/posts/${modal.id}${deleted ? "?hard=1" : ""}`, { method: "DELETE" });
+      if (res.ok) { flash("ok", deleted ? "Post permanently deleted." : "Post moved to Trash."); setModal(null); fetchRows(page, type, published, search); }
       else { const j = await res.json().catch(() => null); flash("err", j?.error ?? "Delete failed."); }
     } finally {
       setModalBusy(false);
@@ -290,17 +313,30 @@ function PostsView({ flash }: { flash: (k: "ok" | "err", m: string) => void }) {
                 <button onClick={() => { setSelectedIds(new Set()); setBulkDelete(false); }} className="text-white/60 hover:text-white transition-colors ml-1" title="Clear"><X size={14} /></button>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
-                <button onClick={() => runBulk("publish")} disabled={!!bulkBusy} className="flex items-center gap-1.5 px-3 py-2 bg-white/10 text-white rounded-none text-sm font-semibold hover:bg-white/20 transition-colors disabled:opacity-50"><Eye size={14} /> Publish</button>
-                <button onClick={() => runBulk("unpublish")} disabled={!!bulkBusy} className="flex items-center gap-1.5 px-3 py-2 bg-white/10 text-white rounded-none text-sm font-semibold hover:bg-white/20 transition-colors disabled:opacity-50"><EyeOff size={14} /> Hide</button>
-                <button onClick={() => setBulkDelete((v) => !v)} disabled={!!bulkBusy} className="flex items-center gap-1.5 px-3 py-2 bg-red-500/20 text-white rounded-none text-sm font-semibold hover:bg-red-500/30 transition-colors disabled:opacity-50"><Trash2 size={14} /> Delete</button>
+                {deleted ? (
+                  <>
+                    <button onClick={() => runBulk("restore")} disabled={!!bulkBusy} className="flex items-center gap-1.5 px-3 py-2 bg-white/10 text-white rounded-none text-sm font-semibold hover:bg-white/20 transition-colors disabled:opacity-50"><RotateCcw size={14} /> Restore</button>
+                    <button onClick={() => setBulkDelete((v) => !v)} disabled={!!bulkBusy} className="flex items-center gap-1.5 px-3 py-2 bg-red-500/20 text-white rounded-none text-sm font-semibold hover:bg-red-500/30 transition-colors disabled:opacity-50"><Trash2 size={14} /> Delete forever</button>
+                  </>
+                ) : (
+                  <>
+                    <button onClick={() => runBulk("publish")} disabled={!!bulkBusy} className="flex items-center gap-1.5 px-3 py-2 bg-white/10 text-white rounded-none text-sm font-semibold hover:bg-white/20 transition-colors disabled:opacity-50"><Eye size={14} /> Publish</button>
+                    <button onClick={() => runBulk("unpublish")} disabled={!!bulkBusy} className="flex items-center gap-1.5 px-3 py-2 bg-white/10 text-white rounded-none text-sm font-semibold hover:bg-white/20 transition-colors disabled:opacity-50"><EyeOff size={14} /> Hide</button>
+                    <button onClick={() => setBulkDelete((v) => !v)} disabled={!!bulkBusy} className="flex items-center gap-1.5 px-3 py-2 bg-red-500/20 text-white rounded-none text-sm font-semibold hover:bg-red-500/30 transition-colors disabled:opacity-50"><Trash2 size={14} /> Delete</button>
+                  </>
+                )}
               </div>
             </div>
             {bulkDelete && (
               <div className="mt-3 flex items-center gap-2 flex-wrap">
-                <span className="text-white/80 text-sm">Permanently delete {selectedIds.size} post{selectedIds.size !== 1 ? "s" : ""} and all their comments/likes?</span>
-                <button onClick={() => runBulk("delete")} disabled={!!bulkBusy}
+                <span className="text-white/80 text-sm">
+                  {deleted
+                    ? `Permanently delete ${selectedIds.size} post${selectedIds.size !== 1 ? "s" : ""} and all their comments/likes? This can't be undone.`
+                    : `Move ${selectedIds.size} post${selectedIds.size !== 1 ? "s" : ""} to Trash? You can restore them later.`}
+                </span>
+                <button onClick={() => runBulk(deleted ? "purge" : "delete")} disabled={!!bulkBusy}
                   className="px-4 py-2 bg-[#F7E7CE] text-[#102C26] rounded-none text-sm font-semibold hover:bg-white transition-colors disabled:opacity-50">
-                  {bulkBusy === "delete" ? "Deleting…" : "Confirm delete"}
+                  {bulkBusy ? "Working…" : deleted ? "Delete forever" : "Move to Trash"}
                 </button>
               </div>
             )}
@@ -421,12 +457,21 @@ function PostsView({ flash }: { flash: (k: "ok" | "err", m: string) => void }) {
           className="z-50 bg-white border border-[#102C26]/15 shadow-xl rounded-none py-1 text-sm">
           <button onClick={() => openPreview(menu.post.id)} className="w-full flex items-center gap-2.5 px-3 py-2 text-gray-700 hover:bg-gray-50 transition-colors"><FileText size={14} className="text-gray-500" /> View post</button>
           <div className="my-1 h-px bg-gray-100" />
-          <button onClick={() => togglePublish(menu.post)} className="w-full flex items-center gap-2.5 px-3 py-2 text-gray-700 hover:bg-gray-50 transition-colors">
-            {menu.post.is_published ? <EyeOff size={14} className="text-gray-500" /> : <Eye size={14} className="text-gray-500" />}
-            {menu.post.is_published ? "Unpublish" : "Publish"}
-          </button>
-          <div className="my-1 h-px bg-gray-100" />
-          <button onClick={() => { setModal(menu.post); setMenu(null); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-red-700 hover:bg-red-50 transition-colors"><Trash2 size={14} /> Delete</button>
+          {deleted ? (
+            <>
+              <button onClick={() => restoreOne(menu.post)} className="w-full flex items-center gap-2.5 px-3 py-2 text-gray-700 hover:bg-gray-50 transition-colors"><RotateCcw size={14} className="text-gray-500" /> Restore</button>
+              <button onClick={() => { setModal(menu.post); setMenu(null); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-red-700 hover:bg-red-50 transition-colors"><Trash2 size={14} /> Delete forever</button>
+            </>
+          ) : (
+            <>
+              <button onClick={() => togglePublish(menu.post)} className="w-full flex items-center gap-2.5 px-3 py-2 text-gray-700 hover:bg-gray-50 transition-colors">
+                {menu.post.is_published ? <EyeOff size={14} className="text-gray-500" /> : <Eye size={14} className="text-gray-500" />}
+                {menu.post.is_published ? "Unpublish" : "Publish"}
+              </button>
+              <div className="my-1 h-px bg-gray-100" />
+              <button onClick={() => { setModal(menu.post); setMenu(null); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-red-700 hover:bg-red-50 transition-colors"><Trash2 size={14} /> Delete</button>
+            </>
+          )}
         </div>
       )}
 
@@ -435,15 +480,19 @@ function PostsView({ flash }: { flash: (k: "ok" | "err", m: string) => void }) {
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-none flex items-center justify-center shrink-0 bg-red-50 text-red-600"><Trash2 size={18} /></div>
             <div className="min-w-0">
-              <h3 id="post-del-title" className={`${display.className} text-lg font-bold text-[#102C26]`}>Delete post?</h3>
-              <p id="post-del-desc" className="text-sm text-gray-600 mt-1">This permanently removes the post and all its comments, likes and bookmarks. This cannot be undone.</p>
+              <h3 id="post-del-title" className={`${display.className} text-lg font-bold text-[#102C26]`}>{deleted ? "Delete forever?" : "Move to Trash?"}</h3>
+              <p id="post-del-desc" className="text-sm text-gray-600 mt-1">
+                {deleted
+                  ? "This permanently removes the post and all its comments, likes and bookmarks. This cannot be undone."
+                  : "The post will be hidden from the feed and moved to Trash. You can restore it later."}
+              </p>
             </div>
           </div>
           <div className="mt-5 flex items-center justify-end gap-2">
             <button onClick={() => setModal(null)} disabled={modalBusy} className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">Cancel</button>
             <button onClick={confirmDelete} disabled={modalBusy}
               className="inline-flex items-center gap-2 px-4 py-2 text-sm font-bold uppercase tracking-tight text-white rounded-none disabled:opacity-50 bg-red-600 hover:bg-red-700 transition-colors">
-              {modalBusy ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />} Delete
+              {modalBusy ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />} {deleted ? "Delete forever" : "Move to Trash"}
             </button>
           </div>
         </Modal>
@@ -517,7 +566,7 @@ function PostsView({ flash }: { flash: (k: "ok" | "err", m: string) => void }) {
 }
 
 // ─── Comments ───────────────────────────────────────────────────────────────
-function CommentsView({ flash }: { flash: (k: "ok" | "err", m: string) => void }) {
+function CommentsView({ flash, deleted = false }: { flash: (k: "ok" | "err", m: string) => void; deleted?: boolean }) {
   const [rows, setRows] = useState<CommentRow[]>([]);
   const [totalComments, setTotalComments] = useState(0);
   const [total, setTotal] = useState(0);
@@ -540,6 +589,7 @@ function CommentsView({ flash }: { flash: (k: "ok" | "err", m: string) => void }
     setLoading(true); setError(null);
     try {
       const params = new URLSearchParams({ page: String(p), pageSize: String(pageSize) });
+      if (deleted) params.set("deleted", "1");
       if (q) params.set("search", q);
       const res = await fetch(`/api/admin/hub/comments?${params}`);
       if (!res.ok) throw new Error();
@@ -556,7 +606,7 @@ function CommentsView({ flash }: { flash: (k: "ok" | "err", m: string) => void }
   useEffect(() => {
     fetchRows(page, search);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize]);
+  }, [page, pageSize, deleted]);
   useEffect(() => { setSelectedIds(new Set()); setBulkDelete(false); }, [page, search]);
 
   function handleSearch(val: string) {
@@ -574,33 +624,42 @@ function CommentsView({ flash }: { flash: (k: "ok" | "err", m: string) => void }
   }
   const allSelected = rows.length > 0 && selectedIds.size === rows.length;
 
-  async function runBulkDelete() {
+  async function runBulk(action: "delete" | "restore" | "purge") {
     const ids = Array.from(selectedIds);
     if (ids.length === 0) return;
     setBulkBusy(true);
     try {
       const res = await fetch("/api/admin/hub/comments/bulk", {
         method: "PATCH", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "delete", ids }),
+        body: JSON.stringify({ action, ids }),
       });
       if (!res.ok) throw new Error();
       const json = await res.json() as { updated: number };
-      flash("ok", `${json.updated} comment${json.updated !== 1 ? "s" : ""} deleted.`);
+      const verb = action === "delete" ? "moved to Trash" : action === "restore" ? "restored" : "permanently deleted";
+      flash("ok", `${json.updated} comment${json.updated !== 1 ? "s" : ""} ${verb}.`);
       setSelectedIds(new Set()); setBulkDelete(false);
       fetchRows(page, search);
     } catch {
-      flash("err", "Bulk delete failed.");
+      flash("err", "Bulk action failed.");
     } finally {
       setBulkBusy(false);
     }
+  }
+
+  async function restoreOne(c: CommentRow) {
+    const res = await fetch(`/api/admin/hub/comments/${c.id}`, {
+      method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ restore: true }),
+    });
+    if (res.ok) { flash("ok", "Comment restored."); fetchRows(page, search); }
+    else flash("err", "Restore failed.");
   }
 
   async function confirmDelete() {
     if (!modal) return;
     setModalBusy(true);
     try {
-      const res = await fetch(`/api/admin/hub/comments/${modal.id}`, { method: "DELETE" });
-      if (res.ok) { flash("ok", "Comment deleted."); setModal(null); fetchRows(page, search); }
+      const res = await fetch(`/api/admin/hub/comments/${modal.id}${deleted ? "?hard=1" : ""}`, { method: "DELETE" });
+      if (res.ok) { flash("ok", deleted ? "Comment permanently deleted." : "Comment moved to Trash."); setModal(null); fetchRows(page, search); }
       else { const j = await res.json().catch(() => null); flash("err", j?.error ?? "Delete failed."); }
     } finally {
       setModalBusy(false);
@@ -633,14 +692,23 @@ function CommentsView({ flash }: { flash: (k: "ok" | "err", m: string) => void }
                 <span className="text-white font-semibold text-sm">{selectedIds.size} selected</span>
                 <button onClick={() => { setSelectedIds(new Set()); setBulkDelete(false); }} className="text-white/60 hover:text-white transition-colors ml-1" title="Clear"><X size={14} /></button>
               </div>
-              <button onClick={() => setBulkDelete((v) => !v)} disabled={bulkBusy} className="flex items-center gap-1.5 px-3 py-2 bg-red-500/20 text-white rounded-none text-sm font-semibold hover:bg-red-500/30 transition-colors disabled:opacity-50"><Trash2 size={14} /> Delete</button>
+              <div className="flex items-center gap-2 flex-wrap">
+                {deleted && (
+                  <button onClick={() => runBulk("restore")} disabled={bulkBusy} className="flex items-center gap-1.5 px-3 py-2 bg-white/10 text-white rounded-none text-sm font-semibold hover:bg-white/20 transition-colors disabled:opacity-50"><RotateCcw size={14} /> Restore</button>
+                )}
+                <button onClick={() => setBulkDelete((v) => !v)} disabled={bulkBusy} className="flex items-center gap-1.5 px-3 py-2 bg-red-500/20 text-white rounded-none text-sm font-semibold hover:bg-red-500/30 transition-colors disabled:opacity-50"><Trash2 size={14} /> {deleted ? "Delete forever" : "Delete"}</button>
+              </div>
             </div>
             {bulkDelete && (
               <div className="mt-3 flex items-center gap-2 flex-wrap">
-                <span className="text-white/80 text-sm">Permanently delete {selectedIds.size} comment{selectedIds.size !== 1 ? "s" : ""} (and any replies)?</span>
-                <button onClick={runBulkDelete} disabled={bulkBusy}
+                <span className="text-white/80 text-sm">
+                  {deleted
+                    ? `Permanently delete ${selectedIds.size} comment${selectedIds.size !== 1 ? "s" : ""} (and any replies)? This can't be undone.`
+                    : `Move ${selectedIds.size} comment${selectedIds.size !== 1 ? "s" : ""} to Trash? You can restore them later.`}
+                </span>
+                <button onClick={() => runBulk(deleted ? "purge" : "delete")} disabled={bulkBusy}
                   className="px-4 py-2 bg-[#F7E7CE] text-[#102C26] rounded-none text-sm font-semibold hover:bg-white transition-colors disabled:opacity-50">
-                  {bulkBusy ? "Deleting…" : "Confirm delete"}
+                  {bulkBusy ? "Working…" : deleted ? "Delete forever" : "Move to Trash"}
                 </button>
               </div>
             )}
@@ -675,8 +743,14 @@ function CommentsView({ flash }: { flash: (k: "ok" | "err", m: string) => void }
                         </div>
                       </div>
                       {canManage && (
-                        <button onClick={() => setModal(c)} title="Delete"
-                          className="inline-flex items-center justify-center w-8 h-8 shrink-0 rounded-none text-gray-500 hover:bg-red-600 hover:text-white transition-all"><Trash2 size={15} /></button>
+                        <div className="flex items-center gap-1 shrink-0">
+                          {deleted && (
+                            <button onClick={() => restoreOne(c)} title="Restore"
+                              className="inline-flex items-center justify-center w-8 h-8 rounded-none text-gray-500 hover:bg-[#102C26] hover:text-white transition-all"><RotateCcw size={15} /></button>
+                          )}
+                          <button onClick={() => setModal(c)} title={deleted ? "Delete forever" : "Delete"}
+                            className="inline-flex items-center justify-center w-8 h-8 rounded-none text-gray-500 hover:bg-red-600 hover:text-white transition-all"><Trash2 size={15} /></button>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -725,8 +799,14 @@ function CommentsView({ flash }: { flash: (k: "ok" | "err", m: string) => void }
                       <td className="px-4 py-3.5 hidden xl:table-cell text-gray-600 whitespace-nowrap">{fmtDateTime(c.created_at)}</td>
                       <td className="px-4 lg:px-5 py-3.5 text-right">
                         {canManage && (
-                          <button onClick={() => setModal(c)} title="Delete"
-                            className="inline-flex items-center justify-center w-8 h-8 rounded-none text-gray-500 hover:bg-red-600 hover:text-white transition-all"><Trash2 size={15} /></button>
+                          <div className="inline-flex items-center gap-1">
+                            {deleted && (
+                              <button onClick={() => restoreOne(c)} title="Restore"
+                                className="inline-flex items-center justify-center w-8 h-8 rounded-none text-gray-500 hover:bg-[#102C26] hover:text-white transition-all"><RotateCcw size={15} /></button>
+                            )}
+                            <button onClick={() => setModal(c)} title={deleted ? "Delete forever" : "Delete"}
+                              className="inline-flex items-center justify-center w-8 h-8 rounded-none text-gray-500 hover:bg-red-600 hover:text-white transition-all"><Trash2 size={15} /></button>
+                          </div>
                         )}
                       </td>
                     </tr>
@@ -745,16 +825,16 @@ function CommentsView({ flash }: { flash: (k: "ok" | "err", m: string) => void }
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-none flex items-center justify-center shrink-0 bg-red-50 text-red-600"><Trash2 size={18} /></div>
             <div className="min-w-0">
-              <h3 id="comment-del-title" className={`${display.className} text-lg font-bold text-[#102C26]`}>Delete comment?</h3>
+              <h3 id="comment-del-title" className={`${display.className} text-lg font-bold text-[#102C26]`}>{deleted ? "Delete forever?" : "Move to Trash?"}</h3>
               <p id="comment-del-desc" className="text-sm text-gray-600 mt-1 wrap-break-word">&ldquo;{modal.content.slice(0, 120)}{modal.content.length > 120 ? "…" : ""}&rdquo;</p>
-              <p className="text-xs text-gray-500 mt-1.5">Any replies to this comment will also be removed.</p>
+              <p className="text-xs text-gray-500 mt-1.5">{deleted ? "This permanently removes the comment and any replies. This cannot be undone." : "The comment will be hidden and moved to Trash. You can restore it later."}</p>
             </div>
           </div>
           <div className="mt-5 flex items-center justify-end gap-2">
             <button onClick={() => setModal(null)} disabled={modalBusy} className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">Cancel</button>
             <button onClick={confirmDelete} disabled={modalBusy}
               className="inline-flex items-center gap-2 px-4 py-2 text-sm font-bold uppercase tracking-tight text-white rounded-none disabled:opacity-50 bg-red-600 hover:bg-red-700 transition-colors">
-              {modalBusy ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />} Delete
+              {modalBusy ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />} {deleted ? "Delete forever" : "Move to Trash"}
             </button>
           </div>
         </Modal>

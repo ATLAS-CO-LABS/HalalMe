@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   Search, RefreshCw, AlertCircle, ChefHat, BadgeCheck, Sparkles, Star, EyeOff, Eye,
-  MoreVertical, Trash2, Loader2, Bot, Users, TrendingUp, CheckSquare, X, FileText, Clock, Flag,
+  MoreVertical, Trash2, Loader2, Bot, Users, TrendingUp, CheckSquare, X, FileText, Clock, Flag, RotateCcw,
 } from "lucide-react";
 import { display } from "../_fonts";
 import {
@@ -48,7 +48,7 @@ interface RecipeRow {
   created_at: string;
   author: Author;
 }
-interface Stats { total: number; published: number; unverified: number; aiGenerated: number; }
+interface Stats { total: number; published: number; unverified: number; aiGenerated: number; deleted?: number; }
 interface AiUsage {
   sessions: { total: number; converted: number; conversionRate: number; thisWeek: number };
   requests: { total: number; thisWeek: number; uniqueUsers: number };
@@ -73,7 +73,8 @@ const SOURCE_FILTERS = [
 
 export default function KitchenPage() {
   const { toast, flash } = useToast();
-  const [tab, setTab] = useState<"recipes" | "reported">("recipes");
+  const [tab, setTab] = useState<"recipes" | "reported" | "deleted">("recipes");
+  const deletedMode = tab === "deleted";
   const [rows, setRows] = useState<RecipeRow[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [total, setTotal] = useState(0);
@@ -122,6 +123,7 @@ export default function KitchenPage() {
     setLoading(true); setError(null);
     try {
       const params = new URLSearchParams({ page: String(p), pageSize: String(pageSize) });
+      if (tab === "deleted") params.set("deleted", "1");
       if (pub !== "all") params.set("published", pub);
       if (hal !== "all") params.set("halal", hal);
       if (src !== "all") params.set("source", src);
@@ -141,8 +143,8 @@ export default function KitchenPage() {
   useEffect(() => {
     fetchRows(page, published, halal, source, search);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize, published, halal, source]);
-  useEffect(() => { setPage(0); }, [published, halal, source]);
+  }, [page, pageSize, published, halal, source, tab]);
+  useEffect(() => { setPage(0); setSelectedIds(new Set()); }, [published, halal, source, tab]);
   useEffect(() => { setSelectedIds(new Set()); setBulkDelete(false); }, [page, published, halal, source, search]);
 
   // AI usage panel — loaded once.
@@ -191,8 +193,9 @@ export default function KitchenPage() {
     if (!modal) return;
     setModalBusy(true);
     try {
-      const res = await fetch(`/api/admin/recipes/${modal.id}`, { method: "DELETE" });
-      if (res.ok) { flash("ok", "Recipe deleted."); setModal(null); fetchRows(page, published, halal, source, search); }
+      // In the Trash, deleting is permanent (?hard=1); elsewhere it soft-deletes.
+      const res = await fetch(`/api/admin/recipes/${modal.id}${deletedMode ? "?hard=1" : ""}`, { method: "DELETE" });
+      if (res.ok) { flash("ok", deletedMode ? "Recipe permanently deleted." : "Recipe moved to Trash."); setModal(null); fetchRows(page, published, halal, source, search); }
       else { const j = await res.json().catch(() => null); flash("err", j?.error ?? "Delete failed."); }
     } finally {
       setModalBusy(false);
@@ -216,7 +219,7 @@ export default function KitchenPage() {
   const allSelected = rows.length > 0 && selectedIds.size === rows.length;
 
   // ── Bulk actions (looped over the existing per-recipe routes) ──────────────
-  async function runBulk(action: "publish" | "unpublish" | "feature" | "unfeature" | "verify" | "delete") {
+  async function runBulk(action: "publish" | "unpublish" | "feature" | "unfeature" | "verify" | "delete" | "restore" | "purge") {
     const ids = Array.from(selectedIds);
     if (ids.length === 0) return;
     setBulkBusy(action);
@@ -227,7 +230,8 @@ export default function KitchenPage() {
       });
       if (!res.ok) throw new Error();
       const json = await res.json() as { updated: number };
-      flash("ok", `${json.updated} recipe${json.updated !== 1 ? "s" : ""} ${action === "delete" ? "deleted" : "updated"}.`);
+      const verb = action === "delete" ? "moved to Trash" : action === "restore" ? "restored" : action === "purge" ? "permanently deleted" : "updated";
+      flash("ok", `${json.updated} recipe${json.updated !== 1 ? "s" : ""} ${verb}.`);
       setSelectedIds(new Set());
       setBulkDelete(false);
       fetchRows(page, published, halal, source, search);
@@ -236,6 +240,17 @@ export default function KitchenPage() {
     } finally {
       setBulkBusy(null);
     }
+  }
+
+  // Restore a single recipe from the Trash.
+  async function restoreOne(r: RecipeRow) {
+    setMenu(null);
+    const res = await fetch(`/api/admin/recipes/${r.id}`, {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ restore: true }),
+    });
+    if (res.ok) { flash("ok", "Recipe restored."); fetchRows(page, published, halal, source, search); }
+    else flash("err", "Restore failed.");
   }
 
   return (
@@ -261,12 +276,14 @@ export default function KitchenPage() {
       {/* Recipes / Reported toggle */}
       <div className="bg-white border-b border-[#102C26]/12 px-4 sm:px-8">
         <div className="flex items-center gap-0.5 -mb-px">
-          {([["recipes", "Recipes", ChefHat], ["reported", "Reported", Flag]] as const).map(([key, label, Icon]) => {
+          {([["recipes", "Recipes", ChefHat], ["reported", "Reported", Flag], ["deleted", "Trash", Trash2]] as const).map(([key, label, Icon]) => {
             const active = tab === key;
+            const badge = key === "deleted" ? (stats?.deleted ?? 0) : 0;
             return (
               <button key={key} onClick={() => setTab(key)}
                 className={`flex items-center gap-2 px-3.5 py-2.5 text-sm font-semibold whitespace-nowrap border-b-2 transition-colors ${active ? "border-[#F59E0B] text-[#102C26]" : "border-transparent text-gray-500 hover:text-[#102C26]"}`}>
                 <Icon size={15} className={active ? "text-[#F59E0B]" : ""} /> {label}
+                {badge > 0 && <span className="text-[10px] font-bold bg-gray-200 text-gray-700 rounded-full px-1.5 py-0.5">{badge}</span>}
               </button>
             );
           })}
@@ -317,19 +334,32 @@ export default function KitchenPage() {
                   <button onClick={() => { setSelectedIds(new Set()); setBulkDelete(false); }} className="text-white/60 hover:text-white transition-colors ml-1" title="Clear"><X size={14} /></button>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <button onClick={() => runBulk("publish")} disabled={!!bulkBusy} className="flex items-center gap-1.5 px-3 py-2 bg-white/10 text-white rounded-none text-sm font-semibold hover:bg-white/20 transition-colors disabled:opacity-50"><Eye size={14} /> Publish</button>
-                  <button onClick={() => runBulk("unpublish")} disabled={!!bulkBusy} className="flex items-center gap-1.5 px-3 py-2 bg-white/10 text-white rounded-none text-sm font-semibold hover:bg-white/20 transition-colors disabled:opacity-50"><EyeOff size={14} /> Hide</button>
-                  <button onClick={() => runBulk("verify")} disabled={!!bulkBusy} className="flex items-center gap-1.5 px-3 py-2 bg-white/10 text-white rounded-none text-sm font-semibold hover:bg-white/20 transition-colors disabled:opacity-50"><BadgeCheck size={14} /> Halal ✓</button>
-                  <button onClick={() => runBulk("feature")} disabled={!!bulkBusy} className="flex items-center gap-1.5 px-3 py-2 bg-white/10 text-white rounded-none text-sm font-semibold hover:bg-white/20 transition-colors disabled:opacity-50"><Star size={14} /> Feature</button>
-                  <button onClick={() => setBulkDelete((v) => !v)} disabled={!!bulkBusy} className="flex items-center gap-1.5 px-3 py-2 bg-red-500/20 text-white rounded-none text-sm font-semibold hover:bg-red-500/30 transition-colors disabled:opacity-50"><Trash2 size={14} /> Delete</button>
+                  {deletedMode ? (
+                    <>
+                      <button onClick={() => runBulk("restore")} disabled={!!bulkBusy} className="flex items-center gap-1.5 px-3 py-2 bg-white/10 text-white rounded-none text-sm font-semibold hover:bg-white/20 transition-colors disabled:opacity-50"><RotateCcw size={14} /> Restore</button>
+                      <button onClick={() => setBulkDelete((v) => !v)} disabled={!!bulkBusy} className="flex items-center gap-1.5 px-3 py-2 bg-red-500/20 text-white rounded-none text-sm font-semibold hover:bg-red-500/30 transition-colors disabled:opacity-50"><Trash2 size={14} /> Delete forever</button>
+                    </>
+                  ) : (
+                    <>
+                      <button onClick={() => runBulk("publish")} disabled={!!bulkBusy} className="flex items-center gap-1.5 px-3 py-2 bg-white/10 text-white rounded-none text-sm font-semibold hover:bg-white/20 transition-colors disabled:opacity-50"><Eye size={14} /> Publish</button>
+                      <button onClick={() => runBulk("unpublish")} disabled={!!bulkBusy} className="flex items-center gap-1.5 px-3 py-2 bg-white/10 text-white rounded-none text-sm font-semibold hover:bg-white/20 transition-colors disabled:opacity-50"><EyeOff size={14} /> Hide</button>
+                      <button onClick={() => runBulk("verify")} disabled={!!bulkBusy} className="flex items-center gap-1.5 px-3 py-2 bg-white/10 text-white rounded-none text-sm font-semibold hover:bg-white/20 transition-colors disabled:opacity-50"><BadgeCheck size={14} /> Halal ✓</button>
+                      <button onClick={() => runBulk("feature")} disabled={!!bulkBusy} className="flex items-center gap-1.5 px-3 py-2 bg-white/10 text-white rounded-none text-sm font-semibold hover:bg-white/20 transition-colors disabled:opacity-50"><Star size={14} /> Feature</button>
+                      <button onClick={() => setBulkDelete((v) => !v)} disabled={!!bulkBusy} className="flex items-center gap-1.5 px-3 py-2 bg-red-500/20 text-white rounded-none text-sm font-semibold hover:bg-red-500/30 transition-colors disabled:opacity-50"><Trash2 size={14} /> Delete</button>
+                    </>
+                  )}
                 </div>
               </div>
               {bulkDelete && (
                 <div className="mt-3 flex items-center gap-2 flex-wrap">
-                  <span className="text-white/80 text-sm">Permanently delete {selectedIds.size} recipe{selectedIds.size !== 1 ? "s" : ""} and all their reviews/favourites?</span>
-                  <button onClick={() => runBulk("delete")} disabled={!!bulkBusy}
+                  <span className="text-white/80 text-sm">
+                    {deletedMode
+                      ? `Permanently delete ${selectedIds.size} recipe${selectedIds.size !== 1 ? "s" : ""} and all their reviews/favourites? This can't be undone.`
+                      : `Move ${selectedIds.size} recipe${selectedIds.size !== 1 ? "s" : ""} to Trash? You can restore them later.`}
+                  </span>
+                  <button onClick={() => runBulk(deletedMode ? "purge" : "delete")} disabled={!!bulkBusy}
                     className="px-4 py-2 bg-[#F7E7CE] text-[#102C26] rounded-none text-sm font-semibold hover:bg-white transition-colors disabled:opacity-50">
-                    {bulkBusy === "delete" ? "Deleting…" : "Confirm delete"}
+                    {bulkBusy ? "Working…" : deletedMode ? "Delete forever" : "Move to Trash"}
                   </button>
                 </div>
               )}
@@ -493,22 +523,33 @@ export default function KitchenPage() {
           <button onClick={() => openPreview(menu.recipe.id)}
             className="w-full flex items-center gap-2.5 px-3 py-2 text-gray-700 hover:bg-gray-50 transition-colors"><FileText size={14} className="text-gray-500" /> View recipe</button>
           <div className="my-1 h-px bg-gray-100" />
-          <button onClick={() => toggle(menu.recipe, "is_published", menu.recipe.is_published ? "Recipe hidden." : "Recipe published.")}
-            className="w-full flex items-center gap-2.5 px-3 py-2 text-gray-700 hover:bg-gray-50 transition-colors">
-            {menu.recipe.is_published ? <EyeOff size={14} className="text-gray-500" /> : <Eye size={14} className="text-gray-500" />}
-            {menu.recipe.is_published ? "Unpublish" : "Publish"}
-          </button>
-          <button onClick={() => toggle(menu.recipe, "is_halal_verified", menu.recipe.is_halal_verified ? "Halal verification removed." : "Marked halal-verified.")}
-            className="w-full flex items-center gap-2.5 px-3 py-2 text-gray-700 hover:bg-gray-50 transition-colors">
-            <BadgeCheck size={14} className="text-gray-500" /> {menu.recipe.is_halal_verified ? "Remove halal ✓" : "Mark halal ✓"}
-          </button>
-          <button onClick={() => toggle(menu.recipe, "is_featured", menu.recipe.is_featured ? "Removed from featured." : "Added to featured.")}
-            className="w-full flex items-center gap-2.5 px-3 py-2 text-gray-700 hover:bg-gray-50 transition-colors">
-            <Star size={14} className="text-gray-500" /> {menu.recipe.is_featured ? "Unfeature" : "Feature"}
-          </button>
-          <div className="my-1 h-px bg-gray-100" />
-          <button onClick={() => { setModal(menu.recipe); setMenu(null); }}
-            className="w-full flex items-center gap-2.5 px-3 py-2 text-red-700 hover:bg-red-50 transition-colors"><Trash2 size={14} /> Delete</button>
+          {deletedMode ? (
+            <>
+              <button onClick={() => restoreOne(menu.recipe)}
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-gray-700 hover:bg-gray-50 transition-colors"><RotateCcw size={14} className="text-gray-500" /> Restore</button>
+              <button onClick={() => { setModal(menu.recipe); setMenu(null); }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-red-700 hover:bg-red-50 transition-colors"><Trash2 size={14} /> Delete forever</button>
+            </>
+          ) : (
+            <>
+              <button onClick={() => toggle(menu.recipe, "is_published", menu.recipe.is_published ? "Recipe hidden." : "Recipe published.")}
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-gray-700 hover:bg-gray-50 transition-colors">
+                {menu.recipe.is_published ? <EyeOff size={14} className="text-gray-500" /> : <Eye size={14} className="text-gray-500" />}
+                {menu.recipe.is_published ? "Unpublish" : "Publish"}
+              </button>
+              <button onClick={() => toggle(menu.recipe, "is_halal_verified", menu.recipe.is_halal_verified ? "Halal verification removed." : "Marked halal-verified.")}
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-gray-700 hover:bg-gray-50 transition-colors">
+                <BadgeCheck size={14} className="text-gray-500" /> {menu.recipe.is_halal_verified ? "Remove halal ✓" : "Mark halal ✓"}
+              </button>
+              <button onClick={() => toggle(menu.recipe, "is_featured", menu.recipe.is_featured ? "Removed from featured." : "Added to featured.")}
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-gray-700 hover:bg-gray-50 transition-colors">
+                <Star size={14} className="text-gray-500" /> {menu.recipe.is_featured ? "Unfeature" : "Feature"}
+              </button>
+              <div className="my-1 h-px bg-gray-100" />
+              <button onClick={() => { setModal(menu.recipe); setMenu(null); }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-red-700 hover:bg-red-50 transition-colors"><Trash2 size={14} /> Delete</button>
+            </>
+          )}
         </div>
       )}
 
@@ -518,15 +559,19 @@ export default function KitchenPage() {
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-none flex items-center justify-center shrink-0 bg-red-50 text-red-600"><Trash2 size={18} /></div>
             <div className="min-w-0">
-              <h3 id="kitchen-del-title" className={`${display.className} text-lg font-bold text-[#102C26]`}>Delete recipe?</h3>
-              <p id="kitchen-del-desc" className="text-sm text-gray-600 mt-1">This permanently removes <span className="font-semibold">{modal.title}</span> and all of its reviews and favourites. This cannot be undone.</p>
+              <h3 id="kitchen-del-title" className={`${display.className} text-lg font-bold text-[#102C26]`}>{deletedMode ? "Delete forever?" : "Move to Trash?"}</h3>
+              <p id="kitchen-del-desc" className="text-sm text-gray-600 mt-1">
+                {deletedMode
+                  ? <>This permanently removes <span className="font-semibold">{modal.title}</span> and all of its reviews and favourites. This cannot be undone.</>
+                  : <><span className="font-semibold">{modal.title}</span> will be hidden from the site and moved to Trash. You can restore it later.</>}
+              </p>
             </div>
           </div>
           <div className="mt-5 flex items-center justify-end gap-2">
             <button onClick={() => setModal(null)} disabled={modalBusy} className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">Cancel</button>
             <button onClick={confirmDelete} disabled={modalBusy}
               className="inline-flex items-center gap-2 px-4 py-2 text-sm font-bold uppercase tracking-tight text-white rounded-none disabled:opacity-50 bg-red-600 hover:bg-red-700 transition-colors">
-              {modalBusy ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />} Delete
+              {modalBusy ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />} {deletedMode ? "Delete forever" : "Move to Trash"}
             </button>
           </div>
         </Modal>

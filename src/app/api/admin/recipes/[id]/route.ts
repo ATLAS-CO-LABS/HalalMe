@@ -48,6 +48,23 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
+  // Restore from the Trash — clears the soft-delete marker (stays unpublished).
+  if (body.restore === true) {
+    const { error } = await serviceClient
+      .from("recipes")
+      .update({ deleted_at: null, deleted_by: null })
+      .eq("id", id);
+    if (error) {
+      console.error("[api/admin/recipes/[id]] restore error", error);
+      return NextResponse.json({ error: "Failed to restore recipe" }, { status: 500 });
+    }
+    await logAdminAction(gate, {
+      action: "recipe.restore", module: "kitchen", targetType: "recipe", targetId: id,
+      summary: `Restored recipe ${id} from Trash`,
+    });
+    return NextResponse.json({ ok: true });
+  }
+
   const update: Record<string, boolean> = {};
   for (const f of BOOL_FLAGS) {
     if (f in body && typeof body[f] === "boolean") update[f] = body[f] as boolean;
@@ -72,28 +89,48 @@ export async function PATCH(
   return NextResponse.json({ ok: true });
 }
 
-// DELETE /api/admin/recipes/[id] — hard delete (cascades to recipe_reviews,
-// recipe_favorites via FK ON DELETE CASCADE). Manage-only.
+// DELETE /api/admin/recipes/[id]
+//   default  → soft delete (Trash): set deleted_at, hide from public.
+//   ?hard=1  → permanent delete (cascades to recipe_reviews/favorites via FK).
+// Manage-only.
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  const hard = new URL(req.url).searchParams.get("hard") === "1";
 
   const gate = await requireAdmin("kitchen", "manage");
   if (!gate.ok) return NextResponse.json({ error: gate.error }, { status: gate.status });
 
   const { data: recipe } = await gate.serviceClient.from("recipes").select("title").eq("id", id).single();
 
-  const { error } = await gate.serviceClient.from("recipes").delete().eq("id", id);
+  if (hard) {
+    const { error } = await gate.serviceClient.from("recipes").delete().eq("id", id);
+    if (error) {
+      console.error("[api/admin/recipes/[id]] purge error", error);
+      return NextResponse.json({ error: "Failed to delete recipe" }, { status: 500 });
+    }
+    await logAdminAction(gate, {
+      action: "recipe.purge", module: "kitchen", targetType: "recipe", targetId: id,
+      summary: `Permanently deleted recipe ${recipe?.title ?? id}`,
+      metadata: { title: recipe?.title ?? null },
+    });
+    return NextResponse.json({ ok: true });
+  }
+
+  const { error } = await gate.serviceClient
+    .from("recipes")
+    .update({ deleted_at: new Date().toISOString(), deleted_by: gate.userId, is_published: false })
+    .eq("id", id);
   if (error) {
-    console.error("[api/admin/recipes/[id]] delete error", error);
+    console.error("[api/admin/recipes/[id]] soft-delete error", error);
     return NextResponse.json({ error: "Failed to delete recipe" }, { status: 500 });
   }
 
   await logAdminAction(gate, {
     action: "recipe.delete", module: "kitchen", targetType: "recipe", targetId: id,
-    summary: `Deleted recipe ${recipe?.title ?? id}`,
+    summary: `Moved recipe ${recipe?.title ?? id} to Trash`,
     metadata: { title: recipe?.title ?? null },
   });
 

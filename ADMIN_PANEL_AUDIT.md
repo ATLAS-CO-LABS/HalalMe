@@ -32,7 +32,22 @@ All three **Critical** items have been fixed in code:
 - **User side:** a reusable `ReportModal` + `reportService`; "Report" actions wired into posts (PostCard menu for others' posts), comments (post detail), and recipes (recipe detail), each auth-gated with a reason picker.
 - **Admin side:** `GET/PATCH /api/admin/reports` + a shared `ReportsQueue` surfaced as a **"Reported" tab in Hub** (posts + comments) and a **Recipes/Reported toggle in Kitchen**. Each row shows report count + reasons + author, with Hide / Delete / Dismiss actions that reuse the existing moderation endpoints and write to the audit log.
 
-**All 10 High-priority items are now resolved.** Medium/Low items below remain.
+**All 10 High-priority items are now resolved.**
+
+## ✅ Medium items resolved (updated 2026-06-26)
+
+All eight **Medium** items (#11–#18) are now fixed in code:
+
+- **#11 StatCard duplication / tones** — deleted the local `StatCard` copies in Users & Merchants; everything uses the shared `_ui.tsx` component (now carries the optional `onClick`/`active` variant). Added semantic tone names (`brand`, `accent`, `success`, `warning`, `danger`) with the old colour names kept as aliases (no visual change).
+- **#12 Decoy `⋮`** — the Merchants list trailing icon is now a `ChevronRight` (matches Users/Kitchen/Hub); the whole row still navigates to detail.
+- **#13 Date-range filtering** — new reusable `DateRange` control (`_ui.tsx`) + `parseDateRange` helper (`@/lib/adminFilters`), wired into **Users ("Joined")** and **Donations ("Donated")**, plus a **Custom range** in Analytics (window refactor with an upper bound). Kitchen/Hub/Merchants can adopt the same control incrementally.
+- **#14 Mobile cards** — added dedicated `md:hidden` card layouts (table → `hidden md:table`) for **Kitchen, Hub posts, Hub comments, Charities, Fraud**, matching the Users/Merchants pattern.
+- **#15 Permissions "Soon"** — replaced with a dedicated **Roles & Permissions** page (`/admin/permissions`, super-admin only): lists every team member with an inline per-module access grid (None/View/Manage across all 7 modules incl. Support), promote/demote, and read-only super-admin rows. Backed by `GET /api/admin/permissions`; edits reuse `PATCH /api/admin/users/[id]`. (Initial pass only de-faked the nav link to a filtered Users view; this is the full screen.)
+- **#16 Pagination** — shared control now always shows **"Page X of Y"**, plus an optional **rows-per-page** selector and **jump-to-page**. Wired across all 10 list surfaces via a new `parsePageSize` helper (`@/lib/adminPaging`).
+- **#17 Analytics export / comparison** — **CSV export** of the active section (stats + every series), and **vs-previous-period delta chips** on the range-based cards (Users signups, Rewards raised + donations, Kitchen AI sessions). (Materialised-view perf optimisation intentionally deferred — current in-memory aggregation is adequate at launch volumes.)
+- **#18 Soft-delete + restore** — content soft-delete for **recipes, posts, comments** (migration `045_soft_delete_content.sql`, applied: `deleted_at`/`deleted_by` + RLS so deleted rows are hidden from public/owner reads; the service-role admin client still sees them). Admin delete now soft-deletes (Trash); a separate `?hard=1` **purge** permanently removes (logged distinctly). Restore + permanent-delete surfaced via a **"Trash" tab** in Kitchen and Hub (posts + comments), with bulk endpoints extended to `restore`/`purge`. `comment_count` is reconciled on soft-delete/restore/purge. Users keep hard-delete (right-to-erasure).
+
+**Low items (#19–#25) remain** — deferred to a later pass. (#19 z-index scale was partially done as a side-effect: a documented `Z` token scale now lives in `_ui.tsx`.)
 
 ---
 
