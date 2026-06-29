@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { display } from "../_fonts";
 import {
-  fmtDateTime, fmtMoney, useToast, ToastView, StatCard, TableSkeleton, EmptyState, Pagination, FilterPills, Badge,
+  fmtDateTime, fmtMoney, useToast, ToastView, StatCard, TableSkeleton, EmptyState, Pagination, FilterPills, Badge, Modal,
 } from "../_ui";
 
 type JoinedObj = {
@@ -194,8 +194,7 @@ export default function FraudTab() {
       {detail && (() => {
         const don = one(detail.donation); const u = one(don?.user); const c = one(don?.charity);
         return (
-          <div className="fixed inset-0 z-60 bg-black/40 flex items-center justify-center p-4" onClick={() => !busy && setDetail(null)}>
-            <div className="bg-white rounded-none border border-[#102C26]/15 shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <Modal open onClose={() => setDetail(null)} busy={!!busy} maxWidth="max-w-lg" className="max-h-[90vh] overflow-y-auto">
               <div className="sticky top-0 bg-white border-b border-[#102C26]/10 px-6 py-4 flex items-start justify-between gap-4">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 mb-1"><Badge label={STATUS_LABEL[detail.status] ?? detail.status} tone={STATUS_TONE[detail.status] ?? "gray"} /><Badge label={`Flagged by ${detail.flagged_by}`} tone="gray" /></div>
@@ -252,8 +251,7 @@ export default function FraudTab() {
                   </div>
                 </div>
               )}
-            </div>
-          </div>
+          </Modal>
         );
       })()}
     </>

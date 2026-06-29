@@ -10,6 +10,7 @@ import { display } from "../_fonts";
 import {
   useToast, ToastView, StatCard, TableSkeleton, EmptyState, Pagination, FilterPills, Badge,
 } from "../_ui";
+import { rememberList } from "@/lib/adminRecordNav";
 
 type Ref = { id: string; full_name?: string | null; username?: string | null; avatar_url?: string | null; email?: string | null };
 type MerchantRef = { id: string; name: string };
@@ -99,6 +100,7 @@ export default function AdminChatPage() {
       if (!res.ok) throw new Error();
       const json = await res.json();
       setRows(json.conversations); setStats(json.stats); setTotal(json.total); setPageSize(json.pageSize);
+      rememberList("support", (json.conversations as Conversation[]).map((c) => c.id));
     } catch {
       setError("Could not load conversations. Try refreshing.");
     } finally {

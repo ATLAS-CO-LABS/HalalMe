@@ -20,10 +20,12 @@ import {
   ShieldCheck,
   ScrollText,
   Settings,
+  Search,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { isStaffRole } from "@/lib/adminRoles";
 import { AdminProvider, useAdmin } from "./AdminProvider";
+import CommandPalette from "./CommandPalette";
 
 type Module = "merchants" | "users" | "kitchen" | "hub" | "rewards" | "analytics" | "support";
 
@@ -182,6 +184,15 @@ function Sidebar({
 
       {/* Nav */}
       <nav className="relative flex-1 px-3 py-3 overflow-y-auto">
+        {/* Global search trigger (⌘K) */}
+        <button
+          onClick={() => { onClose?.(); window.dispatchEvent(new Event("admin:search")); }}
+          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-none text-sm text-white/45 bg-white/[0.04] border border-white/8 hover:bg-white/[0.08] hover:text-white/70 transition-colors mb-2"
+        >
+          <Search size={14} className="shrink-0" />
+          <span className="flex-1 text-left">Search…</span>
+          <kbd className="text-[9px] font-bold tracking-wide bg-white/8 text-white/40 px-1.5 py-0.5 rounded">⌘K</kbd>
+        </button>
         {visibleGroups.map((group, gi) => (
           <div key={group.heading ?? `grp-${gi}`} className={gi > 0 ? "mt-4" : "mt-1"}>
             {group.heading && (
@@ -276,6 +287,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <AdminProvider>
     <div className="min-h-dvh bg-[#F3E9D6]">
+      <CommandPalette />
 
       {/* ── Mobile backdrop ── */}
       {sidebarOpen && (
@@ -320,7 +332,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <span className="text-[#F7E7CE] font-black text-sm" style={{ fontFamily: "var(--font-logo)" }}>HalalMe</span>
             <span className="text-[#F59E0B] text-[9px] font-bold tracking-widest uppercase">Admin</span>
           </div>
-          <div className="w-9" />
+          <button
+            onClick={() => window.dispatchEvent(new Event("admin:search"))}
+            className="p-2 rounded-none text-white/60 hover:text-white hover:bg-white/10 transition-colors -mr-1"
+            aria-label="Search"
+          >
+            <Search size={18} />
+          </button>
         </div>
 
         {/* Page content — the document is the single scroll container */}

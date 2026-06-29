@@ -20,7 +20,9 @@ interface Data {
   stats?: Record<string, number>;
 }
 
-const FOREST = "#102C26", AMBER = "#F59E0B", MUTED = "#9CA3AF";
+// MUTED darkened from #9CA3AF → #6B7280 (gray-500) for stronger contrast against
+// white in donut segments / legends (WCAG-friendlier for the colour-only charts).
+const FOREST = "#102C26", AMBER = "#F59E0B", MUTED = "#6B7280";
 
 const SECTIONS = [
   { key: "merchants", label: "Merchants", icon: Store },
@@ -110,6 +112,8 @@ export default function AnalyticsPage() {
     a.download = `analytics-${section}-${range}-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
+    // Record the export in the audit log — fire-and-forget.
+    fetch("/api/admin/exports", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ resource: "analytics", scope: `${section} · ${range}` }) }).catch(() => {});
   }
 
   return (

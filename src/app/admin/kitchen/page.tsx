@@ -579,8 +579,7 @@ export default function KitchenPage() {
 
       {/* Recipe preview */}
       {(preview || previewLoading) && (
-        <div className="fixed inset-0 z-60 bg-black/40 flex items-center justify-center p-4" onClick={() => setPreview(null)}>
-          <div className="bg-white rounded-none border border-[#102C26]/15 shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <Modal open onClose={() => setPreview(null)} maxWidth="max-w-2xl" className="max-h-[90vh] overflow-y-auto">
             {previewLoading || !preview ? (
               <div className="flex items-center justify-center py-24"><Loader2 size={26} className="animate-spin text-[#102C26]/40" /></div>
             ) : (() => {
@@ -636,8 +635,7 @@ export default function KitchenPage() {
                 </>
               );
             })()}
-          </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

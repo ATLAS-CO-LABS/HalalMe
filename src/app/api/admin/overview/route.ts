@@ -85,11 +85,34 @@ export async function GET() {
 
   // ── Kitchen ────────────────────────────────────────────────────────────
   if (can("kitchen")) {
-    const [{ count: total }, { count: pendingHalal }] = await Promise.all([
-      db.from("recipes").select("id", { count: "exact", head: true }),
-      db.from("recipes").select("id", { count: "exact", head: true }).eq("is_halal_verified", false),
+    const [{ count: total }, { count: pendingHalal }, { data: newRecipes }] = await Promise.all([
+      db.from("recipes").select("id", { count: "exact", head: true }).is("deleted_at", null),
+      db.from("recipes").select("id", { count: "exact", head: true }).eq("is_halal_verified", false).is("deleted_at", null),
+      db.from("recipes").select("title, created_at").is("deleted_at", null).order("created_at", { ascending: false }).limit(5),
     ]);
     stats.kitchen = { total: total ?? 0, pendingHalal: pendingHalal ?? 0 };
+    for (const r of newRecipes ?? []) {
+      recent.push({ type: "recipe", label: r.title, detail: "new recipe", at: r.created_at });
+    }
+  }
+
+  // ── Hub (recent posts for the activity feed) ─────────────────────────────
+  if (can("hub")) {
+    const { data: newPosts } = await db
+      .from("posts")
+      .select("content, post_type, created_at")
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false })
+      .limit(5);
+    for (const p of newPosts ?? []) {
+      const text = (p.content ?? "").trim();
+      recent.push({
+        type: "post",
+        label: text ? (text.length > 40 ? `${text.slice(0, 40)}…` : text) : `New ${p.post_type ?? "post"}`,
+        detail: "posted to Hub",
+        at: p.created_at,
+      });
+    }
   }
 
   // ── Rewards / charity / fraud (all under the rewards module) ────────────

@@ -7,6 +7,7 @@ import AddMerchantModal from "@/components/admin/AddMerchantModal";
 import { getFollowUp } from "@/lib/followUps";
 import ThemedSelect from "@/components/admin/ThemedSelect";
 import { Pagination, useToast, ToastView, StatCard } from "../_ui";
+import { rememberList } from "@/lib/adminRecordNav";
 import { useAdmin } from "../AdminProvider";
 import {
   Search,
@@ -316,6 +317,7 @@ export default function MerchantPipelinePage() {
       setMerchants(json.merchants);
       setTotal(json.total);
       setPageSize(json.pageSize);
+      rememberList("merchants", json.merchants.map((m) => m.id));
     } catch {
       setError("Could not load merchants. Try refreshing.");
     } finally {
@@ -441,6 +443,9 @@ export default function MerchantPipelinePage() {
     a.download = `merchants-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
+    // Record the export (PII) in the audit log — fire-and-forget.
+    const scope = [attentionOnly && "needs-attention", reviewOnly && "commission-review", mineOnly && "mine", statusFilter !== "all" && `status=${statusFilter}`, search && "search"].filter(Boolean).join(", ") || "all merchants";
+    fetch("/api/admin/exports", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ resource: "merchants", count: displayed.length, scope }) }).catch(() => {});
   }
 
   function getCount(key: string) {

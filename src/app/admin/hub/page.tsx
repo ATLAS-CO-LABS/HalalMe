@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   Search, AlertCircle, MessageSquare, FileText, MessagesSquare, Users,
   Image as ImageIcon, EyeOff, Eye, MoreVertical, Trash2, Loader2, TrendingUp,
-  CheckSquare, X, Crown, Flag, RotateCcw,
+  CheckSquare, X, Crown, Flag, RotateCcw, RefreshCw,
 } from "lucide-react";
 import { display } from "../_fonts";
 import {
@@ -56,6 +56,8 @@ const POST_TYPE_TONE: Record<string, "blue" | "purple" | "amber" | "gray" | "gre
 export default function HubPage() {
   const { toast, flash } = useToast();
   const [view, setView] = useState<"posts" | "comments" | "reported" | "deleted">("posts");
+  // Bumping this tells the active sub-view to refetch (the header Refresh button).
+  const [reloadKey, setReloadKey] = useState(0);
 
   return (
     <div className="bg-[#F3E9D6] min-h-full">
@@ -63,12 +65,20 @@ export default function HubPage() {
 
       {/* Header */}
       <div className="bg-white border-b border-[#102C26]/12 px-4 sm:px-8 pt-4 sm:pt-5">
-        <div className="flex items-center gap-2.5 mb-1.5">
-          <div className="w-5 h-px bg-[#F59E0B]" />
-          <span className="text-[#F59E0B] text-[9px] font-bold uppercase tracking-[0.3em]">Content Moderation</span>
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2.5 mb-1.5">
+              <div className="w-5 h-px bg-[#F59E0B]" />
+              <span className="text-[#F59E0B] text-[9px] font-bold uppercase tracking-[0.3em]">Content Moderation</span>
+            </div>
+            <h1 className={`${display.className} text-xl sm:text-2xl font-extrabold uppercase tracking-tighter text-[#102C26] leading-none`}>Hub</h1>
+            <p className="text-xs sm:text-sm text-gray-600 mt-1">Moderate the community feed — posts and comments</p>
+          </div>
+          <button onClick={() => setReloadKey((k) => k + 1)} title="Refresh"
+            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#102C26]/80 bg-[#102C26]/5 border border-[#102C26]/15 rounded-none hover:bg-[#102C26]/10 transition-colors shrink-0">
+            <RefreshCw size={13} />
+          </button>
         </div>
-        <h1 className={`${display.className} text-xl sm:text-2xl font-extrabold uppercase tracking-tighter text-[#102C26] leading-none`}>Hub</h1>
-        <p className="text-xs sm:text-sm text-gray-600 mt-1">Moderate the community feed — posts and comments</p>
 
         <div className="flex items-center gap-0.5 mt-4 -mb-px">
           {([["posts", "Posts", FileText], ["comments", "Comments", MessagesSquare], ["reported", "Reported", Flag], ["deleted", "Trash", Trash2]] as const).map(([key, label, Icon]) => {
@@ -84,17 +94,17 @@ export default function HubPage() {
       </div>
 
       <div className="px-4 sm:px-8 py-5">
-        {view === "posts" ? <PostsView flash={flash} />
-          : view === "comments" ? <CommentsView flash={flash} />
+        {view === "posts" ? <PostsView flash={flash} reloadKey={reloadKey} />
+          : view === "comments" ? <CommentsView flash={flash} reloadKey={reloadKey} />
           : view === "deleted" ? (
             <div className="space-y-8">
               <div>
                 <h2 className={`${display.className} text-sm font-bold uppercase tracking-wide text-[#102C26]/70 mb-3`}>Deleted posts</h2>
-                <PostsView flash={flash} deleted />
+                <PostsView flash={flash} deleted reloadKey={reloadKey} />
               </div>
               <div>
                 <h2 className={`${display.className} text-sm font-bold uppercase tracking-wide text-[#102C26]/70 mb-3`}>Deleted comments</h2>
-                <CommentsView flash={flash} deleted />
+                <CommentsView flash={flash} deleted reloadKey={reloadKey} />
               </div>
             </div>
           )
@@ -105,7 +115,7 @@ export default function HubPage() {
 }
 
 // ─── Posts ────────────────────────────────────────────────────────────────────
-function PostsView({ flash, deleted = false }: { flash: (k: "ok" | "err", m: string) => void; deleted?: boolean }) {
+function PostsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "ok" | "err", m: string) => void; deleted?: boolean; reloadKey?: number }) {
   const [rows, setRows] = useState<PostRow[]>([]);
   const [stats, setStats] = useState<PostStats | null>(null);
   const [types, setTypes] = useState<string[]>([]);
@@ -173,7 +183,7 @@ function PostsView({ flash, deleted = false }: { flash: (k: "ok" | "err", m: str
   useEffect(() => {
     fetchRows(page, type, published, search);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize, type, published, deleted]);
+  }, [page, pageSize, type, published, deleted, reloadKey]);
   useEffect(() => { setPage(0); }, [type, published]);
   useEffect(() => { setSelectedIds(new Set()); setBulkDelete(false); }, [page, type, published, search]);
 
@@ -500,8 +510,7 @@ function PostsView({ flash, deleted = false }: { flash: (k: "ok" | "err", m: str
 
       {/* Post preview */}
       {(preview || previewLoading) && (
-        <div className="fixed inset-0 z-60 bg-black/40 flex items-center justify-center p-4" onClick={() => setPreview(null)}>
-          <div className="bg-white rounded-none border border-[#102C26]/15 shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <Modal open onClose={() => setPreview(null)} maxWidth="max-w-lg" className="max-h-[90vh] overflow-y-auto">
             {previewLoading || !preview ? (
               <div className="flex items-center justify-center py-24"><Loader2 size={26} className="animate-spin text-[#102C26]/40" /></div>
             ) : (() => {
@@ -558,15 +567,14 @@ function PostsView({ flash, deleted = false }: { flash: (k: "ok" | "err", m: str
                 </>
               );
             })()}
-          </div>
-        </div>
+        </Modal>
       )}
     </>
   );
 }
 
 // ─── Comments ───────────────────────────────────────────────────────────────
-function CommentsView({ flash, deleted = false }: { flash: (k: "ok" | "err", m: string) => void; deleted?: boolean }) {
+function CommentsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "ok" | "err", m: string) => void; deleted?: boolean; reloadKey?: number }) {
   const [rows, setRows] = useState<CommentRow[]>([]);
   const [totalComments, setTotalComments] = useState(0);
   const [total, setTotal] = useState(0);
@@ -606,7 +614,7 @@ function CommentsView({ flash, deleted = false }: { flash: (k: "ok" | "err", m: 
   useEffect(() => {
     fetchRows(page, search);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize, deleted]);
+  }, [page, pageSize, deleted, reloadKey]);
   useEffect(() => { setSelectedIds(new Set()); setBulkDelete(false); }, [page, search]);
 
   function handleSearch(val: string) {

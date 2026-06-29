@@ -78,7 +78,7 @@ export function TimeSeries({
       </svg>
       <div className="flex justify-between mt-1.5 px-1">
         {data.map((d, i) => (
-          <span key={i} className="text-[9px] text-gray-400 tabular-nums" style={{ visibility: i % step === 0 || i === n - 1 ? "visible" : "hidden" }}>
+          <span key={i} className="text-[9px] text-gray-500 tabular-nums" style={{ visibility: i % step === 0 || i === n - 1 ? "visible" : "hidden" }}>
             {d.label}
           </span>
         ))}

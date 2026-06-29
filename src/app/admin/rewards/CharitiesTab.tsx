@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { display } from "../_fonts";
 import {
-  fmtMoney, useToast, ToastView, StatCard, TableSkeleton, EmptyState, Pagination, FilterPills, Badge,
+  fmtMoney, useToast, ToastView, StatCard, TableSkeleton, EmptyState, Pagination, FilterPills, Badge, Modal,
 } from "../_ui";
 
 interface CharityRow {
@@ -263,8 +263,7 @@ export default function CharitiesTab() {
 
       {/* Edit drawer */}
       {(edit || editLoading) && (
-        <div className="fixed inset-0 z-60 bg-black/40 flex items-center justify-center p-4" onClick={() => !busy && setEdit(null)}>
-          <div className="bg-white rounded-none border border-[#102C26]/15 shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <Modal open onClose={() => setEdit(null)} busy={busy} maxWidth="max-w-xl" className="max-h-[90vh] overflow-y-auto">
             {editLoading || !edit ? (
               <div className="flex items-center justify-center py-24"><Loader2 size={26} className="animate-spin text-[#102C26]/40" /></div>
             ) : (
@@ -306,8 +305,7 @@ export default function CharitiesTab() {
                 )}
               </>
             )}
-          </div>
-        </div>
+        </Modal>
       )}
 
       {/* Add charity modal */}
@@ -341,8 +339,7 @@ function AddCharityModal({ onClose, onCreated, onError }: { onClose: () => void;
   }
 
   return (
-    <div className="fixed inset-0 z-60 bg-black/40 flex items-center justify-center p-4" onClick={() => !busy && onClose()}>
-      <div className="bg-white rounded-none border border-[#102C26]/15 shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+    <Modal open onClose={onClose} busy={busy} maxWidth="max-w-lg" className="max-h-[90vh] overflow-y-auto">
         <div className="border-b border-[#102C26]/10 px-6 py-4 flex items-center justify-between">
           <h3 className={`${display.className} text-lg font-bold text-[#102C26]`}>Add charity</h3>
           <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-none"><X size={18} /></button>
@@ -370,8 +367,7 @@ function AddCharityModal({ onClose, onCreated, onError }: { onClose: () => void;
             {busy ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />} Create
           </button>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 }
 

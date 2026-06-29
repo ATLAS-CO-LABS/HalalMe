@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { display } from "../_fonts";
 import {
-  fmtDate, useToast, ToastView, StatCard, TableSkeleton, EmptyState, Pagination, FilterPills, Badge,
+  fmtDate, useToast, ToastView, StatCard, TableSkeleton, EmptyState, Pagination, FilterPills, Badge, Modal,
 } from "../_ui";
 
 interface AppRow {
@@ -201,8 +201,7 @@ export default function ApplicationsTab() {
 
       {/* Detail modal */}
       {(detail || detailLoading) && (
-        <div className="fixed inset-0 z-60 bg-black/40 flex items-center justify-center p-4" onClick={() => !busy && setDetail(null)}>
-          <div className="bg-white rounded-none border border-[#102C26]/15 shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <Modal open onClose={() => setDetail(null)} busy={!!busy} maxWidth="max-w-2xl" className="max-h-[90vh] overflow-y-auto">
             {detailLoading || !detail ? (
               <div className="flex items-center justify-center py-24"><Loader2 size={26} className="animate-spin text-[#102C26]/40" /></div>
             ) : (
@@ -289,8 +288,7 @@ export default function ApplicationsTab() {
                 )}
               </>
             )}
-          </div>
-        </div>
+        </Modal>
       )}
     </>
   );

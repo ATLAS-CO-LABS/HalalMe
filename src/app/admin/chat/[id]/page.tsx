@@ -10,6 +10,7 @@ import { display } from "../../_fonts";
 import { useToast, ToastView, Badge } from "../../_ui";
 import { useAdmin } from "../../AdminProvider";
 import ThemedSelect from "@/components/admin/ThemedSelect";
+import RecordNav from "@/components/admin/RecordNav";
 
 type Ref = { id: string; full_name?: string | null; username?: string | null; avatar_url?: string | null; email?: string | null };
 type MerchantRef = { id: string; name: string };
@@ -184,9 +185,12 @@ export default function AdminThreadPage() {
 
       {/* Header */}
       <div className="bg-white border-b border-[#102C26]/12 px-4 sm:px-8 py-4 sm:py-5">
-        <Link href="/admin/chat" className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#102C26]/50 hover:text-[#102C26] transition-colors mb-3">
-          <ArrowLeft size={14} /> Inbox
-        </Link>
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <Link href="/admin/chat" className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#102C26]/50 hover:text-[#102C26] transition-colors">
+            <ArrowLeft size={14} /> Inbox
+          </Link>
+          <RecordNav navKey="support" currentId={id} basePath="/admin/chat" />
+        </div>
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="min-w-0">
             <div className="flex items-center gap-2 mb-1 flex-wrap">

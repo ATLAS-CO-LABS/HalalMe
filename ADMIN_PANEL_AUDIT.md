@@ -47,7 +47,19 @@ All eight **Medium** items (#11–#18) are now fixed in code:
 - **#17 Analytics export / comparison** — **CSV export** of the active section (stats + every series), and **vs-previous-period delta chips** on the range-based cards (Users signups, Rewards raised + donations, Kitchen AI sessions). (Materialised-view perf optimisation intentionally deferred — current in-memory aggregation is adequate at launch volumes.)
 - **#18 Soft-delete + restore** — content soft-delete for **recipes, posts, comments** (migration `045_soft_delete_content.sql`, applied: `deleted_at`/`deleted_by` + RLS so deleted rows are hidden from public/owner reads; the service-role admin client still sees them). Admin delete now soft-deletes (Trash); a separate `?hard=1` **purge** permanently removes (logged distinctly). Restore + permanent-delete surfaced via a **"Trash" tab** in Kitchen and Hub (posts + comments), with bulk endpoints extended to `restore`/`purge`. `comment_count` is reconciled on soft-delete/restore/purge. Users keep hard-delete (right-to-erasure).
 
-**Low items (#19–#25) remain** — deferred to a later pass. (#19 z-index scale was partially done as a side-effect: a documented `Z` token scale now lives in `_ui.tsx`.)
+## ✅ Low items resolved (updated 2026-06-26)
+
+Six of seven **Low** items are done (#22 command palette is on hold pending review):
+
+- **#19 z-index scale** — documented `Z` token scale in `_ui.tsx` (sticky/overlay/menu/modal/toast); the ad-hoc stragglers (`z-55`, modal `z-50`, toast `z-60`) normalized so toasts sit above modals above menus everywhere.
+- **#20 Hub refresh** — Hub header now has a Refresh button (a `reloadKey` signal the active sub-view refetches on), matching every other module.
+- **#21 Next/prev record nav** — list pages stash their ordered ids (`@/lib/adminRecordNav`); a shared `RecordNav` stepper on the User, Merchant and Ticket detail pages walks to the prev/next record (with `[` / `]` keyboard shortcuts), hiding itself on deep-links.
+- **#23 Export logging** — CSV exports (Users, Merchants, Analytics) now POST to `/api/admin/exports`, writing a `*.export` entry to the audit log (who exported what/when, incl. the active filter scope).
+- **#24 Chart contrast** — muted chart grey darkened (`#9CA3AF` → `#6B7280`) and time-series axis labels bumped a step for legibility on the colour-only charts.
+- **#25 Recent Activity icons** — per-type icon + tint map (user/merchant/donation/recipe/post/charity/application/refund/fraud/ticket) with a neutral fallback; the Overview feed now also surfaces new recipes and posts.
+- **#22 Global search / command palette** — DONE. Global ⌘K / Ctrl-K palette (`CommandPalette.tsx`, mounted in the layout; also openable via the sidebar "Search…" button and the mobile top-bar search icon) that searches **users, merchants, tickets and charities** at once and jumps to the record. Backed by `GET /api/admin/search?q=` (staff-gated; only queries modules the viewer can access — no leaking). Debounced, keyboard-navigable (↑/↓/Enter/Esc), grouped results.
+
+> **All 25 audit items (3 Critical + 10 High + 8 Medium + 4 Low) are fully resolved.** The incremental follow-up from High #8 is now also done: **every modal in the panel uses the accessible shared `Modal` primitive** (Esc-to-close, focus-trap, `role=dialog`) — the ~10 previously-bespoke overlays (kitchen/hub previews, charity edit + create, fraud & application detail, user-delete, and the 3 merchant-detail modals) were migrated. No outstanding items.
 
 ---
 

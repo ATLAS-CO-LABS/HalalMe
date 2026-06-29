@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Users, Store, ChefHat, Gift, LifeBuoy, ShieldAlert, AlertTriangle,
-  UserPlus, Heart, ArrowRight, Clock, CheckCircle2,
+  UserPlus, Heart, ArrowRight, Clock, CheckCircle2, MessageSquare, RotateCcw, ShieldCheck,
 } from "lucide-react";
 import { display } from "./_fonts";
 import { StatCard, fmtMoney } from "./_ui";
@@ -35,9 +35,20 @@ function relativeTime(iso: string): string {
   return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
-const ACTIVITY_ICON: Record<string, React.ElementType> = {
-  user: UserPlus, merchant: Store, donation: Heart,
+// Icon + tint per activity type. Falls back to a neutral clock for unknown types.
+const ACTIVITY_STYLE: Record<string, { icon: React.ElementType; cls: string }> = {
+  user: { icon: UserPlus, cls: "bg-[#102C26]/8 text-[#102C26]" },
+  merchant: { icon: Store, cls: "bg-[#F59E0B]/10 text-[#F59E0B]" },
+  donation: { icon: Heart, cls: "bg-[#F03E9E]/10 text-[#F03E9E]" },
+  recipe: { icon: ChefHat, cls: "bg-green-50 text-green-600" },
+  post: { icon: MessageSquare, cls: "bg-[#102C26]/8 text-[#102C26]" },
+  charity: { icon: Gift, cls: "bg-[#F03E9E]/10 text-[#F03E9E]" },
+  application: { icon: ShieldCheck, cls: "bg-[#F59E0B]/10 text-[#F59E0B]" },
+  refund: { icon: RotateCcw, cls: "bg-amber-50 text-amber-600" },
+  fraud: { icon: ShieldAlert, cls: "bg-red-50 text-red-600" },
+  ticket: { icon: LifeBuoy, cls: "bg-[#102C26]/8 text-[#102C26]" },
 };
+const FALLBACK_STYLE = { icon: Clock, cls: "bg-[#102C26]/6 text-[#102C26]/60" };
 
 export default function AdminOverviewPage() {
   const [data, setData] = useState<Overview | null>(null);
@@ -134,11 +145,11 @@ export default function AdminOverviewPage() {
               {data && data.recent.length > 0 ? (
                 <div className="divide-y divide-[#102C26]/8">
                   {data.recent.map((r, i) => {
-                    const Icon = ACTIVITY_ICON[r.type] ?? Clock;
+                    const { icon: Icon, cls } = ACTIVITY_STYLE[r.type] ?? FALLBACK_STYLE;
                     return (
                       <div key={i} className="flex items-center gap-3 px-5 py-3">
-                        <div className="w-8 h-8 rounded-none bg-[#102C26]/6 flex items-center justify-center shrink-0">
-                          <Icon size={14} className="text-[#102C26]/60" />
+                        <div className={`w-8 h-8 rounded-none flex items-center justify-center shrink-0 ${cls}`}>
+                          <Icon size={14} />
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="text-sm text-gray-900 truncate"><span className="font-medium">{r.label}</span> <span className="text-gray-500">{r.detail}</span></p>

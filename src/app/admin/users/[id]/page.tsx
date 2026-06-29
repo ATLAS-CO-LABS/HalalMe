@@ -29,6 +29,8 @@ import {
   LifeBuoy,
 } from "lucide-react";
 import ThemedSelect from "@/components/admin/ThemedSelect";
+import RecordNav from "@/components/admin/RecordNav";
+import { Modal } from "../../_ui";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 type Access = "none" | "view" | "manage";
@@ -233,14 +235,15 @@ export default function UserDetailPage() {
     <div className="bg-[#F3E9D6] min-h-full pb-12">
       {/* Toast */}
       {toast && (
-        <div className={`fixed top-4 right-4 z-60 flex items-center gap-2 px-4 py-2.5 rounded-none shadow-lg text-sm font-medium ${toast.kind === "ok" ? "bg-green-600 text-white" : "bg-red-600 text-white"}`}>
+        <div className={`fixed top-4 right-4 z-70 flex items-center gap-2 px-4 py-2.5 rounded-none shadow-lg text-sm font-medium ${toast.kind === "ok" ? "bg-green-600 text-white" : "bg-red-600 text-white"}`}>
           {toast.kind === "ok" ? <CheckCircle2 size={15} /> : <AlertCircle size={15} />} {toast.msg}
         </div>
       )}
 
       {/* Header */}
-      <div className="bg-white border-b border-[#102C26]/12 px-4 sm:px-8 py-4">
+      <div className="bg-white border-b border-[#102C26]/12 px-4 sm:px-8 py-4 flex items-center justify-between gap-4">
         <Link href="/admin/users" className="inline-flex items-center gap-2 text-sm text-[#102C26]/80 font-semibold hover:text-[#102C26] transition-colors"><ArrowLeft size={14} /> Back to Users</Link>
+        <RecordNav navKey="users" currentId={id} basePath="/admin/users" />
       </div>
 
       <div className="px-4 sm:px-8 py-6 max-w-4xl space-y-5">
@@ -520,13 +523,13 @@ export default function UserDetailPage() {
 
       {/* Delete confirm modal */}
       {showDelete && (
-        <div className="fixed inset-0 z-55 bg-black/40 flex items-center justify-center p-4" onClick={() => !deleting && setShowDelete(false)}>
-          <div className="bg-white rounded-none border border-[#102C26]/15 shadow-2xl w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
+        <Modal open onClose={() => setShowDelete(false)} busy={deleting} maxWidth="max-w-md" className="p-6"
+          labelledBy="user-hard-del-title" describedBy="user-hard-del-desc">
             <div className="flex items-start gap-3">
               <div className="w-10 h-10 rounded-none bg-red-50 text-red-600 flex items-center justify-center shrink-0"><Trash2 size={18} /></div>
               <div className="min-w-0">
-                <h3 className={`${display.className} text-lg font-bold text-[#102C26]`}>Delete user?</h3>
-                <p className="text-sm text-gray-600 mt-1">This permanently removes <span className="font-semibold">{user.full_name}</span> and all of their content. This cannot be undone.</p>
+                <h3 id="user-hard-del-title" className={`${display.className} text-lg font-bold text-[#102C26]`}>Delete user?</h3>
+                <p id="user-hard-del-desc" className="text-sm text-gray-600 mt-1">This permanently removes <span className="font-semibold">{user.full_name}</span> and all of their content. This cannot be undone.</p>
               </div>
             </div>
             <div className="mt-5 flex items-center justify-end gap-2">
@@ -536,8 +539,7 @@ export default function UserDetailPage() {
                 {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />} Delete
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

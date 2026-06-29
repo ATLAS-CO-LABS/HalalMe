@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { display } from "../_fonts";
 import { Modal, StatCard, Pagination, DateRange } from "../_ui";
+import { rememberList } from "@/lib/adminRecordNav";
 import {
   Search,
   RefreshCw,
@@ -164,6 +165,7 @@ export default function UsersPage() {
       if (!res.ok) throw new Error();
       const json = await res.json();
       setUsers(json.users); setStats(json.stats); setTotal(json.total); setCanManage(!!json.canManage);
+      rememberList("users", (json.users as UserRow[]).map((u) => u.id));
     } catch {
       setError("Could not load users. Try refreshing.");
     } finally {
@@ -295,6 +297,9 @@ export default function UsersPage() {
       const a = document.createElement("a");
       a.href = url; a.download = `users-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
       URL.revokeObjectURL(url);
+      // Record the export (PII) in the audit log — fire-and-forget.
+      const scope = [roleFilter !== "all" && `role=${roleFilter}`, statusFilter !== "all" && `status=${statusFilter}`, search && "search", (dateFrom || dateTo) && "date-range"].filter(Boolean).join(", ") || "all users";
+      fetch("/api/admin/exports", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ resource: "users", count: json.users.length, scope }) }).catch(() => {});
     } catch {
       flash("err", "Export failed.");
     } finally {
@@ -314,7 +319,7 @@ export default function UsersPage() {
     <div className="bg-[#F3E9D6] min-h-full">
       {/* Toast */}
       {toast && (
-        <div className={`fixed top-4 right-4 z-60 flex items-center gap-2 px-4 py-2.5 rounded-none shadow-lg text-sm font-medium ${toast.kind === "ok" ? "bg-green-600 text-white" : "bg-red-600 text-white"}`}>
+        <div className={`fixed top-4 right-4 z-70 flex items-center gap-2 px-4 py-2.5 rounded-none shadow-lg text-sm font-medium ${toast.kind === "ok" ? "bg-green-600 text-white" : "bg-red-600 text-white"}`}>
           {toast.kind === "ok" ? <CheckCircle2 size={15} /> : <AlertCircle size={15} />} {toast.msg}
         </div>
       )}

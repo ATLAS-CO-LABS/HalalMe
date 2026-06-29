@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { display } from "../../_fonts";
-import { useToast, ToastView } from "../../_ui";
+import { useToast, ToastView, Modal } from "../../_ui";
 import { useAdmin } from "../../AdminProvider";
+import RecordNav from "@/components/admin/RecordNav";
 import {
   ArrowLeft,
   ArrowRight,
@@ -683,7 +684,9 @@ export default function MerchantDetailPage() {
             </div>
           </div>
 
-          {/* Actions */}
+          {/* Record nav + Actions */}
+          <div className="flex items-center gap-2 shrink-0">
+          <RecordNav navKey="merchants" currentId={merchant.id} basePath="/admin/merchants" />
           <div className="relative shrink-0">
             <button
               onClick={() => setShowActions((v) => !v)}
@@ -738,6 +741,7 @@ export default function MerchantDetailPage() {
                 </div>
               </>
             )}
+          </div>
           </div>
         </div>
       </div>
@@ -1422,14 +1426,7 @@ export default function MerchantDetailPage() {
 
       {/* ── Delete confirmation modal ── */}
       {showDelete && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
-          onClick={() => !deleting && setShowDelete(false)}
-        >
-          <div
-            className="bg-white rounded-none shadow-xl max-w-md w-full overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <Modal open onClose={() => setShowDelete(false)} busy={deleting} maxWidth="max-w-md" className="overflow-hidden">
             <div className="bg-red-600 px-6 py-5 flex items-center gap-3">
               <div className="w-10 h-10 rounded-none bg-white/15 flex items-center justify-center shrink-0">
                 <Trash2 size={18} className="text-white" />
@@ -1487,20 +1484,12 @@ export default function MerchantDetailPage() {
                 }
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {/* ── Edit merchant info modal ── */}
       {showEdit && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
-          onClick={() => !savingEdit && setShowEdit(false)}
-        >
-          <div
-            className="bg-white rounded-none shadow-xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <Modal open onClose={() => setShowEdit(false)} busy={savingEdit} maxWidth="max-w-lg" className="max-h-[90vh] flex flex-col overflow-hidden">
             {/* Header */}
             <div className="bg-[#102C26] px-6 py-5 flex items-center gap-3 shrink-0">
               <div className="w-10 h-10 rounded-none bg-white/15 flex items-center justify-center shrink-0">
@@ -1605,20 +1594,12 @@ export default function MerchantDetailPage() {
                 }
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {/* ── Publish confirmation modal ── */}
       {showPublishConfirm && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
-          onClick={() => !publishing && setShowPublishConfirm(false)}
-        >
-          <div
-            className="bg-white rounded-none shadow-xl max-w-md w-full overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <Modal open onClose={() => setShowPublishConfirm(false)} busy={publishing} maxWidth="max-w-md" className="overflow-hidden">
             {/* Header */}
             <div className="bg-green-600 px-6 py-5 flex items-center gap-3">
               <div className="w-10 h-10 rounded-none bg-white/15 flex items-center justify-center shrink-0">
@@ -1680,8 +1661,7 @@ export default function MerchantDetailPage() {
                 )}
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
 
     </div>
