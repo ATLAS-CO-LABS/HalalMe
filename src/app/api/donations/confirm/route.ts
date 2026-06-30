@@ -52,7 +52,9 @@ export async function POST(req: NextRequest) {
       return json({ success: true, status: "completed", already_completed: true });
     }
 
-    if (donation.status !== "pending") {
+    // Accept 'expired' too: the stale-pending sweeper may have expired a row
+    // whose payment actually succeeded — let it complete here.
+    if (donation.status !== "pending" && donation.status !== "expired") {
       return json({ error: `Cannot confirm donation with status '${donation.status}'` }, 422);
     }
 
@@ -129,7 +131,7 @@ export async function POST(req: NextRequest) {
         net_amount:          netAmount,
       })
       .eq("id", donation.id)
-      .eq("status", "pending"); // guard: only update if still pending
+      .in("status", ["pending", "expired"]); // guard: only complete an unfinished row
 
     if (updateErr) {
       console.error("[confirm] update error:", updateErr.message);

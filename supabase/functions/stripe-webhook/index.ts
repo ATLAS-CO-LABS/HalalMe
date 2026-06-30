@@ -162,7 +162,9 @@ serve(async (req: Request) => {
           break;
         }
 
-        if (donation.status !== "pending") {
+        // Accept 'expired' too: the stale-pending sweeper may have expired a row
+        // whose payment actually succeeded — complete it rather than lose it.
+        if (donation.status !== "pending" && donation.status !== "expired") {
           throw new Error(
             `Unexpected donation status '${donation.status}' for ${donation.id}`
           );
@@ -220,7 +222,7 @@ serve(async (req: Request) => {
             net_amount:           netAmount,
           })
           .eq("id", donation.id)
-          .eq("status", "pending"); // extra guard: only update if still pending
+          .in("status", ["pending", "expired"]); // guard: only complete an unfinished row
 
         if (updateErr) {
           throw new Error(`Failed to complete donation ${donation.id}: ${updateErr.message}`);
@@ -350,23 +352,31 @@ serve(async (req: Request) => {
   }
 
   // -------------------------------------------------------------------------
-  // 5. Mark event as processed (even on error — to prevent infinite retries
-  //    on non-recoverable failures; Stripe will retry on 5xx responses,
-  //    so we return 200 and log the error for manual investigation)
+  // 5. Finalise. On error, leave processed_at NULL and return 500 so Stripe
+  //    retries (exponential backoff, up to ~3 days). The idempotency check
+  //    re-enters this handler on retry, so a transient failure (e.g. the
+  //    webhook racing ahead of the donation insert, or a momentary DB error)
+  //    self-heals on a later attempt instead of leaving the donation stuck
+  //    pending. Stripe caps retries, so a truly permanent error eventually
+  //    stops — and the error is recorded in webhook_events.processing_error.
   // -------------------------------------------------------------------------
+  if (processingError) {
+    console.error(`[stripe-webhook] processing failed, will retry: ${processingError}`);
+    await supabase
+      .from("webhook_events")
+      .update({ processing_error: processingError })
+      .eq("event_id", event.id);
+
+    return json({ error: "Processing failed, will retry" }, 500);
+  }
+
   await supabase
     .from("webhook_events")
     .update({
       processed_at:     new Date().toISOString(),
-      processing_error: processingError,
+      processing_error: null,
     })
     .eq("event_id", event.id);
-
-  if (processingError) {
-    console.error(`[stripe-webhook] completed with error: ${processingError}`);
-    // Still return 200 — returning 5xx would cause Stripe to retry indefinitely
-    // The error is logged in webhook_events.processing_error for investigation
-  }
 
   return json({ received: true });
 });

@@ -146,42 +146,92 @@ export async function POST(req: NextRequest) {
     riskScore = Math.min(riskScore, 100);
 
     // -------------------------------------------------------------------------
-    // 6. Create Stripe PaymentIntent (only if Stripe is configured)
+    // 6. Stripe is required — never create a donation row without a real
+    //    PaymentIntent (orphan pending rows can never complete).
     // -------------------------------------------------------------------------
     const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-    let paymentIntentId: string | null = null;
-    let clientSecret: string | null = null;
-
-    if (stripeSecretKey) {
-      const Stripe = (await import("stripe")).default;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const stripe = new Stripe(stripeSecretKey, { apiVersion: "2026-03-25.dahlia" as any });
-
-      const intentParams: Parameters<typeof stripe.paymentIntents.create>[0] = {
-        amount:               Math.round(amount * 100), // pence
-        currency:             charity.currency.toLowerCase(),
-        payment_method_types: ["card"], // card only — excludes Revolut Pay, BACS, etc.
-        metadata: {
-          user_id:    user.id,
-          charity_id: charity.id,
-        },
-      };
-
-      // Use Stripe Connect if charity has a connected account
-      if (charity.stripe_account_id && charity.stripe_charges_enabled) {
-        intentParams.application_fee_amount = Math.round(platformFeeAmount * 100);
-        intentParams.transfer_data = { destination: charity.stripe_account_id };
-      }
-
-      const intent = await stripe.paymentIntents.create(intentParams);
-      paymentIntentId = intent.id;
-      clientSecret    = intent.client_secret;
+    if (!stripeSecretKey) {
+      console.error("[create-intent] STRIPE_SECRET_KEY not configured");
+      return json({ error: "Donations are temporarily unavailable" }, 503);
     }
+
+    const Stripe = (await import("stripe")).default;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stripe = new Stripe(stripeSecretKey, { apiVersion: "2026-03-25.dahlia" as any });
+
+    // -------------------------------------------------------------------------
+    // 6a. Dedupe — reuse a recent in-flight PaymentIntent for an identical
+    //     attempt (same user + charity + amount within 30 min). Stops double
+    //     clicks, page reloads and remounts from creating duplicate donations.
+    // -------------------------------------------------------------------------
+    const dedupeWindow = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+    const { data: existingPending } = await supabaseAdmin
+      .from("donations")
+      .select("id, payment_intent_id")
+      .eq("user_id", user.id)
+      .eq("charity_id", charityId)
+      .eq("amount", amount)
+      .eq("status", "pending")
+      .not("payment_intent_id", "is", null)
+      .gte("created_at", dedupeWindow)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (existingPending?.payment_intent_id) {
+      try {
+        const existingPi = await stripe.paymentIntents.retrieve(existingPending.payment_intent_id);
+        const reusable = ["requires_payment_method", "requires_confirmation", "requires_action", "processing"];
+        if (existingPi.client_secret && reusable.includes(existingPi.status)) {
+          return json({
+            donation_id:      existingPending.id,
+            client_secret:    existingPi.client_secret,
+            amount,
+            currency:         charity.currency,
+            platform_fee:     platformFeeAmount,
+            net_amount:       netAmount,
+            risk_score:       riskScore,
+            points_preview:   pointsPreview,
+            charity_name:     charity.name,
+            charity_category: charity.category ?? null,
+            reused:           true,
+          });
+        }
+      } catch {
+        // PaymentIntent not retrievable (e.g. test/live key swap) — fall through
+        // and create a fresh one.
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // 6b. Create a new PaymentIntent. The idempotency key protects against
+    //     network-level retries of THIS create call double-charging.
+    // -------------------------------------------------------------------------
+    const idempotencyKey = randomUUID();
+
+    const intentParams: Parameters<typeof stripe.paymentIntents.create>[0] = {
+      amount:               Math.round(amount * 100), // pence
+      currency:             charity.currency.toLowerCase(),
+      payment_method_types: ["card"], // card only — excludes Revolut Pay, BACS, etc.
+      metadata: {
+        user_id:    user.id,
+        charity_id: charity.id,
+      },
+    };
+
+    // Use Stripe Connect if charity has a connected account
+    if (charity.stripe_account_id && charity.stripe_charges_enabled) {
+      intentParams.application_fee_amount = Math.round(platformFeeAmount * 100);
+      intentParams.transfer_data = { destination: charity.stripe_account_id };
+    }
+
+    const intent = await stripe.paymentIntents.create(intentParams, { idempotencyKey });
+    const paymentIntentId = intent.id;
+    const clientSecret    = intent.client_secret;
 
     // -------------------------------------------------------------------------
     // 7. Insert donation row (status: pending)
     // -------------------------------------------------------------------------
-    const idempotencyKey = randomUUID();
 
     const { data: donation, error: insertErr } = await supabaseAdmin
       .from("donations")
@@ -212,14 +262,9 @@ export async function POST(req: NextRequest) {
     // -------------------------------------------------------------------------
     // 8. Update PaymentIntent metadata with real donation ID
     // -------------------------------------------------------------------------
-    if (paymentIntentId && stripeSecretKey) {
-      const Stripe = (await import("stripe")).default;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const stripe = new Stripe(stripeSecretKey, { apiVersion: "2026-03-25.dahlia" as any });
-      await stripe.paymentIntents.update(paymentIntentId, {
-        metadata: { user_id: user.id, charity_id: charity.id, donation_id: donation.id },
-      }).then(() => null, () => null); // non-fatal
-    }
+    await stripe.paymentIntents.update(paymentIntentId, {
+      metadata: { user_id: user.id, charity_id: charity.id, donation_id: donation.id },
+    }).then(() => null, () => null); // non-fatal
 
     // -------------------------------------------------------------------------
     // 9. Auto-flag if high risk score
