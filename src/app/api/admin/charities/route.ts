@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
   let query = serviceClient
     .from("charities")
     .select(
-      "id, name, slug, category, verification_status, verification_level, verification_score, goal_amount, raised_amount, donor_count, minimum_donation, platform_fee_pct, is_featured, is_zakat_eligible, is_active, image_url, currency, created_at",
+      "id, name, slug, category, verification_status, verification_level, verification_score, goal_amount, raised_amount, donor_count, minimum_donation, platform_fee_pct, is_featured, is_zakat_eligible, is_active, image_url, currency, created_at, stripe_account_id, stripe_charges_enabled",
       { count: "exact" },
     )
     .order("created_at", { ascending: false })
@@ -100,12 +100,17 @@ export async function POST(req: NextRequest) {
   const description = String(body.description ?? "").trim();
   const category = String(body.category ?? "").trim();
   const goalAmount = Number(body.goal_amount);
+  const contactEmail = String(body.contact_email ?? "").trim();
 
   if (!name) return NextResponse.json({ error: "Name is required" }, { status: 400 });
   if (!description) return NextResponse.json({ error: "Description is required" }, { status: 400 });
   if (!category) return NextResponse.json({ error: "Category is required" }, { status: 400 });
   if (!Number.isFinite(goalAmount) || goalAmount <= 0) {
     return NextResponse.json({ error: "Goal amount must be greater than 0" }, { status: 400 });
+  }
+  // Required for Stripe Connect onboarding — this is where the payout invite is sent.
+  if (!contactEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) {
+    return NextResponse.json({ error: "A valid contact email is required" }, { status: 400 });
   }
 
   const now = new Date().toISOString();
@@ -124,7 +129,7 @@ export async function POST(req: NextRequest) {
       registration_number: typeof body.registration_number === "string" ? body.registration_number.trim() || null : null,
       country: typeof body.country === "string" && body.country.trim() ? body.country.trim() : "GB",
       charity_type: typeof body.charity_type === "string" ? body.charity_type : null,
-      contact_email: typeof body.contact_email === "string" ? body.contact_email.trim() || null : null,
+      contact_email: contactEmail,
       website_url: typeof body.website_url === "string" ? body.website_url.trim() || null : null,
       goal_amount: goalAmount,
       minimum_donation: Number.isFinite(Number(body.minimum_donation)) ? Number(body.minimum_donation) : 1,

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
-  Search, RefreshCw, AlertCircle, Receipt, CheckCircle2, RotateCcw, Banknote, ShieldAlert,
+  Search, RefreshCw, AlertCircle, Receipt, CheckCircle2, RotateCcw, Banknote, ShieldAlert, Coins,
 } from "lucide-react";
 import ThemedSelect from "@/components/admin/ThemedSelect";
 import {
@@ -22,6 +22,9 @@ interface DonationRow {
   is_anonymous: boolean;
   payment_method_type: string | null;
   created_at: string;
+  net_amount: number | null;
+  platform_fee_amount: number | null;
+  stripe_fee_amount: number | null;
   user: Joined;
   charity: Joined;
 }
@@ -40,7 +43,7 @@ const STATUS_TONE: Record<string, "green" | "amber" | "red" | "gray"> = {
 export default function DonationsTab() {
   const { toast } = useToast();
   const [rows, setRows] = useState<DonationRow[]>([]);
-  const [stats, setStats] = useState<{ total: number; completed: number; refunded: number; totalRaised: number } | null>(null);
+  const [stats, setStats] = useState<{ total: number; completed: number; refunded: number; totalRaised: number; platformFees: number } | null>(null);
   const [charities, setCharities] = useState<{ id: string; name: string }[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
@@ -91,11 +94,12 @@ export default function DonationsTab() {
     <>
       <ToastView toast={toast} />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-5">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-5">
         <StatCard label="Total Donations" value={stats?.total ?? "—"} sub="All time" icon={Receipt} tone="blue" />
         <StatCard label="Completed" value={stats?.completed ?? "—"} sub="Successfully paid" icon={CheckCircle2} tone="green" />
         <StatCard label="Refunded" value={stats?.refunded ?? "—"} sub="Reversed" icon={RotateCcw} tone="amber" />
-        <StatCard label="Total Raised" value={stats ? fmtMoney(stats.totalRaised) : "—"} sub="Completed only" icon={Banknote} tone="purple" />
+        <StatCard label="Total Raised" value={stats ? fmtMoney(stats.totalRaised) : "—"} sub="Gross, completed" icon={Banknote} tone="purple" />
+        <StatCard label="Platform Fees" value={stats ? fmtMoney(stats.platformFees) : "—"} sub="Our revenue" icon={Coins} tone="amber" />
       </div>
 
       <div className="bg-white rounded-none border border-[#102C26]/12 overflow-hidden">
@@ -134,6 +138,9 @@ export default function DonationsTab() {
                   <th className="pl-4 lg:pl-5 px-2 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600">Donor</th>
                   <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600 hidden md:table-cell">Charity</th>
                   <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600">Amount</th>
+                  <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600 hidden md:table-cell">To charity</th>
+                  <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600 hidden lg:table-cell">Platform fee</th>
+                  <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600 hidden xl:table-cell">Stripe fee</th>
                   <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600">Status</th>
                   <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600 hidden lg:table-cell">Points</th>
                   <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600 hidden xl:table-cell">Date</th>
@@ -153,6 +160,9 @@ export default function DonationsTab() {
                       </td>
                       <td className="px-4 py-3.5 hidden md:table-cell text-gray-700 truncate max-w-44">{c?.name ?? "—"}</td>
                       <td className="px-4 py-3.5 text-right font-semibold text-gray-900 tabular-nums">{fmtMoney(d.amount, d.currency)}</td>
+                      <td className="px-4 py-3.5 text-right tabular-nums text-gray-700 hidden md:table-cell">{d.net_amount != null ? fmtMoney(d.net_amount, d.currency) : "—"}</td>
+                      <td className="px-4 py-3.5 text-right tabular-nums text-gray-600 hidden lg:table-cell">{d.platform_fee_amount != null ? fmtMoney(d.platform_fee_amount, d.currency) : "—"}</td>
+                      <td className="px-4 py-3.5 text-right tabular-nums text-gray-500 hidden xl:table-cell">{d.stripe_fee_amount != null ? fmtMoney(d.stripe_fee_amount, d.currency) : "—"}</td>
                       <td className="px-4 py-3.5"><Badge label={d.status} tone={STATUS_TONE[d.status] ?? "gray"} /></td>
                       <td className="px-4 py-3.5 text-right hidden lg:table-cell tabular-nums text-gray-600">{d.points_earned > 0 ? `+${d.points_earned}` : "—"}</td>
                       <td className="px-4 py-3.5 hidden xl:table-cell text-gray-600 whitespace-nowrap">{fmtDateTime(d.created_at)}</td>

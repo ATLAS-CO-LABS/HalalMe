@@ -13,6 +13,7 @@ import MerchantDocsApprovedEmail from "@/emails/MerchantDocsApprovedEmail";
 import MerchantDocsActionNeededEmail from "@/emails/MerchantDocsActionNeededEmail";
 import SupportTicketNotifyEmail from "@/emails/SupportTicketNotifyEmail";
 import SupportTicketReplyEmail from "@/emails/SupportTicketReplyEmail";
+import CharityConnectInviteEmail from "@/emails/CharityConnectInviteEmail";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = "HalalMe <noreply@halalme.co.uk>";
@@ -443,6 +444,32 @@ export async function sendMerchantChaseEmail({
 
   if (error) {
     console.error("[emailService] sendMerchantChaseEmail failed", error);
+    throw new Error(`Email send failed: ${error.message}`);
+  }
+}
+
+export async function sendCharityConnectInviteEmail({
+  to,
+  charityName,
+  onboardingUrl,
+}: {
+  to: string;
+  charityName: string;
+  onboardingUrl: string;
+}): Promise<void> {
+  const html = await render(
+    CharityConnectInviteEmail({ charityName, onboardingUrl }),
+  );
+
+  const { error } = await resend.emails.send({
+    from: FROM,
+    to,
+    subject: `Set up donation payouts - ${charityName}`,
+    html,
+  });
+
+  if (error) {
+    console.error("[emailService] sendCharityConnectInviteEmail failed", error);
     throw new Error(`Email send failed: ${error.message}`);
   }
 }

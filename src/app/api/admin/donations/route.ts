@@ -29,6 +29,7 @@ export async function GET(req: NextRequest) {
     .from("donations")
     .select(
       "id, amount, currency, status, points_earned, risk_score, is_anonymous, payment_method_type, created_at, " +
+        "net_amount, platform_fee_amount, stripe_fee_amount, " +
         "user:profiles!donations_user_id_fkey(id, full_name, email), " +
         "charity:charities!donations_charity_id_fkey(id, name)",
       { count: "exact" },
@@ -68,9 +69,12 @@ export async function GET(req: NextRequest) {
     serviceClient.from("donations").select("id", { count: "exact", head: true }),
     serviceClient.from("donations").select("id", { count: "exact", head: true }).eq("status", "completed"),
     serviceClient.from("donations").select("id", { count: "exact", head: true }).eq("status", "refunded"),
-    serviceClient.from("donations").select("amount").eq("status", "completed"),
+    serviceClient.from("donations").select("amount, net_amount, platform_fee_amount").eq("status", "completed"),
   ]);
-  const totalRaised = (completedSumRes.data ?? []).reduce((s, d) => s + Number(d.amount ?? 0), 0);
+  const completedRows = completedSumRes.data ?? [];
+  const totalRaised     = completedRows.reduce((s, d) => s + Number(d.amount ?? 0), 0);
+  const totalPlatformFees = completedRows.reduce((s, d) => s + Number(d.platform_fee_amount ?? 0), 0);
+  const totalNetToCharities = completedRows.reduce((s, d) => s + Number(d.net_amount ?? 0), 0);
 
   // Charities list for the filter dropdown.
   const { data: charities } = await serviceClient
@@ -89,6 +93,8 @@ export async function GET(req: NextRequest) {
       completed: completedRes.count ?? 0,
       refunded: refundedRes.count ?? 0,
       totalRaised,
+      platformFees: totalPlatformFees,
+      netToCharities: totalNetToCharities,
     },
   });
 }

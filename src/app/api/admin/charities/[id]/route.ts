@@ -125,12 +125,46 @@ export async function PATCH(
     if (f in body && typeof body[f] === "boolean") update[f] = body[f];
   }
 
+  // Identity / contact fields (also feed Stripe Connect onboarding).
+  for (const f of ["legal_name", "registration_number", "website_url"] as const) {
+    if (f in body) {
+      const raw = body[f];
+      update[f] = typeof raw === "string" ? raw.trim() || null : null;
+    }
+  }
+  if ("contact_email" in body) {
+    const email = String(body.contact_email ?? "").trim();
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json({ error: "Invalid contact email" }, { status: 400 });
+    }
+    update.contact_email = email || null;
+  }
+  if ("country" in body) {
+    const c = String(body.country ?? "").trim().toUpperCase();
+    if (!c) return NextResponse.json({ error: "Country cannot be empty" }, { status: 400 });
+    update.country = c;
+  }
+  if ("charity_type" in body) {
+    const t = body.charity_type;
+    const allowed = ["ngo", "foundation", "mosque", "humanitarian", "other"];
+    if (t !== null && !(typeof t === "string" && allowed.includes(t))) {
+      return NextResponse.json({ error: "Invalid charity type" }, { status: 400 });
+    }
+    update.charity_type = (typeof t === "string" && t) || null;
+  }
+
   if (Object.keys(update).length === 0) {
     return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
   }
 
   const { error } = await serviceClient.from("charities").update(update).eq("id", id);
   if (error) {
+    if (error.code === "23505") {
+      return NextResponse.json(
+        { error: "A charity with this registration number already exists for this country" },
+        { status: 409 },
+      );
+    }
     console.error("[charities PATCH] update error", error);
     return NextResponse.json({ error: "Failed to update charity" }, { status: 500 });
   }

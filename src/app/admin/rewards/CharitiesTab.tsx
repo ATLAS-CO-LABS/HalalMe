@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   Search, RefreshCw, AlertCircle, Heart, CheckCircle2, Star, Banknote,
-  ChevronRight, Loader2, X, Plus, Ban, RotateCcw, Save,
+  ChevronRight, Loader2, X, Plus, Ban, RotateCcw, Save, Send,
 } from "lucide-react";
 import { display } from "../_fonts";
 import {
@@ -26,9 +26,29 @@ interface CharityRow {
   is_zakat_eligible: boolean;
   is_active: boolean;
   currency: string;
+  stripe_account_id: string | null;
+  stripe_charges_enabled: boolean;
+}
+
+// Connect payout status → badge (shared by list rows).
+function connectBadge(c: { stripe_account_id: string | null; stripe_charges_enabled: boolean }) {
+  if (c.stripe_charges_enabled) return { label: "Payouts ready", tone: "green" as const };
+  if (c.stripe_account_id) return { label: "Onboarding", tone: "amber" as const };
+  return { label: "Not connected", tone: "gray" as const };
 }
 interface FullCharity extends CharityRow {
   description: string; long_description: string | null; image_url: string | null;
+  legal_name: string | null;
+  registration_number: string | null;
+  country: string | null;
+  charity_type: string | null;
+  website_url: string | null;
+  contact_email: string | null;
+  stripe_account_id: string | null;
+  stripe_charges_enabled: boolean;
+  stripe_payouts_enabled: boolean;
+  stripe_onboarding_status: string | null;
+  stripe_onboarding_sent_at: string | null;
 }
 
 const STATUS_FILTERS = [
@@ -116,6 +136,9 @@ export default function CharitiesTab() {
           platform_fee_pct: edit.platform_fee_pct, description: edit.description,
           long_description: edit.long_description, image_url: edit.image_url,
           is_featured: edit.is_featured, is_zakat_eligible: edit.is_zakat_eligible,
+          legal_name: edit.legal_name, registration_number: edit.registration_number,
+          country: edit.country, charity_type: edit.charity_type,
+          website_url: edit.website_url, contact_email: edit.contact_email,
         }),
       });
       const json = await res.json().catch(() => null);
@@ -142,6 +165,24 @@ export default function CharitiesTab() {
       flash("ok", suspending ? "Charity suspended." : "Charity reinstated.");
       setEdit(null);
       fetchRows(page, status, search);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function sendConnectLink() {
+    if (!edit) return;
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/admin/charities/${edit.id}/connect`, { method: "POST" });
+      const json = await res.json().catch(() => null);
+      if (!res.ok) { flash("err", json?.error ?? "Could not send onboarding link."); return; }
+      if (json?.emailed === false) {
+        flash("err", json?.error ?? "Link created but email failed — copy it from the charity record.");
+      } else {
+        flash("ok", "Onboarding link sent to the charity.");
+      }
+      await openEdit(edit.id); // refresh Connect status in the drawer
     } finally {
       setBusy(false);
     }
@@ -206,6 +247,7 @@ export default function CharitiesTab() {
                           <Badge label={c.verification_status} tone={STATUS_TONE[c.verification_status] ?? "gray"} />
                           <Badge label={`L${c.verification_level}`} tone={c.verification_level >= 2 ? "green" : c.verification_level === 1 ? "amber" : "gray"} />
                           {c.is_zakat_eligible && <Badge label="Zakat" tone="purple" />}
+                          <Badge {...connectBadge(c)} />
                         </div>
                         <p className="text-gray-900 font-medium tabular-nums text-sm mt-2">{fmtMoney(c.raised_amount, c.currency)} <span className="text-gray-400 font-normal">/ {fmtMoney(c.goal_amount, c.currency)}</span></p>
                         <div className="mt-1 h-1.5 w-full max-w-48 bg-gray-100 rounded-full overflow-hidden"><div className="h-full bg-[#102C26]" style={{ width: `${pct}%` }} /></div>
@@ -249,7 +291,12 @@ export default function CharitiesTab() {
                         <p className="text-gray-900 font-medium tabular-nums">{fmtMoney(c.raised_amount, c.currency)} <span className="text-gray-400 font-normal">/ {fmtMoney(c.goal_amount, c.currency)}</span></p>
                         <div className="mt-1 h-1.5 w-32 bg-gray-100 rounded-full overflow-hidden"><div className="h-full bg-[#102C26]" style={{ width: `${pct}%` }} /></div>
                       </td>
-                      <td className="px-4 py-3.5 hidden lg:table-cell"><Badge label={c.verification_status} tone={STATUS_TONE[c.verification_status] ?? "gray"} /></td>
+                      <td className="px-4 py-3.5 hidden lg:table-cell">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <Badge label={c.verification_status} tone={STATUS_TONE[c.verification_status] ?? "gray"} />
+                          <Badge {...connectBadge(c)} />
+                        </div>
+                      </td>
                       <td className="px-4 lg:px-5 py-3.5 text-right"><ChevronRight size={15} className="text-gray-400 inline" /></td>
                     </tr>
                   );
@@ -285,9 +332,55 @@ export default function CharitiesTab() {
                   <TextInput label="Image URL" value={edit.image_url ?? ""} onChange={(v) => setEdit({ ...edit, image_url: v })} disabled={!canManage} />
                   <TextArea label="Short description" value={edit.description} onChange={(v) => setEdit({ ...edit, description: v })} disabled={!canManage} rows={2} />
                   <TextArea label="Long description" value={edit.long_description ?? ""} onChange={(v) => setEdit({ ...edit, long_description: v })} disabled={!canManage} rows={4} />
+
+                  {/* Identity & contact */}
+                  <div className="border-t border-[#102C26]/10 pt-4 space-y-3">
+                    <Label>Identity &amp; contact</Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <TextInput label="Legal name" value={edit.legal_name ?? ""} onChange={(v) => setEdit({ ...edit, legal_name: v })} disabled={!canManage} />
+                      <TextInput label="Registration no." value={edit.registration_number ?? ""} onChange={(v) => setEdit({ ...edit, registration_number: v })} disabled={!canManage} />
+                      <TextInput label="Country" value={edit.country ?? ""} onChange={(v) => setEdit({ ...edit, country: v })} disabled={!canManage} />
+                      <SelectInput label="Charity type" value={edit.charity_type ?? ""} onChange={(v) => setEdit({ ...edit, charity_type: v || null })} disabled={!canManage}
+                        options={[["", "—"], ["ngo", "NGO"], ["foundation", "Foundation"], ["mosque", "Mosque"], ["humanitarian", "Humanitarian"], ["other", "Other"]]} />
+                      <TextInput label="Contact email" value={edit.contact_email ?? ""} onChange={(v) => setEdit({ ...edit, contact_email: v })} disabled={!canManage} />
+                      <TextInput label="Website" value={edit.website_url ?? ""} onChange={(v) => setEdit({ ...edit, website_url: v })} disabled={!canManage} />
+                    </div>
+                  </div>
+
                   <div className="flex items-center gap-5">
                     <Toggle label="Featured" checked={edit.is_featured} onChange={(v) => setEdit({ ...edit, is_featured: v })} disabled={!canManage} />
                     <Toggle label="Zakat eligible" checked={edit.is_zakat_eligible} onChange={(v) => setEdit({ ...edit, is_zakat_eligible: v })} disabled={!canManage} />
+                  </div>
+
+                  {/* Payouts — Stripe Connect */}
+                  <div className="border-t border-[#102C26]/10 pt-4">
+                    <div className="flex items-center justify-between gap-3 flex-wrap">
+                      <div className="min-w-0">
+                        <Label>Payouts (Stripe Connect)</Label>
+                        {edit.stripe_charges_enabled ? (
+                          <Badge label="Ready · accepting donations" tone="green" />
+                        ) : edit.stripe_account_id ? (
+                          <Badge label="Onboarding pending" tone="amber" />
+                        ) : (
+                          <Badge label="Not connected" tone="gray" />
+                        )}
+                        {!edit.stripe_charges_enabled && edit.stripe_onboarding_sent_at && (
+                          <p className="text-[11px] text-gray-500 mt-1">
+                            Link sent {new Date(edit.stripe_onboarding_sent_at).toLocaleDateString()}
+                          </p>
+                        )}
+                        {!edit.contact_email && (
+                          <p className="text-[11px] text-amber-600 mt-1">Add a contact email to enable onboarding.</p>
+                        )}
+                      </div>
+                      {canManage && !edit.stripe_charges_enabled && (
+                        <button onClick={sendConnectLink} disabled={busy || !edit.contact_email}
+                          className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-none transition-colors disabled:opacity-50 text-[#102C26] bg-[#F7E7CE] hover:bg-[#F7E7CE]/70 border border-[#102C26]/15">
+                          {busy ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+                          {edit.stripe_account_id ? "Resend link" : "Send onboarding link"}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -352,9 +445,10 @@ function AddCharityModal({ onClose, onCreated, onError }: { onClose: () => void;
             <NumberInput label="Goal (£) *" value={Number(form.goal_amount)} onChange={(v) => setForm({ ...form, goal_amount: String(v) })} />
             <TextInput label="Legal name" value={form.legal_name} onChange={(v) => setForm({ ...form, legal_name: v })} />
             <TextInput label="Registration no." value={form.registration_number} onChange={(v) => setForm({ ...form, registration_number: v })} />
-            <TextInput label="Country" value={form.country} onChange={(v) => setForm({ ...form, country: v })} />
-            <TextInput label="Contact email" value={form.contact_email} onChange={(v) => setForm({ ...form, contact_email: v })} />
+            <TextInput label="Country *" value={form.country} onChange={(v) => setForm({ ...form, country: v })} />
+            <TextInput label="Contact email *" value={form.contact_email} onChange={(v) => setForm({ ...form, contact_email: v })} />
           </div>
+          <p className="text-[11px] text-gray-500 -mt-1">Contact email is where the Stripe payout onboarding invite is sent.</p>
           <div className="flex items-center gap-5">
             <Toggle label="Featured" checked={form.is_featured} onChange={(v) => setForm({ ...form, is_featured: v })} />
             <Toggle label="Zakat eligible" checked={form.is_zakat_eligible} onChange={(v) => setForm({ ...form, is_zakat_eligible: v })} />
@@ -362,7 +456,7 @@ function AddCharityModal({ onClose, onCreated, onError }: { onClose: () => void;
         </div>
         <div className="border-t border-[#102C26]/10 px-6 py-4 flex items-center justify-end gap-2">
           <button onClick={onClose} disabled={busy} className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900">Cancel</button>
-          <button onClick={submit} disabled={busy || !form.name.trim() || !form.description.trim()}
+          <button onClick={submit} disabled={busy || !form.name.trim() || !form.description.trim() || !form.contact_email.trim() || !form.country.trim()}
             className="inline-flex items-center gap-1.5 px-5 py-2 text-sm font-bold uppercase tracking-tight text-[#F7E7CE] bg-[#102C26] rounded-none hover:bg-[#102C26]/90 transition-colors disabled:opacity-50">
             {busy ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />} Create
           </button>
@@ -385,6 +479,9 @@ function NumberInput({ label, value, onChange, disabled }: { label: string; valu
 }
 function TextArea({ label, value, onChange, disabled, rows }: { label: string; value: string; onChange: (v: string) => void; disabled?: boolean; rows: number }) {
   return <div><Label>{label}</Label><textarea value={value} disabled={disabled} rows={rows} onChange={(e) => onChange(e.target.value)} className={inputCls} /></div>;
+}
+function SelectInput({ label, value, onChange, disabled, options }: { label: string; value: string; onChange: (v: string) => void; disabled?: boolean; options: [string, string][] }) {
+  return <div><Label>{label}</Label><select value={value} disabled={disabled} onChange={(e) => onChange(e.target.value)} className={inputCls}>{options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>;
 }
 function Toggle({ label, checked, onChange, disabled }: { label: string; checked: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
   return (

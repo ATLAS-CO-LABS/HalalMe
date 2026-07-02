@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, Suspense } from "react";
+import { useState, useEffect, useRef, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -27,9 +27,7 @@ const CREAM = "#F7E7CE";
 const TEAL  = "#14B8A6";
 const DEEP  = "#0D9488";
 
-const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
-  ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
-  : null;
+const STRIPE_PK = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 
 const stripeAppearance = {
   theme: "night" as const,
@@ -62,9 +60,10 @@ const stripeAppearance = {
 };
 
 interface IntentData {
-  donation_id:      string;
-  client_secret:    string | null;
-  amount:           number;
+  donation_id:          string;
+  client_secret:        string | null;
+  connected_account_id: string | null;
+  amount:               number;
   currency:         string;
   platform_fee:     number;
   net_amount:       number;
@@ -147,6 +146,13 @@ function CheckoutContent() {
   const [error,      setError]      = useState<string | null>(null);
   const [summaryOpen, setSummaryOpen] = useState(false);
   const intentCreated = useRef(false);
+
+  // Direct charges live on the charity's connected account, so Stripe.js must be
+  // initialised with that account id to confirm the payment.
+  const stripePromise = useMemo(() => {
+    if (!STRIPE_PK || !intentData?.connected_account_id) return null;
+    return loadStripe(STRIPE_PK, { stripeAccount: intentData.connected_account_id });
+  }, [intentData]);
 
   useEffect(() => {
     if (!charityId || !donationAmount) return;

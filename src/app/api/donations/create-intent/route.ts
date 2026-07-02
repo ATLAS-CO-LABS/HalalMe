@@ -52,6 +52,11 @@ export async function POST(req: NextRequest) {
     if (charity.verification_status !== "approved" || !charity.is_active) {
       return json({ error: "This charity is not currently accepting donations" }, 422);
     }
+    // Fiduciary gate: only charities fully Connected to Stripe can receive
+    // donations. Never silently route money into the platform account.
+    if (!charity.stripe_account_id || !charity.stripe_charges_enabled) {
+      return json({ error: "This charity isn't set up to receive donations yet. Please check back soon." }, 422);
+    }
     if (amount < charity.minimum_donation) {
       return json({ error: `Minimum donation for this charity is ${charity.currency} ${charity.minimum_donation}` }, 422);
     }
@@ -180,21 +185,26 @@ export async function POST(req: NextRequest) {
 
     if (existingPending?.payment_intent_id) {
       try {
-        const existingPi = await stripe.paymentIntents.retrieve(existingPending.payment_intent_id);
+        const existingPi = await stripe.paymentIntents.retrieve(
+          existingPending.payment_intent_id,
+          undefined,
+          { stripeAccount: charity.stripe_account_id },
+        );
         const reusable = ["requires_payment_method", "requires_confirmation", "requires_action", "processing"];
         if (existingPi.client_secret && reusable.includes(existingPi.status)) {
           return json({
-            donation_id:      existingPending.id,
-            client_secret:    existingPi.client_secret,
+            donation_id:         existingPending.id,
+            client_secret:       existingPi.client_secret,
+            connected_account_id: charity.stripe_account_id,
             amount,
-            currency:         charity.currency,
-            platform_fee:     platformFeeAmount,
-            net_amount:       netAmount,
-            risk_score:       riskScore,
-            points_preview:   pointsPreview,
-            charity_name:     charity.name,
-            charity_category: charity.category ?? null,
-            reused:           true,
+            currency:            charity.currency,
+            platform_fee:        platformFeeAmount,
+            net_amount:          netAmount,
+            risk_score:          riskScore,
+            points_preview:      pointsPreview,
+            charity_name:        charity.name,
+            charity_category:    charity.category ?? null,
+            reused:              true,
           });
         }
       } catch {
@@ -210,22 +220,24 @@ export async function POST(req: NextRequest) {
     const idempotencyKey = randomUUID();
 
     const intentParams: Parameters<typeof stripe.paymentIntents.create>[0] = {
-      amount:               Math.round(amount * 100), // pence
-      currency:             charity.currency.toLowerCase(),
-      payment_method_types: ["card"], // card only — excludes Revolut Pay, BACS, etc.
+      amount:                 Math.round(amount * 100), // pence
+      currency:               charity.currency.toLowerCase(),
+      payment_method_types:   ["card"], // card only — excludes Revolut Pay, BACS, etc.
+      application_fee_amount:  Math.round(platformFeeAmount * 100), // HalalMe's cut → platform
       metadata: {
         user_id:    user.id,
         charity_id: charity.id,
       },
     };
 
-    // Use Stripe Connect if charity has a connected account
-    if (charity.stripe_account_id && charity.stripe_charges_enabled) {
-      intentParams.application_fee_amount = Math.round(platformFeeAmount * 100);
-      intentParams.transfer_data = { destination: charity.stripe_account_id };
-    }
-
-    const intent = await stripe.paymentIntents.create(intentParams, { idempotencyKey });
+    // Direct charge ON the charity's connected account: the donation lands in the
+    // charity's Stripe balance, Stripe's processing fee comes out of the charity
+    // natively, and our application fee transfers to the platform. HalalMe never
+    // holds the donation funds.
+    const intent = await stripe.paymentIntents.create(intentParams, {
+      idempotencyKey,
+      stripeAccount: charity.stripe_account_id,
+    });
     const paymentIntentId = intent.id;
     const clientSecret    = intent.client_secret;
 
@@ -241,7 +253,9 @@ export async function POST(req: NextRequest) {
         amount,
         currency:             charity.currency,
         platform_fee_amount:  platformFeeAmount,
-        net_amount:           netAmount,
+        application_fee_amount: platformFeeAmount,
+        // net_amount is left null here — the Connect webhook fills the true value
+        // (amount − Stripe fee − platform fee) once the balance transaction settles.
         payment_intent_id:    paymentIntentId,
         idempotency_key:      idempotencyKey,
         status:               "pending",
@@ -264,7 +278,7 @@ export async function POST(req: NextRequest) {
     // -------------------------------------------------------------------------
     await stripe.paymentIntents.update(paymentIntentId, {
       metadata: { user_id: user.id, charity_id: charity.id, donation_id: donation.id },
-    }).then(() => null, () => null); // non-fatal
+    }, { stripeAccount: charity.stripe_account_id }).then(() => null, () => null); // non-fatal
 
     // -------------------------------------------------------------------------
     // 9. Auto-flag if high risk score
@@ -281,8 +295,9 @@ export async function POST(req: NextRequest) {
     }
 
     return json({
-      donation_id:      donation.id,
-      client_secret:    clientSecret,
+      donation_id:          donation.id,
+      client_secret:        clientSecret,
+      connected_account_id: charity.stripe_account_id,
       amount,
       currency:         charity.currency,
       platform_fee:     platformFeeAmount,
