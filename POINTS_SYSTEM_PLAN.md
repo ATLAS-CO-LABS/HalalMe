@@ -119,20 +119,28 @@
 
 Seed rows in `reward_rules`; wire each to its app event:
 
-| Action | Points | Cap | Call site |
-|---|---|---|---|
-| `daily_login` | 10 | 1/day | app resume / login hook |
-| `complete_profile` | 150 | once | profile save when 100% |
-| `verify_email` | 25 | once | on email verify success |
-| `verify_phone` | 25 | once | on phone verify success |
-| `add_photo` | 20 | once | avatar upload |
-| `first_post` | 50 | once | hub post create |
-| `daily_post` | 20 | 1/day | hub post create |
-| `recipe_upload` | 50 | per recipe | kitchen recipe insert |
-| `first_recipe` | 100 | once | kitchen recipe insert |
-| `review` | 25 | 3/day | review submit |
-| `donation` (exists) | 10/£ | — | donation trigger (refactored) |
-| `first_donation` | 100 | once | donation trigger |
+| Action | Points | Cap | Call site | Day |
+|---|---|---|---|---|
+| `daily_login` (exists) | 10 | 1/day | check-in API pinged on app load | 3 |
+| `profile_complete` | 200 | once | DB trigger: `username` + `phone` both fill | 3 |
+| `first_post` | 50 | once | hub post create | 4 |
+| `daily_post` | 20 | 1/day | hub post create | 4 |
+| `recipe_upload` (exists) | 50 | per recipe | kitchen recipe insert | 4 |
+| `first_recipe` | 100 | once | kitchen recipe insert | 4 |
+| `review` (exists) | 25 | 3/day | review submit | 4 |
+| `donation` (exists, wired) | 10/£ | — | donation trigger (refactored) | ✅ |
+| `first_donation` | 100 | once | donation trigger | 4 |
+
+**Onboarding = ONE reward (decided).** Real signup flow: form → verify email →
+Complete Profile page (photo + phone + username). The app's own "done" marker is
+`username`, but Hyperzod-invited users get a username without a phone, so the reliable
+"completed onboarding" signal is **`username` AND `phone` both set**. A single
+`profile_complete` = 200 pts fires via a **DB trigger** on that transition (photo is
+optional on the page, so not required). Fraud-gated by email + a real phone; 200 = the
+£2 min redemption so a new user can redeem immediately. Trigger only fires on the
+NULL→set transition, so existing accounts are not retro-awarded. Separate
+complete_profile/verify_email/verify_phone/add_photo rewards dropped; phone-verify reward
++ stronger gate deferred to Phase 2.
 
 _`referral` deferred to Phase 2 (see §2.6) — its fraud gate needs order data._
 
