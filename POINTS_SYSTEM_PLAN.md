@@ -173,16 +173,23 @@ _`referral` deferred to Phase 2 (see §2.6) — its fraud gate needs order data.
 - Wire "firsts" into the same call sites as 3C. Tier badges awarded from the tier trigger.
 - Replace `STATIC_BADGES` in my-rewards with a data fetch (earned vs locked from `badges` + `user_badges`).
 
-### 3F. Dashboards — reconcile all three
+### 3F. Dashboards — consolidate to 2 pages (DECIDED)
 
+**IA decision:** `/rewards` is the **Charity & Donation pillar landing** (Start Donating, Browse Causes — keep it). The personal points hub moves into a **Rewards tab on the main dashboard**, and **`/rewards/my-rewards` is deleted**. Final structure = 2 pages by purpose:
+- **`/dashboard`** — personal home, **tabbed**: `Overview` (services launchpad + quick stats) + `Rewards` (the points hub). Deep-link via `/dashboard?tab=rewards`.
+- **`/rewards`** — charity & donation landing (unchanged purpose).
+
+Tasks:
 1. **`/api/rewards/balance`** — return `wallet` (`reward_points`), `lifetime_points`, tier + next-tier from new model.
-2. **`/dashboard`** (main) — "Reward Balance" card = wallet; add small tier chip. Minor.
-3. **`/rewards`** (landing) — **fix the tier section**: replace donation-£ thresholds with points-based cumulative (Silver 1,000 / Gold 5,000 / Diamond 15,000), rename Platinum→Diamond, update copy from "lifetime donations" to "lifetime points."
-4. **`/rewards/my-rewards`** (main upgrade, per doc §9):
+2. **`/dashboard`** — add tabs. **Overview tab**: existing launchpad; the "Reward Balance" card links to `?tab=rewards`. **Rewards tab** (the old my-rewards content, per doc §9):
    - **Points summary:** wallet balance + £ equivalent + tier badge + progress bar to next tier.
    - **Redeem section:** Door A cards (perks/badges), tier-locked items shown but greyed.
    - **Points history:** full ledger, filter Earned / Spent / All, show running balance.
-   - **Badges:** data-driven earned vs locked with progress.
+   - **Badges:** data-driven earned vs locked (from `badges` + `user_badges`), replacing the hardcoded `STATIC_BADGES`.
+3. **`/rewards`** (landing) — **fix the tier section**: replace donation-£ thresholds with points-based cumulative (Silver 1,000 / Gold 5,000 / Diamond 15,000), rename Platinum→Diamond, update copy from "lifetime donations" to "lifetime points." Repoint its "My Rewards" button → `/dashboard?tab=rewards`.
+4. **Delete `/rewards/my-rewards`**; update any remaining links to `/dashboard?tab=rewards`.
+5. **Balance-refresh fix:** balance-displaying components re-read after the daily check-in resolves (fixes the "+10 only shows after refresh" race from Day 3 testing).
+6. **Points-earned toast:** a global real-time listener on `reward_transactions` (INSERT, own rows, positive points) pops a toast "+X · <reason>" the instant any award lands — catches every earn path (API, DB trigger, background ping) in one place. The in-the-moment feedback that makes earning feel rewarding.
 
 ### 3G. Types
 
@@ -199,7 +206,7 @@ Update `Profile` (add `lifetime_points`) and reward types in `src/types/app.ts` 
 | **3** | Rules + account wiring | Seed ~12 rules; wire `daily_login`, `complete_profile`, `verify_email`, `verify_phone`, `add_photo` | Log in / complete profile → points land |
 | **4** | Hub + Kitchen + badges | Wire `first_post`, `daily_post`, `recipe_upload`, `first_recipe`, `review`; badge catalogue table + `award_badge` + wire "firsts" & tier badges | Earning live across all Phase-1 pillars |
 | **5** | Redemption + Door A | `redeem_reward` RPC (validate, tier gate, velocity 3/day, wallet-only deduct); `POST /api/rewards/redeem`; 4 fulfilment handlers (AI power-up, recipe boost via `featured_until`, profile flair field, badge); Door A catalogue live, cash items disabled | Points are spendable — AI/boost/flair/badges |
-| **6** | Dashboards | Update `balance` API; rebuild `my-rewards` (points summary, redeem cards, history ledger w/ filters, badges earned/locked); fix `/rewards` landing tiers; main dashboard card + tier chip; update types | Full UI: earn, spend, tier, history visible |
+| **6** | Dashboards + feedback | Update `balance` API; **tab the main dashboard** (Overview + Rewards tab = points summary, redeem cards, history ledger w/ filters, badges earned/locked); **delete `/rewards/my-rewards`** + repoint links to `/dashboard?tab=rewards`; fix `/rewards` landing tiers; **balance-refresh fix** (balance re-reads after the daily check-in, not racing it); **points-earned toast** (real-time listener on the ledger → "+X · reason" pops on every earn); update types | 2 clean pages + instant earn feedback |
 | **7** | Test + polish | E2E: sign up → earn across pillars → redeem → verify ledger/tier/badges; bug fixes; `npm run lint` + `build` | Launch-ready |
 
 ---
