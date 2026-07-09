@@ -372,17 +372,31 @@ async function handle(req: Request, signal: AbortSignal): Promise<Response> {
   console.log("[auth] user ok:", user.id);
   if (signal.aborted) return json({ error: "Request cancelled" }, 499);
 
-  // Redeeming the "AI power-up" reward temporarily raises this user's hourly
-  // limit (see redeem_reward / ai_limit_boosts, 051-052). Falls back to the
-  // default when there's no active boost.
-  let rateLimitForUser = RATE_LIMIT_REQUESTS_PER_HOUR_DEFAULT;
+  // Base limit comes from the user's tier (Bronze 10 / Silver 20 / Gold 30 /
+  // Platinum 50 — reward_tiers.ai_requests_per_hour). Redeeming "AI power-up"
+  // adds a temporary bonus on TOP of that (see redeem_reward / ai_limit_boosts,
+  // 051-053) — it's never a downgrade for higher tiers.
+  const { data: profileRow } = await supabaseAdmin
+    .from("profiles")
+    .select("reward_tier")
+    .eq("id", user.id)
+    .single();
+
+  const { data: tierRow } = await supabaseAdmin
+    .from("reward_tiers")
+    .select("ai_requests_per_hour")
+    .eq("name", profileRow?.reward_tier ?? "bronze")
+    .maybeSingle();
+
+  let rateLimitForUser = tierRow?.ai_requests_per_hour ?? RATE_LIMIT_REQUESTS_PER_HOUR_DEFAULT;
+
   const { data: boostRow } = await supabaseAdmin
     .from("ai_limit_boosts")
     .select("boosted_limit")
     .eq("user_id", user.id)
     .gt("expires_at", new Date().toISOString())
     .maybeSingle();
-  if (boostRow?.boosted_limit) rateLimitForUser = boostRow.boosted_limit;
+  if (boostRow?.boosted_limit) rateLimitForUser += boostRow.boosted_limit;
 
   const windowStart = new Date();
   windowStart.setMinutes(0, 0, 0);

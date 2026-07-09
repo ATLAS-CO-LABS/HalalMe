@@ -11,6 +11,11 @@ import {
   Clock,
   Users,
   MessagesSquare,
+  MessageCircle,
+  ChefHat,
+  HelpCircle,
+  Star,
+  Sparkles,
   Search,
   Bookmark,
   X,
@@ -33,6 +38,11 @@ import UserProfileModal from "@/components/hub/UserProfileModal";
 import NotificationPanel from "@/components/hub/NotificationPanel";
 import { PostCardSkeletonList } from "@/components/hub/PostCardSkeleton";
 import EmptyState from "@/components/hub/EmptyState";
+
+const BG = "#0B0D0F";
+const BG2 = "#111418";
+const AMBER = "#F59E0B";
+const CREAM = "#F7E7CE";
 
 type TabType = FeedMode | "bookmarks";
 
@@ -95,6 +105,7 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
     username: string | null;
     avatarUrl: string | null;
     isVerified: boolean | null;
+    profileFlair: string | null;
     bio: string | null;
   } | null>(null);
 
@@ -483,13 +494,14 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
       username:    post.profiles?.username ?? null,
       avatarUrl:   post.profiles?.avatar_url ?? null,
       isVerified:  post.profiles?.is_verified ?? null,
+      profileFlair: post.profiles?.profile_flair ?? null,
       bio:         null,
     });
     try {
       const profile = await hubService.getUserProfile(post.user_id);
       if (profile) {
         setProfileModal((prev) =>
-          prev?.userId === post.user_id ? { ...prev, bio: profile.bio } : prev
+          prev?.userId === post.user_id ? { ...prev, bio: profile.bio, profileFlair: profile.profile_flair } : prev
         );
       }
     } catch {
@@ -510,17 +522,20 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
   ];
 
   return (
-    <div className="min-h-screen bg-[#0B0D0F] pt-16">
+    <div className="min-h-screen pt-16" style={{ backgroundColor: BG }}>
 
-      {/* Sticky header */}
-      <div className="bg-[#111418]/95 backdrop-blur-lg border-b border-gray-800 sticky top-16 z-40">
+      {/* Sticky header - solid bg (no blur) avoids scroll-repaint tearing under the fixed app header */}
+      <div className="border-b sticky top-16 z-40" style={{ backgroundColor: BG2, borderColor: `${CREAM}10` }}>
         <div className="mx-auto max-w-4xl px-4 md:px-6 py-3 md:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {/* Desktop back */}
               <Link href="/hub" className="hidden md:block">
                 <motion.button
-                  className="text-gray-400 hover:text-white transition-colors"
+                  className="transition-colors"
+                  style={{ color: `${CREAM}50` }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = CREAM)}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = `${CREAM}50`)}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -531,17 +546,18 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
               {/* Mobile menu toggle */}
               <motion.button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden text-gray-400 hover:text-white transition-colors"
+                className="md:hidden transition-colors"
+                style={{ color: `${CREAM}50` }}
                 whileTap={{ scale: 0.95 }}
               >
                 {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </motion.button>
 
               <h1
-                className="text-lg md:text-xl font-extrabold uppercase tracking-tight text-white"
-                style={{ fontFamily: "var(--font-headline)" }}
+                className="text-lg md:text-xl font-extrabold uppercase tracking-tighter"
+                style={{ color: CREAM, fontFamily: "var(--font-headline)" }}
               >
-                HalalMe <span className="text-[#F59E0B]">Social</span>
+                HalalMe <span style={{ color: AMBER }}>Social</span>
               </h1>
             </div>
 
@@ -552,7 +568,8 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
               {/* Create post */}
               <motion.button
                 onClick={() => setIsCreatePostOpen(true)}
-                className="flex items-center gap-1.5 bg-[#F59E0B] text-[#0B0D0F] px-3 md:px-4 py-2 rounded-full font-bold shadow-lg text-sm"
+                className="flex items-center gap-1.5 px-3 md:px-4 py-2 font-extrabold uppercase tracking-tighter text-sm"
+                style={{ backgroundColor: AMBER, color: BG }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -569,17 +586,28 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                className="md:hidden border-t border-gray-800 mt-3"
+                className="md:hidden border-t mt-3"
+                style={{ borderColor: `${CREAM}10` }}
               >
                 <div className="py-3 space-y-1">
                   <Link href="/hub" onClick={() => setMobileMenuOpen(false)}>
-                    <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white hover:bg-gray-800/80 transition-colors">
+                    <div
+                      className="flex items-center gap-3 px-3 py-2.5 transition-colors"
+                      style={{ color: CREAM }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `${CREAM}08`)}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                    >
                       <Home className="w-5 h-5" />
                       <span className="font-semibold">Social Home</span>
                     </div>
                   </Link>
                   <Link href="/kitchen" onClick={() => setMobileMenuOpen(false)}>
-                    <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white hover:bg-gray-800/80 transition-colors">
+                    <div
+                      className="flex items-center gap-3 px-3 py-2.5 transition-colors"
+                      style={{ color: CREAM }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `${CREAM}08`)}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                    >
                       <ArrowLeft className="w-5 h-5" />
                       <span className="font-semibold">Back to Kitchen</span>
                     </div>
@@ -590,39 +618,42 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
           </AnimatePresence>
         </div>
 
-        {/* Tabs */}
-        <div className="mx-auto max-w-4xl px-4 md:px-6 pb-3 pt-2">
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <motion.button
-                  key={tab.id}
-                  onClick={() => { setActiveTab(tab.id); loadFeed(tab.id, 1, false); setTypeFilter("all"); typeFilterRef.current = "all"; setSearchQuery(""); setSearchResults([]); }}
-                  className={`flex items-center gap-1.5 px-3 md:px-4 py-1.5 md:py-2 rounded-full font-semibold transition-all whitespace-nowrap text-xs md:text-sm ${
-                    activeTab === tab.id
-                      ? "bg-[#F59E0B] text-[#0B0D0F]"
-                      : "bg-gray-800/60 text-gray-400 border border-gray-700 hover:text-white hover:border-amber-500/30"
-                  }`}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Icon className="w-3.5 h-3.5" />
-                  {tab.label}
-                </motion.button>
-              );
-            })}
-          </div>
+        {/* Tabs - underline style, matches Kitchen recipes tabs */}
+        <div className="mx-auto max-w-4xl px-4 md:px-6 pt-1 flex border-b" style={{ borderColor: `${CREAM}08` }}>
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const active = activeTab === tab.id;
+            return (
+              <motion.button
+                key={tab.id}
+                onClick={() => { setActiveTab(tab.id); loadFeed(tab.id, 1, false); setTypeFilter("all"); typeFilterRef.current = "all"; setSearchQuery(""); setSearchResults([]); }}
+                className="relative flex items-center gap-1.5 px-3 md:px-4 py-2.5 font-extrabold uppercase tracking-widest transition-colors whitespace-nowrap text-xs"
+                style={{ color: active ? AMBER : `${CREAM}40` }}
+                whileTap={{ scale: 0.97 }}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                {tab.label}
+                {active && (
+                  <motion.div
+                    layoutId="hub-tab-underline"
+                    className="absolute bottom-0 left-0 right-0 h-0.5"
+                    style={{ backgroundColor: AMBER }}
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  />
+                )}
+              </motion.button>
+            );
+          })}
         </div>
 
-        {/* Type filter pills */}
-        <div className="mx-auto max-w-4xl px-4 md:px-6 pb-3 pt-1 flex gap-2 overflow-x-auto scrollbar-hide">
+        {/* Type filter pills - square tags */}
+        <div className="mx-auto max-w-4xl px-4 md:px-6 pb-3 pt-3 flex gap-1.5 overflow-x-auto scrollbar-hide">
           {[
-            { value: "all",      label: "All",       emoji: "✦"  },
-            { value: "general",  label: "Posts",     emoji: "💬" },
-            { value: "recipe",   label: "Recipes",   emoji: "🍽️" },
-            { value: "question", label: "Questions", emoji: "❓" },
-            { value: "review",   label: "Reviews",   emoji: "⭐" },
+            { value: "all",      label: "All",       Icon: Sparkles      },
+            { value: "general",  label: "Posts",     Icon: MessageCircle },
+            { value: "recipe",   label: "Recipes",   Icon: ChefHat       },
+            { value: "question", label: "Questions", Icon: HelpCircle    },
+            { value: "review",   label: "Reviews",   Icon: Star          },
           ].map((f) => (
             <button
               key={f.value}
@@ -631,13 +662,14 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
                 setTypeFilter(f.value);
                 loadFeed(activeTab, 1, false);
               }}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all border ${
+              className="flex items-center gap-1.5 px-3 py-1 text-xs font-bold uppercase tracking-tight whitespace-nowrap transition-all border"
+              style={
                 typeFilter === f.value
-                  ? "bg-gray-200 text-[#0B0D0F] border-gray-200"
-                  : "bg-transparent text-gray-500 border-gray-700 hover:border-gray-500 hover:text-gray-300"
-              }`}
+                  ? { backgroundColor: AMBER, color: BG, borderColor: AMBER }
+                  : { backgroundColor: "transparent", color: `${CREAM}40`, borderColor: `${CREAM}12` }
+              }
             >
-              <span>{f.emoji}</span>
+              <f.Icon className="w-3 h-3" />
               {f.label}
             </button>
           ))}
@@ -646,19 +678,22 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
         {/* Search */}
         <div className="mx-auto max-w-4xl px-4 md:px-6 pb-3">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: `${CREAM}35` }} />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search posts, users..."
-              className="w-full bg-gray-800/60 text-white rounded-full pl-10 pr-10 py-2.5 text-base focus:outline-none focus:ring-1 focus:ring-amber-500/50 border border-gray-700 hover:border-gray-600 font-normal transition-colors"
-              style={{ fontFamily: "var(--font-body)" }}
+              className="w-full text-base pl-10 pr-10 py-2.5 border focus:outline-none font-normal transition-colors"
+              style={{ backgroundColor: BG, borderColor: `${CREAM}12`, color: CREAM, caretColor: AMBER }}
+              onFocus={(e) => (e.target.style.borderColor = AMBER)}
+              onBlur={(e) => (e.target.style.borderColor = `${CREAM}12`)}
             />
             {searchQuery && (
               <motion.button
                 onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
+                style={{ color: `${CREAM}35` }}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
               >
@@ -676,10 +711,10 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
         {searchQuery && (
           <div className="mb-4 flex items-center gap-2">
             {isSearching
-              ? <Loader2 className="w-4 h-4 text-[#F59E0B] animate-spin" />
-              : <Search className="w-4 h-4 text-gray-500" />
+              ? <Loader2 className="w-4 h-4 animate-spin" style={{ color: AMBER }} />
+              : <Search className="w-4 h-4" style={{ color: `${CREAM}30` }} />
             }
-            <span className="text-sm text-gray-400 font-normal" style={{ fontFamily: "var(--font-body)" }}>
+            <span className="text-sm font-normal" style={{ color: `${CREAM}45`, fontFamily: "var(--font-body)" }}>
               {isSearching ? "Searching..." : `${userResults.length + searchResults.length} result${userResults.length + searchResults.length !== 1 ? "s" : ""} for "${searchQuery}"`}
             </span>
           </div>
@@ -688,7 +723,7 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
         {/* User results */}
         {searchQuery && !isSearching && userResults.length > 0 && (
           <div className="mb-6">
-            <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-3">People</p>
+            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: `${CREAM}30` }}>People</p>
             <div className="space-y-2">
               {userResults.map((u) => (
                 <motion.button
@@ -699,23 +734,27 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
                     username: u.username,
                     avatarUrl: u.avatar_url,
                     isVerified: u.is_verified,
+                    profileFlair: null,
                     bio: u.bio,
                   })}
-                  className="w-full flex items-center gap-3 bg-gray-900/60 hover:bg-gray-800/80 border border-gray-800 hover:border-amber-500/30 rounded-xl px-4 py-3 text-left transition-colors"
+                  className="w-full flex items-center gap-3 border px-4 py-3 text-left transition-colors"
+                  style={{ backgroundColor: BG2, borderColor: `${CREAM}10` }}
+                  onMouseEnter={(e) => (e.currentTarget.style.borderColor = `${AMBER}40`)}
+                  onMouseLeave={(e) => (e.currentTarget.style.borderColor = `${CREAM}10`)}
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.99 }}
                 >
                   <Avatar src={u.avatar_url ?? undefined} alt={u.full_name ?? ""} size="md" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <span className="font-semibold text-white text-sm truncate">{u.full_name}</span>
+                      <span className="font-semibold text-sm truncate" style={{ color: CREAM }}>{u.full_name}</span>
                       {u.is_verified && (
-                        <svg className="w-3.5 h-3.5 text-[#F59E0B] shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                        <svg className="w-3.5 h-3.5 shrink-0" style={{ color: AMBER }} viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                         </svg>
                       )}
                     </div>
-                    {u.username && <p className="text-xs text-gray-500 truncate">@{u.username}</p>}
+                    {u.username && <p className="text-xs truncate" style={{ color: `${CREAM}30` }}>@{u.username}</p>}
                   </div>
                 </motion.button>
               ))}
@@ -724,7 +763,7 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
         )}
 
         {searchQuery && !isSearching && searchResults.length > 0 && (
-          <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-3">Posts</p>
+          <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: `${CREAM}30` }}>Posts</p>
         )}
 
         {isLoading ? (
@@ -798,9 +837,12 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
             <motion.button
               onClick={() => loadFeed(activeTab, page + 1, true)}
               disabled={isLoadingMore}
-              className="flex items-center gap-2 bg-gray-800/60 text-gray-300 hover:text-white px-8 py-3 rounded-full font-bold border border-gray-700 hover:border-amber-500/40 transition-all disabled:opacity-60"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              className="flex items-center gap-2 px-8 py-3 font-extrabold uppercase tracking-tighter text-sm border transition-all disabled:opacity-60"
+              style={{ backgroundColor: BG2, borderColor: `${CREAM}10`, color: CREAM }}
+              onMouseEnter={(e) => !isLoadingMore && (e.currentTarget.style.borderColor = AMBER)}
+              onMouseLeave={(e) => (e.currentTarget.style.borderColor = `${CREAM}10`)}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
             >
               {isLoadingMore && <Loader2 className="w-4 h-4 animate-spin" />}
               {isLoadingMore ? "Loading..." : "Load More Posts"}
@@ -836,6 +878,7 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
           username={profileModal.username}
           avatarUrl={profileModal.avatarUrl}
           isVerified={profileModal.isVerified}
+          profileFlair={profileModal.profileFlair}
           bio={profileModal.bio}
           userPosts={posts.filter((p) => p.user_id === profileModal.userId)}
           onLike={handleLike}

@@ -6,6 +6,7 @@ import Footer from "@/components/layout/Footer";
 import ScrollToTop from "@/components/common/ScrollToTop";
 import { AuthGateProvider } from "@/context/AuthGateContext";
 import { AppResumeProvider } from "@/context/AppResumeContext";
+import { RewardsRealtimeProvider } from "@/context/RewardsRealtimeContext";
 
 const hideFooterPaths = [
   "/kitchen",
@@ -54,12 +55,14 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
     // AuthGateProvider wraps the entire app so any page can call requireAuth().
     // It also renders the single global <AuthModal> - no per-page modal needed.
     <AppResumeProvider>
-      <AuthGateProvider>
-        <ScrollToTop />
-        {!shouldHideHeader && <Header />}
-        <main>{children}</main>
-        {!shouldHideFooter && <Footer />}
-      </AuthGateProvider>
+      <RewardsRealtimeProvider>
+        <AuthGateProvider>
+          <ScrollToTop />
+          {!shouldHideHeader && <Header />}
+          <main>{children}</main>
+          {!shouldHideFooter && <Footer />}
+        </AuthGateProvider>
+      </RewardsRealtimeProvider>
     </AppResumeProvider>
   );
 }

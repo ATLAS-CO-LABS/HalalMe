@@ -197,7 +197,7 @@ export default function RewardsLandingPage() {
               </motion.button>
 
               <motion.button
-                onClick={() => router.push("/rewards/my-rewards")}
+                onClick={() => router.push("/dashboard?tab=rewards")}
                 whileHover={{
                   scale: 1.03,
                   backgroundColor: "rgba(247,231,206,0.06)",
@@ -691,7 +691,7 @@ export default function RewardsLandingPage() {
                 Browse Causes <ArrowRight className="w-5 h-5" />
               </motion.button>
               <motion.button
-                onClick={() => router.push("/rewards/my-rewards")}
+                onClick={() => router.push("/dashboard?tab=rewards")}
                 className="flex items-center gap-3 px-8 py-4 border-2 font-extrabold uppercase tracking-tighter text-base transition-all"
                 style={{ borderColor: `rgba(255,255,255,0.4)`, color: "white" }}
                 whileHover={{

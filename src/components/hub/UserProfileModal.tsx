@@ -10,6 +10,7 @@ import { useResumeKey } from "@/context/AppResumeContext";
 import { useAuth } from "@/hooks/useAuth";
 import Avatar from "./Avatar";
 import PostCard from "./PostCard";
+import { getFlairTheme } from "@/lib/flairTheme";
 
 interface UserProfileModalProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ interface UserProfileModalProps {
   username: string | null;
   avatarUrl: string | null;
   isVerified: boolean | null;
+  profileFlair?: string | null;
   bio?: string | null;
   /** Pre-loaded posts for this user (from the feed). */
   userPosts: Post[];
@@ -34,6 +36,7 @@ export default function UserProfileModal({
   username,
   avatarUrl,
   isVerified,
+  profileFlair,
   bio,
   userPosts,
   onLike,
@@ -176,6 +179,7 @@ export default function UserProfileModal({
 
   const isOwnProfile = currentUser?.id === userId;
   const formattedUsername = username ? `@${username}` : null;
+  const flairTheme = getFlairTheme(profileFlair);
 
   return (
     <AnimatePresence>
@@ -201,7 +205,10 @@ export default function UserProfileModal({
             >
               {/* Cover + Close */}
               <div className="relative">
-                <div className="h-32 bg-linear-to-br from-[#F59E0B] to-[#D97706]" />
+                <div
+                  className={flairTheme ? "h-32" : "h-32 bg-linear-to-br from-[#F59E0B] to-[#D97706]"}
+                  style={flairTheme ? { background: flairTheme.banner } : undefined}
+                />
 
                 <motion.button
                   onClick={onClose}
@@ -219,13 +226,14 @@ export default function UserProfileModal({
                       src={avatarUrl ?? undefined}
                       alt={displayName}
                       size="xl"
+                      flair={profileFlair}
                       className="border-4 border-gray-800"
                     />
                     <div className="flex-1 mb-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <h2
-                          className="text-xl font-extrabold uppercase tracking-tight text-white truncate"
-                          style={{ fontFamily: "var(--font-headline)" }}
+                          className="text-xl font-extrabold uppercase tracking-tight truncate"
+                          style={{ fontFamily: "var(--font-headline)", color: flairTheme?.accent ?? "#FFFFFF" }}
                         >
                           {displayName}
                         </h2>

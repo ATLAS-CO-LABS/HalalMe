@@ -44,6 +44,7 @@ export const hubService = {
         .from("following_posts_view")
         .select("*", { count: "exact" })
         .eq("follower_id", userId)
+        .order("is_featured", { ascending: false })
         .order("created_at", { ascending: false })
         .range(from, to);
 
@@ -76,13 +77,17 @@ export const hubService = {
     let query = supabase
       .from("posts")
       .select(
-        "*, profiles!user_id(username, full_name, avatar_url, is_verified)",
+        "*, profiles!user_id(username, full_name, avatar_url, is_verified, profile_flair)",
         { count: "exact" }
       )
       .eq("is_published", true)
       .range(from, to);
 
     if (postType) query = query.eq("post_type", postType);
+
+    // Boosted posts (Rewards redemption) float to the top, same pattern as
+    // recipeService.getRecipes — the whole point of paying for a boost.
+    query = query.order("is_featured", { ascending: false });
 
     if (mode === "trending") {
       query = query
@@ -129,7 +134,7 @@ export const hubService = {
     // those terminal qualifiers downcast to PostgrestBuilder which lacks the method.
     const postQ = supabase
       .from("posts")
-      .select("*, profiles!user_id(username, full_name, avatar_url, is_verified)")
+      .select("*, profiles!user_id(username, full_name, avatar_url, is_verified, profile_flair)")
       .eq("id", id);
     const { data, error } = await (signal ? postQ.abortSignal(signal).single() : postQ.single());
     if (error) throw new Error(error.message);
@@ -167,7 +172,7 @@ export const hubService = {
         post_type: options?.post_type ?? "general",
         recipe_id: options?.recipe_id ?? null,
       })
-      .select("*, profiles!user_id(username, full_name, avatar_url, is_verified)")
+      .select("*, profiles!user_id(username, full_name, avatar_url, is_verified, profile_flair)")
       .single();
     if (error) throw new Error(error.message);
     return { ...data, is_liked: false };
@@ -188,7 +193,7 @@ export const hubService = {
       .from("posts")
       .update(updates)
       .eq("id", id)
-      .select("*, profiles!user_id(username, full_name, avatar_url, is_verified)")
+      .select("*, profiles!user_id(username, full_name, avatar_url, is_verified, profile_flair)")
       .single();
     if (error) throw new Error(error.message);
     return data;
@@ -270,7 +275,7 @@ export const hubService = {
   async getUserPosts(userId: string, currentUserId?: string): Promise<Post[]> {
     const { data, error } = await supabase
       .from("posts")
-      .select("*, profiles!user_id(username, full_name, avatar_url, is_verified)")
+      .select("*, profiles!user_id(username, full_name, avatar_url, is_verified, profile_flair)")
       .eq("user_id", userId)
       .eq("is_published", true)
       .order("created_at", { ascending: false });
@@ -303,12 +308,13 @@ export const hubService = {
     full_name: string | null;
     avatar_url: string | null;
     is_verified: boolean | null;
+    profile_flair: string | null;
     bio: string | null;
     created_at: string;
   } | null> {
     const { data } = await supabase
       .from("profiles")
-      .select("id, username, full_name, avatar_url, is_verified, bio, created_at")
+      .select("id, username, full_name, avatar_url, is_verified, profile_flair, bio, created_at")
       .eq("id", userId)
       .single();
     return data ?? null;
@@ -345,7 +351,7 @@ export const hubService = {
     // Query 1: all top-level comments
     const topQ = supabase
       .from("comments")
-      .select("*, profiles!user_id(username, avatar_url)")
+      .select("*, profiles!user_id(username, avatar_url, profile_flair)")
       .eq("post_id", postId)
       .is("parent_id", null)
       .order("created_at", { ascending: true });
@@ -360,7 +366,7 @@ export const hubService = {
     const topLevelIds = topLevel.map((c) => c.id);
     const replyQ = supabase
       .from("comments")
-      .select("*, profiles!user_id(username, avatar_url)")
+      .select("*, profiles!user_id(username, avatar_url, profile_flair)")
       .in("parent_id", topLevelIds)
       .order("created_at", { ascending: true });
     const { data: replyData } = await (signal ? replyQ.abortSignal(signal) : replyQ);
@@ -418,7 +424,7 @@ export const hubService = {
         content,
         parent_id: parentId ?? null,
       })
-      .select("*, profiles!user_id(username, avatar_url)")
+      .select("*, profiles!user_id(username, avatar_url, profile_flair)")
       .single();
     if (error) throw new Error(error.message);
     return { ...data, is_liked: false, replies: [] };
@@ -429,7 +435,7 @@ export const hubService = {
       .from("comments")
       .update({ content })
       .eq("id", id)
-      .select("*, profiles!user_id(username, avatar_url)")
+      .select("*, profiles!user_id(username, avatar_url, profile_flair)")
       .single();
     if (error) throw new Error(error.message);
     return data;
@@ -542,7 +548,7 @@ export const hubService = {
     // 2. Fetch full post data for those IDs
     const postsQ = supabase
       .from("posts")
-      .select("*, profiles!user_id(username, full_name, avatar_url, is_verified)")
+      .select("*, profiles!user_id(username, full_name, avatar_url, is_verified, profile_flair)")
       .in("id", postIds)
       .eq("is_published", true);
     const { data, error } = await (signal ? postsQ.abortSignal(signal) : postsQ);
@@ -619,7 +625,7 @@ export const hubService = {
 
     const { data, error, count } = await supabase
       .from("posts")
-      .select("*, profiles!user_id(username, full_name, avatar_url, is_verified)", { count: "exact" })
+      .select("*, profiles!user_id(username, full_name, avatar_url, is_verified, profile_flair)", { count: "exact" })
       .eq("is_published", true)
       .ilike("content", `%${query}%`)
       .order("created_at", { ascending: false })

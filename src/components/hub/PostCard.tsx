@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
@@ -18,12 +18,20 @@ import {
   Trash2,
   X,
   Flag,
+  Star,
 } from "lucide-react";
 import type { Post } from "@/types";
 import { formatRelativeTime } from "@/lib/relativeTime";
 import { useAuthGate } from "@/hooks/useAuthGate";
 import ReportModal from "@/components/common/ReportModal";
 import Avatar from "./Avatar";
+import { getFlairTheme } from "@/lib/flairTheme";
+
+const BG = "#0B0D0F";
+const BG2 = "#111418";
+const BG3 = "#0D1012";
+const AMBER = "#F59E0B";
+const CREAM = "#F7E7CE";
 
 interface PostCardProps {
   post: Post;
@@ -52,15 +60,17 @@ export default function PostCard({
   const isOwnPost = !!currentUserId && currentUserId === post.user_id;
   const isRecipePost = post.post_type === "recipe";
 
-  const TYPE_BADGE: Record<string, { emoji: string; label: string; className: string }> = {
-    recipe:   { emoji: "🍽️", label: "Recipe",   className: "bg-amber-500/15 text-amber-400 border-amber-500/30" },
-    question: { emoji: "❓", label: "Question", className: "bg-blue-500/15 text-blue-400 border-blue-500/30" },
-    review:   { emoji: "⭐", label: "Review",   className: "bg-green-500/15 text-green-400 border-green-500/30" },
+  const TYPE_BADGE: Record<string, { emoji: string; label: string; color: string }> = {
+    recipe:   { emoji: "🍽️", label: "Recipe",   color: "#F59E0B" },
+    question: { emoji: "❓", label: "Question", color: "#60A5FA" },
+    review:   { emoji: "⭐", label: "Review",   color: "#4ADE80" },
   };
   const typeBadge = post.post_type && post.post_type !== "general" ? TYPE_BADGE[post.post_type] : null;
   const displayName = post.profiles?.full_name ?? post.profiles?.username ?? "Unknown";
   const username = post.profiles?.username ? `@${post.profiles.username}` : null;
   const avatarUrl = post.profiles?.avatar_url ?? undefined;
+  const authorFlair = post.profiles?.profile_flair ?? null;
+  const flairTheme = getFlairTheme(authorFlair);
   const isVerified = post.profiles?.is_verified ?? false;
   const firstMedia = post.media_urls?.[0] ?? null;
   const mediaIsVideo = isVideoUrl(firstMedia);
@@ -94,8 +104,11 @@ export default function PostCard({
 
   return (
     <motion.div
-      className="bg-[#111418] rounded-2xl border border-gray-800 overflow-hidden hover:border-amber-500/30 transition-colors"
-      whileHover={{ y: -2 }}
+      className="overflow-hidden transition-colors border"
+      style={{ backgroundColor: BG2, borderColor: flairTheme ? flairTheme.cardBorder : `${CREAM}10` }}
+      whileHover={{ y: -2, boxShadow: flairTheme ? `0 14px 32px -10px ${flairTheme.glow}` : undefined }}
+      onMouseEnter={(e) => { if (!flairTheme) e.currentTarget.style.borderColor = `${AMBER}30`; }}
+      onMouseLeave={(e) => { if (!flairTheme) e.currentTarget.style.borderColor = `${CREAM}10`; }}
     >
       {/* User Info */}
       <div className="p-4 md:p-5 flex items-center gap-3">
@@ -103,7 +116,7 @@ export default function PostCard({
           onClick={() => onUserClick?.(post.user_id)}
           className="cursor-pointer shrink-0"
         >
-          <Avatar src={avatarUrl} alt={displayName} size="lg" />
+          <Avatar src={avatarUrl} alt={displayName} size="lg" flair={authorFlair} />
         </div>
 
         <div
@@ -112,25 +125,33 @@ export default function PostCard({
         >
           <div className="flex items-center gap-1.5 flex-wrap">
             <h3
-              className="font-semibold text-white text-base hover:text-[#F59E0B] transition-colors truncate"
-              style={{ fontFamily: "var(--font-headline)" }}
+              className="font-extrabold text-base hover:text-(--flair-accent) transition-colors truncate"
+              style={{ color: CREAM, fontFamily: "var(--font-headline)", "--flair-accent": flairTheme?.accent ?? AMBER } as CSSProperties}
             >
               {displayName}
             </h3>
             {isVerified && (
-              <BadgeCheck className="w-4 h-4 text-[#F59E0B] shrink-0" />
+              <BadgeCheck className="w-4 h-4 shrink-0" style={{ color: AMBER }} />
+            )}
+            {post.is_featured && (
+              <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5" style={{ backgroundColor: CREAM, color: "#1C1C1C" }}>
+                <Star className="w-2.5 h-2.5 fill-[#1C1C1C]" /> Featured
+              </span>
             )}
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <p
-              className="text-gray-400 text-sm font-normal truncate"
-              style={{ fontFamily: "var(--font-body)" }}
+              className="text-sm font-normal truncate"
+              style={{ color: `${CREAM}45`, fontFamily: "var(--font-body)" }}
             >
               {username && <span>{username} • </span>}
               {formatRelativeTime(post.created_at)}
             </p>
             {typeBadge && (
-              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${typeBadge.className}`}>
+              <span
+                className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide border"
+                style={{ color: typeBadge.color, borderColor: `${typeBadge.color}40`, backgroundColor: `${typeBadge.color}15` }}
+              >
                 {typeBadge.emoji} {typeBadge.label}
               </span>
             )}
@@ -145,7 +166,10 @@ export default function PostCard({
               setConfirmingDelete(false);
             }}
             aria-label="Post options"
-            className="text-gray-400 hover:text-white p-2 rounded-full hover:bg-gray-700 transition-colors"
+            className="p-2 transition-colors"
+            style={{ color: `${CREAM}45` }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = CREAM)}
+            onMouseLeave={(e) => (e.currentTarget.style.color = `${CREAM}45`)}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
           >
@@ -158,7 +182,8 @@ export default function PostCard({
                 initial={{ opacity: 0, scale: 0.95, y: -8 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: -8 }}
-                className="absolute right-0 mt-2 w-52 bg-[#0D1012] rounded-xl border border-gray-800 shadow-xl overflow-hidden z-10"
+                className="absolute right-0 mt-2 w-52 overflow-hidden z-10 border shadow-xl"
+                style={{ backgroundColor: BG3, borderColor: `${CREAM}10` }}
               >
                 {isOwnPost ? (
                   !confirmingDelete ? (
@@ -168,14 +193,19 @@ export default function PostCard({
                           onEdit?.(post);
                           setMenuOpen(false);
                         }}
-                        className="flex items-center gap-3 w-full px-4 py-3 text-left text-white hover:bg-gray-800/60 transition-colors"
+                        className="flex items-center gap-3 w-full px-4 py-3 text-left transition-colors"
+                        style={{ color: CREAM }}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `${CREAM}08`)}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                       >
                         <Edit2 className="w-4 h-4" />
                         <span className="text-sm font-semibold">Edit Post</span>
                       </button>
                       <button
                         onClick={() => setConfirmingDelete(true)}
-                        className="flex items-center gap-3 w-full px-4 py-3 text-left text-red-500 hover:bg-gray-800/60 transition-colors"
+                        className="flex items-center gap-3 w-full px-4 py-3 text-left text-red-500 transition-colors"
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `${CREAM}08`)}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                       >
                         <Trash2 className="w-4 h-4" />
                         <span className="text-sm font-semibold">Delete Post</span>
@@ -183,20 +213,21 @@ export default function PostCard({
                     </>
                   ) : (
                     <div className="p-4">
-                      <p className="text-white text-sm font-semibold mb-3">
+                      <p className="text-sm font-semibold mb-3" style={{ color: CREAM }}>
                         Delete this post?
                       </p>
                       <div className="flex gap-2">
                         <button
                           onClick={() => setConfirmingDelete(false)}
-                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-gray-800 text-gray-300 hover:text-white text-sm font-semibold transition-colors"
+                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-semibold transition-colors border"
+                          style={{ backgroundColor: BG, color: `${CREAM}70`, borderColor: `${CREAM}10` }}
                         >
                           <X className="w-3.5 h-3.5" />
                           Cancel
                         </button>
                         <button
                           onClick={handleDeleteConfirm}
-                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition-colors"
+                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition-colors"
                         >
                           <Check className="w-3.5 h-3.5" />
                           Delete
@@ -210,7 +241,9 @@ export default function PostCard({
                       setMenuOpen(false);
                       requireAuth(() => setReportOpen(true), "Sign in to report content");
                     }}
-                    className="flex items-center gap-3 w-full px-4 py-3 text-left text-red-400 hover:bg-gray-800/60 transition-colors"
+                    className="flex items-center gap-3 w-full px-4 py-3 text-left text-red-400 transition-colors"
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `${CREAM}08`)}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                   >
                     <Flag className="w-4 h-4" />
                     <span className="text-sm font-semibold">Report Post</span>
@@ -233,8 +266,8 @@ export default function PostCard({
       {/* Post Content */}
       <div className="px-4 md:px-5 pb-4">
         <p
-          className="text-white text-base leading-relaxed font-normal"
-          style={{ fontFamily: "var(--font-body)" }}
+          className="text-base leading-relaxed font-normal"
+          style={{ color: CREAM, fontFamily: "var(--font-body)" }}
         >
           {post.content}
         </p>
@@ -245,26 +278,29 @@ export default function PostCard({
         <div className="px-4 md:px-5 pb-4">
           <Link href={`/kitchen/recipes/${post.recipe_id}`}>
             <motion.div
-              className="bg-linear-to-br from-[#F59E0B]/20 to-[#D97706]/20 border border-[#F59E0B]/30 rounded-xl p-4 hover:border-[#F59E0B] transition-colors cursor-pointer"
+              className="p-4 border transition-colors cursor-pointer"
+              style={{ backgroundColor: `${AMBER}12`, borderColor: `${AMBER}30` }}
+              onMouseEnter={(e) => (e.currentTarget.style.borderColor = AMBER)}
+              onMouseLeave={(e) => (e.currentTarget.style.borderColor = `${AMBER}30`)}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
               <div className="flex items-center gap-3">
-                <div className="bg-[#F59E0B] p-2 rounded-lg shrink-0">
+                <div className="p-2 shrink-0" style={{ backgroundColor: AMBER }}>
                   <ChefHat className="w-5 h-5 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[#F59E0B] text-xs font-semibold uppercase tracking-wide mb-0.5">
+                  <p className="text-xs font-bold uppercase tracking-wide mb-0.5" style={{ color: AMBER }}>
                     Recipe
                   </p>
                   <p
-                    className="text-white text-sm font-normal truncate"
-                    style={{ fontFamily: "var(--font-body)" }}
+                    className="text-sm font-normal truncate"
+                    style={{ color: CREAM, fontFamily: "var(--font-body)" }}
                   >
                     View linked recipe
                   </p>
                 </div>
-                <span className="text-[#F59E0B] text-sm font-semibold shrink-0">
+                <span className="text-sm font-semibold shrink-0" style={{ color: AMBER }}>
                   View →
                 </span>
               </div>
@@ -287,7 +323,7 @@ export default function PostCard({
         </div>
       ) : firstImage ? (
         <Link href={`/hub/post/${post.id}`}>
-          <div className="relative w-full bg-[#0B0D0F] flex items-center justify-center cursor-pointer overflow-hidden group">
+          <div className="relative w-full flex items-center justify-center cursor-pointer overflow-hidden group" style={{ backgroundColor: BG }}>
             <Image
               src={firstImage}
               alt="Post image"
@@ -299,7 +335,7 @@ export default function PostCard({
             />
             {/* Multi-image indicator */}
             {(post.media_urls?.length ?? 0) > 1 && (
-              <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm text-white text-xs font-semibold px-2 py-1 rounded-full">
+              <div className="absolute top-3 right-3 bg-black/70 text-white text-xs font-bold px-2 py-1">
                 1/{post.media_urls!.length}
               </div>
             )}
@@ -308,14 +344,13 @@ export default function PostCard({
       ) : null}
 
       {/* Actions */}
-      <div className="p-4 md:p-5 border-t border-gray-800">
+      <div className="p-4 md:p-5 border-t" style={{ borderColor: `${CREAM}10` }}>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-5">
             <motion.button
               onClick={() => onLike(post.id, !!post.is_liked)}
-              className={`flex items-center gap-2 transition-colors ${
-                post.is_liked ? "text-red-500" : "text-gray-400 hover:text-red-500"
-              }`}
+              className="flex items-center gap-2 transition-colors"
+              style={{ color: post.is_liked ? "#EF4444" : `${CREAM}45` }}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
             >
@@ -325,7 +360,10 @@ export default function PostCard({
 
             <Link href={`/hub/post/${post.id}`}>
               <motion.button
-                className="flex items-center gap-2 text-gray-400 hover:text-[#F59E0B] transition-colors"
+                className="flex items-center gap-2 transition-colors"
+                style={{ color: `${CREAM}45` }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = AMBER)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = `${CREAM}45`)}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
               >
@@ -339,11 +377,8 @@ export default function PostCard({
             {onBookmark && (
               <motion.button
                 onClick={() => onBookmark(post.id, !!post.is_bookmarked)}
-                className={`transition-colors ${
-                  post.is_bookmarked
-                    ? "text-[#F59E0B]"
-                    : "text-gray-400 hover:text-[#F59E0B]"
-                }`}
+                className="transition-colors"
+                style={{ color: post.is_bookmarked ? AMBER : `${CREAM}45` }}
                 title={post.is_bookmarked ? "Remove bookmark" : "Bookmark"}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
@@ -353,7 +388,8 @@ export default function PostCard({
             )}
             <motion.button
               onClick={handleShare}
-              className={`transition-colors ${copied ? "text-[#F59E0B]" : "text-gray-400 hover:text-[#F59E0B]"}`}
+              className="transition-colors"
+              style={{ color: copied ? AMBER : `${CREAM}45` }}
               title={copied ? "Copied!" : "Share"}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
@@ -367,8 +403,8 @@ export default function PostCard({
         {post.comment_count > 0 && (
           <Link href={`/hub/post/${post.id}`}>
             <motion.div
-              className="text-gray-400 hover:text-gray-300 text-sm cursor-pointer font-normal"
-              style={{ fontFamily: "var(--font-body)" }}
+              className="text-sm cursor-pointer font-normal transition-colors"
+              style={{ color: `${CREAM}45`, fontFamily: "var(--font-body)" }}
               whileHover={{ x: 4 }}
             >
               View all {post.comment_count} comment{post.comment_count !== 1 ? "s" : ""}

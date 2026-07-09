@@ -14,7 +14,7 @@ export async function GET() {
       await Promise.all([
         supabaseAdmin
           .from("profiles")
-          .select("reward_points, reward_tier")
+          .select("reward_points, lifetime_points, reward_tier, profile_flair")
           .eq("id", user.id)
           .single(),
 
@@ -46,10 +46,13 @@ export async function GET() {
           .gt("points", 0),
       ]);
 
-    const totalPoints: number = profileRes.data?.reward_points ?? 0;
-    const tier: string        = profileRes.data?.reward_tier   ?? "bronze";
+    const walletPoints:   number = profileRes.data?.reward_points   ?? 0;
+    const lifetimePoints: number = profileRes.data?.lifetime_points ?? 0;
+    const tier:           string = profileRes.data?.reward_tier     ?? "bronze";
 
-    // Tier progression from DB (no hardcoded thresholds on client)
+    // Tier progression is driven by LIFETIME points, never the spendable wallet —
+    // otherwise redeeming a reward would make the progress bar look like it fell
+    // backward, even though spending can never actually demote a tier.
     const tiers = tiersRes.data ?? [];
     const currentIdx    = tiers.findIndex((t) => t.name === tier);
     const currentTier   = tiers[currentIdx] ?? { min_points: 0, ai_requests_per_hour: 10 };
@@ -59,7 +62,7 @@ export async function GET() {
 
     const nextTier             = nextTierData?.name ?? null;
     const pointsToNextTier     = nextTierData
-      ? Math.max(0, nextTierData.min_points - totalPoints)
+      ? Math.max(0, nextTierData.min_points - lifetimePoints)
       : 0;
 
     // Active (non-expired) points from the ledger
@@ -78,8 +81,10 @@ export async function GET() {
       donationRule?.unit === "per_gbp" ? donationRule.points_per_unit : 10;
 
     return NextResponse.json({
-      reward_points:           totalPoints,
+      reward_points:           walletPoints,
+      lifetime_points:         lifetimePoints,
       reward_tier:             tier,
+      profile_flair:           profileRes.data?.profile_flair ?? null,
       next_tier:               nextTier,
       points_to_next_tier:     pointsToNextTier,
       current_tier_min_points: currentTier.min_points,

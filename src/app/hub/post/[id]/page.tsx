@@ -31,6 +31,11 @@ import AuthGuard from "@/components/auth/AuthGuard";
 import { formatRelativeTime } from "@/lib/relativeTime";
 import Avatar from "@/components/hub/Avatar";
 
+const BG = "#0B0D0F";
+const BG2 = "#111418";
+const AMBER = "#F59E0B";
+const CREAM = "#F7E7CE";
+
 export default function PostDetailPage({
   params,
 }: {
@@ -291,34 +296,34 @@ function PostDetailContent({ id }: { id: string }) {
           src={comment.profiles?.avatar_url ?? undefined}
           alt={comment.profiles?.username ?? "User"}
           size={isReply ? "sm" : "md"}
+          flair={comment.profiles?.profile_flair}
         />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
             <span
-              className="font-semibold text-white text-sm"
-              style={{ fontFamily: "var(--font-headline)" }}
+              className="font-extrabold text-sm"
+              style={{ color: CREAM, fontFamily: "var(--font-headline)" }}
             >
               {comment.profiles?.username ?? "Unknown"}
             </span>
             <span
-              className="text-gray-400 text-xs font-normal"
-              style={{ fontFamily: "var(--font-body)" }}
+              className="text-xs font-normal"
+              style={{ color: `${CREAM}35`, fontFamily: "var(--font-body)" }}
             >
               {formatRelativeTime(comment.created_at)}
             </span>
           </div>
           <p
-            className="text-gray-300 text-sm mb-2 font-normal"
-            style={{ fontFamily: "var(--font-body)" }}
+            className="text-sm mb-2 font-normal"
+            style={{ color: `${CREAM}80`, fontFamily: "var(--font-body)" }}
           >
             {comment.content}
           </p>
           <div className="flex items-center gap-4">
             <motion.button
               onClick={() => handleLikeComment(comment.id, comment.parent_id, !!comment.is_liked)}
-              className={`flex items-center gap-1 text-xs transition-colors ${
-                comment.is_liked ? "text-red-500" : "text-gray-400 hover:text-red-500"
-              }`}
+              className="flex items-center gap-1 text-xs transition-colors"
+              style={{ color: comment.is_liked ? "#EF4444" : `${CREAM}35` }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -337,7 +342,10 @@ function PostDetailContent({ id }: { id: string }) {
                       : { id: comment.id, username: comment.profiles?.username ?? "user" }
                   )
                 }
-                className="text-xs text-gray-400 hover:text-[#F59E0B] transition-colors font-semibold flex items-center gap-1"
+                className="text-xs transition-colors font-semibold flex items-center gap-1"
+                style={{ color: `${CREAM}35` }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = AMBER)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = `${CREAM}35`)}
               >
                 <CornerDownRight className="w-3 h-3" />
                 Reply
@@ -347,7 +355,10 @@ function PostDetailContent({ id }: { id: string }) {
               <button
                 onClick={() => handleDeleteComment(comment.id, comment.parent_id)}
                 aria-label="Delete comment"
-                className="text-xs text-gray-500 hover:text-red-400 transition-colors flex items-center gap-1"
+                className="text-xs transition-colors flex items-center gap-1"
+                style={{ color: `${CREAM}25` }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "#F87171")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = `${CREAM}25`)}
               >
                 <Trash2 className="w-3 h-3" />
               </button>
@@ -355,7 +366,10 @@ function PostDetailContent({ id }: { id: string }) {
               <button
                 onClick={() => setReportTarget({ type: "comment", id: comment.id })}
                 aria-label="Report comment"
-                className="text-xs text-gray-500 hover:text-red-400 transition-colors flex items-center gap-1"
+                className="text-xs transition-colors flex items-center gap-1"
+                style={{ color: `${CREAM}25` }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "#F87171")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = `${CREAM}25`)}
               >
                 <Flag className="w-3 h-3" />
               </button>
@@ -366,7 +380,7 @@ function PostDetailContent({ id }: { id: string }) {
 
       {/* Nested replies */}
       {!isReply && (comment.replies ?? []).length > 0 && (
-        <div className="mt-3 space-y-3 border-l-2 border-amber-500/20 pl-4 ml-6">
+        <div className="mt-3 space-y-3 pl-4 ml-6" style={{ borderLeft: `2px solid ${AMBER}20` }}>
           {(comment.replies ?? []).map((reply) => renderComment(reply, true))}
         </div>
       )}
@@ -378,23 +392,24 @@ function PostDetailContent({ id }: { id: string }) {
   // ---------------------------------------------------------------------------
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0B0D0F] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-[#F59E0B] animate-spin" />
+      <div className="min-h-screen pt-16 flex items-center justify-center" style={{ backgroundColor: BG }}>
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: AMBER }} />
       </div>
     );
   }
 
   if (error || !post) {
     return (
-      <div className="min-h-screen bg-[#0B0D0F] flex items-center justify-center">
+      <div className="min-h-screen pt-16 flex items-center justify-center" style={{ backgroundColor: BG }}>
         <div className="text-center space-y-4">
-          <AlertCircle className="w-12 h-12 text-gray-500 mx-auto" />
-          <h2 className="text-2xl font-bold text-white" style={{ fontFamily: "var(--font-headline)" }}>
+          <AlertCircle className="w-12 h-12 mx-auto" style={{ color: `${CREAM}30` }} />
+          <h2 className="text-2xl font-extrabold uppercase tracking-tighter" style={{ color: CREAM, fontFamily: "var(--font-headline)" }}>
             Post not found
           </h2>
           <Link href="/hub/feed">
             <motion.button
-              className="text-[#F59E0B] hover:text-[#D97706] transition-colors font-semibold"
+              className="text-xs font-bold uppercase tracking-[0.2em] transition-colors"
+              style={{ color: AMBER }}
               whileHover={{ scale: 1.05 }}
             >
               ← Back to Feed
@@ -416,22 +431,25 @@ function PostDetailContent({ id }: { id: string }) {
   const videoPoster = mediaIsVideo ? cldVideoPoster(firstMedia) : undefined;
 
   return (
-    <div className="min-h-screen bg-[#0B0D0F]">
-      {/* Header - sticky top-16 to sit below the app header */}
-      <div className="bg-[#111418]/95 backdrop-blur-lg border-b border-gray-800 sticky top-16 z-40">
+    <div className="min-h-screen pt-16" style={{ backgroundColor: BG }}>
+      {/* Header - sticky top-16 to sit below the fixed app header; solid bg (no blur) avoids scroll-repaint tearing */}
+      <div className="border-b sticky top-16 z-40" style={{ backgroundColor: BG2, borderColor: `${CREAM}10` }}>
         <div className="mx-auto max-w-4xl px-4 md:px-6 py-4 md:py-5">
           <div className="flex items-center gap-3 md:gap-4">
               <motion.button
                 onClick={() => router.back()}
-                className="text-gray-400 hover:text-white transition-colors"
+                className="transition-colors"
+                style={{ color: `${CREAM}50` }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = CREAM)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = `${CREAM}50`)}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
               >
                 <ArrowLeft className="w-5 h-5 md:w-6 md:h-6" />
               </motion.button>
             <h1
-              className="text-xl md:text-2xl font-extrabold uppercase tracking-tight text-white"
-              style={{ fontFamily: "var(--font-headline)" }}
+              className="text-xl md:text-2xl font-extrabold uppercase tracking-tighter"
+              style={{ color: CREAM, fontFamily: "var(--font-headline)" }}
             >
               Post
             </h1>
@@ -446,26 +464,27 @@ function PostDetailContent({ id }: { id: string }) {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-[#111418] rounded-2xl border border-gray-800 overflow-hidden mb-6"
+          className="overflow-hidden mb-6 border"
+          style={{ backgroundColor: BG2, borderColor: `${CREAM}10` }}
         >
           {/* User Info */}
           <div className="p-4 md:p-5 flex items-center gap-3">
-            <Avatar src={post.profiles?.avatar_url ?? undefined} alt={displayName} size="lg" />
+            <Avatar src={post.profiles?.avatar_url ?? undefined} alt={displayName} size="lg" flair={post.profiles?.profile_flair} />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <h3
-                  className="font-semibold text-white text-base truncate"
-                  style={{ fontFamily: "var(--font-headline)" }}
+                  className="font-extrabold text-base truncate"
+                  style={{ color: CREAM, fontFamily: "var(--font-headline)" }}
                 >
                   {displayName}
                 </h3>
                 {isVerified && (
-                  <BadgeCheck className="w-4 h-4 text-[#F59E0B] shrink-0" />
+                  <BadgeCheck className="w-4 h-4 shrink-0" style={{ color: AMBER }} />
                 )}
               </div>
               <p
-                className="text-gray-400 text-sm font-normal"
-                style={{ fontFamily: "var(--font-body)" }}
+                className="text-sm font-normal"
+                style={{ color: `${CREAM}45`, fontFamily: "var(--font-body)" }}
               >
                 {username && <span>{username} • </span>}
                 {formatRelativeTime(post.created_at)}
@@ -476,8 +495,8 @@ function PostDetailContent({ id }: { id: string }) {
           {/* Content */}
           <div className="px-4 md:px-5 pb-4">
             <p
-              className="text-white text-lg leading-relaxed font-normal"
-              style={{ fontFamily: "var(--font-body)" }}
+              className="text-lg leading-relaxed font-normal"
+              style={{ color: CREAM, fontFamily: "var(--font-body)" }}
             >
               {post.content}
             </p>
@@ -488,23 +507,26 @@ function PostDetailContent({ id }: { id: string }) {
             <div className="px-4 md:px-5 pb-4">
               <Link href={`/kitchen/recipes/${post.recipe_id}`}>
                 <motion.div
-                  className="bg-linear-to-br from-[#F59E0B]/20 to-[#D97706]/20 border border-[#F59E0B]/30 rounded-xl p-4 hover:border-[#F59E0B] transition-colors cursor-pointer"
+                  className="p-4 border transition-colors cursor-pointer"
+                  style={{ backgroundColor: `${AMBER}12`, borderColor: `${AMBER}30` }}
+                  onMouseEnter={(e) => (e.currentTarget.style.borderColor = AMBER)}
+                  onMouseLeave={(e) => (e.currentTarget.style.borderColor = `${AMBER}30`)}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="bg-[#F59E0B] p-3 rounded-lg shrink-0">
+                    <div className="p-3 shrink-0" style={{ backgroundColor: AMBER }}>
                       <ChefHat className="w-6 h-6 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[#F59E0B] text-xs font-semibold uppercase tracking-wide mb-1">
+                      <p className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: AMBER }}>
                         Recipe
                       </p>
-                      <p className="text-white font-normal text-sm" style={{ fontFamily: "var(--font-body)" }}>
+                      <p className="font-normal text-sm" style={{ color: CREAM, fontFamily: "var(--font-body)" }}>
                         View linked recipe in Kitchen
                       </p>
                     </div>
-                    <span className="text-[#F59E0B] text-sm font-semibold shrink-0">View →</span>
+                    <span className="text-sm font-semibold shrink-0" style={{ color: AMBER }}>View →</span>
                   </div>
                 </motion.div>
               </Link>
@@ -525,7 +547,7 @@ function PostDetailContent({ id }: { id: string }) {
             </div>
           ) : firstImage ? (
             <a href={firstImage} target="_blank" rel="noopener noreferrer" className="block">
-              <div className="relative w-full bg-[#0B0D0F] flex items-center justify-center cursor-zoom-in overflow-hidden group">
+              <div className="relative w-full flex items-center justify-center cursor-zoom-in overflow-hidden group" style={{ backgroundColor: BG }}>
                 <Image
                   src={firstImage}
                   alt="Post image"
@@ -536,7 +558,7 @@ function PostDetailContent({ id }: { id: string }) {
                   className="w-full h-auto max-h-[80vh] object-contain group-hover:opacity-95 transition-opacity duration-300"
                 />
                 {(post.media_urls?.length ?? 0) > 1 && (
-                  <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm text-white text-xs font-semibold px-2 py-1 rounded-full">
+                  <div className="absolute top-3 right-3 bg-black/70 text-white text-xs font-bold px-2 py-1">
                     1/{post.media_urls!.length}
                   </div>
                 )}
@@ -545,14 +567,13 @@ function PostDetailContent({ id }: { id: string }) {
           ) : null}
 
           {/* Actions */}
-          <div className="p-4 md:p-5 border-t border-gray-800">
+          <div className="p-4 md:p-5 border-t" style={{ borderColor: `${CREAM}10` }}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-6">
                 <motion.button
                   onClick={handleLikePost}
-                  className={`flex items-center gap-2 transition-colors ${
-                    post.is_liked ? "text-red-500" : "text-gray-400 hover:text-red-500"
-                  }`}
+                  className="flex items-center gap-2 transition-colors"
+                  style={{ color: post.is_liked ? "#EF4444" : `${CREAM}45` }}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                 >
@@ -560,12 +581,12 @@ function PostDetailContent({ id }: { id: string }) {
                   <span className="text-base font-semibold">{post.like_count}</span>
                 </motion.button>
 
-                <div className="flex items-center gap-2 text-gray-400">
+                <div className="flex items-center gap-2" style={{ color: `${CREAM}45` }}>
                   <MessageCircle className="w-6 h-6" />
                   <span className="text-base font-semibold">{post.comment_count}</span>
                 </div>
 
-                <div className="flex items-center gap-2 text-gray-500">
+                <div className="flex items-center gap-2" style={{ color: `${CREAM}30` }}>
                   <Eye className="w-5 h-5" />
                   <span className="text-sm font-semibold">{post.view_count}</span>
                 </div>
@@ -573,7 +594,10 @@ function PostDetailContent({ id }: { id: string }) {
 
               <motion.button
                 onClick={handleShare}
-                className="text-gray-400 hover:text-[#F59E0B] transition-colors"
+                className="transition-colors"
+                style={{ color: `${CREAM}45` }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = AMBER)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = `${CREAM}45`)}
                 title="Copy link"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
@@ -589,10 +613,11 @@ function PostDetailContent({ id }: { id: string }) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-[#111418] rounded-2xl border border-gray-800 overflow-hidden"
+          className="overflow-hidden border"
+          style={{ backgroundColor: BG2, borderColor: `${CREAM}10` }}
         >
           {/* Add comment / reply input */}
-          <div className="p-4 md:p-5 border-b border-gray-800">
+          <div className="p-4 md:p-5 border-b" style={{ borderColor: `${CREAM}10` }}>
             <AnimatePresence>
               {replyingTo && (
                 <motion.div
@@ -601,12 +626,13 @@ function PostDetailContent({ id }: { id: string }) {
                   exit={{ opacity: 0, height: 0 }}
                   className="flex items-center justify-between mb-2 px-1"
                 >
-                  <span className="text-xs text-[#F59E0B] font-semibold">
+                  <span className="text-xs font-semibold" style={{ color: AMBER }}>
                     Replying to @{replyingTo.username}
                   </span>
                   <button
                     onClick={() => setReplyingTo(null)}
-                    className="text-gray-500 hover:text-white transition-colors"
+                    className="transition-colors"
+                    style={{ color: `${CREAM}35` }}
                   >
                     <span className="text-xs">Cancel</span>
                   </button>
@@ -615,7 +641,7 @@ function PostDetailContent({ id }: { id: string }) {
             </AnimatePresence>
 
             <div className="flex items-start gap-3">
-              <Avatar src={user?.avatar_url ?? undefined} alt={user?.full_name ?? "You"} size="md" />
+              <Avatar src={user?.avatar_url ?? undefined} alt={user?.full_name ?? "You"} size="md" flair={user?.profile_flair} />
               <div className="flex-1 flex gap-2">
                 <input
                   type="text"
@@ -623,18 +649,21 @@ function PostDetailContent({ id }: { id: string }) {
                   onChange={(e) => setNewComment(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleAddComment()}
                   placeholder={replyingTo ? `Reply to @${replyingTo.username}...` : "Write a comment..."}
-                  className="flex-1 bg-gray-800 text-white rounded-full px-4 py-2.5 text-base focus:outline-none focus:ring-1 focus:ring-amber-500/50 border border-gray-700 hover:border-gray-600 font-normal transition-colors"
-                  style={{ fontFamily: "var(--font-body)" }}
+                  className="flex-1 text-base px-4 py-2.5 border focus:outline-none font-normal transition-colors"
+                  style={{ backgroundColor: BG, borderColor: `${CREAM}15`, color: CREAM, caretColor: AMBER }}
+                  onFocus={(e) => (e.target.style.borderColor = AMBER)}
+                  onBlur={(e) => (e.target.style.borderColor = `${CREAM}15`)}
                   disabled={isSubmittingComment}
                 />
                 <motion.button
                   onClick={handleAddComment}
                   disabled={!newComment.trim() || isSubmittingComment}
-                  className={`p-2.5 rounded-full shrink-0 ${
+                  className="p-2.5 shrink-0"
+                  style={
                     newComment.trim() && !isSubmittingComment
-                      ? "bg-linear-to-br from-[#F59E0B] to-[#D97706] text-white"
-                      : "bg-gray-700 text-gray-500"
-                  }`}
+                      ? { backgroundColor: AMBER, color: BG }
+                      : { backgroundColor: BG, color: `${CREAM}30`, border: `1px solid ${CREAM}10` }
+                  }
                   whileHover={newComment.trim() && !isSubmittingComment ? { scale: 1.1 } : {}}
                   whileTap={newComment.trim() && !isSubmittingComment ? { scale: 0.9 } : {}}
                 >
@@ -648,15 +677,15 @@ function PostDetailContent({ id }: { id: string }) {
           </div>
 
           {/* Comments list */}
-          <div className="divide-y divide-gray-800">
+          <div>
             {isCommentsLoading ? (
               <div className="flex justify-center py-10">
-                <Loader2 className="w-5 h-5 text-[#F59E0B] animate-spin" />
+                <Loader2 className="w-5 h-5 animate-spin" style={{ color: AMBER }} />
               </div>
             ) : comments.length === 0 ? (
               <div className="p-8 text-center">
-                <MessageCircle className="w-12 h-12 text-amber-500/30 mx-auto mb-3" />
-                <p className="text-gray-400 font-normal" style={{ fontFamily: "var(--font-body)" }}>
+                <MessageCircle className="w-12 h-12 mx-auto mb-3" style={{ color: `${AMBER}30` }} />
+                <p className="font-normal" style={{ color: `${CREAM}45`, fontFamily: "var(--font-body)" }}>
                   No comments yet. Be the first to comment!
                 </p>
               </div>
@@ -668,6 +697,7 @@ function PostDetailContent({ id }: { id: string }) {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.04 }}
                   className="p-4 md:p-5"
+                  style={index > 0 ? { borderTop: `1px solid ${CREAM}10` } : undefined}
                 >
                   {renderComment(comment)}
                 </motion.div>
