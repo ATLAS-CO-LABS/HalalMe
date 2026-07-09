@@ -155,14 +155,23 @@ _`referral` deferred to Phase 2 (see §2.6) — its fraud gate needs order data.
 
 **API route** `POST /api/rewards/redeem`.
 
-**Catalogue for launch (Door A — decided menu, all near-£0 cost):**
+**Catalogue for launch (Door A — decided menu, widened 2026-07-08):**
 
-| Item | Fulfilment | Infra that exists |
-|---|---|---|
-| **AI power-up** — extra AI recipe generations / temp higher hourly limit | Top up the user's AI allowance for a window | `ai_request_counts` table + hourly limiter + `ai_requests_per_hour` on tiers |
-| **Recipe boost** — feature recipe in discover for 7 days | Set a time-boxed featured flag on the recipe | `recipes.is_featured` (038) + Featured query — needs `featured_until` |
-| **Profile flair** — name colour / avatar frame / theme | Set a cosmetic field on the profile | New profile cosmetic field(s) + Hub render |
-| **Badges** — profile achievements | Insert `user_badges` | `user_badges` + badge engine (§3E) |
+The original 4-item menu (incl. purchasable badges) was too thin — 2 of the 4 items only mattered to recipe-uploaders, and the 30/hr AI ceiling was so generous nobody would ever feel the need to buy more. Widened to give every user something worth saving for, and fixed the AI economics:
+
+- **Free AI limit lowered 30 → 10 requests/hour** (`generate-recipe` edge function). Still generous for normal use, but now a real ceiling a heavy user can hit — which is what makes the power-up mean something.
+- **Badges removed from the purchasable list** — they stay earned-only via triggers (§3E). Selling status cheapens it.
+- **Profile flair expanded** from one single item to a pick of 3-4 cosmetic options.
+- **New: Hub post boost** — mirrors recipe boost for non-cooking/social users.
+
+| Item | Cost | Fulfilment | Infra needed |
+|---|---|---|---|
+| **Profile flair** (pick 1 of 3-4) | 150 pts | Set a cosmetic field on the profile | New profile cosmetic field(s) + Hub render |
+| **Hub post boost** — pin/feature a post for a few days | 300 pts | Time-boxed featured flag on the post | New `featured_until` col on `posts` |
+| **Recipe boost** — feature recipe in discover for 7 days | 400 pts | Time-boxed featured flag on the recipe | `recipes.is_featured` (038) — needs `featured_until` |
+| **AI power-up** — boosts hourly AI limit 10 → 30 for 24h | 500 pts, **max 1 redemption/day** | Upsert an active row in new `ai_limit_boosts` table; edge function reads it before falling back to the default 10 | New `ai_limit_boosts (user_id, boosted_limit, expires_at)` table + edge function change |
+
+Note: AI power-up is the one item with real marginal cost (OpenAI spend) — priced highest and rate-limited to 1/day as a natural brake; the other three are pure flag-flips at £0 cost. All prices live in `reward_catalog.points_cost` — tunable later via `UPDATE`, no code change.
 
 **Deactivate** the seeded `kitchen_discount` and `charity_convert` catalog items (`is_active=false`) until Phase 2 — they're Door B / cash.
 
@@ -205,7 +214,7 @@ Update `Profile` (add `lifetime_points`) and reward types in `src/types/app.ts` 
 | **2** | Earning engine | `award_points` RPC (caps, fixed/per_gbp, multiplier, idempotency, dual balance, `balance_after`); refactor donation trigger to call it; `pointsService` wrapper | Engine live; donations flow through it |
 | **3** | Rules + account wiring | Seed ~12 rules; wire `daily_login`, `complete_profile`, `verify_email`, `verify_phone`, `add_photo` | Log in / complete profile → points land |
 | **4** | Hub + Kitchen + badges | Wire `first_post`, `daily_post`, `recipe_upload`, `first_recipe`, `review`; badge catalogue table + `award_badge` + wire "firsts" & tier badges | Earning live across all Phase-1 pillars |
-| **5** | Redemption + Door A | `redeem_reward` RPC (validate, tier gate, velocity 3/day, wallet-only deduct); `POST /api/rewards/redeem`; 4 fulfilment handlers (AI power-up, recipe boost via `featured_until`, profile flair field, badge); Door A catalogue live, cash items disabled | Points are spendable — AI/boost/flair/badges |
+| **5** | Redemption + Door A | `redeem_reward` RPC (validate, tier gate, velocity 3/day, wallet-only deduct); `POST /api/rewards/redeem`; lower AI limit 30→10/hr; 4 fulfilment handlers (profile flair, Hub post boost via `featured_until`, recipe boost via `featured_until`, AI power-up via `ai_limit_boosts`); Door A catalogue live (150/300/400/500 pts), cash items disabled | Points are spendable — flair/boosts/AI |
 | **6** | Dashboards + feedback | Update `balance` API; **tab the main dashboard** (Overview + Rewards tab = points summary, redeem cards, history ledger w/ filters, badges earned/locked); **delete `/rewards/my-rewards`** + repoint links to `/dashboard?tab=rewards`; fix `/rewards` landing tiers; **balance-refresh fix** (balance re-reads after the daily check-in, not racing it); **points-earned toast** (real-time listener on the ledger → "+X · reason" pops on every earn); update types | 2 clean pages + instant earn feedback |
 | **7** | Test + polish | E2E: sign up → earn across pillars → redeem → verify ledger/tier/badges; bug fixes; `npm run lint` + `build` | Launch-ready |
 

@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const RATE_LIMIT_REQUESTS_PER_HOUR_DEFAULT = 30;
+const RATE_LIMIT_REQUESTS_PER_HOUR_DEFAULT = 10;
 const OPENAI_TIMEOUT_MS = 25000;
 const FUNCTION_TIMEOUT_MS = 30000;
 const MAX_HISTORY_ITEMS = 10;
@@ -372,7 +372,17 @@ async function handle(req: Request, signal: AbortSignal): Promise<Response> {
   console.log("[auth] user ok:", user.id);
   if (signal.aborted) return json({ error: "Request cancelled" }, 499);
 
-  const rateLimitForUser = RATE_LIMIT_REQUESTS_PER_HOUR_DEFAULT;
+  // Redeeming the "AI power-up" reward temporarily raises this user's hourly
+  // limit (see redeem_reward / ai_limit_boosts, 051-052). Falls back to the
+  // default when there's no active boost.
+  let rateLimitForUser = RATE_LIMIT_REQUESTS_PER_HOUR_DEFAULT;
+  const { data: boostRow } = await supabaseAdmin
+    .from("ai_limit_boosts")
+    .select("boosted_limit")
+    .eq("user_id", user.id)
+    .gt("expires_at", new Date().toISOString())
+    .maybeSingle();
+  if (boostRow?.boosted_limit) rateLimitForUser = boostRow.boosted_limit;
 
   const windowStart = new Date();
   windowStart.setMinutes(0, 0, 0);

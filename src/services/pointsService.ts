@@ -46,3 +46,27 @@ export async function awardPoints(
 
   return (data as number | null) ?? 0;
 }
+
+/**
+ * Redeem `catalogItemId` for `userId`. `targetId` is the recipe/post being
+ * boosted — required for recipe_boost/hub_post_boost items, ignored otherwise.
+ * Returns the new redemption id. Throws on validation failure (insufficient
+ * points, tier too low, velocity cap, etc.) — the caller maps that to a 400.
+ */
+export async function redeemReward(
+  userId: string,
+  catalogItemId: string,
+  targetId?: string,
+): Promise<string> {
+  const admin = createServiceClient();
+
+  const { data, error } = await admin.rpc("redeem_reward", {
+    p_user_id: userId,
+    p_catalog_item_id: catalogItemId,
+    p_target_id: targetId ?? null,
+  });
+
+  if (error) throw new Error(error.message);
+
+  return data as string;
+}
