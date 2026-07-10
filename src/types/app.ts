@@ -1798,6 +1798,8 @@ export interface AIAssistantResponse {
   is_saved?:           boolean;
   session_id?:         string | null;
   requests_remaining?: number;
+  /** The user's current hourly cap (tier base + active AI power-up boost, if any). */
+  rate_limit?:         number;
 }
 
 export interface UserSearchResult {

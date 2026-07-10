@@ -367,7 +367,11 @@ export default function AIAssistantPage() {
   const [sidebarOpen, setSidebarOpen]   = useState(false);
   const [activeConv, setActiveConv]     = useState("current");
   const [convs, setConvs]               = useState<Conv[]>([]);
-  const [requestsLeft, setRequestsLeft] = useState<number | null>(null);
+  const [requestsLeft, setRequestsLeft]   = useState<number | null>(null);
+  // Dynamic per-user cap (tier base 10/20/30/50 + active AI power-up boost) —
+  // never hardcode "30" here, the whole point of the tiered limit + boost is
+  // that it varies per user.
+  const [requestsLimit, setRequestsLimit] = useState<number>(10);
   const [savedIds, setSavedIds]         = useState<Set<string>>(new Set());
   const [sessionId, setSessionId]       = useState<string | null>(null);
   const [copiedId, setCopiedId]         = useState<string | null>(null);
@@ -559,6 +563,7 @@ export default function AIAssistantPage() {
         loadConvs();
       }
       setRequestsLeft(result.requests_remaining ?? null);
+      if (result.rate_limit) setRequestsLimit(result.rate_limit);
 
       const assistantMsg: Message = {
         id:           (Date.now() + 1).toString(),
@@ -586,7 +591,7 @@ export default function AIAssistantPage() {
         role: "assistant",
         responseType: "chat" as const,
         content:
-          code === "rate_limit" ? "You've reached the AI request limit (30 per hour). Please try again later."
+          code === "rate_limit" ? errText
           : code === "auth"     ? "Your sign-in session has expired. Please sign out and back in, then try again."
           :                       `Sorry, I ran into an issue. ${errText}`,
         ts: new Date(),
@@ -704,7 +709,7 @@ export default function AIAssistantPage() {
                   {Array.from({ length: 10 }).map((_, i) => (
                     <div key={i} className="w-1 h-3 transition-all"
                       style={{
-                        backgroundColor: i < Math.round((requestsLeft / 30) * 10)
+                        backgroundColor: i < Math.round((requestsLeft / requestsLimit) * 10)
                           ? requestsLeft <= 5 ? "#f87171" : VIOLET
                           : "rgba(247,224,192,0.08)",
                       }} />
@@ -726,7 +731,7 @@ export default function AIAssistantPage() {
                   </motion.span>
                 ) : (
                   <span className="text-[9px] font-bold" style={{ color: `${CREAM}30` }}>
-                    {requestsLeft}/30
+                    {requestsLeft}/{requestsLimit}
                   </span>
                 )}
               </div>

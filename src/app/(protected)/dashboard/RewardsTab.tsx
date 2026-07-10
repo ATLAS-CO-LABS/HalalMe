@@ -42,6 +42,18 @@ interface Balance {
   current_tier_min_points: number;
 }
 
+// Mirrors the cap enforced server-side in redeem_reward (052) — shown here so
+// users see the limit coming instead of hitting it blind.
+const VELOCITY_LIMIT = 3;
+
+function formatCountdown(ms: number): string {
+  const totalMinutes = Math.max(0, Math.ceil(ms / 60000));
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours === 0) return `${minutes}m`;
+  return `${hours}h ${minutes}m`;
+}
+
 export default function RewardsTab() {
   const { user } = useAuth();
 
@@ -60,11 +72,13 @@ export default function RewardsTab() {
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [hasMoreHistory, setHasMoreHistory] = useState(false);
   const [loadingMoreHistory, setLoadingMoreHistory] = useState(false);
+  const [recentRedemptionTimes, setRecentRedemptionTimes] = useState<string[]>([]);
 
   const loadAll = useCallback(async () => {
     if (!user) return;
     try {
-      const [balRes, catalogRes, histRes, badgesRes, allBadgesRes, recipesRes, postsRes] = await Promise.all([
+      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const [balRes, catalogRes, histRes, badgesRes, allBadgesRes, recipesRes, postsRes, redemptionsRes] = await Promise.all([
         fetch("/api/rewards/balance").then((r) => r.json()),
         supabase.from("reward_catalog").select("*").eq("is_active", true).order("points_required"),
         fetch("/api/rewards/history").then((r) => r.json()),
@@ -72,6 +86,7 @@ export default function RewardsTab() {
         supabase.from("badges").select("slug, name, description, icon, category, sort_order").eq("is_active", true).order("sort_order"),
         supabase.from("recipes").select("id, title, cuisine, image_url").eq("user_id", user.id).order("created_at", { ascending: false }).limit(50),
         supabase.from("posts").select("id, content, media_urls, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(50),
+        supabase.from("reward_redemptions").select("created_at").eq("user_id", user.id).gte("created_at", oneDayAgo).order("created_at", { ascending: true }),
       ]);
 
       setBalance(balRes);
@@ -79,6 +94,7 @@ export default function RewardsTab() {
       setHistory(histRes.transactions ?? []);
       setHasMoreHistory(histRes.hasMore ?? false);
       setAllBadges((allBadgesRes.data ?? []) as RewardBadge[]);
+      setRecentRedemptionTimes((redemptionsRes.data ?? []).map((r: { created_at: string }) => r.created_at));
       setEarnedSlugs(new Set((badgesRes.badges ?? []).map((b: { badge_slug: string }) => b.badge_slug)));
       setMyRecipes((recipesRes.data ?? []).map((r: { id: string; title: string; cuisine: string | null; image_url: string | null }) => ({
         id: r.id, label: r.title, subtitle: r.cuisine ?? undefined, imageUrl: r.image_url,
@@ -129,6 +145,11 @@ export default function RewardsTab() {
       return;
     }
 
+    if (recentRedemptionTimes.length >= VELOCITY_LIMIT) {
+      setFeedback({ type: "error", message: `You've used all ${VELOCITY_LIMIT} redemptions for today — check back later.` });
+      return;
+    }
+
     setRedeemingId(item.id);
     try {
       const res = await fetch("/api/rewards/redeem", {
@@ -166,6 +187,14 @@ export default function RewardsTab() {
   const filteredHistory = history.filter((h) =>
     historyFilter === "all" ? true : historyFilter === "earned" ? h.points > 0 : h.points < 0
   );
+
+  const velocityUsed = recentRedemptionTimes.length;
+  const velocityCapped = velocityUsed >= VELOCITY_LIMIT;
+  // Cap resets on a rolling 24h window — frees up as soon as the oldest of
+  // the 3 falls outside it, not at a fixed daily reset time.
+  const nextSlotAt = velocityCapped
+    ? new Date(new Date(recentRedemptionTimes[0]).getTime() + 24 * 60 * 60 * 1000)
+    : null;
 
   return (
     <div className="relative">
@@ -248,9 +277,23 @@ export default function RewardsTab() {
           <div className="w-6 h-px bg-[#F59E0B]" />
           <span className="text-[#F59E0B] text-[10px] font-bold uppercase tracking-[0.3em]">Spend Your Points</span>
         </div>
-        <h2 className="text-3xl sm:text-4xl font-extrabold uppercase tracking-tighter leading-[0.9] text-[#F7E7CE] mb-8">
-          Redeem <span className="text-[#F7E7CE]/40">Rewards</span>
-        </h2>
+        <div className="flex items-center justify-between flex-wrap gap-3 mb-8">
+          <h2 className="text-3xl sm:text-4xl font-extrabold uppercase tracking-tighter leading-[0.9] text-[#F7E7CE]">
+            Redeem <span className="text-[#F7E7CE]/40">Rewards</span>
+          </h2>
+          <span
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest border"
+            style={{
+              backgroundColor: velocityCapped ? "rgba(239,68,68,0.1)" : "rgba(20,184,166,0.1)",
+              borderColor: velocityCapped ? "rgba(239,68,68,0.35)" : "rgba(20,184,166,0.35)",
+              color: velocityCapped ? "#EF4444" : "#14B8A6",
+            }}
+            title="Max 3 redemptions per rolling 24 hours"
+          >
+            {velocityUsed}/{VELOCITY_LIMIT} redemptions today
+            {velocityCapped && nextSlotAt && ` · next in ${formatCountdown(nextSlotAt.getTime() - Date.now())}`}
+          </span>
+        </div>
 
         <div className="grid gap-px grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 bg-[#F7E7CE]/8">
           {catalog.map((item) => {
@@ -261,7 +304,7 @@ export default function RewardsTab() {
             const tierRank = TIER_ORDER.indexOf(item.min_tier_required);
             const tierLocked = currentTierIdx < tierRank;
             const cantAfford = (balance?.reward_points ?? 0) < item.points_required;
-            const disabled = tierLocked || cantAfford || (needsTarget && options.length === 0) || redeemingId === item.id;
+            const disabled = tierLocked || cantAfford || velocityCapped || (needsTarget && options.length === 0) || redeemingId === item.id;
 
             return (
               <div key={item.id} className="bg-[#0A1C19] p-6 flex flex-col">
@@ -303,6 +346,8 @@ export default function RewardsTab() {
                 >
                   {redeemingId === item.id ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : velocityCapped && !tierLocked ? (
+                    "Daily limit reached"
                   ) : (
                     <>{item.points_required.toLocaleString()} pts {cantAfford && !tierLocked ? "· Need more points" : ""}</>
                   )}

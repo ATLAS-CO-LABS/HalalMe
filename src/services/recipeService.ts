@@ -74,7 +74,12 @@ export const recipeService = {
   },
 
   async getRecipeById(id: string): Promise<Recipe> {
-    const { data, error } = await supabasePublic
+    // Authenticated client (not supabasePublic) — RLS allows anyone to read
+    // published recipes, plus the owner to read their own unpublished/draft
+    // recipes (e.g. right after AI generates one). supabasePublic has no
+    // session, so auth.uid() is always null and the owner-read rule never
+    // applies, breaking "view your own draft recipe".
+    const { data, error } = await supabase
       .from("recipes")
       .select("*, profiles!user_id(username, avatar_url, is_verified)")
       .eq("id", id)
@@ -291,7 +296,7 @@ export const recipeService = {
 
       if (!response.ok) {
         clearTimeout(timeoutId);
-        let payload: { error?: string } = {};
+        let payload: { error?: string; message?: string } = {};
         try { payload = await response.json(); } catch {}
 
         // Retry once for transient server errors
@@ -306,7 +311,9 @@ export const recipeService = {
           : response.status === 429 ? "rate_limit"
           : response.status === 400 ? "invalid_request"
           : "upstream";
-        throw new AIRequestError(String(payload.error ?? `Request failed: ${response.status}`), code);
+        // Prefer `message` (server's dynamic, human text — e.g. the actual per-user
+        // AI rate limit) over `error` (a short machine-facing label).
+        throw new AIRequestError(String(payload.message ?? payload.error ?? `Request failed: ${response.status}`), code);
       }
 
       try {

@@ -413,6 +413,8 @@ async function handle(req: Request, signal: AbortSignal): Promise<Response> {
       error: "Rate limit exceeded",
       message: `You can make up to ${rateLimitForUser} AI requests per hour.`,
       retry_after: "1 hour",
+      requests_remaining: 0,
+      rate_limit: rateLimitForUser,
     }, 429);
   }
   if (signal.aborted) return json({ error: "Request cancelled" }, 499);
@@ -529,6 +531,7 @@ async function handle(req: Request, signal: AbortSignal): Promise<Response> {
       message: envelope.message,
       session_id: returnedSessionId,
       requests_remaining: requestsRemaining,
+      rate_limit: rateLimitForUser,
     });
   }
 
@@ -609,6 +612,7 @@ async function handle(req: Request, signal: AbortSignal): Promise<Response> {
     is_saved:           savedRecipeId !== null,
     session_id:         returnedSessionId,
     requests_remaining: requestsRemaining,
+    rate_limit:         rateLimitForUser,
   });
 }
 
