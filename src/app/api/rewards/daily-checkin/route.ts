@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
 import { awardPoints } from "@/services/pointsService";
+import { createRateLimiter, rateLimitResponse } from "@/lib/rateLimit";
+
+const limiter = createRateLimiter("daily-checkin", 10, "1 m");
 
 // POST /api/rewards/daily-checkin
 // Awards the daily_login reward for the signed-in user. The user id comes from
@@ -11,6 +14,9 @@ export async function POST() {
     const supabase = await createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+
+    const { success, reset } = await limiter.limit(user.id);
+    if (!success) return rateLimitResponse(reset);
 
     const awarded = await awardPoints(user.id, "daily_login");
     return NextResponse.json({ awarded });

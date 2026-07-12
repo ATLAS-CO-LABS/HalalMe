@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient, createServiceClient } from "@/lib/supabase-server";
 import { randomUUID } from "crypto";
+import { createRateLimiter, rateLimitResponse } from "@/lib/rateLimit";
+import * as Sentry from "@sentry/nextjs";
 
 const json = (body: unknown, status = 200) =>
   NextResponse.json(body, { status });
+
+const limiter = createRateLimiter("donations-create-intent", 5, "1 m");
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,6 +17,9 @@ export async function POST(req: NextRequest) {
     const supabase = await createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return json({ error: "Unauthorised" }, 401);
+
+    const { success, reset } = await limiter.limit(user.id);
+    if (!success) return rateLimitResponse(reset);
 
     // -------------------------------------------------------------------------
     // 2. Parse + validate body
@@ -310,6 +317,7 @@ export async function POST(req: NextRequest) {
 
   } catch (err) {
     console.error("[create-intent] unexpected error:", err);
+    Sentry.captureException(err);
     return json({ error: "Internal server error" }, 500);
   }
 }

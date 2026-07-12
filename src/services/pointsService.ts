@@ -47,11 +47,16 @@ export async function awardPoints(
   return (data as number | null) ?? 0;
 }
 
+/** Thrown for expected redeem_reward validation failures (insufficient points,
+ *  tier too low, velocity cap, ...) — safe to show the message to the user. */
+export class RedemptionValidationError extends Error {}
+
 /**
  * Redeem `catalogItemId` for `userId`. `targetId` is the recipe/post being
  * boosted — required for recipe_boost/hub_post_boost items, ignored otherwise.
- * Returns the new redemption id. Throws on validation failure (insufficient
- * points, tier too low, velocity cap, etc.) — the caller maps that to a 400.
+ * Returns the new redemption id. Throws RedemptionValidationError on a known
+ * validation failure — anything else is an unexpected DB error, logged here
+ * and re-thrown as a generic message so internals never reach the client.
  */
 export async function redeemReward(
   userId: string,
@@ -66,7 +71,12 @@ export async function redeemReward(
     p_target_id: targetId ?? null,
   });
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    // P0001 = plain RAISE EXCEPTION inside redeem_reward (052_redeem_reward_engine.sql) — expected validation failure.
+    if (error.code === "P0001") throw new RedemptionValidationError(error.message);
+    console.error("[pointsService] redeemReward failed:", error);
+    throw new Error("Redemption failed");
+  }
 
   return data as string;
 }

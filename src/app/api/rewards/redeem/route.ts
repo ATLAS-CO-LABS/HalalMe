@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
-import { redeemReward } from "@/services/pointsService";
+import { redeemReward, RedemptionValidationError } from "@/services/pointsService";
+import { createRateLimiter, rateLimitResponse } from "@/lib/rateLimit";
+import * as Sentry from "@sentry/nextjs";
+
+const limiter = createRateLimiter("rewards-redeem", 10, "1 m");
 
 // POST /api/rewards/redeem
 // Body: { catalogItemId: string, targetId?: string }
@@ -12,6 +16,9 @@ export async function POST(request: Request) {
     const supabase = await createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+
+    const { success, reset } = await limiter.limit(user.id);
+    if (!success) return rateLimitResponse(reset);
 
     const body = await request.json();
     const catalogItemId = body?.catalogItemId;
@@ -25,12 +32,17 @@ export async function POST(request: Request) {
       const redemptionId = await redeemReward(user.id, catalogItemId, targetId);
       return NextResponse.json({ redemptionId });
     } catch (err) {
-      // redeem_reward validation failures (insufficient points, tier, velocity, ...) — user-facing.
-      const message = err instanceof Error ? err.message : "Redemption failed";
-      return NextResponse.json({ error: message }, { status: 400 });
+      // Known validation failures (insufficient points, tier, velocity, ...) — safe to show the user.
+      if (err instanceof RedemptionValidationError) {
+        return NextResponse.json({ error: err.message }, { status: 400 });
+      }
+      console.error("[rewards/redeem]", err);
+      Sentry.captureException(err);
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
   } catch (err) {
     console.error("[rewards/redeem]", err);
+    Sentry.captureException(err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

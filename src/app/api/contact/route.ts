@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient, createServiceClient } from "@/lib/supabase-server";
 import { sendSupportNotifyEmail } from "@/services/emailService";
+import { createRateLimiter, getClientIp, rateLimitResponse } from "@/lib/rateLimit";
+
+const limiter = createRateLimiter("contact", 5, "10 m");
 
 // Public contact form → creates a support ticket in /admin/chat.
 //   - Logged-in submitter → ticket tied to their account (shows in My Messages).
@@ -20,6 +23,9 @@ const SUBJECT_LABELS: Record<string, string> = {
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(req: NextRequest) {
+  const { success, reset } = await limiter.limit(getClientIp(req));
+  if (!success) return rateLimitResponse(reset);
+
   let body: {
     fullName?: string;
     email?: string;
