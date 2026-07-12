@@ -4,6 +4,8 @@ import { createServiceClient } from "@/lib/supabase-server";
 // const WEBHOOK_SECRET = process.env.HYPERZOD_WEBHOOK_SECRET ?? ""; // TODO: re-enable when Hyperzod confirms secret header name
 
 function verifySecret(_req: NextRequest): boolean {
+  // TEMP DEBUG — capturing real headers to find which one carries the whsec_ secret. Remove after.
+  console.log("[hyperzod-debug] headers:", JSON.stringify(Object.fromEntries(_req.headers.entries())));
   // TODO: re-enable once Hyperzod confirms which header carries the whsec_ secret
   return true;
 }
