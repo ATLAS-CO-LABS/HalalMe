@@ -15,17 +15,63 @@ import {
   Menu,
   X,
   ExternalLink,
+  LayoutDashboard,
+  LifeBuoy,
+  ShieldCheck,
+  ScrollText,
+  Settings,
+  Search,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { display } from "./_fonts";
+import { isStaffRole } from "@/lib/adminRoles";
+import { AdminProvider, useAdmin } from "./AdminProvider";
+import CommandPalette from "./CommandPalette";
 
-const NAV = [
-  { label: "Merchant CRM",    href: "/admin/merchants", icon: Store },
-  { label: "User Management", href: "/admin/users",     icon: Users,         soon: true },
-  { label: "Kitchen",         href: "/admin/kitchen",   icon: ChefHat,       soon: true },
-  { label: "Hub",             href: "/admin/hub",       icon: MessageSquare, soon: true },
-  { label: "Rewards",         href: "/admin/rewards",   icon: Gift,          soon: true },
-  { label: "Analytics",       href: "/admin/analytics", icon: BarChart3,     soon: true },
+type Module = "merchants" | "users" | "kitchen" | "hub" | "rewards" | "analytics" | "support";
+
+type NavItem = {
+  label: string;
+  href: string;
+  icon: typeof Store;
+  module?: Module; // ties the item to an admin_permissions key (the 6 gated modules)
+  soon?: boolean;
+  superAdminOnly?: boolean; // only shown to super_admin (e.g. Audit log)
+};
+
+// Grouped navigation (per OPERATIONS_WORKSPACES_PLAN.md). Operations workspaces
+// are Phase 2 and intentionally not listed yet. Items with no `module` are always
+// shown to any staff role; `soon` items aren't built yet.
+const NAV_GROUPS: { heading?: string; items: NavItem[] }[] = [
+  {
+    items: [
+      { label: "Overview", href: "/admin", icon: LayoutDashboard },
+    ],
+  },
+  {
+    heading: "Domains",
+    items: [
+      { label: "Merchants",         href: "/admin/merchants", icon: Store,         module: "merchants" },
+      { label: "Users",             href: "/admin/users",     icon: Users,         module: "users" },
+      { label: "Rewards & Charity", href: "/admin/rewards",   icon: Gift,          module: "rewards" },
+      { label: "Kitchen",           href: "/admin/kitchen",   icon: ChefHat,       module: "kitchen" },
+      { label: "Hub",               href: "/admin/hub",       icon: MessageSquare, module: "hub" },
+      { label: "Support",           href: "/admin/chat",      icon: LifeBuoy,      module: "support" },
+    ],
+  },
+  {
+    heading: "Intelligence",
+    items: [
+      { label: "Analytics", href: "/admin/analytics", icon: BarChart3, module: "analytics" },
+    ],
+  },
+  {
+    heading: "System",
+    items: [
+      { label: "Permissions", href: "/admin/permissions", icon: ShieldCheck, superAdminOnly: true },
+      { label: "Audit",       href: "/admin/audit",     icon: ScrollText,  superAdminOnly: true },
+      { label: "Settings",    href: "/admin/settings",  icon: Settings,    soon: true },
+    ],
+  },
 ];
 
 function Sidebar({
@@ -37,6 +83,7 @@ function Sidebar({
   user: { email?: string; full_name?: string };
   onClose?: () => void;
 }) {
+  const { permissions, counts, isSuper } = useAdmin();
   const initials = (user.full_name ?? user.email ?? "A")
     .split(" ")
     .map((w) => w[0])
@@ -44,13 +91,70 @@ function Sidebar({
     .slice(0, 2)
     .toUpperCase();
 
+  // Hide modules the current admin has no access to (empty groups drop out).
+  // While permissions are still loading (null) show everything to avoid a flash.
+  const visibleGroups = NAV_GROUPS
+    .map((g) => ({
+      ...g,
+      items: g.items.filter(
+        (item) =>
+          (!item.module || !permissions || permissions[item.module] !== "none") &&
+          (!item.superAdminOnly || isSuper),
+      ),
+    }))
+    .filter((g) => g.items.length > 0);
+
+  function renderItem({ label, href, icon: Icon, soon, module }: NavItem) {
+    const active = href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
+    const badge = module && counts[module] ? counts[module] : 0;
+    if (soon) {
+      return (
+        <div
+          key={label}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-none cursor-not-allowed select-none"
+        >
+          <Icon size={15} className="text-white/20 shrink-0" />
+          <span className="text-sm text-white/25 flex-1 font-medium">{label}</span>
+          <span className="text-[9px] font-bold tracking-wide uppercase bg-white/6 text-white/20 px-2 py-0.5 rounded-full">
+            Soon
+          </span>
+        </div>
+      );
+    }
+    return (
+      <Link
+        key={label}
+        href={href}
+        onClick={onClose}
+        className={`relative flex items-center gap-3 px-3 py-2.5 rounded-none text-sm font-medium transition-all duration-150 ${
+          active
+            ? "bg-[#F7E7CE]/12 text-[#F7E7CE] border border-[#F7E7CE]/12"
+            : "text-white/55 hover:bg-white/[0.07] hover:text-white border border-transparent"
+        }`}
+      >
+        {active && (
+          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-full bg-[#F59E0B]" />
+        )}
+        <Icon size={15} className={`shrink-0 ${active ? "text-[#F7E7CE]" : ""}`} />
+        {label}
+        {badge > 0 ? (
+          <span className="ml-auto min-w-4.5 h-4.5 px-1 flex items-center justify-center rounded-full bg-[#F59E0B] text-white text-[10px] font-bold leading-none shrink-0">
+            {badge > 99 ? "99+" : badge}
+          </span>
+        ) : active ? (
+          <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#F59E0B] shrink-0" />
+        ) : null}
+      </Link>
+    );
+  }
+
   return (
     <aside className="w-64 md:w-56 bg-[#0e2420] flex flex-col h-full relative">
       {/* Subtle texture */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(247,231,206,0.04),transparent_60%)] pointer-events-none" />
 
       {/* Brand */}
-      <div className="relative px-5 pt-5 pb-4 border-b border-white/[0.08] flex items-center justify-between">
+      <div className="relative px-5 pt-5 pb-4 border-b border-white/8 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2.5">
           <span className="relative inline-flex w-8 h-8 shrink-0">
             <span className="absolute inset-0 bg-white/90 rounded-full" />
@@ -79,58 +183,32 @@ function Sidebar({
       </div>
 
       {/* Nav */}
-      <nav className="relative flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
-        <p className="text-[9px] font-bold text-white/20 tracking-[0.15em] uppercase px-3 mb-2 mt-1">
-          Modules
-        </p>
-
-        {NAV.map(({ label, href, icon: Icon, soon }) => {
-          const active = pathname.startsWith(href);
-
-          if (soon) {
-            return (
-              <div
-                key={href}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-none cursor-not-allowed select-none"
-              >
-                <Icon size={15} className="text-white/20 shrink-0" />
-                <span className="text-sm text-white/25 flex-1 font-medium">{label}</span>
-                <span className="text-[9px] font-bold tracking-wide uppercase bg-white/[0.06] text-white/20 px-2 py-0.5 rounded-full">
-                  Soon
-                </span>
-              </div>
-            );
-          }
-
-          return (
-            <Link
-              key={href}
-              href={href}
-              onClick={onClose}
-              className={`relative flex items-center gap-3 px-3 py-2.5 rounded-none text-sm font-medium transition-all duration-150 ${
-                active
-                  ? "bg-[#F7E7CE]/[0.12] text-[#F7E7CE] border border-[#F7E7CE]/[0.12]"
-                  : "text-white/55 hover:bg-white/[0.07] hover:text-white border border-transparent"
-              }`}
-            >
-              {active && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-full bg-[#F03E9E]" />
-              )}
-              <Icon
-                size={15}
-                className={`shrink-0 ${active ? "text-[#F7E7CE]" : ""}`}
-              />
-              {label}
-              {active && (
-                <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#F03E9E] shrink-0" />
-              )}
-            </Link>
-          );
-        })}
+      <nav className="relative flex-1 px-3 py-3 overflow-y-auto">
+        {/* Global search trigger (⌘K) */}
+        <button
+          onClick={() => { onClose?.(); window.dispatchEvent(new Event("admin:search")); }}
+          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-none text-sm text-white/45 bg-white/[0.04] border border-white/8 hover:bg-white/[0.08] hover:text-white/70 transition-colors mb-2"
+        >
+          <Search size={14} className="shrink-0" />
+          <span className="flex-1 text-left">Search…</span>
+          <kbd className="text-[9px] font-bold tracking-wide bg-white/8 text-white/40 px-1.5 py-0.5 rounded">⌘K</kbd>
+        </button>
+        {visibleGroups.map((group, gi) => (
+          <div key={group.heading ?? `grp-${gi}`} className={gi > 0 ? "mt-4" : "mt-1"}>
+            {group.heading && (
+              <p className="text-[9px] font-bold text-white/20 tracking-[0.15em] uppercase px-3 mb-2">
+                {group.heading}
+              </p>
+            )}
+            <div className="space-y-0.5">
+              {group.items.map((item) => renderItem(item))}
+            </div>
+          </div>
+        ))}
       </nav>
 
       {/* Footer */}
-      <div className="relative px-3 py-3 border-t border-white/[0.08] space-y-1">
+      <div className="relative px-3 py-3 border-t border-white/8 space-y-1">
         {/* User */}
         <div className="flex items-center gap-3 px-3 py-2.5 rounded-none">
           <div className="w-7 h-7 rounded-full bg-[#F7E7CE]/15 border border-[#F7E7CE]/20 flex items-center justify-center shrink-0">
@@ -148,7 +226,7 @@ function Sidebar({
         <Link
           href="/"
           onClick={onClose}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-none text-white/35 hover:text-white/70 hover:bg-white/[0.06] text-sm transition-all group"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-none text-white/35 hover:text-white/70 hover:bg-white/6 text-sm transition-all group"
         >
           <ExternalLink size={14} className="shrink-0" />
           <span className="font-medium">Back to HalalMe</span>
@@ -183,7 +261,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  if (!user || user.role !== "admin") {
+  if (!user || !isStaffRole(user.role)) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#F3E9D6]">
         <div className="text-center max-w-sm px-6">
@@ -207,7 +285,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
+    <AdminProvider>
     <div className="min-h-dvh bg-[#F3E9D6]">
+      <CommandPalette />
 
       {/* ── Mobile backdrop ── */}
       {sidebarOpen && (
@@ -252,12 +332,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <span className="text-[#F7E7CE] font-black text-sm" style={{ fontFamily: "var(--font-logo)" }}>HalalMe</span>
             <span className="text-[#F59E0B] text-[9px] font-bold tracking-widest uppercase">Admin</span>
           </div>
-          <div className="w-9" />
+          <button
+            onClick={() => window.dispatchEvent(new Event("admin:search"))}
+            className="p-2 rounded-none text-white/60 hover:text-white hover:bg-white/10 transition-colors -mr-1"
+            aria-label="Search"
+          >
+            <Search size={18} />
+          </button>
         </div>
 
         {/* Page content — the document is the single scroll container */}
         <main className="flex-1">{children}</main>
       </div>
     </div>
+    </AdminProvider>
   );
 }

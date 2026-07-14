@@ -14,6 +14,74 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_role: string | null
+          created_at: string
+          id: string
+          metadata: Json | null
+          module: string | null
+          summary: string | null
+          target_id: string | null
+          target_type: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_role?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          module?: string | null
+          summary?: string | null
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_role?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          module?: string | null
+          summary?: string | null
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Relationships: []
+      }
+      admin_permissions: {
+        Row: {
+          access: string
+          module: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access?: string
+          module: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access?: string
+          module?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_permissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_chat_sessions: {
         Row: {
           created_at: string
@@ -59,6 +127,32 @@ export type Database = {
           },
         ]
       }
+      ai_limit_boosts: {
+        Row: {
+          boosted_limit: number
+          expires_at: string
+          user_id: string
+        }
+        Insert: {
+          boosted_limit: number
+          expires_at: string
+          user_id: string
+        }
+        Update: {
+          boosted_limit?: number
+          expires_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_limit_boosts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_request_counts: {
         Row: {
           request_count: number
@@ -85,6 +179,39 @@ export type Database = {
           },
         ]
       }
+      badges: {
+        Row: {
+          bonus_points: number
+          category: string
+          description: string
+          icon: string | null
+          is_active: boolean
+          name: string
+          slug: string
+          sort_order: number
+        }
+        Insert: {
+          bonus_points?: number
+          category: string
+          description: string
+          icon?: string | null
+          is_active?: boolean
+          name: string
+          slug: string
+          sort_order?: number
+        }
+        Update: {
+          bonus_points?: number
+          category?: string
+          description?: string
+          icon?: string | null
+          is_active?: boolean
+          name?: string
+          slug?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       charities: {
         Row: {
           category: string
@@ -97,12 +224,16 @@ export type Database = {
           description: string
           document_paths: Json
           donor_count: number
+          external_api_response: Json | null
+          external_ref: string | null
+          external_verified_at: string | null
           goal_amount: number
           id: string
           image_url: string | null
           is_active: boolean
           is_featured: boolean
           is_zakat_eligible: boolean
+          last_verified_at: string | null
           legal_name: string | null
           long_description: string | null
           minimum_donation: number
@@ -124,6 +255,10 @@ export type Database = {
           stripe_payouts_enabled: boolean
           submitted_by: string | null
           updated_at: string
+          verification_expires_at: string | null
+          verification_level: number
+          verification_score: number
+          verification_source: string | null
           verification_status: string
           verified_at: string | null
           verified_by: string | null
@@ -140,12 +275,16 @@ export type Database = {
           description: string
           document_paths?: Json
           donor_count?: number
+          external_api_response?: Json | null
+          external_ref?: string | null
+          external_verified_at?: string | null
           goal_amount: number
           id?: string
           image_url?: string | null
           is_active?: boolean
           is_featured?: boolean
           is_zakat_eligible?: boolean
+          last_verified_at?: string | null
           legal_name?: string | null
           long_description?: string | null
           minimum_donation?: number
@@ -167,6 +306,10 @@ export type Database = {
           stripe_payouts_enabled?: boolean
           submitted_by?: string | null
           updated_at?: string
+          verification_expires_at?: string | null
+          verification_level?: number
+          verification_score?: number
+          verification_source?: string | null
           verification_status?: string
           verified_at?: string | null
           verified_by?: string | null
@@ -183,12 +326,16 @@ export type Database = {
           description?: string
           document_paths?: Json
           donor_count?: number
+          external_api_response?: Json | null
+          external_ref?: string | null
+          external_verified_at?: string | null
           goal_amount?: number
           id?: string
           image_url?: string | null
           is_active?: boolean
           is_featured?: boolean
           is_zakat_eligible?: boolean
+          last_verified_at?: string | null
           legal_name?: string | null
           long_description?: string | null
           minimum_donation?: number
@@ -210,6 +357,10 @@ export type Database = {
           stripe_payouts_enabled?: boolean
           submitted_by?: string | null
           updated_at?: string
+          verification_expires_at?: string | null
+          verification_level?: number
+          verification_score?: number
+          verification_source?: string | null
           verification_status?: string
           verified_at?: string | null
           verified_by?: string | null
@@ -245,6 +396,11 @@ export type Database = {
           description: string
           display_name: string
           document_paths: Json
+          documents_reviewed_at: string | null
+          documents_reviewed_by: string | null
+          external_check_ran_at: string | null
+          external_check_response: Json | null
+          external_check_status: string
           id: string
           is_zakat_eligible: boolean
           legal_name: string
@@ -268,6 +424,11 @@ export type Database = {
           description: string
           display_name: string
           document_paths?: Json
+          documents_reviewed_at?: string | null
+          documents_reviewed_by?: string | null
+          external_check_ran_at?: string | null
+          external_check_response?: Json | null
+          external_check_status?: string
           id?: string
           is_zakat_eligible?: boolean
           legal_name: string
@@ -291,6 +452,11 @@ export type Database = {
           description?: string
           display_name?: string
           document_paths?: Json
+          documents_reviewed_at?: string | null
+          documents_reviewed_by?: string | null
+          external_check_ran_at?: string | null
+          external_check_response?: Json | null
+          external_check_status?: string
           id?: string
           is_zakat_eligible?: boolean
           legal_name?: string
@@ -325,10 +491,111 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "charity_applications_charity_id_fkey"
+            columns: ["charity_id"]
+            isOneToOne: false
+            referencedRelation: "charity_trust_badges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "charity_applications_documents_reviewed_by_fkey"
+            columns: ["documents_reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "charity_applications_reviewed_by_fkey"
             columns: ["reviewed_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      charity_verification_log: {
+        Row: {
+          application_id: string | null
+          change_type: string
+          changed_by: string | null
+          charity_id: string
+          created_at: string
+          id: string
+          new_level: number | null
+          new_score: number | null
+          new_status: string | null
+          notes: string | null
+          previous_level: number | null
+          previous_score: number | null
+          previous_status: string | null
+          source: string | null
+        }
+        Insert: {
+          application_id?: string | null
+          change_type: string
+          changed_by?: string | null
+          charity_id: string
+          created_at?: string
+          id?: string
+          new_level?: number | null
+          new_score?: number | null
+          new_status?: string | null
+          notes?: string | null
+          previous_level?: number | null
+          previous_score?: number | null
+          previous_status?: string | null
+          source?: string | null
+        }
+        Update: {
+          application_id?: string | null
+          change_type?: string
+          changed_by?: string | null
+          charity_id?: string
+          created_at?: string
+          id?: string
+          new_level?: number | null
+          new_score?: number | null
+          new_status?: string | null
+          notes?: string | null
+          previous_level?: number | null
+          previous_score?: number | null
+          previous_status?: string | null
+          source?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "charity_verification_log_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "charity_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "charity_verification_log_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "charity_verification_log_charity_id_fkey"
+            columns: ["charity_id"]
+            isOneToOne: false
+            referencedRelation: "charities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "charity_verification_log_charity_id_fkey"
+            columns: ["charity_id"]
+            isOneToOne: false
+            referencedRelation: "charity_stripe_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "charity_verification_log_charity_id_fkey"
+            columns: ["charity_id"]
+            isOneToOne: false
+            referencedRelation: "charity_trust_badges"
             referencedColumns: ["id"]
           },
         ]
@@ -370,6 +637,8 @@ export type Database = {
         Row: {
           content: string
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
           id: string
           like_count: number
           parent_id: string | null
@@ -379,6 +648,8 @@ export type Database = {
         Insert: {
           content: string
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           id?: string
           like_count?: number
           parent_id?: string | null
@@ -388,6 +659,8 @@ export type Database = {
         Update: {
           content?: string
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           id?: string
           like_count?: number
           parent_id?: string | null
@@ -395,6 +668,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "comments_deleted_by_fkey"
+            columns: ["deleted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "comments_parent_id_fkey"
             columns: ["parent_id"]
@@ -419,6 +699,60 @@ export type Database = {
           {
             foreignKeyName: "comments_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_reports: {
+        Row: {
+          content_id: string
+          content_type: string
+          created_at: string
+          details: string | null
+          id: string
+          reason: string
+          reporter_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          content_id: string
+          content_type: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason: string
+          reporter_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          content_id?: string
+          content_type?: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason?: string
+          reporter_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_reports_reviewed_by_fkey"
+            columns: ["reviewed_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -642,6 +976,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "donations_charity_id_fkey"
+            columns: ["charity_id"]
+            isOneToOne: false
+            referencedRelation: "charity_trust_badges"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "donations_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -679,6 +1020,95 @@ export type Database = {
             columns: ["following_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchant_commission: {
+        Row: {
+          accepted_at: string | null
+          contract_signed_at: string | null
+          countered_commission: number | null
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          exclusivity: boolean | null
+          existing_commission_band: string | null
+          final_commission: number | null
+          lane: string | null
+          launch_ready_7d: boolean | null
+          menu_ready: boolean | null
+          merchant_id: string
+          monthly_volume_band: string | null
+          on_other_platform: boolean | null
+          qualification_score: number | null
+          recommended_commission: number | null
+          referral_source: string | null
+          requested_commission: number | null
+          review_reason: string | null
+          review_status: string
+          score_breakdown: Json | null
+          store_count: number | null
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          contract_signed_at?: string | null
+          countered_commission?: number | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          exclusivity?: boolean | null
+          existing_commission_band?: string | null
+          final_commission?: number | null
+          lane?: string | null
+          launch_ready_7d?: boolean | null
+          menu_ready?: boolean | null
+          merchant_id: string
+          monthly_volume_band?: string | null
+          on_other_platform?: boolean | null
+          qualification_score?: number | null
+          recommended_commission?: number | null
+          referral_source?: string | null
+          requested_commission?: number | null
+          review_reason?: string | null
+          review_status?: string
+          score_breakdown?: Json | null
+          store_count?: number | null
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          contract_signed_at?: string | null
+          countered_commission?: number | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          exclusivity?: boolean | null
+          existing_commission_band?: string | null
+          final_commission?: number | null
+          lane?: string | null
+          launch_ready_7d?: boolean | null
+          menu_ready?: boolean | null
+          merchant_id?: string
+          monthly_volume_band?: string | null
+          on_other_platform?: boolean | null
+          qualification_score?: number | null
+          recommended_commission?: number | null
+          referral_source?: string | null
+          requested_commission?: number | null
+          review_reason?: string | null
+          review_status?: string
+          score_breakdown?: Json | null
+          store_count?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_commission_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: true
+            referencedRelation: "merchants"
             referencedColumns: ["id"]
           },
         ]
@@ -750,6 +1180,7 @@ export type Database = {
           activated_at: string | null
           address: string | null
           assigned_rep: string | null
+          assigned_rep_id: string | null
           business_email: string | null
           category_ids: string[] | null
           city: string | null
@@ -786,6 +1217,7 @@ export type Database = {
           activated_at?: string | null
           address?: string | null
           assigned_rep?: string | null
+          assigned_rep_id?: string | null
           business_email?: string | null
           category_ids?: string[] | null
           city?: string | null
@@ -822,6 +1254,7 @@ export type Database = {
           activated_at?: string | null
           address?: string | null
           assigned_rep?: string | null
+          assigned_rep_id?: string | null
           business_email?: string | null
           category_ids?: string[] | null
           city?: string | null
@@ -854,7 +1287,15 @@ export type Database = {
           website?: string | null
           welcome_sent_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "merchants_assigned_rep_id_fkey"
+            columns: ["assigned_rep_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notifications: {
         Row: {
@@ -1010,7 +1451,11 @@ export type Database = {
           comment_count: number
           content: string
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
+          featured_until: string | null
           id: string
+          is_featured: boolean
           is_published: boolean
           like_count: number
           media_public_ids: string[] | null
@@ -1025,7 +1470,11 @@ export type Database = {
           comment_count?: number
           content: string
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          featured_until?: string | null
           id?: string
+          is_featured?: boolean
           is_published?: boolean
           like_count?: number
           media_public_ids?: string[] | null
@@ -1040,7 +1489,11 @@ export type Database = {
           comment_count?: number
           content?: string
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          featured_until?: string | null
           id?: string
+          is_featured?: boolean
           is_published?: boolean
           like_count?: number
           media_public_ids?: string[] | null
@@ -1052,6 +1505,13 @@ export type Database = {
           view_count?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "posts_deleted_by_fkey"
+            columns: ["deleted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "posts_recipe_id_fkey"
             columns: ["recipe_id"]
@@ -1074,15 +1534,22 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           created_at: string
+          email: string | null
           full_name: string
           hyperzod_customer_id: string | null
           id: string
           is_verified: boolean
+          lifetime_points: number
           location: string | null
           phone: string | null
+          profile_flair: string | null
           reward_points: number
           reward_tier: string
           role: string
+          status: string
+          suspended_at: string | null
+          suspended_by: string | null
+          suspended_reason: string | null
           updated_at: string
           username: string | null
         }
@@ -1091,15 +1558,22 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          email?: string | null
           full_name: string
           hyperzod_customer_id?: string | null
           id: string
           is_verified?: boolean
+          lifetime_points?: number
           location?: string | null
           phone?: string | null
+          profile_flair?: string | null
           reward_points?: number
           reward_tier?: string
           role?: string
+          status?: string
+          suspended_at?: string | null
+          suspended_by?: string | null
+          suspended_reason?: string | null
           updated_at?: string
           username?: string | null
         }
@@ -1108,15 +1582,22 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string
           hyperzod_customer_id?: string | null
           id?: string
           is_verified?: boolean
+          lifetime_points?: number
           location?: string | null
           phone?: string | null
+          profile_flair?: string | null
           reward_points?: number
           reward_tier?: string
           role?: string
+          status?: string
+          suspended_at?: string | null
+          suspended_by?: string | null
+          suspended_reason?: string | null
           updated_at?: string
           username?: string | null
         }
@@ -1206,14 +1687,18 @@ export type Database = {
           cook_time_mins: number | null
           created_at: string
           cuisine: string | null
+          deleted_at: string | null
+          deleted_by: string | null
           description: string | null
           difficulty: string | null
+          featured_until: string | null
           id: string
           image_public_id: string | null
           image_url: string | null
           ingredients: Json
           instructions: Json
           is_ai_generated: boolean
+          is_featured: boolean
           is_halal_verified: boolean
           is_published: boolean
           nutrition: Json | null
@@ -1231,14 +1716,18 @@ export type Database = {
           cook_time_mins?: number | null
           created_at?: string
           cuisine?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
           description?: string | null
           difficulty?: string | null
+          featured_until?: string | null
           id?: string
           image_public_id?: string | null
           image_url?: string | null
           ingredients?: Json
           instructions?: Json
           is_ai_generated?: boolean
+          is_featured?: boolean
           is_halal_verified?: boolean
           is_published?: boolean
           nutrition?: Json | null
@@ -1256,14 +1745,18 @@ export type Database = {
           cook_time_mins?: number | null
           created_at?: string
           cuisine?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
           description?: string | null
           difficulty?: string | null
+          featured_until?: string | null
           id?: string
           image_public_id?: string | null
           image_url?: string | null
           ingredients?: Json
           instructions?: Json
           is_ai_generated?: boolean
+          is_featured?: boolean
           is_halal_verified?: boolean
           is_published?: boolean
           nutrition?: Json | null
@@ -1278,7 +1771,135 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "recipes_deleted_by_fkey"
+            columns: ["deleted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "recipes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reward_catalog: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          id: string
+          is_active: boolean
+          max_per_user: number | null
+          min_tier_required: string
+          name: string
+          points_required: number
+          redeemed_count: number
+          stock_remaining: number | null
+          updated_at: string
+          value_amount: number | null
+          value_metadata: Json
+          value_type: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description: string
+          id?: string
+          is_active?: boolean
+          max_per_user?: number | null
+          min_tier_required?: string
+          name: string
+          points_required: number
+          redeemed_count?: number
+          stock_remaining?: number | null
+          updated_at?: string
+          value_amount?: number | null
+          value_metadata?: Json
+          value_type: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          is_active?: boolean
+          max_per_user?: number | null
+          min_tier_required?: string
+          name?: string
+          points_required?: number
+          redeemed_count?: number
+          stock_remaining?: number | null
+          updated_at?: string
+          value_amount?: number | null
+          value_metadata?: Json
+          value_type?: string
+        }
+        Relationships: []
+      }
+      reward_redemptions: {
+        Row: {
+          catalog_item_id: string
+          created_at: string
+          fulfilled_at: string | null
+          id: string
+          points_spent: number
+          reversal_reason: string | null
+          reversed_at: string | null
+          status: string
+          target_id: string | null
+          transaction_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          catalog_item_id: string
+          created_at?: string
+          fulfilled_at?: string | null
+          id?: string
+          points_spent: number
+          reversal_reason?: string | null
+          reversed_at?: string | null
+          status?: string
+          target_id?: string | null
+          transaction_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          catalog_item_id?: string
+          created_at?: string
+          fulfilled_at?: string | null
+          id?: string
+          points_spent?: number
+          reversal_reason?: string | null
+          reversed_at?: string | null
+          status?: string
+          target_id?: string | null
+          transaction_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reward_redemptions_catalog_item_id_fkey"
+            columns: ["catalog_item_id"]
+            isOneToOne: false
+            referencedRelation: "reward_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reward_redemptions_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "reward_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reward_redemptions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -1335,21 +1956,33 @@ export type Database = {
         Row: {
           ai_requests_per_hour: number
           color: string
+          free_deliveries: number
           min_points: number
+          min_redemption_points: number
+          monthly_bonus_points: number
+          multiplier_pct: number
           name: string
           sort_order: number
         }
         Insert: {
           ai_requests_per_hour?: number
           color: string
+          free_deliveries?: number
           min_points: number
+          min_redemption_points?: number
+          monthly_bonus_points?: number
+          multiplier_pct?: number
           name: string
           sort_order: number
         }
         Update: {
           ai_requests_per_hour?: number
           color?: string
+          free_deliveries?: number
           min_points?: number
+          min_redemption_points?: number
+          monthly_bonus_points?: number
+          multiplier_pct?: number
           name?: string
           sort_order?: number
         }
@@ -1358,47 +1991,56 @@ export type Database = {
       reward_transactions: {
         Row: {
           action: string
+          balance_after: number | null
           created_at: string
           created_date: string
           description: string | null
           expires_at: string | null
           id: string
           is_expired: boolean
+          multiplier: number
           points: number
           redeemed_at: string | null
           redemption_ref: string | null
           reference_id: string | null
           source_donation_id: string | null
+          status: string
           user_id: string
         }
         Insert: {
           action: string
+          balance_after?: number | null
           created_at?: string
           created_date?: string
           description?: string | null
           expires_at?: string | null
           id?: string
           is_expired?: boolean
+          multiplier?: number
           points: number
           redeemed_at?: string | null
           redemption_ref?: string | null
           reference_id?: string | null
           source_donation_id?: string | null
+          status?: string
           user_id: string
         }
         Update: {
           action?: string
+          balance_after?: number | null
           created_at?: string
           created_date?: string
           description?: string | null
           expires_at?: string | null
           id?: string
           is_expired?: boolean
+          multiplier?: number
           points?: number
           redeemed_at?: string | null
           redemption_ref?: string | null
           reference_id?: string | null
           source_donation_id?: string | null
+          status?: string
           user_id?: string
         }
         Relationships: [
@@ -1501,6 +2143,128 @@ export type Database = {
             columns: ["charity_id"]
             isOneToOne: false
             referencedRelation: "charity_stripe_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stripe_connect_events_charity_id_fkey"
+            columns: ["charity_id"]
+            isOneToOne: false
+            referencedRelation: "charity_trust_badges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_conversations: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          delivery_reference: string | null
+          id: string
+          last_message_at: string
+          merchant_id: string | null
+          priority: string
+          requester_email: string | null
+          requester_name: string | null
+          status: string
+          subject: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          delivery_reference?: string | null
+          id?: string
+          last_message_at?: string
+          merchant_id?: string | null
+          priority?: string
+          requester_email?: string | null
+          requester_name?: string | null
+          status?: string
+          subject: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          delivery_reference?: string | null
+          id?: string
+          last_message_at?: string
+          merchant_id?: string | null
+          priority?: string
+          requester_email?: string | null
+          requester_name?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_conversations_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_conversations_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_conversations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_messages: {
+        Row: {
+          body: string
+          conversation_id: string
+          created_at: string
+          id: string
+          is_internal: boolean
+          sender_id: string | null
+          sender_role: string
+        }
+        Insert: {
+          body: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          is_internal?: boolean
+          sender_id?: string | null
+          sender_role: string
+        }
+        Update: {
+          body?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          is_internal?: boolean
+          sender_id?: string | null
+          sender_role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "support_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1617,6 +2381,48 @@ export type Database = {
         }
         Relationships: []
       }
+      charity_trust_badges: {
+        Row: {
+          id: string | null
+          is_zakat_eligible: boolean | null
+          last_verified_at: string | null
+          name: string | null
+          slug: string | null
+          trust_tier: string | null
+          verification_detail: string | null
+          verification_label: string | null
+          verification_level: number | null
+          verification_score: number | null
+          verification_source: string | null
+        }
+        Insert: {
+          id?: string | null
+          is_zakat_eligible?: boolean | null
+          last_verified_at?: string | null
+          name?: string | null
+          slug?: string | null
+          trust_tier?: never
+          verification_detail?: never
+          verification_label?: never
+          verification_level?: number | null
+          verification_score?: number | null
+          verification_source?: string | null
+        }
+        Update: {
+          id?: string | null
+          is_zakat_eligible?: boolean | null
+          last_verified_at?: string | null
+          name?: string | null
+          slug?: string | null
+          trust_tier?: never
+          verification_detail?: never
+          verification_label?: never
+          verification_level?: number | null
+          verification_score?: number | null
+          verification_source?: string | null
+        }
+        Relationships: []
+      }
       following_posts_view: {
         Row: {
           comment_count: number | null
@@ -1664,6 +2470,18 @@ export type Database = {
         Args: { p_badge_slug: string; p_reason?: string; p_user_id: string }
         Returns: undefined
       }
+      award_points: {
+        Args: {
+          p_action: string
+          p_amount?: number
+          p_description?: string
+          p_multiplier?: number
+          p_reference_id?: string
+          p_source_donation_id?: string
+          p_user_id: string
+        }
+        Returns: number
+      }
       check_and_award_badges:
         | { Args: { p_user_id: string }; Returns: undefined }
         | {
@@ -1678,8 +2496,18 @@ export type Database = {
         Args: { p_points: number; p_user_id: string }
         Returns: undefined
       }
+      expire_feature_boosts: { Args: never; Returns: undefined }
+      expire_stale_pending_donations: { Args: never; Returns: number }
       increment_post_view: { Args: { p_post_id: string }; Returns: undefined }
       recalculate_user_rewards: { Args: { p_user_id: string }; Returns: Json }
+      redeem_reward: {
+        Args: {
+          p_catalog_item_id: string
+          p_target_id?: string
+          p_user_id: string
+        }
+        Returns: string
+      }
       release_flagged_rewards: {
         Args: { p_donation_id: string }
         Returns: Json

@@ -225,6 +225,181 @@ serve(async (req: Request) => {
         break;
       }
 
+      // ----------------------------------------------------------------------
+      // payment_intent.succeeded  (DIRECT CHARGE on the charity's account)
+      // Money captured into the charity's balance. Mark donation completed →
+      // DB trigger awards points + updates charity stats.
+      // ----------------------------------------------------------------------
+      case "payment_intent.succeeded": {
+        const pi = event.data.object as Stripe.PaymentIntent;
+        const connectedAccount = (event as unknown as { account?: string }).account;
+
+        const { data: donation } = await supabase
+          .from("donations")
+          .select("id, amount, status, user_id, stripe_fee_amount")
+          .eq("payment_intent_id", pi.id)
+          .maybeSingle();
+
+        if (!donation) {
+          throw new Error(`Donation not found for payment_intent: ${pi.id}`);
+        }
+        // Fully done already (completed AND Stripe fee recorded) → nothing to do.
+        // Use stripe_fee_amount as the sentinel: unlike net_amount it is only ever
+        // set here, so it reliably signals whether fees still need backfilling.
+        if (donation.status === "completed" && donation.stripe_fee_amount !== null) break;
+        if (donation.status === "failed" || donation.status === "refunded") {
+          throw new Error(`Unexpected status '${donation.status}' for donation ${donation.id}`);
+        }
+
+        const expectedPence = Math.round(donation.amount * 100);
+        if (pi.amount_received !== expectedPence) {
+          throw new Error(
+            `Amount mismatch: expected ${expectedPence}p, got ${pi.amount_received}p (donation ${donation.id})`
+          );
+        }
+
+        const chargeId = typeof pi.latest_charge === "string"
+          ? pi.latest_charge
+          : pi.latest_charge?.id ?? null;
+
+        let stripeFeeAmount: number | null = null;
+        let netAmount: number | null = null;
+        let paymentMethodType: string | null = null;
+
+        // The charge + balance transaction live on the connected account. The BT
+        // can settle 0–2s after the charge, so retry a few times in-invocation to
+        // land fees within seconds instead of waiting for Stripe's slow redelivery.
+        if (chargeId && connectedAccount) {
+          for (let attempt = 0; attempt < 3; attempt++) {
+            try {
+              const charge = await stripe.charges.retrieve(
+                chargeId,
+                { expand: ["balance_transaction"] },
+                { stripeAccount: connectedAccount },
+              );
+              paymentMethodType = charge.payment_method_details?.type ?? paymentMethodType;
+
+              // balance_transaction may be an object, an unexpanded id, or null if
+              // it hasn't settled yet. Resolve it to an object where possible.
+              let bt = charge.balance_transaction as Stripe.BalanceTransaction | string | null;
+              if (typeof bt === "string") {
+                bt = await stripe.balanceTransactions.retrieve(bt, { stripeAccount: connectedAccount });
+              }
+              if (bt && typeof bt !== "string") {
+                // net = amount − Stripe fee − application fee = the charity's take.
+                netAmount = bt.net / 100;
+                const stripeFeePence = (bt.fee_details ?? [])
+                  .filter((f) => f.type === "stripe_fee")
+                  .reduce((s, f) => s + f.amount, 0);
+                stripeFeeAmount = stripeFeePence / 100;
+                break;
+              }
+            } catch (e) {
+              console.warn("[stripe-connect-webhook] charge/BT fetch attempt failed:", e);
+            }
+            if (attempt < 2) await new Promise((r) => setTimeout(r, 1200));
+          }
+        }
+
+        // Complete a pending/expired row, OR backfill fees onto an already-
+        // completed row whose net_amount is still null (confirm path won the race
+        // before the balance transaction settled). Only set fee fields when known.
+        const updateFields: Record<string, unknown> = {
+          status:              "completed",
+          payment_ref:         chargeId,
+          stripe_charge_id:    chargeId,
+          payment_method_type: paymentMethodType,
+        };
+        if (netAmount !== null) {
+          updateFields.stripe_fee_amount = stripeFeeAmount;
+          updateFields.net_amount = netAmount;
+        }
+
+        const { error: updateErr } = await supabase
+          .from("donations")
+          .update(updateFields)
+          .eq("id", donation.id)
+          .or("status.eq.pending,status.eq.expired,and(status.eq.completed,stripe_fee_amount.is.null)");
+
+        if (updateErr) throw new Error(`Failed to complete donation ${donation.id}: ${updateErr.message}`);
+
+        // If the balance transaction wasn't ready, ask Stripe to retry so we can
+        // backfill fee/net once it settles (uses the 500-retry below). The
+        // donation is already completed + points awarded, so this is safe.
+        if (netAmount === null) {
+          throw new Error(`balance_transaction not ready for donation ${donation.id} — retrying to backfill fees`);
+        }
+
+        console.log(`[stripe-connect-webhook] donation ${donation.id} completed`);
+        break;
+      }
+
+      // ----------------------------------------------------------------------
+      // payment_intent.payment_failed
+      // ----------------------------------------------------------------------
+      case "payment_intent.payment_failed": {
+        const pi = event.data.object as Stripe.PaymentIntent;
+        const { data: donation } = await supabase
+          .from("donations")
+          .select("id, status")
+          .eq("payment_intent_id", pi.id)
+          .maybeSingle();
+
+        if (donation?.status === "pending") {
+          const { error: updateErr } = await supabase
+            .from("donations")
+            .update({ status: "failed" })
+            .eq("id", donation.id)
+            .eq("status", "pending");
+          if (updateErr) throw new Error(`Failed to mark donation ${donation.id} failed: ${updateErr.message}`);
+          console.log(`[stripe-connect-webhook] donation ${donation.id} failed`);
+        }
+        break;
+      }
+
+      // ----------------------------------------------------------------------
+      // charge.refunded — reverse the donation + its reward points
+      // ----------------------------------------------------------------------
+      case "charge.refunded": {
+        const charge = event.data.object as Stripe.Charge;
+        const { data: donation } = await supabase
+          .from("donations")
+          .select("id, status, points_earned, user_id")
+          .eq("payment_ref", charge.id)
+          .maybeSingle();
+
+        if (!donation || donation.status === "refunded") break;
+
+        const { error: updateErr } = await supabase
+          .from("donations")
+          .update({
+            status:      "refunded",
+            refunded_at: new Date().toISOString(),
+            refund_ref:  charge.refunds?.data?.[0]?.id ?? null,
+          })
+          .eq("id", donation.id);
+        if (updateErr) throw new Error(`Failed to refund donation ${donation.id}: ${updateErr.message}`);
+
+        if (donation.points_earned > 0) {
+          const { error: ledgerErr } = await supabase.from("reward_transactions").insert({
+            user_id:     donation.user_id,
+            points:      -donation.points_earned,
+            action:      "spent",
+            description: `Points reversed: donation refunded (${donation.id})`,
+          });
+          if (ledgerErr) {
+            console.error("[stripe-connect-webhook] failed to reverse points:", ledgerErr.message);
+          } else {
+            await supabase.rpc("decrement_reward_points", {
+              p_user_id: donation.user_id,
+              p_points:  donation.points_earned,
+            });
+          }
+        }
+        console.log(`[stripe-connect-webhook] donation ${donation.id} refunded`);
+        break;
+      }
+
       default: {
         console.log(`[stripe-connect-webhook] unhandled event: ${event.type}`);
         break;
@@ -239,13 +414,23 @@ serve(async (req: Request) => {
   }
 
   // -------------------------------------------------------------------------
-  // 5. Mark event processed
+  // 5. Finalise. On error, leave processed_at NULL and return 500 so Stripe
+  //    retries (self-heals transient failures like the webhook racing ahead of
+  //    the donation insert). On success, stamp processed_at and return 200.
   // -------------------------------------------------------------------------
+  if (processingError) {
+    await supabase
+      .from("webhook_events")
+      .update({ processing_error: processingError })
+      .eq("event_id", event.id);
+    return json({ error: "Processing failed, will retry" }, 500);
+  }
+
   await supabase
     .from("webhook_events")
     .update({
       processed_at:     new Date().toISOString(),
-      processing_error: processingError,
+      processing_error: null,
     })
     .eq("event_id", event.id);
 

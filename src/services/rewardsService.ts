@@ -10,6 +10,7 @@ export const rewardsService = {
       .from("charities")
       .select("*")
       .eq("is_active", true)
+      .eq("stripe_charges_enabled", true) // only show charities that can actually receive donations
       .order("is_featured", { ascending: false });
 
     if (filters?.category) query = query.eq("category", filters.category);
@@ -25,6 +26,7 @@ export const rewardsService = {
       .from("charities")
       .select("*")
       .eq("id", id)
+      .eq("stripe_charges_enabled", true) // non-Ready charities are not donatable → treat as not found
       .single();
     if (error) throw new Error(error.message);
     return data;
@@ -35,6 +37,7 @@ export const rewardsService = {
       .from("charities")
       .select("*")
       .eq("slug", slug)
+      .eq("stripe_charges_enabled", true) // non-Ready charities are not donatable → treat as not found
       .single();
     if (error) throw new Error(error.message);
     return data;
@@ -44,7 +47,8 @@ export const rewardsService = {
     const { data, error } = await supabase
       .from("charities")
       .select("category")
-      .eq("is_active", true);
+      .eq("is_active", true)
+      .eq("stripe_charges_enabled", true);
     if (error) throw new Error(error.message);
     return [...new Set((data ?? []).map((c) => c.category))].sort();
   },

@@ -300,6 +300,7 @@ function UploadRecipeInner() {
 
   const [loadingRecipe, setLoadingRecipe] = useState(isEditMode);
   const [isSubmitting, setIsSubmitting]   = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [notification, setNotification]   = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   const [ingredientInput, setIngredientInput]       = useState("");
@@ -505,7 +506,8 @@ function UploadRecipeInner() {
       }
 
       if (form.image && recipeId) {
-        await recipeService.uploadRecipeImage(recipeId, form.image);
+        setUploadProgress(0);
+        await recipeService.uploadRecipeImage(recipeId, form.image, setUploadProgress);
       }
 
       setNotification({
@@ -520,6 +522,7 @@ function UploadRecipeInner() {
       });
     } finally {
       setIsSubmitting(false);
+      setUploadProgress(null);
     }
   }, [form, isEditMode, editId, router]);
 
@@ -1012,7 +1015,7 @@ function UploadRecipeInner() {
           <motion.button
             type="submit"
             disabled={isSubmitting}
-            className="w-full px-8 py-4 font-extrabold uppercase tracking-tighter text-base flex items-center justify-center gap-3 transition-all"
+            className="relative w-full px-8 py-4 font-extrabold uppercase tracking-tighter text-base flex items-center justify-center gap-3 transition-all overflow-hidden"
             style={
               isSubmitting
                 ? { backgroundColor: BG2, color: `${CREAM}40`, cursor: 'not-allowed' }
@@ -1021,13 +1024,26 @@ function UploadRecipeInner() {
             whileHover={!isSubmitting ? { scale: 1.01 } : {}}
             whileTap={!isSubmitting ? { scale: 0.99 } : {}}
           >
-            {isSubmitting ? (
-              <><Loader2 className="w-6 h-6 animate-spin" /> {isEditMode ? "Saving…" : "Uploading…"}</>
-            ) : isEditMode ? (
-              <><Pencil className="w-6 h-6" /> Save Changes</>
-            ) : (
-              <><Upload className="w-6 h-6" /> Upload Recipe</>
+            {isSubmitting && uploadProgress !== null && (
+              <span
+                className="absolute inset-y-0 left-0 transition-all duration-150"
+                style={{ width: `${uploadProgress}%`, backgroundColor: `${MAGENTA}20` }}
+              />
             )}
+            <span className="relative flex items-center justify-center gap-3">
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                  {uploadProgress !== null
+                    ? `Uploading… ${uploadProgress}%`
+                    : isEditMode ? "Saving…" : "Uploading…"}
+                </>
+              ) : isEditMode ? (
+                <><Pencil className="w-6 h-6" /> Save Changes</>
+              ) : (
+                <><Upload className="w-6 h-6" /> Upload Recipe</>
+              )}
+            </span>
           </motion.button>
         </form>
       </div>

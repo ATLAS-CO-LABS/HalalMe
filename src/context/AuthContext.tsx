@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useEffect, useState, useCallback } from "react";
+import { createContext, useEffect, useState, useCallback, useRef } from "react";
 import { authService } from "@/services/authService";
 import { minDelay } from "@/lib/minDelay";
 import type { Profile } from "@/types";
@@ -20,6 +20,19 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  // Guards the daily check-in so it pings once per session, not per render.
+  const checkedInRef = useRef(false);
+
+  // Award the daily_login reward once when a user is present. Fire-and-forget:
+  // the award_points engine caps it at once per day, so a redundant ping is a
+  // harmless no-op. Reset on logout so the next signed-in user pings again.
+  useEffect(() => {
+    if (user && !checkedInRef.current) {
+      checkedInRef.current = true;
+      fetch("/api/rewards/daily-checkin", { method: "POST" }).catch(() => {});
+    }
+    if (!user) checkedInRef.current = false;
+  }, [user]);
 
   useEffect(() => {
     let active = true;

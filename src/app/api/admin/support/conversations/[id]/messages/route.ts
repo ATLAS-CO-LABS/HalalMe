@@ -1,0 +1,99 @@
+import { NextRequest, NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/adminAuth";
+import { sendSupportReplyEmail } from "@/services/emailService";
+import * as Sentry from "@sentry/nextjs";
+
+export const runtime = "nodejs";
+
+// POST /api/admin/support/conversations/[id]/messages — admin reply (support:manage).
+// The DB trigger sets status='pending' and assigns the convo to the sender if
+// it was unassigned. We then email the requester.
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
+
+  const gate = await requireAdmin("support", "manage");
+  if (!gate.ok) return NextResponse.json({ error: gate.error }, { status: gate.status });
+  const { serviceClient } = gate;
+
+  let body: { message?: string; internal?: boolean };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid body" }, { status: 400 });
+  }
+
+  const message = body.message?.trim();
+  if (!message) {
+    return NextResponse.json({ error: "Message is required" }, { status: 400 });
+  }
+  // Internal notes are staff-only: stored with is_internal=true (hidden from the
+  // requester by RLS) and never emailed out.
+  const isInternal = body.internal === true;
+
+  // Load the conversation + requester for the notification email. A guest ticket
+  // has no linked profile — fall back to the typed requester_email/name.
+  const { data: conversation } = await serviceClient
+    .from("support_conversations")
+    .select(
+      "id, subject, requester_email, requester_name, requester:profiles!support_conversations_user_id_fkey(full_name, email)",
+    )
+    .eq("id", id)
+    .single();
+
+  if (!conversation) {
+    return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
+  }
+
+  const { data: newMessage, error: msgErr } = await serviceClient
+    .from("support_messages")
+    .insert({
+      conversation_id: id,
+      sender_id: gate.userId,
+      sender_role: "admin",
+      body: message,
+      is_internal: isInternal,
+    })
+    .select("id, sender_role, body, created_at, is_internal")
+    .single();
+
+  if (msgErr) {
+    console.error("[api/admin/support/.../messages] insert error", msgErr);
+    return NextResponse.json({ error: "Failed to send reply" }, { status: 500 });
+  }
+
+  // Internal notes are never emailed to the requester.
+  if (isInternal) {
+    return NextResponse.json({ ok: true, internal: true, message: newMessage });
+  }
+
+  // Notify the requester (non-blocking — reply already saved). Prefer the linked
+  // account email; fall back to the guest's typed email.
+  const conv = conversation as unknown as {
+    subject: string;
+    requester_email: string | null;
+    requester_name: string | null;
+    requester: { full_name: string | null; email: string | null } | { full_name: string | null; email: string | null }[] | null;
+  };
+  const linked = Array.isArray(conv.requester) ? conv.requester[0] : conv.requester;
+  const toEmail = linked?.email ?? conv.requester_email;
+  const toName = linked?.full_name ?? conv.requester_name ?? undefined;
+  if (toEmail) {
+    // Fire-and-forget — the reply is already saved, don't make the admin wait
+    // on Resend's round-trip before seeing "sent".
+    sendSupportReplyEmail({
+      to: toEmail,
+      recipientName: toName,
+      subject: conv.subject,
+      replyPreview: message,
+      conversationId: id,
+    }).catch((err) => {
+      console.error("[api/admin/support/.../messages] reply email failed", err);
+      Sentry.captureException(err);
+    });
+  }
+
+  return NextResponse.json({ ok: true, message: newMessage });
+}

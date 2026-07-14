@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient, createServiceClient } from "@/lib/supabase-server";
 import { updateHyperzodMerchant } from "@/services/hyperzodService";
+import { requireAdmin } from "@/lib/adminAuth";
+import { logAdminAction } from "@/lib/adminAudit";
 
 export async function POST(
   _req: NextRequest,
@@ -9,19 +10,9 @@ export async function POST(
   const { id } = await params;
 
   // ── Auth gate ──────────────────────────────────────────────────────────────
-  const serverClient = await createServerClient();
-  const { data: { user } } = await serverClient.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const serviceClient = createServiceClient();
-  const { data: profile } = await serviceClient
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-  if (profile?.role !== "admin") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const gate = await requireAdmin("merchants", "manage");
+  if (!gate.ok) return NextResponse.json({ error: gate.error }, { status: gate.status });
+  const { serviceClient } = gate;
 
   // ── Load merchant ──────────────────────────────────────────────────────────
   const { data: merchant, error: fetchError } = await serviceClient
@@ -84,6 +75,11 @@ export async function POST(
       { status: 500 }
     );
   }
+
+  logAdminAction(gate, {
+    action: "merchant.deactivate", module: "merchants", targetType: "merchant", targetId: id,
+    summary: "Took merchant offline (reverted to agreed)",
+  });
 
   return NextResponse.json({ merchant: updated });
 }

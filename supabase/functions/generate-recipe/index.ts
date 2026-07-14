@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const RATE_LIMIT_REQUESTS_PER_HOUR_DEFAULT = 30;
+const RATE_LIMIT_REQUESTS_PER_HOUR_DEFAULT = 10;
 const OPENAI_TIMEOUT_MS = 25000;
 const FUNCTION_TIMEOUT_MS = 30000;
 const MAX_HISTORY_ITEMS = 10;
@@ -372,7 +372,31 @@ async function handle(req: Request, signal: AbortSignal): Promise<Response> {
   console.log("[auth] user ok:", user.id);
   if (signal.aborted) return json({ error: "Request cancelled" }, 499);
 
-  const rateLimitForUser = RATE_LIMIT_REQUESTS_PER_HOUR_DEFAULT;
+  // Base limit comes from the user's tier (Bronze 10 / Silver 20 / Gold 30 /
+  // Platinum 50 — reward_tiers.ai_requests_per_hour). Redeeming "AI power-up"
+  // adds a temporary bonus on TOP of that (see redeem_reward / ai_limit_boosts,
+  // 051-053) — it's never a downgrade for higher tiers.
+  const { data: profileRow } = await supabaseAdmin
+    .from("profiles")
+    .select("reward_tier")
+    .eq("id", user.id)
+    .single();
+
+  const { data: tierRow } = await supabaseAdmin
+    .from("reward_tiers")
+    .select("ai_requests_per_hour")
+    .eq("name", profileRow?.reward_tier ?? "bronze")
+    .maybeSingle();
+
+  let rateLimitForUser = tierRow?.ai_requests_per_hour ?? RATE_LIMIT_REQUESTS_PER_HOUR_DEFAULT;
+
+  const { data: boostRow } = await supabaseAdmin
+    .from("ai_limit_boosts")
+    .select("boosted_limit")
+    .eq("user_id", user.id)
+    .gt("expires_at", new Date().toISOString())
+    .maybeSingle();
+  if (boostRow?.boosted_limit) rateLimitForUser += boostRow.boosted_limit;
 
   const windowStart = new Date();
   windowStart.setMinutes(0, 0, 0);
@@ -389,6 +413,8 @@ async function handle(req: Request, signal: AbortSignal): Promise<Response> {
       error: "Rate limit exceeded",
       message: `You can make up to ${rateLimitForUser} AI requests per hour.`,
       retry_after: "1 hour",
+      requests_remaining: 0,
+      rate_limit: rateLimitForUser,
     }, 429);
   }
   if (signal.aborted) return json({ error: "Request cancelled" }, 499);
@@ -505,6 +531,7 @@ async function handle(req: Request, signal: AbortSignal): Promise<Response> {
       message: envelope.message,
       session_id: returnedSessionId,
       requests_remaining: requestsRemaining,
+      rate_limit: rateLimitForUser,
     });
   }
 
@@ -585,6 +612,7 @@ async function handle(req: Request, signal: AbortSignal): Promise<Response> {
     is_saved:           savedRecipeId !== null,
     session_id:         returnedSessionId,
     requests_remaining: requestsRemaining,
+    rate_limit:         rateLimitForUser,
   });
 }
 

@@ -1,38 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient, createServiceClient } from "@/lib/supabase-server";
+import { requireAdmin, type AccessLevel } from "@/lib/adminAuth";
+import { logAdminAction } from "@/lib/adminAudit";
 import {
   sendMerchantAgreementEmail,
   sendMerchantInviteSentEmail,
   sendMerchantCommissionInviteEmail,
 } from "@/services/emailService";
 import { deleteHyperzodMerchant } from "@/services/hyperzodService";
+import * as Sentry from "@sentry/nextjs";
 
-async function getAdminServiceClient() {
-  const serverClient = await createServerClient();
-  const {
-    data: { user },
-  } = await serverClient.auth.getUser();
-
-  if (!user) return { error: "Unauthorized", status: 401, serviceClient: null };
-
-  const serviceClient = createServiceClient();
-  const { data: profile } = await serviceClient
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  if (profile?.role !== "admin") return { error: "Forbidden", status: 403, serviceClient: null };
-
-  return { error: null, status: 200, serviceClient };
+async function getAdminServiceClient(level: AccessLevel) {
+  const gate = await requireAdmin("merchants", level);
+  if (!gate.ok) return { error: gate.error, status: gate.status, serviceClient: null, gate: null };
+  return { error: null, status: 200, serviceClient: gate.serviceClient, gate };
 }
+
+// Internal statuses (DB): pending | invited | contacted | negotiating | agreed | live | rejected
+const VALID_STATUSES = new Set(["pending", "invited", "contacted", "negotiating", "agreed", "live", "rejected"]);
 
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const { error, status, serviceClient } = await getAdminServiceClient();
+  const { error, status, serviceClient } = await getAdminServiceClient("view");
   if (error || !serviceClient) return NextResponse.json({ error }, { status });
 
   const { data, error: dbError } = await serviceClient
@@ -53,16 +44,21 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const { error, status, serviceClient } = await getAdminServiceClient();
+  const { error, status, serviceClient, gate } = await getAdminServiceClient("manage");
   if (error || !serviceClient) return NextResponse.json({ error }, { status });
 
   const body = await req.json() as {
     status?: string;
     assigned_rep?: string | null;
+    assigned_rep_id?: string | null;
     commission_percentage?: number | null;
     readiness_checklist?: Record<string, boolean>;
     note?: string;
   };
+
+  if (body.status !== undefined && !VALID_STATUSES.has(body.status)) {
+    return NextResponse.json({ error: `Invalid status: ${body.status}` }, { status: 400 });
+  }
 
   // Fetch current record so we can append notes and conditionally set timestamps
   const { data: current } = await serviceClient
@@ -103,6 +99,7 @@ export async function PATCH(
   }
 
   if ("assigned_rep" in body) updates.assigned_rep = body.assigned_rep ?? null;
+  if ("assigned_rep_id" in body) updates.assigned_rep_id = body.assigned_rep_id ?? null;
   if ("commission_percentage" in body) updates.commission_percentage = body.commission_percentage ?? null;
   if (body.readiness_checklist !== undefined) updates.readiness_checklist = body.readiness_checklist;
 
@@ -118,16 +115,43 @@ export async function PATCH(
     updates.notes = current.notes ? `${newLine}\n${current.notes}` : newLine;
   }
 
-  const { data: updated, error: dbError } = await serviceClient
-    .from("merchants")
-    .update(updates)
-    .eq("id", id)
-    .select("*")
-    .single();
+  let updateQuery = serviceClient.from("merchants").update(updates).eq("id", id);
+  // Guard status transitions against a concurrent double-submit (double-click,
+  // retried request): only apply if the row's status hasn't already moved
+  // since we read it above — otherwise we'd re-fire the same stage email.
+  if (body.status !== undefined) {
+    updateQuery = updateQuery.eq("status", current.status);
+  }
+
+  const { data: updated, error: dbError } = await updateQuery.select("*").maybeSingle();
 
   if (dbError) {
     console.error("[api/admin/merchants/[id]] patch error", dbError);
     return NextResponse.json({ error: "Update failed" }, { status: 500 });
+  }
+
+  if (!updated) {
+    return NextResponse.json(
+      { error: "This merchant's status already changed. Please refresh and try again." },
+      { status: 409 },
+    );
+  }
+
+  // Audit — describe the most significant change (status transition wins, else
+  // whichever fields were edited).
+  const changed: string[] = [];
+  if (body.status !== undefined && body.status !== current.status) changed.push(`status ${current.status} → ${body.status}`);
+  if ("commission_percentage" in body) changed.push(`commission → ${body.commission_percentage ?? "unset"}%`);
+  if ("assigned_rep_id" in body) changed.push("rep reassigned");
+  if (body.readiness_checklist !== undefined) changed.push("checklist updated");
+  if (body.note?.trim()) changed.push("note added");
+  if (changed.length > 0 && gate) {
+    logAdminAction(gate, {
+      action: body.status !== undefined && body.status !== current.status ? "merchant.status_change" : "merchant.update",
+      module: "merchants", targetType: "merchant", targetId: id,
+      summary: `${current.name}: ${changed.join(", ")}`,
+      metadata: { status: body.status, commission_percentage: body.commission_percentage, from_status: current.status },
+    });
   }
 
   // Email #2 — fire-and-forget when the merchant first reaches "invited"
@@ -136,9 +160,10 @@ export async function PATCH(
       to: current.email,
       restaurantName: current.name,
       ownerName: current.owner_name ?? undefined,
-    }).catch((err) =>
-      console.error("[api/admin/merchants/[id]] invite email failed", err)
-    );
+    }).catch((err) => {
+      console.error("[api/admin/merchants/[id]] invite email failed", err);
+      Sentry.captureException(err);
+    });
   }
 
   // Commission nudge — fire-and-forget when the merchant reaches "negotiating",
@@ -148,9 +173,10 @@ export async function PATCH(
       to: current.email,
       restaurantName: current.name,
       ownerName: current.owner_name ?? undefined,
-    }).catch((err) =>
-      console.error("[api/admin/merchants/[id]] commission invite email failed", err)
-    );
+    }).catch((err) => {
+      console.error("[api/admin/merchants/[id]] commission invite email failed", err);
+      Sentry.captureException(err);
+    });
   }
 
   // Email #3 — fire-and-forget when the merchant first reaches "agreed"
@@ -159,9 +185,10 @@ export async function PATCH(
       to: current.email,
       restaurantName: current.name,
       ownerName: current.owner_name ?? undefined,
-    }).catch((err) =>
-      console.error("[api/admin/merchants/[id]] agreement email failed", err)
-    );
+    }).catch((err) => {
+      console.error("[api/admin/merchants/[id]] agreement email failed", err);
+      Sentry.captureException(err);
+    });
   }
 
   return NextResponse.json({ merchant: updated });
@@ -172,13 +199,13 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const { error, status, serviceClient } = await getAdminServiceClient();
+  const { error, status, serviceClient, gate } = await getAdminServiceClient("manage");
   if (error || !serviceClient) return NextResponse.json({ error }, { status });
 
   // Load merchant to get the Hyperzod link
   const { data: merchant } = await serviceClient
     .from("merchants")
-    .select("id, hyperzod_merchant_id")
+    .select("id, name, hyperzod_merchant_id")
     .eq("id", id)
     .single();
 
@@ -215,6 +242,14 @@ export async function DELETE(
       },
       { status: 500 }
     );
+  }
+
+  if (gate) {
+    logAdminAction(gate, {
+      action: "merchant.delete", module: "merchants", targetType: "merchant", targetId: id,
+      summary: `Deleted merchant ${merchant.name}`,
+      metadata: { name: merchant.name, hyperzod_merchant_id: merchant.hyperzod_merchant_id },
+    });
   }
 
   return NextResponse.json({ success: true });

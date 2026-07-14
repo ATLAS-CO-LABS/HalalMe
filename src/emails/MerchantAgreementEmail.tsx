@@ -1,5 +1,5 @@
 import { Heading, Hr, Section, Text } from "@react-email/components";
-import { EmailLayout, styles } from "./theme";
+import { EmailLayout, styles, SUPPORT_EMAIL } from "./theme";
 
 interface MerchantAgreementEmailProps {
   restaurantName: string;
@@ -63,8 +63,8 @@ export default function MerchantAgreementEmail({
 
       <Text style={styles.paragraph}>
         Any questions? Reply to this email or contact us at{" "}
-        <a href="mailto:support@halalme.co.uk" style={styles.link}>
-          support@halalme.co.uk
+        <a href={`mailto:${SUPPORT_EMAIL}`} style={styles.link}>
+          {SUPPORT_EMAIL}
         </a>
         .
       </Text>

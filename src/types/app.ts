@@ -1656,7 +1656,9 @@ export interface Profile {
   role:                 string;
   is_verified:          boolean;
   reward_points:        number;
+  lifetime_points:      number;
   reward_tier:          string;
+  profile_flair:        string | null;
   created_at:           string;
   updated_at:           string;
 }
@@ -1680,6 +1682,7 @@ export interface Recipe {
   is_ai_generated:  boolean;
   is_halal_verified: boolean;
   is_published:     boolean;
+  is_featured?:     boolean;
   avg_rating:       number | null;
   review_count:     number;
   view_count:       number;
@@ -1795,6 +1798,8 @@ export interface AIAssistantResponse {
   is_saved?:           boolean;
   session_id?:         string | null;
   requests_remaining?: number;
+  /** The user's current hourly cap (tier base + active AI power-up boost, if any). */
+  rate_limit?:         number;
 }
 
 export interface UserSearchResult {
@@ -1817,8 +1822,9 @@ export interface Comment {
   is_liked?:  boolean;
   replies?:   Comment[];
   profiles?: {
-    username:   string | null;
-    avatar_url: string | null;
+    username:      string | null;
+    avatar_url:    string | null;
+    profile_flair?: string | null;
   } | null;
 }
 
@@ -1859,12 +1865,49 @@ export interface Post {
   view_count:    number;
   is_liked:      boolean;
   is_bookmarked: boolean;
+  is_featured?:    boolean;
+  featured_until?: string | null;
   created_at:    string;
   updated_at:    string;
   profiles?: {
-    username:    string | null;
-    full_name:   string | null;
-    avatar_url:  string | null;
-    is_verified: boolean | null;
+    username:      string | null;
+    full_name:     string | null;
+    avatar_url:    string | null;
+    is_verified:   boolean | null;
+    profile_flair?: string | null;
   } | null;
+}
+
+export interface RewardCatalogItem {
+  id:                string;
+  name:              string;
+  description:       string;
+  category:          "profile_flair" | "hub_post_boost" | "recipe_boost" | "ai_power_up";
+  points_required:   number;
+  value_type:        "cosmetic_flair" | "feature_days" | "ai_limit_boost";
+  value_amount:      number | null;
+  value_metadata:    Record<string, string>;
+  min_tier_required: "bronze" | "silver" | "gold" | "platinum";
+  max_per_user:      number | null;
+  is_active:         boolean;
+}
+
+export interface RewardTransaction {
+  id:                  string;
+  points:              number;
+  action:              string;
+  description:         string | null;
+  created_at:          string;
+  expires_at:          string | null;
+  source_donation_id:  string | null;
+  balance_after:       number | null;
+}
+
+export interface RewardBadge {
+  slug:        string;
+  name:        string;
+  description: string;
+  icon:        string | null;
+  category:    "hub" | "kitchen" | "charity" | "tier" | "platform";
+  sort_order:  number;
 }

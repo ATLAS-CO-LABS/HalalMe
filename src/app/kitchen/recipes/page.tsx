@@ -89,6 +89,11 @@ function RecipeCard({
 
             {/* Badges */}
             <div className="absolute top-2 left-2 flex gap-1.5">
+              {recipe.is_featured && (
+                <span className="flex items-center gap-1 text-[#1C1C1C] text-[10px] font-bold uppercase tracking-wide px-2 py-0.5" style={{ backgroundColor: CREAM }}>
+                  <Star className="w-2.5 h-2.5 fill-[#1C1C1C]" /> Featured
+                </span>
+              )}
               {recipe.is_ai_generated && (
                 <span className="flex items-center gap-1 text-white text-[10px] font-bold uppercase tracking-wide px-2 py-0.5" style={{ backgroundColor: MAGENTA }}>
                   <Sparkles className="w-2.5 h-2.5" /> AI

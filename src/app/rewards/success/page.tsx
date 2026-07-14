@@ -237,7 +237,7 @@ function SuccessContent() {
             className="flex flex-col sm:flex-row gap-3 mb-8"
           >
             <motion.button
-              onClick={() => router.push("/rewards/my-rewards")}
+              onClick={() => router.push("/dashboard?tab=rewards")}
               className="flex-1 flex items-center justify-center gap-2 py-4 font-extrabold uppercase tracking-tighter text-sm text-white"
               style={{ backgroundColor: DEEP }}
               whileHover={{ scale: 1.02 }}

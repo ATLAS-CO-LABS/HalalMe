@@ -10,6 +10,11 @@ import { useResumeKey } from "@/context/AppResumeContext";
 import { useAuth } from "@/hooks/useAuth";
 import Avatar from "./Avatar";
 import PostCard from "./PostCard";
+import { getFlairTheme } from "@/lib/flairTheme";
+
+const BG2 = "#111418";
+const AMBER = "#F59E0B";
+const CREAM = "#F7E7CE";
 
 interface UserProfileModalProps {
   isOpen: boolean;
@@ -20,6 +25,7 @@ interface UserProfileModalProps {
   username: string | null;
   avatarUrl: string | null;
   isVerified: boolean | null;
+  profileFlair?: string | null;
   bio?: string | null;
   /** Pre-loaded posts for this user (from the feed). */
   userPosts: Post[];
@@ -34,6 +40,7 @@ export default function UserProfileModal({
   username,
   avatarUrl,
   isVerified,
+  profileFlair,
   bio,
   userPosts,
   onLike,
@@ -176,6 +183,7 @@ export default function UserProfileModal({
 
   const isOwnProfile = currentUser?.id === userId;
   const formattedUsername = username ? `@${username}` : null;
+  const flairTheme = getFlairTheme(profileFlair);
 
   return (
     <AnimatePresence>
@@ -187,7 +195,7 @@ export default function UserProfileModal({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/60 z-50"
+            className="fixed inset-0 bg-black/70 z-50"
           />
 
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
@@ -196,16 +204,20 @@ export default function UserProfileModal({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 8 }}
               transition={{ type: "tween", duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="bg-gray-800 rounded-2xl border border-gray-700 w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col my-8"
+              className="w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col my-8 border shadow-2xl"
+              style={{ backgroundColor: BG2, borderColor: `${CREAM}12` }}
               onClick={(e) => e.stopPropagation()}
             >
               {/* Cover + Close */}
               <div className="relative">
-                <div className="h-32 bg-linear-to-br from-[#F59E0B] to-[#D97706]" />
+                <div
+                  className={flairTheme ? "h-32" : "h-32"}
+                  style={{ background: flairTheme ? flairTheme.banner : AMBER }}
+                />
 
                 <motion.button
                   onClick={onClose}
-                  className="absolute top-4 right-4 bg-black/40 backdrop-blur-sm text-white p-2 rounded-full hover:bg-black/60 transition-colors"
+                  className="absolute top-4 right-4 bg-black/40 backdrop-blur-sm text-white p-2 hover:bg-black/60 transition-colors"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                 >
@@ -219,24 +231,25 @@ export default function UserProfileModal({
                       src={avatarUrl ?? undefined}
                       alt={displayName}
                       size="xl"
-                      className="border-4 border-gray-800"
+                      flair={profileFlair}
+                      className="border-4 border-[#111418]"
                     />
                     <div className="flex-1 mb-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <h2
-                          className="text-xl font-extrabold uppercase tracking-tight text-white truncate"
-                          style={{ fontFamily: "var(--font-headline)" }}
+                          className="text-xl font-extrabold uppercase tracking-tight truncate"
+                          style={{ fontFamily: "var(--font-headline)", color: flairTheme?.accent ?? CREAM }}
                         >
                           {displayName}
                         </h2>
                         {isVerified && (
-                          <BadgeCheck className="w-5 h-5 text-[#F59E0B] fill-[#F59E0B] shrink-0" />
+                          <BadgeCheck className="w-5 h-5 shrink-0" style={{ color: AMBER, fill: AMBER }} />
                         )}
                       </div>
                       {formattedUsername && (
                         <p
-                          className="text-gray-400 text-sm font-normal"
-                          style={{ fontFamily: "var(--font-body)" }}
+                          className="text-sm font-normal"
+                          style={{ color: `${CREAM}45`, fontFamily: "var(--font-body)" }}
                         >
                           {formattedUsername}
                         </p>
@@ -247,15 +260,15 @@ export default function UserProfileModal({
                   {/* Bio */}
                   {bio && (
                     <p
-                      className="mt-3 text-gray-300 text-sm font-normal leading-relaxed"
-                      style={{ fontFamily: "var(--font-body)" }}
+                      className="mt-3 text-sm font-normal leading-relaxed"
+                      style={{ color: `${CREAM}70`, fontFamily: "var(--font-body)" }}
                     >
                       {bio}
                     </p>
                   )}
 
                   {/* Meta */}
-                  <div className="flex items-center gap-4 mt-3 text-sm text-gray-500">
+                  <div className="flex items-center gap-4 mt-3 text-sm" style={{ color: `${CREAM}45` }}>
                     <div className="flex items-center gap-1">
                       <MapPin className="w-4 h-4" />
                       <span>Global</span>
@@ -280,8 +293,8 @@ export default function UserProfileModal({
                           <div
                             key={b.slug}
                             title={b.label}
-                            className="flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
-                            style={{ backgroundColor: `${b.color}20`, color: b.color }}
+                            className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold uppercase tracking-wider border"
+                            style={{ backgroundColor: `${b.color}15`, color: b.color, borderColor: `${b.color}30` }}
                           >
                             <b.icon className="w-3 h-3" />
                             {b.label}
@@ -293,20 +306,20 @@ export default function UserProfileModal({
                   {/* Stats */}
                   <div className="flex items-center gap-6 mt-4">
                     <div>
-                      <span className="text-white font-bold text-lg">{posts.length}</span>
-                      <span className="text-gray-400 text-sm ml-1">Posts</span>
+                      <span className="font-bold text-lg" style={{ color: CREAM }}>{posts.length}</span>
+                      <span className="text-sm ml-1" style={{ color: `${CREAM}45` }}>Posts</span>
                     </div>
                     <div>
-                      <span className="text-white font-bold text-lg">
+                      <span className="font-bold text-lg" style={{ color: CREAM }}>
                         {followerCount ?? "-"}
                       </span>
-                      <span className="text-gray-400 text-sm ml-1">Followers</span>
+                      <span className="text-sm ml-1" style={{ color: `${CREAM}45` }}>Followers</span>
                     </div>
                     <div>
-                      <span className="text-white font-bold text-lg">
+                      <span className="font-bold text-lg" style={{ color: CREAM }}>
                         {followingCount ?? "-"}
                       </span>
-                      <span className="text-gray-400 text-sm ml-1">Following</span>
+                      <span className="text-sm ml-1" style={{ color: `${CREAM}45` }}>Following</span>
                     </div>
                   </div>
 
@@ -315,11 +328,12 @@ export default function UserProfileModal({
                     <motion.button
                       onClick={handleFollowToggle}
                       disabled={isFollowLoading}
-                      className={`mt-4 w-full flex items-center justify-center gap-2 px-6 py-3 rounded-full font-semibold transition-all disabled:opacity-70 ${
+                      className="mt-4 w-full flex items-center justify-center gap-2 px-6 py-3 font-extrabold uppercase tracking-tighter text-sm transition-all disabled:opacity-70 border"
+                      style={
                         isFollowing
-                          ? "bg-gray-700 text-white border border-gray-600 hover:bg-gray-600"
-                          : "bg-linear-to-br from-[#F59E0B] to-[#D97706] text-white"
-                      }`}
+                          ? { backgroundColor: "transparent", color: CREAM, borderColor: `${CREAM}20` }
+                          : { backgroundColor: AMBER, color: BG2, borderColor: AMBER }
+                      }
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
@@ -331,12 +345,12 @@ export default function UserProfileModal({
               </div>
 
               {/* Posts Section */}
-              <div className="flex-1 overflow-y-auto border-t border-gray-700 p-6">
+              <div className="flex-1 overflow-y-auto border-t p-6" style={{ borderColor: `${CREAM}10` }}>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-6 h-px bg-[#F59E0B]" />
+                  <div className="w-6 h-px" style={{ backgroundColor: AMBER }} />
                   <h3
-                    className="text-xs font-bold uppercase tracking-[0.2em] text-[#F59E0B]"
-                    style={{ fontFamily: "var(--font-headline)" }}
+                    className="text-xs font-bold uppercase tracking-[0.2em]"
+                    style={{ color: AMBER, fontFamily: "var(--font-headline)" }}
                   >
                     Posts by {displayName}
                   </h3>
@@ -344,11 +358,11 @@ export default function UserProfileModal({
 
                 {isPostsLoading ? (
                   <div className="flex justify-center py-12">
-                    <Loader2 className="w-6 h-6 text-[#F59E0B] animate-spin" />
+                    <Loader2 className="w-6 h-6 animate-spin" style={{ color: AMBER }} />
                   </div>
                 ) : posts.length === 0 ? (
                   <div className="text-center py-12">
-                    <p className="text-gray-400 font-normal" style={{ fontFamily: "var(--font-body)" }}>
+                    <p className="font-normal" style={{ color: `${CREAM}45`, fontFamily: "var(--font-body)" }}>
                       No posts yet
                     </p>
                   </div>

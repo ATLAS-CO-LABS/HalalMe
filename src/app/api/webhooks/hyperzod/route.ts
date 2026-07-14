@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase-server";
+import * as Sentry from "@sentry/nextjs";
 
 // const WEBHOOK_SECRET = process.env.HYPERZOD_WEBHOOK_SECRET ?? ""; // TODO: re-enable when Hyperzod confirms secret header name
 
@@ -66,6 +67,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ skipped: "email_exists" });
     }
     console.error("[webhook/hyperzod] inviteUserByEmail error", inviteError);
+    Sentry.captureException(inviteError);
     return NextResponse.json({ error: inviteError.message }, { status: 500 });
   }
 

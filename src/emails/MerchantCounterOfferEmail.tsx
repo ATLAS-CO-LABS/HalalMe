@@ -1,5 +1,5 @@
 import { Button, Heading, Section, Text } from "@react-email/components";
-import { EmailLayout, styles } from "./theme";
+import { EmailLayout, styles, SITE_URL, SUPPORT_EMAIL } from "./theme";
 
 interface MerchantCounterOfferEmailProps {
   restaurantName: string;
@@ -12,7 +12,7 @@ export default function MerchantCounterOfferEmail({
   restaurantName,
   ownerName,
   commission,
-  dashboardUrl = "https://halalme.co.uk/merchant",
+  dashboardUrl = `${SITE_URL}/merchant`,
 }: MerchantCounterOfferEmailProps) {
   const greeting = ownerName ? `Hi ${ownerName},` : "Hi there,";
   const pct = `${Number.isInteger(commission) ? commission : commission.toFixed(1)}%`;
@@ -46,8 +46,8 @@ export default function MerchantCounterOfferEmail({
 
       <Text style={styles.paragraph}>
         Questions? Reply to this email or contact us at{" "}
-        <a href="mailto:support@halalme.co.uk" style={styles.link}>
-          support@halalme.co.uk
+        <a href={`mailto:${SUPPORT_EMAIL}`} style={styles.link}>
+          {SUPPORT_EMAIL}
         </a>
         .
       </Text>

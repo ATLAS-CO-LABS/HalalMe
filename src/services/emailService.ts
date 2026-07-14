@@ -11,12 +11,16 @@ import MerchantLiveEmail from "@/emails/MerchantLiveEmail";
 import MerchantChaseEmail from "@/emails/MerchantChaseEmail";
 import MerchantDocsApprovedEmail from "@/emails/MerchantDocsApprovedEmail";
 import MerchantDocsActionNeededEmail from "@/emails/MerchantDocsActionNeededEmail";
+import SupportTicketNotifyEmail from "@/emails/SupportTicketNotifyEmail";
+import SupportTicketReplyEmail from "@/emails/SupportTicketReplyEmail";
+import CharityConnectInviteEmail from "@/emails/CharityConnectInviteEmail";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = "HalalMe <noreply@halalme.co.uk>";
 const SUPPORT_INBOX = "support@halalme.co.uk";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://halalme.co.uk";
 
-function escapeHtml(s: string): string {
+export function escapeHtml(s: string): string {
   return s
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -61,6 +65,85 @@ export async function sendMerchantSupportEmail({
 
   if (error) {
     console.error("[emailService] sendMerchantSupportEmail failed", error);
+    throw new Error(`Email send failed: ${error.message}`);
+  }
+}
+
+export async function sendSupportNotifyEmail({
+  requesterName,
+  requesterEmail,
+  source,
+  subject,
+  messagePreview,
+  conversationId,
+  isNew,
+}: {
+  requesterName: string;
+  requesterEmail: string;
+  source: "user" | "merchant";
+  subject: string;
+  messagePreview: string;
+  conversationId: string;
+  isNew: boolean;
+}): Promise<void> {
+  const html = await render(
+    SupportTicketNotifyEmail({
+      requesterName,
+      requesterEmail,
+      source,
+      subject,
+      messagePreview,
+      conversationUrl: `${SITE_URL}/admin/chat/${conversationId}`,
+      isNew,
+    }),
+  );
+
+  const { error } = await resend.emails.send({
+    from: FROM,
+    to: SUPPORT_INBOX,
+    replyTo: requesterEmail,
+    subject: `New support message from ${requesterName}`,
+    html,
+  });
+
+  if (error) {
+    console.error("[emailService] sendSupportNotifyEmail failed", error);
+    throw new Error(`Email send failed: ${error.message}`);
+  }
+}
+
+export async function sendSupportReplyEmail({
+  to,
+  recipientName,
+  subject,
+  replyPreview,
+  conversationId,
+}: {
+  to: string;
+  recipientName?: string;
+  subject: string;
+  replyPreview: string;
+  conversationId: string;
+}): Promise<void> {
+  const html = await render(
+    SupportTicketReplyEmail({
+      recipientName,
+      subject,
+      replyPreview,
+      threadUrl: `${SITE_URL}/messages/${conversationId}`,
+    }),
+  );
+
+  const { error } = await resend.emails.send({
+    from: FROM,
+    to,
+    replyTo: SUPPORT_INBOX,
+    subject: "You have a reply from HalalMe Support",
+    html,
+  });
+
+  if (error) {
+    console.error("[emailService] sendSupportReplyEmail failed", error);
     throw new Error(`Email send failed: ${error.message}`);
   }
 }
@@ -361,6 +444,32 @@ export async function sendMerchantChaseEmail({
 
   if (error) {
     console.error("[emailService] sendMerchantChaseEmail failed", error);
+    throw new Error(`Email send failed: ${error.message}`);
+  }
+}
+
+export async function sendCharityConnectInviteEmail({
+  to,
+  charityName,
+  onboardingUrl,
+}: {
+  to: string;
+  charityName: string;
+  onboardingUrl: string;
+}): Promise<void> {
+  const html = await render(
+    CharityConnectInviteEmail({ charityName, onboardingUrl }),
+  );
+
+  const { error } = await resend.emails.send({
+    from: FROM,
+    to,
+    subject: `Set up donation payouts - ${charityName}`,
+    html,
+  });
+
+  if (error) {
+    console.error("[emailService] sendCharityConnectInviteEmail failed", error);
     throw new Error(`Email send failed: ${error.message}`);
   }
 }

@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
 
     const { data: donation, error: findErr } = await supabaseAdmin
       .from("donations")
-      .select("id, amount, currency, status, user_id")
+      .select("id, amount, currency, status, user_id, charity_id")
       .eq("payment_intent_id", paymentIntentId)
       .eq("user_id", user.id) // security: user can only confirm their own donations
       .maybeSingle();
@@ -52,7 +52,9 @@ export async function POST(req: NextRequest) {
       return json({ success: true, status: "completed", already_completed: true });
     }
 
-    if (donation.status !== "pending") {
+    // Accept 'expired' too: the stale-pending sweeper may have expired a row
+    // whose payment actually succeeded — let it complete here.
+    if (donation.status !== "pending" && donation.status !== "expired") {
       return json({ error: `Cannot confirm donation with status '${donation.status}'` }, 422);
     }
 
@@ -68,9 +70,19 @@ export async function POST(req: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const stripe = new Stripe(stripeSecretKey, { apiVersion: "2026-03-25.dahlia" as any });
 
+    // Direct charges live on the charity's connected account — retrieve the PI
+    // (and later the charge) there via the Stripe-Account header.
+    const { data: charityRow } = await supabaseAdmin
+      .from("charities")
+      .select("stripe_account_id")
+      .eq("id", donation.charity_id)
+      .single();
+    const connectedAccount = charityRow?.stripe_account_id ?? null;
+    const stripeOpts = connectedAccount ? { stripeAccount: connectedAccount } : undefined;
+
     let pi: Awaited<ReturnType<typeof stripe.paymentIntents.retrieve>>;
     try {
-      pi = await stripe.paymentIntents.retrieve(paymentIntentId);
+      pi = await stripe.paymentIntents.retrieve(paymentIntentId, undefined, stripeOpts);
     } catch {
       return json({ error: "Could not verify payment with Stripe" }, 502);
     }
@@ -90,46 +102,24 @@ export async function POST(req: NextRequest) {
     }
 
     // -------------------------------------------------------------------------
-    // 5. Get charge details for fee tracking
+    // 5. Mark donation completed for instant UX. The Connect webhook is the
+    //    authority for fee/net + payment method — it enriches this row (and
+    //    backfills once the balance transaction settles), so here we only set
+    //    status + charge ref. Avoids racing the balance_transaction on redirect.
     // -------------------------------------------------------------------------
     const chargeId = typeof pi.latest_charge === "string"
       ? pi.latest_charge
       : (pi.latest_charge as { id: string } | null)?.id ?? null;
 
-    let stripeFeeAmount: number | null = null;
-    let netAmount: number | null = null;
-    let paymentMethodType: string | null = null;
-
-    if (chargeId) {
-      try {
-        const charge = await stripe.charges.retrieve(chargeId, {
-          expand: ["balance_transaction"],
-        });
-        paymentMethodType = charge.payment_method_details?.type ?? null;
-        const bt = charge.balance_transaction as { fee: number; net: number } | null;
-        if (bt) {
-          stripeFeeAmount = bt.fee / 100;
-          netAmount = bt.net / 100;
-        }
-      } catch {
-        // Non-fatal — nice-to-have details
-      }
-    }
-
-    // -------------------------------------------------------------------------
-    // 6. Mark donation completed — DB trigger fires and awards points
-    // -------------------------------------------------------------------------
     const { error: updateErr } = await supabaseAdmin
       .from("donations")
       .update({
-        status:              "completed",
-        payment_ref:         chargeId,
-        payment_method_type: paymentMethodType,
-        stripe_fee_amount:   stripeFeeAmount,
-        net_amount:          netAmount,
+        status:           "completed",
+        payment_ref:      chargeId,
+        stripe_charge_id: chargeId,
       })
       .eq("id", donation.id)
-      .eq("status", "pending"); // guard: only update if still pending
+      .in("status", ["pending", "expired"]); // guard: only complete an unfinished row
 
     if (updateErr) {
       console.error("[confirm] update error:", updateErr.message);

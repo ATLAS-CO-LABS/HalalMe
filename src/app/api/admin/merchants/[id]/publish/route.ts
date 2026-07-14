@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient, createServiceClient } from "@/lib/supabase-server";
 import { updateHyperzodMerchant } from "@/services/hyperzodService";
 import { sendMerchantLiveEmail } from "@/services/emailService";
+import * as Sentry from "@sentry/nextjs";
+import { requireAdmin } from "@/lib/adminAuth";
+import { logAdminAction } from "@/lib/adminAudit";
 
 const CHECKLIST_KEYS = [
   "invite_accepted",
@@ -17,19 +19,9 @@ export async function POST(
   const { id } = await params;
 
   // ── Auth gate ──────────────────────────────────────────────────────────────
-  const serverClient = await createServerClient();
-  const { data: { user } } = await serverClient.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const serviceClient = createServiceClient();
-  const { data: profile } = await serviceClient
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-  if (profile?.role !== "admin") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const gate = await requireAdmin("merchants", "manage");
+  if (!gate.ok) return NextResponse.json({ error: gate.error }, { status: gate.status });
+  const { serviceClient } = gate;
 
   // ── Load merchant ──────────────────────────────────────────────────────────
   const { data: merchant, error: fetchError } = await serviceClient
@@ -109,12 +101,21 @@ export async function POST(
     );
   }
 
+  logAdminAction(gate, {
+    action: "merchant.publish", module: "merchants", targetType: "merchant", targetId: id,
+    summary: `Published ${merchant.name} live on Hyperzod`,
+    metadata: { commission_percentage: merchant.commission_percentage },
+  });
+
   // ── Email #4 — fire-and-forget ─────────────────────────────────────────────
   sendMerchantLiveEmail({
     to: merchant.email,
     restaurantName: merchant.name,
     ownerName: merchant.owner_name ?? undefined,
-  }).catch((err) => console.error("[publish] live email failed", err));
+  }).catch((err) => {
+    console.error("[publish] live email failed", err);
+    Sentry.captureException(err);
+  });
 
   return NextResponse.json({ merchant: updated });
 }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import AuthFooter from "./AuthFooter";
 
 export default function AuthLayout({
   children,
@@ -39,12 +40,8 @@ export default function AuthLayout({
         <div className="w-full max-w-md">{children}</div>
       </main>
 
-      {/* Footer */}
-      <footer className="relative z-10 border-t border-[#F7E7CE]/8">
-        <div className="container mx-auto px-4 py-4 sm:py-5 text-center text-xs text-[#F7E7CE]/25">
-          <p>© {new Date().getFullYear()} HalalMe. All rights reserved.</p>
-        </div>
-      </footer>
+      {/* Footer (hidden on /complete-profile) */}
+      <AuthFooter />
     </div>
   );
 }

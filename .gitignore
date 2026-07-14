@@ -62,3 +62,6 @@ skills-lock.json
 
 # Docs (local only)
 docs/
+
+# Sentry Config File
+.env.sentry-build-plugin

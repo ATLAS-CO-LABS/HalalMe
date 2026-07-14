@@ -18,6 +18,7 @@ import {
   Trash2,
   ChevronRight,
   Phone,
+  MessageSquare,
 } from "lucide-react";
 
 const COUNTRY_CODES = [
@@ -511,6 +512,26 @@ export default function ProfilePage() {
             <div className="flex items-center gap-3">
               <Lock className="h-4 w-4 text-[#F7E7CE]/30" />
               <span>Change Password</span>
+            </div>
+            <ChevronRight className="h-4 w-4 text-[#F7E7CE]/25" />
+          </button>
+        </div>
+
+        {/* ── Support section ── */}
+        <div className="mt-5 rounded-xl border border-[#F7E7CE]/10 bg-[#0A1C19] overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#F7E7CE]/8">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-[#F59E0B]">
+              Support
+            </h2>
+          </div>
+          <button
+            type="button"
+            onClick={() => router.push("/messages")}
+            className="w-full flex items-center justify-between px-5 py-4 text-sm text-[#F7E7CE]/70 hover:bg-[#F7E7CE]/5 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <MessageSquare className="h-4 w-4 text-[#F7E7CE]/30" />
+              <span>My Messages</span>
             </div>
             <ChevronRight className="h-4 w-4 text-[#F7E7CE]/25" />
           </button>

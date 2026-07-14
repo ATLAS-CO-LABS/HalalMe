@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient, createServiceClient } from "@/lib/supabase-server";
 import { updateHyperzodMerchant, type HyperzodMerchantOverrides } from "@/services/hyperzodService";
+import { requireAdmin } from "@/lib/adminAuth";
+import { logAdminAction } from "@/lib/adminAudit";
 
 // Fields shared with Hyperzod (a change here must sync)
 const SHARED_FIELDS = [
@@ -18,19 +19,9 @@ export async function PATCH(
   const { id } = await params;
 
   // ── Auth gate ──────────────────────────────────────────────────────────────
-  const serverClient = await createServerClient();
-  const { data: { user } } = await serverClient.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const serviceClient = createServiceClient();
-  const { data: profile } = await serviceClient
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-  if (profile?.role !== "admin") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const gate = await requireAdmin("merchants", "manage");
+  if (!gate.ok) return NextResponse.json({ error: gate.error }, { status: gate.status });
+  const { serviceClient } = gate;
 
   const body = await req.json() as Record<string, unknown>;
 
@@ -99,6 +90,12 @@ export async function PATCH(
     console.error("[merchants/info] update error", updateError);
     return NextResponse.json({ error: "Failed to save changes" }, { status: 500 });
   }
+
+  logAdminAction(gate, {
+    action: "merchant.info_edit", module: "merchants", targetType: "merchant", targetId: id,
+    summary: `Edited merchant details: ${Object.keys(updates).filter((k) => k !== "hyperzod_sync_failed").join(", ")}`,
+    metadata: { fields: Object.keys(updates), hyperzod_synced: !hyperzodWarning },
+  });
 
   return NextResponse.json({ merchant: updated, warning: hyperzodWarning });
 }

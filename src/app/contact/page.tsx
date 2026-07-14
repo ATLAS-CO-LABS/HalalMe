@@ -85,12 +85,23 @@ function ContactFormSection() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
+    setSubmitStatus("idle");
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+      if (!res.ok) throw new Error("Request failed");
       setSubmitStatus("success");
       setFormData({ fullName: "", email: "", subject: "", message: "" });
       setTimeout(() => setSubmitStatus("idle"), 5000);
-    }, 1500);
+    } catch {
+      setSubmitStatus("error");
+      setTimeout(() => setSubmitStatus("idle"), 5000);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (
@@ -251,6 +262,18 @@ function ContactFormSection() {
               >
                 <p className="text-[#F7E7CE]/70 text-sm text-center font-semibold uppercase tracking-tight">
                   Message sent - we&apos;ll get back to you soon.
+                </p>
+              </motion.div>
+            )}
+
+            {submitStatus === "error" && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-[#102C26] border border-[#F03E9E]/30 p-4"
+              >
+                <p className="text-[#F03E9E] text-sm text-center font-semibold uppercase tracking-tight">
+                  Something went wrong - please try again.
                 </p>
               </motion.div>
             )}

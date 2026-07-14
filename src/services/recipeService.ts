@@ -1,4 +1,5 @@
 import { supabase, supabasePublic, supabaseUrl, supabaseAnonKey } from "./supabase";
+import { uploadWithProgress } from "@/lib/uploadWithProgress";
 import type {
   Recipe,
   RecipeReview,
@@ -49,6 +50,8 @@ export const recipeService = {
       .select("*, profiles!user_id(username, avatar_url, is_verified)", { count: "exact" })
       .eq("is_published", true)
       .range(from, to)
+      // Featured recipes float to the top, then newest first.
+      .order("is_featured", { ascending: false })
       .order("created_at", { ascending: false });
 
     if (rest.cuisine) query = query.eq("cuisine", rest.cuisine);
@@ -72,7 +75,12 @@ export const recipeService = {
   },
 
   async getRecipeById(id: string): Promise<Recipe> {
-    const { data, error } = await supabasePublic
+    // Authenticated client (not supabasePublic) — RLS allows anyone to read
+    // published recipes, plus the owner to read their own unpublished/draft
+    // recipes (e.g. right after AI generates one). supabasePublic has no
+    // session, so auth.uid() is always null and the owner-read rule never
+    // applies, breaking "view your own draft recipe".
+    const { data, error } = await supabase
       .from("recipes")
       .select("*, profiles!user_id(username, avatar_url, is_verified)")
       .eq("id", id)
@@ -121,18 +129,21 @@ export const recipeService = {
     if (error) throw new Error(error.message);
   },
 
-  async uploadRecipeImage(recipeId: string, file: File): Promise<string> {
+  async uploadRecipeImage(
+    recipeId: string,
+    file: File,
+    onProgress?: (percent: number) => void
+  ): Promise<string> {
     const form = new FormData();
     form.append("file", file);
     form.append("folder", "halalme/recipes");
     form.append("public_id", `${recipeId}/cover`);
 
-    const res = await fetch("/api/upload", { method: "POST", body: form });
-    if (!res.ok) {
-      const { error } = await res.json();
-      throw new Error(error ?? "Upload failed");
-    }
-    const { url, public_id } = await res.json() as { url: string; public_id: string };
+    const { url, public_id } = await uploadWithProgress<{ url: string; public_id: string }>(
+      "/api/upload",
+      form,
+      onProgress
+    );
 
     await supabase
       .from("recipes")
@@ -289,7 +300,7 @@ export const recipeService = {
 
       if (!response.ok) {
         clearTimeout(timeoutId);
-        let payload: { error?: string } = {};
+        let payload: { error?: string; message?: string } = {};
         try { payload = await response.json(); } catch {}
 
         // Retry once for transient server errors
@@ -304,7 +315,9 @@ export const recipeService = {
           : response.status === 429 ? "rate_limit"
           : response.status === 400 ? "invalid_request"
           : "upstream";
-        throw new AIRequestError(String(payload.error ?? `Request failed: ${response.status}`), code);
+        // Prefer `message` (server's dynamic, human text — e.g. the actual per-user
+        // AI rate limit) over `error` (a short machine-facing label).
+        throw new AIRequestError(String(payload.message ?? payload.error ?? `Request failed: ${response.status}`), code);
       }
 
       try {

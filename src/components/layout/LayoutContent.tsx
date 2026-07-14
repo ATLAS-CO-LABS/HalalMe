@@ -4,16 +4,20 @@ import { usePathname } from "next/navigation";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import ScrollToTop from "@/components/common/ScrollToTop";
+import RouteProgressBar from "@/components/layout/RouteProgressBar";
 import { AuthGateProvider } from "@/context/AuthGateContext";
 import { AppResumeProvider } from "@/context/AppResumeContext";
+import { RewardsRealtimeProvider } from "@/context/RewardsRealtimeContext";
 
 const hideFooterPaths = [
   "/kitchen",
   "/login",
   "/signup",
   "/forgot-password",
+  "/complete-profile",
   "/dashboard",
   "/profile",
+  "/messages",
   "/hub",
   "/select-role",
   "/help",
@@ -34,6 +38,7 @@ const hideHeaderPaths = [
   "/forgot-password",
   "/dashboard",
   "/profile",
+  "/messages",
   "/select-role",
   "/kitchen/ai-assistant",
   "/partner",
@@ -51,12 +56,15 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
     // AuthGateProvider wraps the entire app so any page can call requireAuth().
     // It also renders the single global <AuthModal> - no per-page modal needed.
     <AppResumeProvider>
-      <AuthGateProvider>
-        <ScrollToTop />
-        {!shouldHideHeader && <Header />}
-        <main>{children}</main>
-        {!shouldHideFooter && <Footer />}
-      </AuthGateProvider>
+      <RewardsRealtimeProvider>
+        <AuthGateProvider>
+          <RouteProgressBar />
+          <ScrollToTop />
+          {!shouldHideHeader && <Header />}
+          <main>{children}</main>
+          {!shouldHideFooter && <Footer />}
+        </AuthGateProvider>
+      </RewardsRealtimeProvider>
     </AppResumeProvider>
   );
 }

@@ -1,22 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient, createServiceClient } from "@/lib/supabase-server";
+import { requireAdmin } from "@/lib/adminAuth";
+import { logAdminAction } from "@/lib/adminAudit";
 import { createHyperzodMerchant } from "@/services/hyperzodService";
 
 export async function POST(req: NextRequest) {
   // ── Auth gate ──────────────────────────────────────────────────────────────
-  const serverClient = await createServerClient();
-  const { data: { user } } = await serverClient.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const serviceClient = createServiceClient();
-  const { data: profile } = await serviceClient
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-  if (profile?.role !== "admin") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const gate = await requireAdmin("merchants", "manage");
+  if (!gate.ok) return NextResponse.json({ error: gate.error }, { status: gate.status });
+  const { serviceClient } = gate;
 
   const body = await req.json() as Record<string, unknown>;
   const {
@@ -84,6 +75,12 @@ export async function POST(req: NextRequest) {
     console.error("[admin/merchants/create] db insert error", dbError);
     return NextResponse.json({ error: "db_error" }, { status: 500 });
   }
+
+  logAdminAction(gate, {
+    action: "merchant.create", module: "merchants", targetType: "merchant", targetId: merchant.id,
+    summary: `Added merchant ${name}`,
+    metadata: { name, email, city, hyperzod_sync_failed: !result },
+  });
 
   // No welcome email — an admin-added lead didn't apply themselves.
   return NextResponse.json({

@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient, createServerClient } from "@/lib/supabase-server";
 import { createHyperzodMerchant } from "@/services/hyperzodService";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { createRateLimiter, getClientIp, rateLimitResponse } from "@/lib/rateLimit";
+
+const limiter = createRateLimiter("provision-merchant", 3, "10 m");
 
 /**
  * Resolves the auth-user id to attach this merchant to.
@@ -33,6 +36,9 @@ async function resolveAuthUserId(
 
 export async function POST(req: NextRequest) {
   try {
+    const { success, reset } = await limiter.limit(getClientIp(req));
+    if (!success) return rateLimitResponse(reset);
+
     const body = await req.json() as Record<string, unknown>;
     const {
       name, owner_name, email, phone, address, city, state,

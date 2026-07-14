@@ -55,10 +55,12 @@ export default function AdminCommissionCard({
   merchantId,
   documents,
   onDecision,
+  canManage = false,
 }: {
   merchantId: string;
   documents: DocLite[];
   onDecision: () => void;
+  canManage?: boolean;
 }) {
   const [row, setRow] = useState<AdminCommission | null>(null);
   const [loading, setLoading] = useState(true);
@@ -81,6 +83,7 @@ export default function AdminCommissionCard({
   useEffect(() => { load(); }, [load]);
 
   async function decide(action: "approve" | "reject" | "counter", commission?: number) {
+    if (!canManage) return;
     setBusy(action);
     setError(null);
     try {
@@ -186,7 +189,9 @@ export default function AdminCommissionCard({
 
             {/* Decision controls */}
             {row.review_status === "pending" ? (
-              showCounter ? (
+              !canManage ? (
+                <p className="text-xs text-gray-500 italic">Pending review — you have view-only access.</p>
+              ) : showCounter ? (
                 <div className="rounded-none bg-gray-50 border border-[#102C26]/12 p-3">
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Counter-offer rate</p>
                   <div className="flex items-center gap-2">

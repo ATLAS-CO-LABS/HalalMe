@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { display } from "../../_fonts";
+import { useToast, ToastView, Modal } from "../../_ui";
+import { useAdmin } from "../../AdminProvider";
+import RecordNav from "@/components/admin/RecordNav";
 import {
   ArrowLeft,
   ArrowRight,
@@ -39,6 +42,7 @@ import {
   Eye,
 } from "lucide-react";
 import { VERIFICATION_DOC_TYPES, REQUIRED_DOC_KEYS } from "@/lib/merchantStages";
+import ThemedSelect from "@/components/admin/ThemedSelect";
 import AdminCommissionCard from "./AdminCommissionCard";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -63,6 +67,7 @@ interface Merchant {
   website: string | null;
   status: string;
   assigned_rep: string | null;
+  assigned_rep_id: string | null;
   commission_percentage: number | null;
   notes: string | null;
   readiness_checklist: ReadinessChecklist | null;
@@ -279,13 +284,17 @@ function Skeleton() {
 export default function MerchantDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const { toast, flash } = useToast();
+
+  const { can, team } = useAdmin();
+  const canManage = can("merchants", "manage");
 
   const [merchant, setMerchant] = useState<Merchant | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
   // Details form (rep + commission)
-  const [assignedRep, setAssignedRep] = useState("");
+  const [assignedRepId, setAssignedRepId] = useState("");
   const [commission, setCommission] = useState("");
   // Checklist (optimistic, persisted immediately on toggle)
   const [checklist, setChecklist] = useState<ReadinessChecklist>(DEFAULT_CHECKLIST);
@@ -342,7 +351,7 @@ export default function MerchantDetailPage() {
       if (!res.ok) throw new Error();
       const { merchant: m } = await res.json() as { merchant: Merchant };
       setMerchant(m);
-      setAssignedRep(m.assigned_rep ?? "");
+      setAssignedRepId(m.assigned_rep_id ?? "");
       setCommission(m.commission_percentage?.toString() ?? "");
       setChecklist(m.readiness_checklist ?? DEFAULT_CHECKLIST);
     } catch {
@@ -367,7 +376,10 @@ export default function MerchantDetailPage() {
 
   useEffect(() => { loadDocuments(); }, [loadDocuments]);
 
+  // (Manage-access + team roster now come from the shared admin context — useAdmin().)
+
   async function reviewDocument(docId: string, action: "approve" | "reject", reason?: string) {
+    if (!canManage) return;
     setReviewingId(docId);
     try {
       const res = await fetch(`/api/admin/merchants/${id}/documents/${docId}`, {
@@ -377,14 +389,14 @@ export default function MerchantDetailPage() {
       });
       if (!res.ok) {
         const json = await res.json().catch(() => ({})) as { error?: string };
-        alert(json.error ?? "Couldn't update the document. Please try again.");
+        flash("err", json.error ?? "Couldn't update the document. Please try again.");
         return;
       }
       setRejectingId(null);
       setRejectReason("");
       await loadDocuments();
     } catch {
-      alert("Something went wrong. Please try again.");
+      flash("err", "Something went wrong. Please try again.");
     } finally {
       setReviewingId(null);
     }
@@ -392,6 +404,7 @@ export default function MerchantDetailPage() {
 
   // Save the Details card (rep + commission only)
   async function handleSaveDetails() {
+    if (!canManage) return;
     setSaving(true);
     setSaveResult("idle");
     try {
@@ -399,7 +412,8 @@ export default function MerchantDetailPage() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          assigned_rep: assignedRep || null,
+          assigned_rep_id: assignedRepId || null,
+          assigned_rep: team.find((t) => t.id === assignedRepId)?.full_name ?? null,
           commission_percentage: commission !== "" ? parseFloat(commission) : null,
         }),
       });
@@ -425,6 +439,7 @@ export default function MerchantDetailPage() {
   }
 
   async function handleDelete() {
+    if (!canManage) return;
     setDeleting(true);
     setDeleteError(null);
     try {
@@ -462,6 +477,7 @@ export default function MerchantDetailPage() {
   }
 
   async function handleSaveEdit() {
+    if (!canManage) return;
     if (!editForm.name.trim() || !editForm.email.trim() || !editForm.phone.trim()) {
       setEditError("Name, email and phone are required.");
       return;
@@ -482,7 +498,7 @@ export default function MerchantDetailPage() {
       if (json.merchant) setMerchant(json.merchant);
       if (json.warning) {
         // Saved locally but Hyperzod sync failed — surface, keep modal closable
-        alert(json.warning);
+        flash("err", json.warning);
       }
       setShowEdit(false);
     } catch {
@@ -494,6 +510,7 @@ export default function MerchantDetailPage() {
 
   // Move the merchant to a new pipeline stage (immediate persist)
   async function changeStatus(newStatus: string) {
+    if (!canManage) return;
     setTransitioning(true);
     try {
       const res = await fetch(`/api/admin/merchants/${id}`, {
@@ -506,7 +523,7 @@ export default function MerchantDetailPage() {
       setMerchant(m);
       setConfirmingReject(false);
     } catch {
-      alert("Couldn't update the stage. Please try again.");
+      flash("err", "Couldn't update the stage. Please try again.");
     } finally {
       setTransitioning(false);
     }
@@ -514,18 +531,19 @@ export default function MerchantDetailPage() {
 
   // Deactivate a live merchant (Hyperzod 1 → 0, status back to "agreed")
   async function handleDeactivate() {
+    if (!canManage) return;
     setDeactivating(true);
     try {
       const res = await fetch(`/api/admin/merchants/${id}/deactivate`, { method: "POST" });
       const json = await res.json() as { merchant?: Merchant; message?: string };
       if (!res.ok) {
-        alert(json.message ?? "Couldn't deactivate. Please try again.");
+        flash("err", json.message ?? "Couldn't deactivate. Please try again.");
         return;
       }
       if (json.merchant) setMerchant(json.merchant);
       setConfirmingDeactivate(false);
     } catch {
-      alert("Something went wrong. Please try again.");
+      flash("err", "Something went wrong. Please try again.");
     } finally {
       setDeactivating(false);
     }
@@ -533,6 +551,7 @@ export default function MerchantDetailPage() {
 
   // Toggle a checklist item (optimistic + immediate persist)
   async function toggleCheck(key: keyof ReadinessChecklist) {
+    if (!canManage) return;
     const next = { ...checklist, [key]: !checklist[key] };
     setChecklist(next); // optimistic
     try {
@@ -546,11 +565,12 @@ export default function MerchantDetailPage() {
       setMerchant(m);
     } catch {
       setChecklist(checklist); // revert on failure
-      alert("Couldn't save that change. Please try again.");
+      flash("err", "Couldn't save that change. Please try again.");
     }
   }
 
   async function handleAddNote() {
+    if (!canManage) return;
     if (!note.trim()) return;
     setAddingNote(true);
     try {
@@ -564,13 +584,14 @@ export default function MerchantDetailPage() {
       setMerchant(m);
       setNote("");
     } catch {
-      alert("Failed to save note — please try again.");
+      flash("err", "Failed to save note — please try again.");
     } finally {
       setAddingNote(false);
     }
   }
 
   async function handlePublish() {
+    if (!canManage) return;
     setPublishing(true);
     setPublishError(null);
     try {
@@ -643,6 +664,7 @@ export default function MerchantDetailPage() {
 
   return (
     <div className="bg-[#F3E9D6] min-h-full">
+      <ToastView toast={toast} />
 
       {/* ── Header ── */}
       <div className="bg-white border-b border-[#102C26]/12 px-4 sm:px-8 py-3 sm:py-4 sticky top-14 md:top-0 z-20">
@@ -662,7 +684,9 @@ export default function MerchantDetailPage() {
             </div>
           </div>
 
-          {/* Actions */}
+          {/* Record nav + Actions */}
+          <div className="flex items-center gap-2 shrink-0">
+          <RecordNav navKey="merchants" currentId={merchant.id} basePath="/admin/merchants" />
           <div className="relative shrink-0">
             <button
               onClick={() => setShowActions((v) => !v)}
@@ -693,29 +717,42 @@ export default function MerchantDetailPage() {
                       {copied === "id" ? "Copied!" : "Copy Hyperzod ID"}
                     </button>
                   )}
-                  {merchant.status !== "rejected" && merchant.status !== "live" && (
-                    <button
-                      onClick={() => { setShowActions(false); changeStatus("rejected"); }}
-                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      <Ban size={14} className="text-gray-400" />
-                      Reject merchant
-                    </button>
+                  {canManage && (
+                    <>
+                      {merchant.status !== "rejected" && merchant.status !== "live" && (
+                        <button
+                          onClick={() => { setShowActions(false); changeStatus("rejected"); }}
+                          className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        >
+                          <Ban size={14} className="text-gray-400" />
+                          Reject merchant
+                        </button>
+                      )}
+                      <div className="my-1 border-t border-[#102C26]/12" />
+                      <button
+                        onClick={() => { setShowActions(false); setDeleteError(null); setDeleteConfirmText(""); setShowDelete(true); }}
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <Trash2 size={14} />
+                        Delete merchant
+                      </button>
+                    </>
                   )}
-                  <div className="my-1 border-t border-[#102C26]/12" />
-                  <button
-                    onClick={() => { setShowActions(false); setDeleteError(null); setDeleteConfirmText(""); setShowDelete(true); }}
-                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                  >
-                    <Trash2 size={14} />
-                    Delete merchant
-                  </button>
                 </div>
               </>
             )}
           </div>
+          </div>
         </div>
       </div>
+
+      {/* ── Read-only notice for view-only admins ── */}
+      {!canManage && (
+        <div className="bg-amber-50 border-b border-amber-200 px-4 sm:px-8 py-2.5 flex items-center gap-2">
+          <Eye size={14} className="text-amber-600 shrink-0" />
+          <p className="text-xs sm:text-sm text-amber-800 font-medium">View only — you don&apos;t have permission to manage merchants.</p>
+        </div>
+      )}
 
       {/* ── Quick stats strip ── */}
       <div className="bg-white border-b border-[#102C26]/12 px-4 sm:px-8 py-3 sm:py-4">
@@ -817,12 +854,14 @@ export default function MerchantDetailPage() {
             title="Merchant Information"
             subtitle="Contact and location details"
             action={
-              <button
-                onClick={openEdit}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-none hover:bg-gray-50 transition-colors"
-              >
-                <Pencil size={13} /> Edit
-              </button>
+              canManage ? (
+                <button
+                  onClick={openEdit}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-none hover:bg-gray-50 transition-colors"
+                >
+                  <Pencil size={13} /> Edit
+                </button>
+              ) : undefined
             }
           >
             <InfoItem icon={Building2} label="Restaurant name" value={merchant.name} />
@@ -956,7 +995,7 @@ export default function MerchantDetailPage() {
                             >
                               <Eye size={13} /> View
                             </a>
-                            {doc.status !== "approved" && (
+                            {canManage && doc.status !== "approved" && (
                               <button
                                 onClick={() => reviewDocument(doc.id, "approve")}
                                 disabled={reviewingId === doc.id}
@@ -966,7 +1005,7 @@ export default function MerchantDetailPage() {
                                 Approve
                               </button>
                             )}
-                            {doc.status !== "rejected" && (
+                            {canManage && doc.status !== "rejected" && (
                               <button
                                 onClick={() => { setRejectingId(doc.id); setRejectReason(""); }}
                                 className="inline-flex items-center gap-1.5 text-xs font-medium text-red-600 border border-red-200 rounded-none px-3 py-1.5 hover:bg-red-50"
@@ -989,14 +1028,16 @@ export default function MerchantDetailPage() {
             title="Notes"
             subtitle="Internal notes and call logs"
             action={
-              <button
-                onClick={handleAddNote}
-                disabled={!note.trim() || addingNote}
-                className="px-4 py-2 bg-[#102C26] text-[#F7E7CE] rounded-none text-sm font-semibold
-                           hover:bg-[#102C26]/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-              >
-                {addingNote ? "Adding…" : "Add Note"}
-              </button>
+              canManage ? (
+                <button
+                  onClick={handleAddNote}
+                  disabled={!note.trim() || addingNote}
+                  className="px-4 py-2 bg-[#102C26] text-[#F7E7CE] rounded-none text-sm font-semibold
+                             hover:bg-[#102C26]/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                >
+                  {addingNote ? "Adding…" : "Add Note"}
+                </button>
+              ) : undefined
             }
           >
             {merchant.notes ? (
@@ -1028,14 +1069,18 @@ export default function MerchantDetailPage() {
               </div>
             )}
 
-            <textarea
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="e.g. Called owner, agreed 15% commission — sending contract Friday."
-              rows={3}
-              className={`${inputCls} resize-none leading-relaxed`}
-            />
-            <p className="text-xs text-gray-400 mt-2">Timestamp is added automatically.</p>
+            {canManage && (
+              <>
+                <textarea
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder="e.g. Called owner, agreed 15% commission — sending contract Friday."
+                  rows={3}
+                  className={`${inputCls} resize-none leading-relaxed`}
+                />
+                <p className="text-xs text-gray-400 mt-2">Timestamp is added automatically.</p>
+              </>
+            )}
           </Card>
         </div>
 
@@ -1047,16 +1092,14 @@ export default function MerchantDetailPage() {
             <div className="space-y-4">
               <div>
                 <FieldLabel>Assigned Rep</FieldLabel>
-                <div className="relative">
-                  <UserIcon size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                  <input
-                    type="text"
-                    value={assignedRep}
-                    onChange={(e) => setAssignedRep(e.target.value)}
-                    placeholder="Select or search rep"
-                    className={`${inputCls} pl-9`}
-                  />
-                </div>
+                <ThemedSelect
+                  value={assignedRepId}
+                  onChange={setAssignedRepId}
+                  disabled={!canManage}
+                  leftIcon={<UserIcon size={15} />}
+                  placeholder="Unassigned"
+                  options={[{ value: "", label: "Unassigned" }, ...team.map((t) => ({ value: t.id, label: t.full_name }))]}
+                />
               </div>
 
               <div>
@@ -1069,8 +1112,9 @@ export default function MerchantDetailPage() {
                     step="0.5"
                     value={commission}
                     onChange={(e) => setCommission(e.target.value)}
+                    disabled={!canManage}
                     placeholder="0"
-                    className="flex-1 text-sm text-gray-900 bg-transparent px-3.5 py-2.5 focus:outline-none placeholder:text-gray-400"
+                    className="flex-1 text-sm text-gray-900 bg-transparent px-3.5 py-2.5 focus:outline-none placeholder:text-gray-400 disabled:text-gray-500"
                   />
                   <div className="flex items-center px-3.5 bg-gray-50 border-l border-gray-200">
                     <span className="text-sm font-semibold text-gray-500">%</span>
@@ -1078,24 +1122,26 @@ export default function MerchantDetailPage() {
                 </div>
               </div>
 
-              <button
-                onClick={handleSaveDetails}
-                disabled={saving}
-                className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-none text-sm font-semibold transition-all ${
-                  saveResult === "success"
-                    ? "bg-green-600 text-white"
+              {canManage && (
+                <button
+                  onClick={handleSaveDetails}
+                  disabled={saving}
+                  className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-none text-sm font-semibold transition-all ${
+                    saveResult === "success"
+                      ? "bg-green-600 text-white"
+                      : saveResult === "error"
+                      ? "bg-red-600 text-white"
+                      : "bg-[#102C26] text-[#F7E7CE] hover:bg-[#102C26]/90 disabled:opacity-50"
+                  }`}
+                >
+                  {saveResult === "success"
+                    ? <><Check size={14} /> Saved</>
                     : saveResult === "error"
-                    ? "bg-red-600 text-white"
-                    : "bg-[#102C26] text-[#F7E7CE] hover:bg-[#102C26]/90 disabled:opacity-50"
-                }`}
-              >
-                {saveResult === "success"
-                  ? <><Check size={14} /> Saved</>
-                  : saveResult === "error"
-                  ? <><AlertTriangle size={14} /> Failed — retry</>
-                  : <><Save size={14} /> {saving ? "Saving…" : "Save Details"}</>
-                }
-              </button>
+                    ? <><AlertTriangle size={14} /> Failed — retry</>
+                    : <><Save size={14} /> {saving ? "Saving…" : "Save Details"}</>
+                  }
+                </button>
+              )}
             </div>
           </Card>
 
@@ -1104,6 +1150,7 @@ export default function MerchantDetailPage() {
             merchantId={merchant.id}
             documents={documents}
             onDecision={load}
+            canManage={canManage}
           />
 
           {/* Merchant Journey */}
@@ -1118,13 +1165,15 @@ export default function MerchantDetailPage() {
                 </div>
                 <p className="text-sm font-semibold text-gray-800">Merchant rejected</p>
                 <p className="text-xs text-gray-400 mt-1 mb-4">Onboarding was stopped for this merchant.</p>
-                <button
-                  onClick={() => changeStatus("pending")}
-                  disabled={transitioning}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-none text-sm font-semibold text-[#102C26] border border-[#102C26]/20 hover:bg-[#102C26]/5 transition-colors disabled:opacity-50"
-                >
-                  <RotateCcw size={14} /> Reopen onboarding
-                </button>
+                {canManage && (
+                  <button
+                    onClick={() => changeStatus("pending")}
+                    disabled={transitioning}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-none text-sm font-semibold text-[#102C26] border border-[#102C26]/20 hover:bg-[#102C26]/5 transition-colors disabled:opacity-50"
+                  >
+                    <RotateCcw size={14} /> Reopen onboarding
+                  </button>
+                )}
               </div>
             ) : (
               <>
@@ -1176,22 +1225,24 @@ export default function MerchantDetailPage() {
                                 </div>
                               )}
                               {next ? (
-                                <button
-                                  onClick={() => changeStatus(next.key)}
-                                  disabled={transitioning}
-                                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-none text-sm font-semibold bg-[#102C26] text-[#F7E7CE] hover:bg-[#102C26]/90 transition-colors disabled:opacity-50"
-                                >
-                                  {transitioning
-                                    ? <><Loader2 size={13} className="animate-spin" /> Updating…</>
-                                    : <>{next.action} <ArrowRight size={13} /></>
-                                  }
-                                </button>
+                                canManage && (
+                                  <button
+                                    onClick={() => changeStatus(next.key)}
+                                    disabled={transitioning}
+                                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-none text-sm font-semibold bg-[#102C26] text-[#F7E7CE] hover:bg-[#102C26]/90 transition-colors disabled:opacity-50"
+                                  >
+                                    {transitioning
+                                      ? <><Loader2 size={13} className="animate-spin" /> Updating…</>
+                                      : <>{next.action} <ArrowRight size={13} /></>
+                                    }
+                                  </button>
+                                )
                               ) : (
                                 <p className="text-xs text-green-700 bg-green-50 rounded-none px-3 py-2 font-medium">
                                   ✓ Ready — complete the checklist below to go live.
                                 </p>
                               )}
-                              {i > 0 && (
+                              {i > 0 && canManage && (
                                 <button
                                   onClick={() => changeStatus(STAGES[i - 1].key)}
                                   disabled={transitioning}
@@ -1232,6 +1283,7 @@ export default function MerchantDetailPage() {
                           </div>
 
                           {/* Deactivate */}
+                          {canManage && (
                           <div className="mt-3">
                             {confirmingDeactivate ? (
                               <div className="rounded-none bg-amber-50 border border-amber-200 px-3 py-3">
@@ -1265,6 +1317,7 @@ export default function MerchantDetailPage() {
                               </button>
                             )}
                           </div>
+                          )}
                         </>
                       ) : (
                         <div className="mt-2.5">
@@ -1282,7 +1335,8 @@ export default function MerchantDetailPage() {
                                   type="button"
                                   title={hint}
                                   onClick={() => toggleCheck(key)}
-                                  className={`w-full flex items-center gap-2.5 p-2.5 rounded-none text-left transition-colors ${
+                                  disabled={!canManage}
+                                  className={`w-full flex items-center gap-2.5 p-2.5 rounded-none text-left transition-colors disabled:cursor-default ${
                                     checked ? "bg-green-50 border border-green-100" : "bg-gray-50 border border-transparent hover:border-gray-200"
                                   }`}
                                 >
@@ -1307,20 +1361,22 @@ export default function MerchantDetailPage() {
                           </div>
 
                           {/* Publish */}
-                          <button
-                            onClick={() => { setPublishError(null); setShowPublishConfirm(true); }}
-                            disabled={!checklistComplete}
-                            className={`mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-none text-sm font-semibold transition-all ${
-                              checklistComplete
-                                ? "bg-green-600 text-white hover:bg-green-700"
-                                : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                            }`}
-                          >
-                            {checklistComplete
-                              ? <><Rocket size={15} /> Approve &amp; Publish</>
-                              : <><Lock size={13} /> Approve &amp; Publish ({checklistDone}/4)</>
-                            }
-                          </button>
+                          {canManage && (
+                            <button
+                              onClick={() => { setPublishError(null); setShowPublishConfirm(true); }}
+                              disabled={!checklistComplete}
+                              className={`mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-none text-sm font-semibold transition-all ${
+                                checklistComplete
+                                  ? "bg-green-600 text-white hover:bg-green-700"
+                                  : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                              }`}
+                            >
+                              {checklistComplete
+                                ? <><Rocket size={15} /> Approve &amp; Publish</>
+                                : <><Lock size={13} /> Approve &amp; Publish ({checklistDone}/4)</>
+                              }
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>
@@ -1328,7 +1384,7 @@ export default function MerchantDetailPage() {
                 </div>
 
                 {/* Reject action */}
-                {!isLive && (
+                {!isLive && canManage && (
                   <div className="mt-2 pt-4 border-t border-[#102C26]/8">
                     {confirmingReject ? (
                       <div className="flex items-center justify-between gap-2">
@@ -1370,14 +1426,7 @@ export default function MerchantDetailPage() {
 
       {/* ── Delete confirmation modal ── */}
       {showDelete && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
-          onClick={() => !deleting && setShowDelete(false)}
-        >
-          <div
-            className="bg-white rounded-none shadow-xl max-w-md w-full overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <Modal open onClose={() => setShowDelete(false)} busy={deleting} maxWidth="max-w-md" className="overflow-hidden">
             <div className="bg-red-600 px-6 py-5 flex items-center gap-3">
               <div className="w-10 h-10 rounded-none bg-white/15 flex items-center justify-center shrink-0">
                 <Trash2 size={18} className="text-white" />
@@ -1435,20 +1484,12 @@ export default function MerchantDetailPage() {
                 }
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {/* ── Edit merchant info modal ── */}
       {showEdit && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
-          onClick={() => !savingEdit && setShowEdit(false)}
-        >
-          <div
-            className="bg-white rounded-none shadow-xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <Modal open onClose={() => setShowEdit(false)} busy={savingEdit} maxWidth="max-w-lg" className="max-h-[90vh] flex flex-col overflow-hidden">
             {/* Header */}
             <div className="bg-[#102C26] px-6 py-5 flex items-center gap-3 shrink-0">
               <div className="w-10 h-10 rounded-none bg-white/15 flex items-center justify-center shrink-0">
@@ -1553,20 +1594,12 @@ export default function MerchantDetailPage() {
                 }
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {/* ── Publish confirmation modal ── */}
       {showPublishConfirm && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
-          onClick={() => !publishing && setShowPublishConfirm(false)}
-        >
-          <div
-            className="bg-white rounded-none shadow-xl max-w-md w-full overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <Modal open onClose={() => setShowPublishConfirm(false)} busy={publishing} maxWidth="max-w-md" className="overflow-hidden">
             {/* Header */}
             <div className="bg-green-600 px-6 py-5 flex items-center gap-3">
               <div className="w-10 h-10 rounded-none bg-white/15 flex items-center justify-center shrink-0">
@@ -1628,8 +1661,7 @@ export default function MerchantDetailPage() {
                 )}
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
 
     </div>

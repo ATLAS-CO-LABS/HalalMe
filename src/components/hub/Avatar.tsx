@@ -3,12 +3,15 @@
 import Image from "next/image";
 import { User } from "lucide-react";
 import { cldUrl, CLD_AVATAR } from "@/lib/cldUrl";
+import { getFlairTheme } from "@/lib/flairTheme";
 
 interface AvatarProps {
   src?: string;
   alt: string;
   size?: "sm" | "md" | "lg" | "xl";
   className?: string;
+  /** Redeemed profile flair slug (e.g. "gold-frame") — renders a ring around the avatar. */
+  flair?: string | null;
 }
 
 const sizeClasses = {
@@ -25,15 +28,28 @@ const iconSizes = {
   xl: "w-8 h-8",
 };
 
+// Ring thickness per size — kept proportional so small avatars (sm) don't
+// get swallowed by the ring.
+const ringPadding = {
+  sm: "p-[2px]",
+  md: "p-[2px]",
+  lg: "p-[2.5px]",
+  xl: "p-[3px]",
+};
+
 export default function Avatar({
   src,
   alt,
   size = "md",
   className = "",
+  flair,
 }: AvatarProps) {
-  return (
+  const theme = getFlairTheme(flair);
+  const ring = theme?.ring ?? null;
+
+  const inner = (
     <div
-      className={`relative ${sizeClasses[size]} rounded-full overflow-hidden flex items-center justify-center shrink-0 ${className}`}
+      className={`relative ${ring ? "w-full h-full" : sizeClasses[size]} rounded-full overflow-hidden flex items-center justify-center shrink-0`}
       style={{ background: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)" }}
     >
       {src ? (
@@ -41,6 +57,20 @@ export default function Avatar({
       ) : (
         <User className={`${iconSizes[size]} text-[#102C26]`} />
       )}
+    </div>
+  );
+
+  if (!ring) {
+    return <div className={`${className}`}>{inner}</div>;
+  }
+
+  return (
+    <div
+      className={`${sizeClasses[size]} ${ringPadding[size]} rounded-full shrink-0 ${className}`}
+      style={{ background: ring }}
+      title="Has an equipped profile flair"
+    >
+      {inner}
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { createServiceClient } from "@/lib/supabase-server";
 import { getFollowUp, THRESHOLDS } from "@/lib/followUps";
 import { sendMerchantChaseEmail } from "@/services/emailService";
 import { notifyTeam, type FollowUpSummaryItem } from "@/services/followUpService";
+import * as Sentry from "@sentry/nextjs";
 
 // Don't re-chase the same merchant more often than this
 const CHASE_COOLDOWN_DAYS = 3;
@@ -72,6 +73,7 @@ export async function GET(req: NextRequest) {
         chaseSent++;
       } catch (err) {
         console.error(`[cron/follow-ups] chase email failed for ${m.email}`, err);
+        Sentry.captureException(err);
       }
     }
   }

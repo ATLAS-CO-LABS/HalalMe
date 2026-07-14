@@ -5,6 +5,10 @@ import { useRouter } from "next/navigation";
 import { display } from "../_fonts";
 import AddMerchantModal from "@/components/admin/AddMerchantModal";
 import { getFollowUp } from "@/lib/followUps";
+import ThemedSelect from "@/components/admin/ThemedSelect";
+import { Pagination, useToast, ToastView, StatCard } from "../_ui";
+import { rememberList } from "@/lib/adminRecordNav";
+import { useAdmin } from "../AdminProvider";
 import {
   Search,
   RefreshCw,
@@ -21,7 +25,6 @@ import {
   Sparkles,
   MapPin,
   Clock,
-  MoreVertical,
   ArrowRight,
   Plus,
 } from "lucide-react";
@@ -36,6 +39,8 @@ interface Merchant {
   post_code: string | null;
   status: string;
   assigned_rep: string | null;
+  assigned_rep_id: string | null;
+  assigned_rep_name: string | null;
   commission_percentage: number | null;
   created_at: string;
   invited_at: string | null;
@@ -44,6 +49,17 @@ interface Merchant {
   hyperzod_merchant_id: string | null;
   hyperzod_sync_failed: boolean;
   commission_review_status: string | null;
+}
+
+interface PipelineStats {
+  total: number;
+  byStatus: Record<string, number>;
+  live: number;
+  newThisWeek: number;
+  topCities: [string, number][];
+  recent: { id: string; name: string; created_at: string }[];
+  attention: { count: number; ids: string[] };
+  reviewPending: { count: number; ids: string[] };
 }
 
 // Small badge for a merchant's commission-review state on the list.
@@ -192,8 +208,8 @@ function TableSkeleton() {
 }
 
 // Mobile card row
-function MerchantCard({ m, onClick, selected, onSelect }: {
-  m: Merchant; onClick: () => void; selected: boolean; onSelect: () => void;
+function MerchantCard({ m, onClick, selected, onSelect, canManage }: {
+  m: Merchant; onClick: () => void; selected: boolean; onSelect: () => void; canManage: boolean;
 }) {
   const days = daysSince(m.created_at);
   const urgent   = m.status === "pending" && days > 2;
@@ -206,9 +222,11 @@ function MerchantCard({ m, onClick, selected, onSelect }: {
       urgent   ? "border-l-2 border-l-amber-400" : ""
     }`}>
       <div className="flex items-start gap-3">
-        <div className="flex items-center justify-center w-6 h-6 shrink-0 mt-1.5" onClick={(e) => { e.stopPropagation(); onSelect(); }}>
-          <input type="checkbox" checked={selected} readOnly className="w-4 h-4 rounded border-gray-300 accent-[#102C26] pointer-events-none" />
-        </div>
+        {canManage && (
+          <div className="flex items-center justify-center w-6 h-6 shrink-0 mt-1.5" onClick={(e) => { e.stopPropagation(); onSelect(); }}>
+            <input type="checkbox" checked={selected} readOnly className="w-4 h-4 rounded border-gray-300 accent-[#102C26] pointer-events-none" />
+          </div>
+        )}
         <Avatar name={m.name} />
         <div className="flex-1 min-w-0 cursor-pointer" onClick={onClick}>
           <div className="flex items-start justify-between gap-3">
@@ -230,7 +248,7 @@ function MerchantCard({ m, onClick, selected, onSelect }: {
               </span>
             )}
             <span className={`text-xs font-semibold ${critical ? "text-red-600" : urgent ? "text-amber-600" : "text-gray-400"}`}>{days}d ago</span>
-            {m.assigned_rep && <span className="text-xs text-gray-500">Rep: {m.assigned_rep}</span>}
+            {(m.assigned_rep_name ?? m.assigned_rep) && <span className="text-xs text-gray-500">Rep: {m.assigned_rep_name ?? m.assigned_rep}</span>}
             {m.hyperzod_sync_failed && <span className="text-xs text-amber-600 font-medium">⚠ Sync failed</span>}
           </div>
         </div>
@@ -239,45 +257,16 @@ function MerchantCard({ m, onClick, selected, onSelect }: {
   );
 }
 
-function StatCard({ label, value, sub, icon: Icon, tone, onClick, active }: {
-  label: string; value: React.ReactNode; sub: string; icon: React.ElementType;
-  tone: "green" | "amber" | "blue" | "purple";
-  onClick?: () => void; active?: boolean;
-}) {
-  const tones = {
-    green:  "bg-green-50 text-green-600",
-    amber:  "bg-[#F59E0B]/10 text-[#F59E0B]",
-    blue:   "bg-[#102C26]/8 text-[#102C26]",
-    purple: "bg-[#F03E9E]/10 text-[#F03E9E]",
-  };
-  const Tag = onClick ? "button" : "div";
-  return (
-    <Tag
-      onClick={onClick}
-      className={`text-left w-full bg-white rounded-none border p-4 sm:p-5 transition-all ${
-        active ? "border-[#F59E0B] ring-2 ring-[#F59E0B]/20" : "border-[#102C26]/12"
-      } ${onClick ? "hover:border-gray-300 cursor-pointer" : ""}`}
-    >
-      <div className="flex items-start justify-between">
-        <div className="min-w-0">
-          <p className="text-xs font-medium text-gray-500">{label}</p>
-          <p className={`${display.className} text-2xl font-bold text-[#102C26] mt-1`}>{value}</p>
-          <p className="text-xs text-gray-400 mt-0.5 truncate">{sub}</p>
-        </div>
-        <div className={`w-10 h-10 rounded-none flex items-center justify-center shrink-0 ${tones[tone]}`}>
-          <Icon size={18} />
-        </div>
-      </div>
-    </Tag>
-  );
-}
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function MerchantPipelinePage() {
   const router = useRouter();
+  const { toast, flash } = useToast();
   const [merchants, setMerchants] = useState<Merchant[]>([]);
-  const [allMerchants, setAllMerchants] = useState<Merchant[]>([]);
+  const [stats, setStats] = useState<PipelineStats | null>(null);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(25);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState("all");
@@ -294,19 +283,41 @@ export default function MerchantPipelinePage() {
   const [showAdd, setShowAdd] = useState(false);
   const [attentionOnly, setAttentionOnly] = useState(false);
   const [reviewOnly, setReviewOnly] = useState(false);
+  const [mineOnly, setMineOnly] = useState(false);
 
-  async function fetchMerchants(status: string, q: string) {
+  // Identity, manage-access and the team roster all come from the shared admin
+  // context (loaded once by the layout), not per-page fetches.
+  const { can, team } = useAdmin();
+  const canManage = can("merchants", "manage");
+
+  // Load the paginated table for the current view. The "needs attention" and
+  // "commission review" views fetch a specific id-set (computed by the stats
+  // endpoint); every other view is server-paginated by status/search.
+  async function fetchMerchants(
+    status: string, q: string, mine: boolean, pageNum: number,
+    attention: boolean, review: boolean, statsData: PipelineStats | null,
+  ) {
     setLoading(true);
     setError(null);
     try {
       const params = new URLSearchParams();
-      if (status !== "all") params.set("status", status);
-      if (q) params.set("search", q);
+      if (mine) params.set("mine", "1");
+      if (attention || review) {
+        const ids = attention ? statsData?.attention.ids : statsData?.reviewPending.ids;
+        params.set("ids", (ids ?? []).join(","));
+      } else {
+        if (status !== "all") params.set("status", status);
+        if (q) params.set("search", q);
+        params.set("page", String(pageNum));
+        params.set("pageSize", String(pageSize));
+      }
       const res = await fetch(`/api/admin/merchants?${params}`);
       if (!res.ok) throw new Error();
-      const json = await res.json() as { merchants: Merchant[] };
+      const json = await res.json() as { merchants: Merchant[]; total: number; pageSize: number };
       setMerchants(json.merchants);
-      if (status === "all" && !q) setAllMerchants(json.merchants);
+      setTotal(json.total);
+      setPageSize(json.pageSize);
+      rememberList("merchants", json.merchants.map((m) => m.id));
     } catch {
       setError("Could not load merchants. Try refreshing.");
     } finally {
@@ -314,45 +325,66 @@ export default function MerchantPipelinePage() {
     }
   }
 
-  function refreshAll() {
-    fetch("/api/admin/merchants")
-      .then((r) => r.json())
-      .then((d: { merchants: Merchant[] }) => setAllMerchants(d.merchants))
-      .catch(() => {});
+  async function fetchStats(mine: boolean) {
+    try {
+      const res = await fetch(`/api/admin/merchants/stats${mine ? "?mine=1" : ""}`);
+      if (!res.ok) return;
+      setStats(await res.json() as PipelineStats);
+    } catch {
+      // Non-fatal — the table still works without the rail aggregates.
+    }
   }
 
-  useEffect(() => {
-    fetchMerchants(statusFilter, search);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter]);
+  // Re-load both the table and the aggregates (after a mutation / manual refresh).
+  function reload() {
+    fetchMerchants(statusFilter, search, mineOnly, page, attentionOnly, reviewOnly, stats);
+    fetchStats(mineOnly);
+  }
 
-  useEffect(() => { refreshAll(); }, []);
-  useEffect(() => { setSelectedIds(new Set()); }, [statusFilter, search]);
+  // In the id-set views the table refetches when the computed ids change; in the
+  // normal view this key stays empty so stat refreshes don't retrigger the table.
+  const viewIdsKey = attentionOnly
+    ? (stats?.attention.ids.join(",") ?? "")
+    : reviewOnly
+    ? (stats?.reviewPending.ids.join(",") ?? "")
+    : "";
+
+  // Aggregates — on mount and when the scope (mine) changes.
+  useEffect(() => {
+    fetchStats(mineOnly);
+  }, [mineOnly]);
+
+  // Table — reacts to filters, page and the active id-set view.
+  useEffect(() => {
+    fetchMerchants(statusFilter, search, mineOnly, page, attentionOnly, reviewOnly, stats);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter, mineOnly, page, pageSize, attentionOnly, reviewOnly, viewIdsKey]);
+
+  // Reset to the first page whenever the filter context changes.
+  useEffect(() => { setPage(0); }, [statusFilter, mineOnly, attentionOnly, reviewOnly]);
+  useEffect(() => { setSelectedIds(new Set()); }, [statusFilter, search, page, attentionOnly, reviewOnly]);
 
   function handleSearchChange(val: string) {
     setSearch(val);
+    // In the id-set views search filters the loaded rows client-side (below).
+    if (attentionOnly || reviewOnly) return;
     if (searchTimer.current) clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => fetchMerchants(statusFilter, val), 300);
+    searchTimer.current = setTimeout(() => {
+      setPage(0);
+      fetchMerchants(statusFilter, val, mineOnly, 0, false, false, stats);
+    }, 300);
   }
 
-  // Merchants that need follow-up (across all statuses)
-  const attentionMerchants = allMerchants.filter((m) => getFollowUp(m) !== null);
+  const reviewPendingCount = stats?.reviewPending.count ?? 0;
 
-  // Merchants waiting on a commission decision (pending review), across all statuses.
-  const reviewMerchants = allMerchants.filter((m) => m.commission_review_status === "pending");
-  const reviewPendingCount = reviewMerchants.length;
-
-  // What the table renders: overdue-only / review-only filters override the status list.
+  // In the id-set views (attention / review), the small returned set is filtered
+  // by search client-side; the normal view already had search applied server-side.
   const matchesSearch = (m: Merchant) => {
     if (!search) return true;
     const q = search.toLowerCase();
     return m.name.toLowerCase().includes(q) || m.email.toLowerCase().includes(q);
   };
-  const displayed = attentionOnly
-    ? attentionMerchants.filter(matchesSearch)
-    : reviewOnly
-    ? reviewMerchants.filter(matchesSearch)
-    : merchants;
+  const displayed = (attentionOnly || reviewOnly) ? merchants.filter(matchesSearch) : merchants;
 
   // Selection helpers
   const selectedPendingCount = displayed.filter((m) => selectedIds.has(m.id) && m.status === "pending").length;
@@ -386,10 +418,9 @@ export default function MerchantPipelinePage() {
       const json = await res.json() as { updated: number };
       setBulkResult({ action, count: json.updated });
       clearSelection();
-      await fetchMerchants(statusFilter, search);
-      refreshAll();
+      reload();
     } catch {
-      alert("Bulk action failed. Please try again.");
+      flash("err", "Bulk action failed. Please try again.");
     } finally {
       setBulkBusy(null);
     }
@@ -399,7 +430,7 @@ export default function MerchantPipelinePage() {
     const header = ["Name", "Owner", "Email", "Phone", "City", "Postcode", "Status", "Rep", "Commission %", "Registered"];
     const rows = displayed.map((m) => [
       m.name, m.owner_name ?? "", m.email, m.phone, m.city ?? "", m.post_code ?? "",
-      m.status, m.assigned_rep ?? "", m.commission_percentage?.toString() ?? "",
+      m.status, m.assigned_rep_name ?? m.assigned_rep ?? "", m.commission_percentage?.toString() ?? "",
       new Date(m.created_at).toISOString().slice(0, 10),
     ]);
     const csv = [header, ...rows]
@@ -412,41 +443,37 @@ export default function MerchantPipelinePage() {
     a.download = `merchants-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
+    // Record the export (PII) in the audit log — fire-and-forget.
+    const scope = [attentionOnly && "needs-attention", reviewOnly && "commission-review", mineOnly && "mine", statusFilter !== "all" && `status=${statusFilter}`, search && "search"].filter(Boolean).join(", ") || "all merchants";
+    fetch("/api/admin/exports", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ resource: "merchants", count: displayed.length, scope }) }).catch(() => {});
   }
 
   function getCount(key: string) {
-    return key === "all" ? allMerchants.length : allMerchants.filter((m) => m.status === key).length;
+    return key === "all" ? (stats?.total ?? 0) : (stats?.byStatus[key] ?? 0);
   }
 
-  // ── Derived stats / rail data ─────────────────────────────────────────────
-  const total = allMerchants.length;
-  const liveCount = allMerchants.filter((m) => m.status === "live").length;
-  const urgentCount = attentionMerchants.length;
-  const newThisWeek = allMerchants.filter((m) => daysSince(m.created_at) <= 7).length;
+  // ── Derived stats / rail data (from the aggregate endpoint) ───────────────
+  const statTotal = stats?.total ?? 0;
+  const liveCount = stats?.live ?? 0;
+  const urgentCount = stats?.attention.count ?? 0;
+  const newThisWeek = stats?.newThisWeek ?? 0;
 
   const pipeline = PIPELINE_ORDER.map((key) => ({
     key,
-    count: allMerchants.filter((m) => m.status === key).length,
+    count: stats?.byStatus[key] ?? 0,
     hex: STATUS_CONFIG[key].hex,
     label: STATUS_CONFIG[key].label,
   }));
 
-  const topCities = Object.entries(
-    allMerchants.reduce<Record<string, number>>((acc, m) => {
-      const c = m.city?.trim();
-      if (c) acc[c] = (acc[c] ?? 0) + 1;
-      return acc;
-    }, {})
-  ).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const topCities = stats?.topCities ?? [];
 
-  const recentActivity = [...allMerchants]
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    .slice(0, 4);
+  const recentActivity = stats?.recent ?? [];
 
   const navigate = (id: string) => router.push(`/admin/merchants/${id}`);
 
   return (
     <div className="bg-[#F3E9D6] min-h-full">
+      <ToastView toast={toast} />
 
       {/* ── Header ── */}
       <div className="bg-white border-b border-[#102C26]/12 px-4 sm:px-8 py-4 sm:py-5 flex items-center justify-between gap-4">
@@ -467,19 +494,21 @@ export default function MerchantPipelinePage() {
             <span className="hidden sm:inline">Export</span>
           </button>
           <button
-            onClick={() => { fetchMerchants(statusFilter, search); refreshAll(); }}
+            onClick={reload}
             className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#102C26]/70 bg-[#102C26]/5 border border-[#102C26]/15 rounded-none hover:bg-[#102C26]/10 transition-colors"
             title="Refresh"
           >
             <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
           </button>
-          <button
-            onClick={() => setShowAdd(true)}
-            className="flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-extrabold uppercase tracking-tighter text-[#F7E7CE] bg-[#102C26] rounded-none hover:bg-[#102C26]/90 transition-colors"
-          >
-            <Plus size={15} />
-            <span className="hidden sm:inline">Add Merchant</span>
-          </button>
+          {canManage && (
+            <button
+              onClick={() => setShowAdd(true)}
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-extrabold uppercase tracking-tighter text-[#F7E7CE] bg-[#102C26] rounded-none hover:bg-[#102C26]/90 transition-colors"
+            >
+              <Plus size={15} />
+              <span className="hidden sm:inline">Add Merchant</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -493,15 +522,15 @@ export default function MerchantPipelinePage() {
       {/* ── Stat cards ── */}
       <div className="px-4 sm:px-8 pt-5">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <StatCard label="Total Merchants" value={total} sub="All time" icon={Store} tone="green" />
+          <StatCard label="Total Merchants" value={statTotal} sub="All time" icon={Store} tone="success" />
           <StatCard label="Needs Attention" value={urgentCount}
             sub={attentionOnly ? "Showing — click to clear" : urgentCount ? "Click to review" : "All caught up"}
-            icon={AlertCircle} tone="amber"
+            icon={AlertCircle} tone="warning"
             active={attentionOnly}
             onClick={() => { setAttentionOnly((v) => !v); setReviewOnly(false); }} />
           <StatCard label="Active (Live)" value={liveCount}
-            sub={total ? `${Math.round((liveCount / total) * 100)}% of total` : "—"} icon={Activity} tone="green" />
-          <StatCard label="New This Week" value={newThisWeek} sub="Registered ≤ 7 days" icon={Sparkles} tone="purple" />
+            sub={statTotal ? `${Math.round((liveCount / statTotal) * 100)}% of total` : "—"} icon={Activity} tone="success" />
+          <StatCard label="New This Week" value={newThisWeek} sub="Registered ≤ 7 days" icon={Sparkles} tone="accent" />
         </div>
       </div>
 
@@ -530,6 +559,18 @@ export default function MerchantPipelinePage() {
                   );
                 })}
 
+                {/* My Merchants (server-side scope to assigned_rep_id = me) */}
+                {canManage && (
+                  <button
+                    onClick={() => { setMineOnly((v) => !v); setAttentionOnly(false); setReviewOnly(false); }}
+                    className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-none text-xs sm:text-sm font-medium whitespace-nowrap transition-all ml-1 ${
+                      mineOnly ? "bg-[#102C26] text-[#F7E7CE]" : "text-gray-500 hover:text-[#102C26] hover:bg-[#102C26]/8"
+                    }`}
+                  >
+                    My Merchants
+                  </button>
+                )}
+
                 {/* Commission-review filter (client-side; spans all statuses) */}
                 {reviewPendingCount > 0 && (
                   <button
@@ -556,7 +597,7 @@ export default function MerchantPipelinePage() {
             </div>
 
             {/* Bulk toolbar */}
-            {selectedIds.size > 0 && (
+            {canManage && selectedIds.size > 0 && (
               <div className="bg-[#102C26] px-4 sm:px-5 py-3">
                 <div className="flex items-center justify-between gap-4 flex-wrap">
                   <div className="flex items-center gap-3">
@@ -585,10 +626,15 @@ export default function MerchantPipelinePage() {
                 </div>
                 {showAssign && (
                   <div className="mt-3 flex items-center gap-2 flex-wrap">
-                    <input type="text" value={assignRep} onChange={(e) => setAssignRep(e.target.value)}
-                      placeholder="Rep name (leave blank to unassign)"
-                      className="flex-1 min-w-50 px-3 py-2 text-sm bg-white/10 text-white border border-white/20 rounded-none placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#F7E7CE]/40" />
-                    <button onClick={() => runBulk("assign", { rep: assignRep })} disabled={!!bulkBusy}
+                    <ThemedSelect
+                      value={assignRep}
+                      onChange={setAssignRep}
+                      variant="dark"
+                      className="flex-1 min-w-50"
+                      placeholder="Assign to…"
+                      options={[{ value: "", label: "Unassign" }, ...team.map((t) => ({ value: t.id, label: t.full_name }))]}
+                    />
+                    <button onClick={() => runBulk("assign", { repId: assignRep })} disabled={!!bulkBusy}
                       className="px-4 py-2 bg-[#F7E7CE] text-[#102C26] rounded-none text-sm font-semibold hover:bg-white transition-colors disabled:opacity-50">
                       {bulkBusy === "assign" ? "Assigning…" : "Apply"}
                     </button>
@@ -645,7 +691,7 @@ export default function MerchantPipelinePage() {
                 {/* Mobile cards */}
                 <div className="md:hidden">
                   {displayed.map((m) => (
-                    <MerchantCard key={m.id} m={m} onClick={() => navigate(m.id)} selected={selectedIds.has(m.id)} onSelect={() => toggleSelect(m.id)} />
+                    <MerchantCard key={m.id} m={m} onClick={() => navigate(m.id)} selected={selectedIds.has(m.id)} onSelect={() => toggleSelect(m.id)} canManage={canManage} />
                   ))}
                 </div>
 
@@ -653,12 +699,14 @@ export default function MerchantPipelinePage() {
                 <table className="hidden md:table w-full text-sm">
                   <thead>
                     <tr className="border-b border-[#102C26]/12 bg-gray-50/60">
-                      <th className="pl-4 lg:pl-5 pr-3 py-3 w-12 cursor-pointer" onClick={toggleSelectAll} title="Select / deselect all">
-                        <div className="flex items-center justify-center">
-                          <input type="checkbox" checked={displayed.length > 0 && selectedIds.size === displayed.length} readOnly
-                            disabled={displayed.length === 0} className="w-4 h-4 rounded border-gray-300 accent-[#102C26] pointer-events-none disabled:opacity-30" />
-                        </div>
-                      </th>
+                      {canManage && (
+                        <th className="pl-4 lg:pl-5 pr-3 py-3 w-12 cursor-pointer" onClick={toggleSelectAll} title="Select / deselect all">
+                          <div className="flex items-center justify-center">
+                            <input type="checkbox" checked={displayed.length > 0 && selectedIds.size === displayed.length} readOnly
+                              disabled={displayed.length === 0} className="w-4 h-4 rounded border-gray-300 accent-[#102C26] pointer-events-none disabled:opacity-30" />
+                          </div>
+                        </th>
+                      )}
                       <th className="px-2 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500">Restaurant</th>
                       <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500 hidden lg:table-cell">Contact</th>
                       <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500 hidden xl:table-cell">Location</th>
@@ -678,11 +726,13 @@ export default function MerchantPipelinePage() {
                       return (
                         <tr key={m.id} onClick={() => navigate(m.id)}
                           className={`group cursor-pointer transition-colors ${isSelected ? "bg-[#102C26]/3" : "hover:bg-[#102C26]/2"}`}>
-                          <td className="pl-4 lg:pl-5 pr-3 py-3.5 w-12" onClick={(e) => { e.stopPropagation(); toggleSelect(m.id); }}>
-                            <div className="flex items-center justify-center h-full">
-                              <input type="checkbox" checked={isSelected} readOnly className="w-4 h-4 rounded border-gray-300 accent-[#102C26] pointer-events-none" />
-                            </div>
-                          </td>
+                          {canManage && (
+                            <td className="pl-4 lg:pl-5 pr-3 py-3.5 w-12" onClick={(e) => { e.stopPropagation(); toggleSelect(m.id); }}>
+                              <div className="flex items-center justify-center h-full">
+                                <input type="checkbox" checked={isSelected} readOnly className="w-4 h-4 rounded border-gray-300 accent-[#102C26] pointer-events-none" />
+                              </div>
+                            </td>
+                          )}
 
                           {/* Restaurant */}
                           <td className="px-2 py-3.5">
@@ -728,8 +778,8 @@ export default function MerchantPipelinePage() {
 
                           {/* Rep */}
                           <td className="px-4 py-3.5 hidden lg:table-cell">
-                            {m.assigned_rep
-                              ? <span className="text-gray-700 text-sm">{m.assigned_rep}</span>
+                            {(m.assigned_rep_name ?? m.assigned_rep)
+                              ? <span className="text-gray-700 text-sm">{m.assigned_rep_name ?? m.assigned_rep}</span>
                               : <span className="text-xs text-gray-400 bg-gray-50 border border-dashed border-gray-200 px-2 py-0.5 rounded-md">Unassigned</span>}
                           </td>
 
@@ -743,10 +793,10 @@ export default function MerchantPipelinePage() {
                               : <span className="text-gray-400 text-xs italic">Not set</span>}
                           </td>
 
-                          {/* Action */}
+                          {/* Action — whole row navigates to detail; chevron signals that (matches Users/Kitchen/Hub) */}
                           <td className="px-4 lg:px-5 py-3.5 text-right">
                             <span className="inline-flex items-center justify-center w-8 h-8 rounded-none text-gray-400 group-hover:bg-[#102C26] group-hover:text-white transition-all" title="Open">
-                              <MoreVertical size={15} />
+                              <ChevronRight size={15} />
                             </span>
                           </td>
                         </tr>
@@ -755,11 +805,22 @@ export default function MerchantPipelinePage() {
                   </tbody>
                 </table>
 
-                {/* Footer count */}
-                <div className="px-5 py-3 border-t border-[#102C26]/8 text-xs text-gray-400">
-                  Showing {displayed.length} merchant{displayed.length !== 1 ? "s" : ""}
-                  {attentionOnly ? " · needs attention" : reviewOnly ? " · commission reviews pending" : statusFilter !== "all" ? ` · filtered by ${STATUS_CONFIG[statusFilter]?.label ?? statusFilter}` : ""}
-                </div>
+                {/* Footer — id-set views show a simple count; the paginated
+                    status/search view gets full pagination controls. */}
+                {(attentionOnly || reviewOnly) ? (
+                  <div className="px-5 py-3 border-t border-[#102C26]/8 text-xs text-gray-400">
+                    Showing {displayed.length} merchant{displayed.length !== 1 ? "s" : ""}
+                    {attentionOnly ? " · needs attention" : " · commission reviews pending"}
+                  </div>
+                ) : (
+                  <Pagination
+                    page={page} pageSize={pageSize} total={total} noun="merchant"
+                    onPrev={() => setPage((p) => Math.max(0, p - 1))}
+                    onNext={() => setPage((p) => p + 1)}
+                    onPageSize={(s) => { setPageSize(s); setPage(0); }}
+                    onJump={(p) => setPage(p)}
+                  />
+                )}
               </>
             )}
           </div>
@@ -772,14 +833,14 @@ export default function MerchantPipelinePage() {
           <div className="bg-white rounded-none border border-[#102C26]/12 p-5">
             <h3 className={`${display.className} text-[13px] font-extrabold uppercase tracking-wide text-[#102C26] mb-4`}>Pipeline Overview</h3>
             <div className="flex items-center gap-5">
-              <Donut segments={pipeline} total={total} />
+              <Donut segments={pipeline} total={statTotal} />
               <div className="flex-1 min-w-0 space-y-1.5">
                 {pipeline.map((s) => (
                   <div key={s.key} className="flex items-center gap-2 text-xs">
                     <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: s.hex }} />
                     <span className="text-gray-600 flex-1 truncate">{s.label}</span>
                     <span className="font-semibold text-gray-900 tabular-nums">{s.count}</span>
-                    <span className="text-gray-400 tabular-nums w-9 text-right">{total ? Math.round((s.count / total) * 100) : 0}%</span>
+                    <span className="text-gray-400 tabular-nums w-9 text-right">{statTotal ? Math.round((s.count / statTotal) * 100) : 0}%</span>
                   </div>
                 ))}
               </div>
@@ -800,10 +861,10 @@ export default function MerchantPipelinePage() {
                   <div key={city}>
                     <div className="flex items-center justify-between text-xs mb-1">
                       <span className="text-gray-700 font-medium truncate">{city}</span>
-                      <span className="text-gray-400">{count} · {Math.round((count / total) * 100)}%</span>
+                      <span className="text-gray-400">{count} · {Math.round((count / statTotal) * 100)}%</span>
                     </div>
                     <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-[#102C26] rounded-full" style={{ width: `${(count / total) * 100}%` }} />
+                      <div className="h-full bg-[#102C26] rounded-full" style={{ width: `${(count / statTotal) * 100}%` }} />
                     </div>
                   </div>
                 ))}
@@ -823,7 +884,7 @@ export default function MerchantPipelinePage() {
               <div className="space-y-3.5">
                 {recentActivity.map((m) => (
                   <button key={m.id} onClick={() => navigate(m.id)} className="flex items-start gap-2.5 w-full text-left group">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#F03E9E] mt-1.5 shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B] mt-1.5 shrink-0" />
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-gray-800 truncate group-hover:text-[#102C26]">{m.name}</p>
                       <p className="text-xs text-gray-400">Added to CRM · {relativeTime(m.created_at)}</p>

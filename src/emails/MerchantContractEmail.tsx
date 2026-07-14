@@ -1,6 +1,6 @@
 import { Heading, Hr, Section, Text } from "@react-email/components";
 import { buildMerchantAgreement } from "@/lib/merchantAgreement";
-import { EmailLayout, styles } from "./theme";
+import { EmailLayout, styles, SUPPORT_EMAIL } from "./theme";
 
 interface MerchantContractEmailProps {
   restaurantName: string;
@@ -66,8 +66,8 @@ export default function MerchantContractEmail({
 
       <Text style={styles.paragraph}>
         Any questions? Reply to this email or contact us at{" "}
-        <a href="mailto:support@halalme.co.uk" style={styles.link}>
-          support@halalme.co.uk
+        <a href={`mailto:${SUPPORT_EMAIL}`} style={styles.link}>
+          {SUPPORT_EMAIL}
         </a>
         .
       </Text>

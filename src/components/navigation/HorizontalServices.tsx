@@ -16,7 +16,7 @@ const SERVICES = [
     tagline: "Halal food at your door",
     desc: "Order from the best halal restaurants near you, delivered in minutes.",
     link: "/delivery",
-    image: "/images/services/halal01.jpg",
+    image: "/images/services/halal_delivery1.png",
     accent: "#B96AF0",
     logoColor: "#5E188F",
   },
@@ -116,7 +116,7 @@ export default function HorizontalServices() {
               priority={i === 0}
               sizes="100vw"
               className="object-cover object-center"
-              style={{ backgroundColor: '#102C26' }}
+              style={{ backgroundColor: "#102C26" }}
             />
 
             {/* Cinematic gradient - dark left, image reveals right */}
@@ -153,22 +153,31 @@ export default function HorizontalServices() {
                       display: "inline-block",
                     }}
                   >
-                    <span style={{ position: "absolute", inset: 0, backgroundColor: "rgba(255,255,255,0.92)", borderRadius: "50%" }} />
                     <span
                       style={{
                         position: "absolute",
                         inset: 0,
-                        backgroundColor: s.logoColor ?? s.accent,
-                        WebkitMaskImage: "url(/logo/logo.png)",
-                        maskImage: "url(/logo/logo.png)",
-                        WebkitMaskSize: "contain",
-                        maskSize: "contain",
-                        WebkitMaskRepeat: "no-repeat",
-                        maskRepeat: "no-repeat",
-                        maskMode: "alpha",
-                        WebkitMaskPosition: "center",
-                        maskPosition: "center",
-                      } as React.CSSProperties}
+                        backgroundColor: "rgba(255,255,255,0.92)",
+                        borderRadius: "50%",
+                      }}
+                    />
+                    <span
+                      style={
+                        {
+                          position: "absolute",
+                          inset: 0,
+                          backgroundColor: s.logoColor ?? s.accent,
+                          WebkitMaskImage: "url(/logo/logo.png)",
+                          maskImage: "url(/logo/logo.png)",
+                          WebkitMaskSize: "contain",
+                          maskSize: "contain",
+                          WebkitMaskRepeat: "no-repeat",
+                          maskRepeat: "no-repeat",
+                          maskMode: "alpha",
+                          WebkitMaskPosition: "center",
+                          maskPosition: "center",
+                        } as React.CSSProperties
+                      }
                     />
                   </span>
                   <span

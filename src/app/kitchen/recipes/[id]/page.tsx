@@ -23,10 +23,12 @@ import {
   Pencil,
   Trash2,
   Printer,
+  Flag,
 } from "lucide-react";
 import { recipeService } from "@/services/recipeService";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthGate } from "@/hooks/useAuthGate";
+import ReportModal from "@/components/common/ReportModal";
 import type { Recipe, RecipeReview } from "@/types";
 
 const BG = "#1C1C1C";
@@ -292,6 +294,7 @@ export default function RecipeDetailPage({
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [bookmarkLoading, setBookmarkLoading] = useState(false);
   const [bookmarkError, setBookmarkError] = useState("");
+  const [reportOpen, setReportOpen] = useState(false);
 
   // ── Review state ──────────────────────────────────────────────
   const [reviews, setReviews] = useState<RecipeReview[]>([]);
@@ -776,6 +779,18 @@ export default function RecipeDetailPage({
                 fill={isBookmarked ? "white" : "transparent"}
               />
             )}
+          </motion.button>
+
+          <motion.button
+            onClick={() => requireAuth(() => setReportOpen(true), "Sign in to report content")}
+            title="Report recipe"
+            aria-label="Report recipe"
+            className="backdrop-blur-sm text-white p-2 md:p-3 border transition-colors"
+            style={{ backgroundColor: "rgba(0,0,0,0.6)", borderColor: "rgba(255,255,255,0.2)" }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Flag className="w-5 h-5 md:w-6 md:h-6" />
           </motion.button>
         </div>
 
@@ -1378,6 +1393,14 @@ export default function RecipeDetailPage({
           </motion.div>
         )}
       </AnimatePresence>
+
+      <ReportModal
+        open={reportOpen}
+        onClose={() => setReportOpen(false)}
+        contentType="recipe"
+        contentId={id}
+        contentLabel="recipe"
+      />
     </div>
   );
 }
