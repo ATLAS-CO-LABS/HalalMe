@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   Search, RefreshCw, AlertCircle, Heart, CheckCircle2, Star, Banknote,
-  ChevronRight, Loader2, X, Plus, Ban, RotateCcw, Save, Send,
+  ChevronRight, Loader2, X, Plus, Ban, RotateCcw, Save, Send, Trash2,
 } from "lucide-react";
 import { display } from "../_fonts";
 import {
@@ -80,6 +80,8 @@ export default function CharitiesTab() {
   const [editLoading, setEditLoading] = useState(false);
   const [creating, setCreating] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   async function fetchRows(p: number, s: string, q: string) {
     setLoading(true); setError(null);
@@ -167,6 +169,22 @@ export default function CharitiesTab() {
       fetchRows(page, status, search);
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function deleteCharity() {
+    if (!edit) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/admin/charities/${edit.id}`, { method: "DELETE" });
+      const json = await res.json().catch(() => null);
+      if (!res.ok) { flash("err", json?.error ?? "Could not delete charity."); return; }
+      flash("ok", "Charity deleted.");
+      setShowDeleteConfirm(false);
+      setEdit(null);
+      fetchRows(page, status, search);
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -386,10 +404,16 @@ export default function CharitiesTab() {
 
                 {canManage && (
                   <div className="sticky bottom-0 bg-gray-50/95 backdrop-blur border-t border-[#102C26]/10 px-6 py-4 flex items-center justify-between gap-2 flex-wrap">
-                    <button onClick={toggleSuspend} disabled={busy}
-                      className={`inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-none transition-colors disabled:opacity-50 ${edit.verification_status === "suspended" ? "text-green-700 bg-green-50 hover:bg-green-100" : "text-red-700 bg-red-50 hover:bg-red-100"}`}>
-                      {edit.verification_status === "suspended" ? <><RotateCcw size={14} /> Reinstate</> : <><Ban size={14} /> Suspend</>}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button onClick={toggleSuspend} disabled={busy}
+                        className={`inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-none transition-colors disabled:opacity-50 ${edit.verification_status === "suspended" ? "text-green-700 bg-green-50 hover:bg-green-100" : "text-red-700 bg-red-50 hover:bg-red-100"}`}>
+                        {edit.verification_status === "suspended" ? <><RotateCcw size={14} /> Reinstate</> : <><Ban size={14} /> Suspend</>}
+                      </button>
+                      <button onClick={() => setShowDeleteConfirm(true)} disabled={busy}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-none transition-colors disabled:opacity-50 text-red-700 bg-red-50 hover:bg-red-100">
+                        <Trash2 size={14} /> Delete
+                      </button>
+                    </div>
                     <button onClick={saveEdit} disabled={busy}
                       className="inline-flex items-center gap-1.5 px-5 py-2 text-sm font-bold uppercase tracking-tight text-[#F7E7CE] bg-[#102C26] rounded-none hover:bg-[#102C26]/90 transition-colors disabled:opacity-50">
                       {busy ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} Save
@@ -398,6 +422,28 @@ export default function CharitiesTab() {
                 )}
               </>
             )}
+        </Modal>
+      )}
+
+      {/* Delete confirm */}
+      {showDeleteConfirm && edit && (
+        <Modal open busy={deleting} onClose={() => setShowDeleteConfirm(false)} labelledBy="charity-del-title" describedBy="charity-del-desc" className="p-6">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-none flex items-center justify-center shrink-0 bg-red-50 text-red-600"><Trash2 size={18} /></div>
+            <div className="min-w-0">
+              <h3 id="charity-del-title" className={`${display.className} text-lg font-bold text-[#102C26]`}>Delete this charity?</h3>
+              <p id="charity-del-desc" className="text-sm text-gray-600 mt-1">
+                This permanently removes <span className="font-semibold">{edit.name}</span> from the directory. If it has any donations or applications on record, deletion will be blocked — suspend it instead in that case.
+              </p>
+            </div>
+          </div>
+          <div className="mt-5 flex items-center justify-end gap-2">
+            <button onClick={() => setShowDeleteConfirm(false)} disabled={deleting} className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">Cancel</button>
+            <button onClick={deleteCharity} disabled={deleting}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-bold uppercase tracking-tight text-white rounded-none disabled:opacity-50 bg-red-600 hover:bg-red-700 transition-colors">
+              {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />} Delete forever
+            </button>
+          </div>
         </Modal>
       )}
 

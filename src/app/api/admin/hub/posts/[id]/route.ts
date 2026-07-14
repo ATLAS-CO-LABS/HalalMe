@@ -62,7 +62,7 @@ export async function PATCH(
       console.error("[api/admin/hub/posts/[id]] restore error", error);
       return NextResponse.json({ error: "Failed to restore post" }, { status: 500 });
     }
-    await logAdminAction(gate, {
+    logAdminAction(gate, {
       action: "post.restore", module: "hub", targetType: "post", targetId: id,
       summary: "Restored post from Trash",
     });
@@ -82,7 +82,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Failed to update post" }, { status: 500 });
   }
 
-  await logAdminAction(gate, {
+  logAdminAction(gate, {
     action: body.is_published ? "post.publish" : "post.unpublish", module: "hub", targetType: "post", targetId: id,
     summary: body.is_published ? "Published post" : "Hid post",
     metadata: { is_published: body.is_published },
@@ -111,7 +111,7 @@ export async function DELETE(
       console.error("[api/admin/hub/posts/[id]] purge error", error);
       return NextResponse.json({ error: "Failed to delete post" }, { status: 500 });
     }
-    await logAdminAction(gate, {
+    logAdminAction(gate, {
       action: "post.purge", module: "hub", targetType: "post", targetId: id,
       summary: "Permanently deleted post and all its comments/likes",
     });
@@ -127,7 +127,7 @@ export async function DELETE(
     return NextResponse.json({ error: "Failed to delete post" }, { status: 500 });
   }
 
-  await logAdminAction(gate, {
+  logAdminAction(gate, {
     action: "post.delete", module: "hub", targetType: "post", targetId: id,
     summary: "Moved post to Trash",
   });

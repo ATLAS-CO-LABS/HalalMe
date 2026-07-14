@@ -27,7 +27,11 @@ export type AccessLevel = "view" | "manage";
 type ServiceClient = ReturnType<typeof createServiceClient>;
 
 type AdminGate =
-  | { ok: true; serviceClient: ServiceClient; userId: string; role: string }
+  // `access` is the caller's resolved level for this module ("manage" for
+  // super_admin, since they bypass the per-module table entirely) — routes
+  // that need to know if the viewer can manage (not just view) should read
+  // this instead of re-querying admin_permissions themselves.
+  | { ok: true; serviceClient: ServiceClient; userId: string; role: string; access: AccessLevel }
   | { ok: false; error: string; status: number };
 
 export async function requireAdmin(
@@ -54,7 +58,9 @@ export async function requireAdmin(
 
   const role = profile!.role as string;
 
-  // super_admin bypasses the per-module table entirely.
+  // super_admin bypasses the per-module table entirely — always full access.
+  let access: AccessLevel = "manage";
+
   if (!isSuperAdmin(role)) {
     const { data: perm } = await serviceClient
       .from("admin_permissions")
@@ -66,7 +72,8 @@ export async function requireAdmin(
     const level = (perm?.access as AccessLevel | "none" | undefined) ?? "none";
     const allowed = required === "view" ? level !== "none" : level === "manage";
     if (!allowed) return { ok: false, error: "Forbidden", status: 403 };
+    access = level === "manage" ? "manage" : "view";
   }
 
-  return { ok: true, serviceClient, userId: user.id, role };
+  return { ok: true, serviceClient, userId: user.id, role, access };
 }

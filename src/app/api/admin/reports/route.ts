@@ -98,13 +98,7 @@ export async function GET(req: NextRequest) {
     deleted: !previews[g.contentId],
   }));
 
-  let canManage = gate.role === "super_admin";
-  if (!canManage) {
-    const { data: vp } = await serviceClient
-      .from("admin_permissions").select("access")
-      .eq("user_id", gate.userId).eq("module", mod).single();
-    canManage = vp?.access === "manage";
-  }
+  const canManage = gate.access === "manage";
 
   return NextResponse.json({ items, total: items.length, canManage });
 }
@@ -147,7 +141,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Failed to resolve reports" }, { status: 500 });
   }
 
-  await logAdminAction(gate, {
+  logAdminAction(gate, {
     action: `report.${action}`, module: moduleForType(contentType), targetType: contentType, targetId: contentId,
     summary: `${action === "dismiss" ? "Dismissed" : "Resolved"} ${data?.length ?? 0} report${(data?.length ?? 0) !== 1 ? "s" : ""} on a ${contentType}`,
     metadata: { count: data?.length ?? 0 },

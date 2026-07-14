@@ -9,12 +9,22 @@ import { withTimeout } from "@/lib/withTimeout";
 import { friendlyError } from "@/lib/friendlyError";
 import Avatar from "./Avatar";
 
+const BG = "#0B0D0F";
+const BG2 = "#111418";
+const AMBER = "#F59E0B";
+const CREAM = "#F7E7CE";
+
 interface CreatePostModalProps {
   isOpen: boolean;
   onClose: () => void;
   /** Called with the text content, optional media File, and post type.
    *  Should return a Promise so the modal can show a loading state. */
-  onSubmit: (content: string, mediaFile?: File, postType?: PostType) => Promise<void>;
+  onSubmit: (
+    content: string,
+    mediaFile?: File,
+    postType?: PostType,
+    onProgress?: (percent: number) => void
+  ) => Promise<void>;
   currentUser: Profile | null;
 }
 
@@ -43,6 +53,7 @@ export default function CreatePostModal({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -65,17 +76,22 @@ export default function CreatePostModal({
     if (!content.trim() || isSubmitting) return;
     setIsSubmitting(true);
     setError(null);
+    if (selectedFile) setUploadProgress(0);
     try {
       // Media uploads (esp. video on mobile) can take a while — give them room.
       // Text-only posts keep the tight 30s timeout.
       const timeoutMs = selectedFile ? 120_000 : 30_000;
-      await withTimeout(onSubmit(content.trim(), selectedFile ?? undefined, postType), timeoutMs);
+      await withTimeout(
+        onSubmit(content.trim(), selectedFile ?? undefined, postType, selectedFile ? setUploadProgress : undefined),
+        timeoutMs
+      );
       handleClose();
     } catch (err) {
       console.error("[CreatePost]", err);
       setError(friendlyError(err, "Failed to create post. Please try again."));
     } finally {
       setIsSubmitting(false);
+      setUploadProgress(null);
     }
   };
 
@@ -103,7 +119,7 @@ export default function CreatePostModal({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
             onClick={handleClose}
-            className="fixed inset-0 bg-black/60 z-50"
+            className="fixed inset-0 bg-black/70 z-50"
           />
 
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -112,20 +128,24 @@ export default function CreatePostModal({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 8 }}
               transition={{ type: "tween", duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="bg-gray-800 rounded-2xl border border-gray-700 w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
+              className="w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col border shadow-2xl"
+              style={{ backgroundColor: BG2, borderColor: `${CREAM}12` }}
             >
               {/* Header */}
-              <div className="flex items-center justify-between p-4 md:p-5 border-b border-gray-700">
+              <div className="flex items-center justify-between p-4 md:p-5 border-b" style={{ borderColor: `${CREAM}10` }}>
                 <h2
-                  className="text-xl font-bold text-white"
-                  style={{ fontFamily: "var(--font-headline)" }}
+                  className="text-lg md:text-xl font-extrabold uppercase tracking-tight"
+                  style={{ color: CREAM, fontFamily: "var(--font-headline)" }}
                 >
                   Create Post
                 </h2>
                 <motion.button
                   onClick={handleClose}
                   disabled={isSubmitting}
-                  className="text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+                  className="transition-colors disabled:opacity-50"
+                  style={{ color: `${CREAM}45` }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = CREAM)}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = `${CREAM}45`)}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                 >
@@ -134,19 +154,19 @@ export default function CreatePostModal({
               </div>
 
               {/* User Info */}
-              <div className="p-4 md:p-5 flex items-center gap-3 border-b border-gray-700">
+              <div className="p-4 md:p-5 flex items-center gap-3 border-b" style={{ borderColor: `${CREAM}10` }}>
                 <Avatar src={avatarUrl} alt={displayName} size="lg" />
                 <div>
                   <h3
-                    className="font-semibold text-white"
-                    style={{ fontFamily: "var(--font-headline)" }}
+                    className="font-semibold"
+                    style={{ color: CREAM, fontFamily: "var(--font-headline)" }}
                   >
                     {displayName}
                   </h3>
                   {username && (
                     <p
-                      className="text-gray-400 text-sm font-normal"
-                      style={{ fontFamily: "var(--font-body)" }}
+                      className="text-sm font-normal"
+                      style={{ color: `${CREAM}45`, fontFamily: "var(--font-body)" }}
                     >
                       {username}
                     </p>
@@ -156,20 +176,24 @@ export default function CreatePostModal({
 
               {/* Post type selector */}
               <div className="px-4 md:px-5 pt-4 flex gap-2 flex-wrap">
-                {POST_TYPES.map((pt) => (
-                  <button
-                    key={pt.value}
-                    onClick={() => setPostType(pt.value)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                      postType === pt.value
-                        ? "bg-[#F59E0B] text-white"
-                        : "bg-gray-700 text-gray-400 hover:text-white border border-gray-600"
-                    }`}
-                  >
-                    <span>{pt.emoji}</span>
-                    {pt.label}
-                  </button>
-                ))}
+                {POST_TYPES.map((pt) => {
+                  const active = postType === pt.value;
+                  return (
+                    <button
+                      key={pt.value}
+                      onClick={() => setPostType(pt.value)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide border transition-colors"
+                      style={
+                        active
+                          ? { backgroundColor: AMBER, color: BG, borderColor: AMBER }
+                          : { backgroundColor: "transparent", color: `${CREAM}55`, borderColor: `${CREAM}15` }
+                      }
+                    >
+                      <span>{pt.emoji}</span>
+                      {pt.label}
+                    </button>
+                  );
+                })}
               </div>
 
               {/* Content Area */}
@@ -178,8 +202,8 @@ export default function CreatePostModal({
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   placeholder={PLACEHOLDERS[postType]}
-                  className="w-full bg-transparent text-white placeholder-gray-500 text-base resize-none focus:outline-none min-h-30 font-normal"
-                  style={{ fontFamily: "var(--font-body)" }}
+                  className="w-full text-base resize-none focus:outline-none min-h-30 font-normal border p-3"
+                  style={{ backgroundColor: BG, borderColor: `${CREAM}12`, color: CREAM, caretColor: AMBER, fontFamily: "var(--font-body)" }}
                   autoFocus
                   disabled={isSubmitting}
                 />
@@ -188,15 +212,29 @@ export default function CreatePostModal({
                   <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="relative mt-4 rounded-xl overflow-hidden"
+                    className="relative mt-4 overflow-hidden border"
+                    style={{ borderColor: `${CREAM}12` }}
                   >
                     <div className="relative w-full aspect-video">
                       <Image src={imagePreview} alt="Preview" fill className="object-cover" />
+                      {uploadProgress !== null && (
+                        <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-2">
+                          <span className="text-2xl font-extrabold" style={{ color: CREAM, fontFamily: "var(--font-headline)" }}>
+                            {uploadProgress}%
+                          </span>
+                          <div className="w-2/3 h-1.5 overflow-hidden" style={{ backgroundColor: `${CREAM}20` }}>
+                            <div
+                              className="h-full transition-all duration-150"
+                              style={{ width: `${uploadProgress}%`, backgroundColor: AMBER }}
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
                     <motion.button
                       onClick={handleRemoveImage}
                       disabled={isSubmitting}
-                      className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white p-2 rounded-full hover:bg-black/80 transition-colors"
+                      className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white p-2 hover:bg-black/80 transition-colors"
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                     >
@@ -211,7 +249,7 @@ export default function CreatePostModal({
               </div>
 
               {/* Actions */}
-              <div className="p-4 md:p-5 border-t border-gray-700">
+              <div className="p-4 md:p-5 border-t" style={{ borderColor: `${CREAM}10` }}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1">
                     <input
@@ -225,7 +263,10 @@ export default function CreatePostModal({
                     <motion.button
                       onClick={() => fileInputRef.current?.click()}
                       disabled={isSubmitting}
-                      className="text-gray-400 hover:text-[#F59E0B] p-2 rounded-full hover:bg-gray-700 transition-colors disabled:opacity-50"
+                      className="p-2 transition-colors disabled:opacity-50"
+                      style={{ color: `${CREAM}45` }}
+                      onMouseEnter={(e) => !isSubmitting && (e.currentTarget.style.color = AMBER)}
+                      onMouseLeave={(e) => (e.currentTarget.style.color = `${CREAM}45`)}
                       title="Attach image"
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
@@ -237,16 +278,21 @@ export default function CreatePostModal({
                   <motion.button
                     onClick={handleSubmit}
                     disabled={!content.trim() || isSubmitting}
-                    className={`flex items-center gap-2 px-6 py-2.5 rounded-full font-semibold transition-all ${
+                    className="flex items-center gap-2 px-6 py-2.5 font-extrabold uppercase tracking-tighter text-sm transition-all"
+                    style={
                       content.trim() && !isSubmitting
-                        ? "bg-linear-to-br from-[#F59E0B] to-[#D97706] text-white hover:shadow-lg"
-                        : "bg-gray-700 text-gray-500 cursor-not-allowed"
-                    }`}
+                        ? { backgroundColor: AMBER, color: BG }
+                        : { backgroundColor: BG, color: `${CREAM}30`, cursor: "not-allowed" }
+                    }
                     whileHover={content.trim() && !isSubmitting ? { scale: 1.05 } : {}}
                     whileTap={content.trim() && !isSubmitting ? { scale: 0.95 } : {}}
                   >
                     {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                    {isSubmitting ? "Posting..." : "Post"}
+                    {isSubmitting
+                      ? uploadProgress !== null
+                        ? `Uploading… ${uploadProgress}%`
+                        : "Posting..."
+                      : "Post"}
                   </motion.button>
                 </div>
               </div>

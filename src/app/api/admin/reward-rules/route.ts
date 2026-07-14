@@ -20,13 +20,7 @@ export async function GET() {
     return NextResponse.json({ error: "Failed to fetch reward rules" }, { status: 500 });
   }
 
-  let canManage = gate.role === "super_admin";
-  if (!canManage) {
-    const { data: vp } = await gate.serviceClient
-      .from("admin_permissions").select("access")
-      .eq("user_id", gate.userId).eq("module", "rewards").single();
-    canManage = vp?.access === "manage";
-  }
+  const canManage = gate.access === "manage";
 
   return NextResponse.json({ rules: data ?? [], canManage });
 }
@@ -102,7 +96,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Failed to update reward rule" }, { status: 500 });
   }
 
-  await logAdminAction(gate, {
+  logAdminAction(gate, {
     action: "reward_rule.update", module: "rewards", targetType: "reward_rule", targetId: id,
     summary: `Updated reward rule: ${Object.keys(update).join(", ")}`,
     metadata: update,

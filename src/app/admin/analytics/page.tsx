@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { display } from "../_fonts";
 import { StatCard, FilterPills, fmtMoney, DateRange } from "../_ui";
-import { ChartCard, TimeSeries, BarList, Donut, Funnel } from "./_charts";
+import { ChartCard, TimeSeries, BarList, Donut, Funnel, CHART_COLORS, ORDINAL_GREEN } from "./_charts";
 
 type Point = { label: string; value: number };
 interface Data {
@@ -20,9 +20,9 @@ interface Data {
   stats?: Record<string, number>;
 }
 
-// MUTED darkened from #9CA3AF → #6B7280 (gray-500) for stronger contrast against
-// white in donut segments / legends (WCAG-friendlier for the colour-only charts).
-const FOREST = "#102C26", AMBER = "#F59E0B", MUTED = "#6B7280";
+// Validated categorical palette (see _charts.tsx) — green/amber are brand-derived,
+// blue/magenta extend it for charts that need a 3rd/4th distinct hue.
+const { green: FOREST, amber: AMBER } = CHART_COLORS;
 
 const SECTIONS = [
   { key: "merchants", label: "Merchants", icon: Store },
@@ -174,8 +174,8 @@ export default function AnalyticsPage() {
                   <ChartCard title="Pipeline Funnel" subtitle="Merchants reaching each stage (lifecycle)">
                     <Funnel stages={data.funnel ?? []} />
                   </ChartCard>
-                  <ChartCard title="Current Status" subtitle="Where merchants sit right now">
-                    <BarList data={data.byStatus ?? []} />
+                  <ChartCard title="Current Status" subtitle="Where merchants sit right now (pipeline order)">
+                    <BarList data={data.byStatus ?? []} colors={ORDINAL_GREEN} />
                   </ChartCard>
                 </div>
                 <ChartCard title="Merchants Added" subtitle="New merchant records over time">
@@ -200,13 +200,13 @@ export default function AnalyticsPage() {
                     <Donut
                       segments={[
                         { label: "Verified", value: data.verification?.[0]?.value ?? 0, color: FOREST },
-                        { label: "Unverified", value: data.verification?.[1]?.value ?? 0, color: MUTED },
+                        { label: "Unverified", value: data.verification?.[1]?.value ?? 0, color: "#9CA3AF" },
                       ]}
                       centerValue={`${s.verifiedPct ?? 0}%`} centerLabel="Verified"
                     />
                   </ChartCard>
-                  <ChartCard title="Roles" subtitle="Account types">
-                    <BarList data={data.roleBreakdown ?? []} />
+                  <ChartCard title="Roles" subtitle="Account types (by privilege level)">
+                    <BarList data={data.roleBreakdown ?? []} colors={ORDINAL_GREEN} />
                   </ChartCard>
                 </div>
               </>

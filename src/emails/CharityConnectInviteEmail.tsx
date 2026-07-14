@@ -1,5 +1,5 @@
 import { Button, Heading, Section, Text } from "@react-email/components";
-import { EmailLayout, styles } from "./halalTheme";
+import { EmailLayout, styles, SUPPORT_EMAIL } from "./halalTheme";
 
 interface CharityConnectInviteEmailProps {
   charityName: string;
@@ -92,7 +92,7 @@ export default function CharityConnectInviteEmail({
       </Text>
       <Text style={styles.fineprint}>
         Questions? Contact us at{" "}
-        <a href="mailto:support@halalme.co.uk" style={styles.link}>support@halalme.co.uk</a>.
+        <a href={`mailto:${SUPPORT_EMAIL}`} style={styles.link}>{SUPPORT_EMAIL}</a>.
       </Text>
 
       <Text style={styles.signature}>The HalalMe Team</Text>

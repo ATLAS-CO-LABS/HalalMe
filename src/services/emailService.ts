@@ -20,7 +20,7 @@ const FROM = "HalalMe <noreply@halalme.co.uk>";
 const SUPPORT_INBOX = "support@halalme.co.uk";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://halalme.co.uk";
 
-function escapeHtml(s: string): string {
+export function escapeHtml(s: string): string {
   return s
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")

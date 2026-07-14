@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient, createServiceClient } from "@/lib/supabase-server";
 import { uploadBuffer, deleteAssets } from "@/lib/cloudinary";
 import { MERCHANT_DOC_TYPES } from "@/lib/merchantStages";
+import * as Sentry from "@sentry/nextjs";
 
 const ALLOWED_DOC_TYPES = new Set(MERCHANT_DOC_TYPES.map((d) => d.key));
 const ALLOWED_FORMATS = new Set(["pdf", "jpg", "jpeg", "png", "webp"]);
@@ -82,10 +83,8 @@ export async function POST(req: NextRequest) {
     const e = err as { message?: string; http_code?: number; error?: { message?: string } };
     const detail = e?.error?.message ?? e?.message ?? String(err);
     console.error("[merchant/documents] upload failed", { detail, http_code: e?.http_code, err });
-    return NextResponse.json(
-      { error: "Upload failed", detail, http_code: e?.http_code ?? null },
-      { status: 500 },
-    );
+    Sentry.captureException(err);
+    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
   }
 
   // Insert the new document row.
@@ -106,6 +105,7 @@ export async function POST(req: NextRequest) {
 
   if (insErr) {
     console.error("[merchant/documents] insert error", insErr);
+    Sentry.captureException(insErr);
     return NextResponse.json({ error: "Could not save document" }, { status: 500 });
   }
 

@@ -86,16 +86,7 @@ export async function GET(
 
   // Does the viewer have manage-level on the users module? (Controls whether the
   // detail page shows edit / status / delete actions.) Super admins always do.
-  let canManage = gate.role === "super_admin";
-  if (!canManage) {
-    const { data: vp } = await serviceClient
-      .from("admin_permissions")
-      .select("access")
-      .eq("user_id", gate.userId)
-      .eq("module", "users")
-      .single();
-    canManage = vp?.access === "manage";
-  }
+  const canManage = gate.access === "manage";
 
   // ── Cross-platform activity (richer profile) ────────────────────────────────
   const [{ data: dons }, postRes, recipeRes, convRes, { data: rts }, { data: postDates }, { data: recipeDates }, { data: ticketDates }] = await Promise.all([
@@ -252,7 +243,7 @@ export async function PATCH(
     if (newRole === "user") {
       await serviceClient.from("admin_permissions").delete().eq("user_id", id);
     }
-    await logAdminAction(gate, {
+    logAdminAction(gate, {
       action: "user.role_change", module: "users", targetType: "user", targetId: id,
       summary: `Changed role to ${newRole}${newRole === "user" ? " (permissions cleared)" : ""}`,
       metadata: { from: target.role, to: newRole },
@@ -272,7 +263,7 @@ export async function PATCH(
         console.error("[api/admin/users/[id]] permission upsert error", permErr);
         return NextResponse.json({ error: "Failed to update permissions" }, { status: 500 });
       }
-      await logAdminAction(gate, {
+      logAdminAction(gate, {
         action: "user.permissions_change", module: "users", targetType: "user", targetId: id,
         summary: "Updated module permissions",
         metadata: { permissions: body.permissions },
@@ -328,7 +319,7 @@ export async function PATCH(
       console.error("[api/admin/users/[id]] status update error", statusErr);
       return NextResponse.json({ error: "Failed to update status" }, { status: 500 });
     }
-    await logAdminAction(gate, {
+    logAdminAction(gate, {
       action: `user.${status}`, module: "users", targetType: "user", targetId: id,
       summary: status === "active" ? "Reactivated account" : `${status === "banned" ? "Banned" : "Suspended"} account`,
       metadata: { from: target.status, to: status, reason: reason ?? null },
@@ -378,7 +369,7 @@ export async function DELETE(
     return NextResponse.json({ error: "Failed to delete user" }, { status: 500 });
   }
 
-  await logAdminAction(gate, {
+  logAdminAction(gate, {
     action: "user.delete", module: "users", targetType: "user", targetId: id,
     summary: `Deleted user ${target.full_name ?? target.email ?? id}`,
     metadata: { full_name: target.full_name, email: target.email },

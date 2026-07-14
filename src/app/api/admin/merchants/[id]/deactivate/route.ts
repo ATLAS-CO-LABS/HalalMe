@@ -76,7 +76,7 @@ export async function POST(
     );
   }
 
-  await logAdminAction(gate, {
+  logAdminAction(gate, {
     action: "merchant.deactivate", module: "merchants", targetType: "merchant", targetId: id,
     summary: "Took merchant offline (reverted to agreed)",
   });

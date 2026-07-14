@@ -61,13 +61,7 @@ export async function GET(req: NextRequest) {
     serviceClient.from("comments").select("id", { count: "exact", head: true }).not("deleted_at", "is", null),
   ]);
 
-  let canManage = gate.role === "super_admin";
-  if (!canManage) {
-    const { data: vp } = await serviceClient
-      .from("admin_permissions").select("access")
-      .eq("user_id", gate.userId).eq("module", "hub").single();
-    canManage = vp?.access === "manage";
-  }
+  const canManage = gate.access === "manage";
 
   return NextResponse.json({
     comments: data ?? [],

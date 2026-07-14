@@ -80,3 +80,22 @@ export async function redeemReward(
 
   return data as string;
 }
+
+/**
+ * Equip a flair the user has already redeemed — free, no points spent.
+ * Throws RedemptionValidationError if the flair isn't owned (or isn't a flair).
+ */
+export async function equipFlair(userId: string, catalogItemId: string): Promise<void> {
+  const admin = createServiceClient();
+
+  const { error } = await admin.rpc("equip_flair", {
+    p_user_id: userId,
+    p_catalog_item_id: catalogItemId,
+  });
+
+  if (error) {
+    if (error.code === "P0001") throw new RedemptionValidationError(error.message);
+    console.error("[pointsService] equipFlair failed:", error);
+    throw new Error("Equip failed");
+  }
+}

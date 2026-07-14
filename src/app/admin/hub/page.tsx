@@ -277,26 +277,31 @@ function PostsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "ok" 
 
   return (
     <>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-5">
-        <StatCard label="Total Posts" value={stats?.total ?? "—"} sub="All posts" icon={FileText} tone="blue" />
-        <StatCard label="Published" value={stats?.published ?? "—"} sub="Visible in feed" icon={Eye} tone="green" />
-        <StatCard label="Posted Today" value={stats?.today ?? "—"} sub="Last 24 hours" icon={TrendingUp} tone="purple" />
-        <StatCard label="Follow Connections" value={stats?.follows ?? "—"} sub="Across the network" icon={Users} tone="amber" />
-      </div>
-
-      {topPosters.length > 0 && (
-        <div className="bg-white rounded-none border border-[#102C26]/12 p-4 mb-5">
-          <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500 mb-2.5 flex items-center gap-1.5"><Crown size={13} className="text-[#F59E0B]" /> Top posters</p>
-          <div className="flex flex-wrap gap-x-6 gap-y-1.5">
-            {topPosters.map((u, i) => (
-              <div key={u.id} className="flex items-center gap-2 text-sm">
-                <span className="text-gray-400 tabular-nums">{i + 1}.</span>
-                <span className="text-gray-800 truncate max-w-44" title={u.name}>{u.name}</span>
-                <span className="text-gray-500 tabular-nums">· {u.posts} post{u.posts !== 1 ? "s" : ""}</span>
-              </div>
-            ))}
+      {/* Global stats + top posters aren't Trash-specific — only show on the main Posts tab */}
+      {!deleted && (
+        <>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-5">
+            <StatCard label="Total Posts" value={stats?.total ?? "—"} sub="All posts" icon={FileText} tone="blue" />
+            <StatCard label="Published" value={stats?.published ?? "—"} sub="Visible in feed" icon={Eye} tone="green" />
+            <StatCard label="Posted Today" value={stats?.today ?? "—"} sub="Last 24 hours" icon={TrendingUp} tone="purple" />
+            <StatCard label="Follow Connections" value={stats?.follows ?? "—"} sub="Across the network" icon={Users} tone="amber" />
           </div>
-        </div>
+
+          {topPosters.length > 0 && (
+            <div className="bg-white rounded-none border border-[#102C26]/12 p-4 mb-5">
+              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500 mb-2.5 flex items-center gap-1.5"><Crown size={13} className="text-[#F59E0B]" /> Top posters</p>
+              <div className="flex flex-wrap gap-x-6 gap-y-1.5">
+                {topPosters.map((u, i) => (
+                  <div key={u.id} className="flex items-center gap-2 text-sm">
+                    <span className="text-gray-400 tabular-nums">{i + 1}.</span>
+                    <span className="text-gray-800 truncate max-w-44" title={u.name}>{u.name}</span>
+                    <span className="text-gray-500 tabular-nums">· {u.posts} post{u.posts !== 1 ? "s" : ""}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       <div className="bg-white rounded-none border border-[#102C26]/12 overflow-hidden">
@@ -677,8 +682,9 @@ function CommentsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "o
   return (
     <>
       <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-5 max-w-md">
-        <StatCard label="Total Comments" value={totalComments || "—"} sub="Across all posts" icon={MessagesSquare} tone="blue" />
-        <StatCard label="On This Page" value={rows.length || "—"} sub={`of ${total.toLocaleString()}`} icon={MessageSquare} tone="purple" />
+        {/* Global total isn't Trash-specific — only show it on the main Comments tab. */}
+        {!deleted && <StatCard label="Total Comments" value={totalComments || "—"} sub="Across all posts" icon={MessagesSquare} tone="blue" />}
+        <StatCard label={deleted ? "In Trash" : "On This Page"} value={rows.length || "—"} sub={deleted ? `of ${total.toLocaleString()} deleted` : `of ${total.toLocaleString()}`} icon={MessageSquare} tone="purple" />
       </div>
 
       <div className="bg-white rounded-none border border-[#102C26]/12 overflow-hidden">

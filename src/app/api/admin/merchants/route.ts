@@ -20,16 +20,7 @@ export async function GET(req: NextRequest) {
   const ids = idsParam ? idsParam.split(",").filter(Boolean) : null;
 
   // Determine the viewer's merchants access level for "My Merchants" scoping.
-  let canManage = gate.role === "super_admin";
-  if (!canManage) {
-    const { data: vp } = await serviceClient
-      .from("admin_permissions")
-      .select("access")
-      .eq("user_id", gate.userId)
-      .eq("module", "merchants")
-      .single();
-    canManage = vp?.access === "manage";
-  }
+  const canManage = gate.access === "manage";
   // View-only reps are always scoped to their own book; manage admins/super
   // admins can opt in with ?mine=1.
   const scopeToSelf = !canManage || mine;

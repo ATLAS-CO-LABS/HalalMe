@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "db_error" }, { status: 500 });
   }
 
-  await logAdminAction(gate, {
+  logAdminAction(gate, {
     action: "merchant.create", module: "merchants", targetType: "merchant", targetId: merchant.id,
     summary: `Added merchant ${name}`,
     metadata: { name, email, city, hyperzod_sync_failed: !result },

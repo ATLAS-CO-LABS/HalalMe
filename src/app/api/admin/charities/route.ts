@@ -59,13 +59,7 @@ export async function GET(req: NextRequest) {
   ]);
   const totalRaised = (raisedRes.data ?? []).reduce((sum, c) => sum + Number(c.raised_amount ?? 0), 0);
 
-  let canManage = gate.role === "super_admin";
-  if (!canManage) {
-    const { data: vp } = await serviceClient
-      .from("admin_permissions").select("access")
-      .eq("user_id", gate.userId).eq("module", "rewards").single();
-    canManage = vp?.access === "manage";
-  }
+  const canManage = gate.access === "manage";
 
   return NextResponse.json({
     charities: data ?? [],
@@ -170,7 +164,7 @@ export async function POST(req: NextRequest) {
     notes: "Created directly by admin (seed)",
   });
 
-  await logAdminAction(gate, {
+  logAdminAction(gate, {
     action: "charity.create", module: "rewards", targetType: "charity", targetId: charity.id,
     summary: `Created charity ${name}`,
     metadata: { name, category, goal_amount: goalAmount },

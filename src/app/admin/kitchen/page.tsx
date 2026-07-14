@@ -294,15 +294,17 @@ export default function KitchenPage() {
         <div className="px-4 sm:px-8 py-5"><ReportsQueue type="recipe" /></div>
       ) : (
       <>
-      {/* Stat cards */}
-      <div className="px-4 sm:px-8 pt-5">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <StatCard label="Total Recipes" value={stats?.total ?? "—"} sub="All recipes" icon={ChefHat} tone="blue" />
-          <StatCard label="Published" value={stats?.published ?? "—"} sub="Visible to public" icon={Eye} tone="green" />
-          <StatCard label="Unverified Halal" value={stats?.unverified ?? "—"} sub="Need review" icon={BadgeCheck} tone="amber" />
-          <StatCard label="AI-Generated" value={stats?.aiGenerated ?? "—"} sub="From AI chat" icon={Sparkles} tone="purple" />
+      {/* Stat cards — global totals, not Trash-specific, so only show them on the main Recipes tab */}
+      {tab === "recipes" && (
+        <div className="px-4 sm:px-8 pt-5">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <StatCard label="Total Recipes" value={stats?.total ?? "—"} sub="All recipes" icon={ChefHat} tone="blue" />
+            <StatCard label="Published" value={stats?.published ?? "—"} sub="Visible to public" icon={Eye} tone="green" />
+            <StatCard label="Unverified Halal" value={stats?.unverified ?? "—"} sub="Need review" icon={BadgeCheck} tone="amber" />
+            <StatCard label="AI-Generated" value={stats?.aiGenerated ?? "—"} sub="From AI chat" icon={Sparkles} tone="purple" />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Main */}
       <div className="px-4 sm:px-8 py-5">
@@ -485,33 +487,35 @@ export default function KitchenPage() {
           )}
         </div>
 
-        {/* AI usage panel */}
-        <div className="mt-6">
-          <div className="flex items-center gap-2 mb-3">
-            <Bot size={16} className="text-[#102C26]/60" />
-            <h2 className={`${display.className} text-sm font-bold uppercase tracking-tight text-[#102C26]`}>AI Recipe Chat — Usage</h2>
-          </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <StatCard label="Chat Sessions" value={ai?.sessions.total ?? "—"} sub={`${ai?.sessions.thisWeek ?? 0} this week`} icon={Bot} tone="blue" />
-            <StatCard label="Session → Recipe" value={ai ? `${ai.sessions.conversionRate}%` : "—"} sub={`${ai?.sessions.converted ?? 0} produced a recipe`} icon={TrendingUp} tone="green" />
-            <StatCard label="AI Requests" value={ai?.requests.total ?? "—"} sub={`${ai?.requests.thisWeek ?? 0} this week`} icon={Sparkles} tone="purple" />
-            <StatCard label="Active AI Users" value={ai?.requests.uniqueUsers ?? "—"} sub="All time" icon={Users} tone="amber" />
-          </div>
-          {ai && ai.topUsers.length > 0 && (
-            <div className="mt-4 bg-white rounded-none border border-[#102C26]/12 p-4">
-              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500 mb-2.5">Heaviest AI users this week</p>
-              <div className="space-y-1.5">
-                {ai.topUsers.map((u, i) => (
-                  <div key={u.id} className="flex items-center gap-3 text-sm">
-                    <span className="text-gray-400 tabular-nums w-4">{i + 1}</span>
-                    <span className="text-gray-800 flex-1 truncate">{u.name}</span>
-                    <span className="text-gray-600 tabular-nums font-medium">{u.requests} requests</span>
-                  </div>
-                ))}
-              </div>
+        {/* AI usage panel — platform-wide usage, not Trash-specific */}
+        {tab === "recipes" && (
+          <div className="mt-6">
+            <div className="flex items-center gap-2 mb-3">
+              <Bot size={16} className="text-[#102C26]/60" />
+              <h2 className={`${display.className} text-sm font-bold uppercase tracking-tight text-[#102C26]`}>AI Recipe Chat — Usage</h2>
             </div>
-          )}
-        </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              <StatCard label="Chat Sessions" value={ai?.sessions.total ?? "—"} sub={`${ai?.sessions.thisWeek ?? 0} this week`} icon={Bot} tone="blue" />
+              <StatCard label="Session → Recipe" value={ai ? `${ai.sessions.conversionRate}%` : "—"} sub={`${ai?.sessions.converted ?? 0} produced a recipe`} icon={TrendingUp} tone="green" />
+              <StatCard label="AI Requests" value={ai?.requests.total ?? "—"} sub={`${ai?.requests.thisWeek ?? 0} this week`} icon={Sparkles} tone="purple" />
+              <StatCard label="Active AI Users" value={ai?.requests.uniqueUsers ?? "—"} sub="All time" icon={Users} tone="amber" />
+            </div>
+            {ai && ai.topUsers.length > 0 && (
+              <div className="mt-4 bg-white rounded-none border border-[#102C26]/12 p-4">
+                <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-gray-500 mb-2.5">Heaviest AI users this week</p>
+                <div className="space-y-1.5">
+                  {ai.topUsers.map((u, i) => (
+                    <div key={u.id} className="flex items-center gap-3 text-sm">
+                      <span className="text-gray-400 tabular-nums w-4">{i + 1}</span>
+                      <span className="text-gray-800 flex-1 truncate">{u.name}</span>
+                      <span className="text-gray-600 tabular-nums font-medium">{u.requests} requests</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
       </>
       )}

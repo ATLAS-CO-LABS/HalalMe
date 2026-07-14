@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { updateHyperzodMerchant } from "@/services/hyperzodService";
 import { sendMerchantLiveEmail } from "@/services/emailService";
+import * as Sentry from "@sentry/nextjs";
 import { requireAdmin } from "@/lib/adminAuth";
 import { logAdminAction } from "@/lib/adminAudit";
 
@@ -100,7 +101,7 @@ export async function POST(
     );
   }
 
-  await logAdminAction(gate, {
+  logAdminAction(gate, {
     action: "merchant.publish", module: "merchants", targetType: "merchant", targetId: id,
     summary: `Published ${merchant.name} live on Hyperzod`,
     metadata: { commission_percentage: merchant.commission_percentage },
@@ -111,7 +112,10 @@ export async function POST(
     to: merchant.email,
     restaurantName: merchant.name,
     ownerName: merchant.owner_name ?? undefined,
-  }).catch((err) => console.error("[publish] live email failed", err));
+  }).catch((err) => {
+    console.error("[publish] live email failed", err);
+    Sentry.captureException(err);
+  });
 
   return NextResponse.json({ merchant: updated });
 }

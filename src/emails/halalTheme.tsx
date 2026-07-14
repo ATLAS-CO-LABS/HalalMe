@@ -19,6 +19,8 @@ import * as React from "react";
  * Use for platform-wide emails (charity onboarding, rewards, account).
  */
 
+export const SUPPORT_EMAIL = "support@halalme.co.uk";
+
 export const colors = {
   forest: "#0B1E1A",
   card: "#112520",

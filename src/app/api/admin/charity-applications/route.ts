@@ -57,16 +57,7 @@ export async function GET(req: NextRequest) {
 
   // Does the viewer have manage-level on rewards? Controls whether the UI shows
   // approve/reject/edit actions. Super admins always do.
-  let canManage = gate.role === "super_admin";
-  if (!canManage) {
-    const { data: vp } = await serviceClient
-      .from("admin_permissions")
-      .select("access")
-      .eq("user_id", gate.userId)
-      .eq("module", "rewards")
-      .single();
-    canManage = vp?.access === "manage";
-  }
+  const canManage = gate.access === "manage";
 
   return NextResponse.json({
     applications: data ?? [],

@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
   const count = Number.isFinite(body.count) ? Number(body.count) : null;
   const scope = typeof body.scope === "string" ? body.scope : null;
 
-  await logAdminAction(gate, {
+  logAdminAction(gate, {
     action: `${resource}.export`,
     module: mod,
     targetType: resource,

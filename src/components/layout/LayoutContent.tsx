@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import ScrollToTop from "@/components/common/ScrollToTop";
+import RouteProgressBar from "@/components/layout/RouteProgressBar";
 import { AuthGateProvider } from "@/context/AuthGateContext";
 import { AppResumeProvider } from "@/context/AppResumeContext";
 import { RewardsRealtimeProvider } from "@/context/RewardsRealtimeContext";
@@ -57,6 +58,7 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
     <AppResumeProvider>
       <RewardsRealtimeProvider>
         <AuthGateProvider>
+          <RouteProgressBar />
           <ScrollToTop />
           {!shouldHideHeader && <Header />}
           <main>{children}</main>

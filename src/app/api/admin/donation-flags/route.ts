@@ -47,13 +47,7 @@ export async function GET(req: NextRequest) {
     serviceClient.from("donation_flags").select("id", { count: "exact", head: true }).eq("status", "reviewed_blocked"),
   ]);
 
-  let canManage = gate.role === "super_admin";
-  if (!canManage) {
-    const { data: vp } = await serviceClient
-      .from("admin_permissions").select("access")
-      .eq("user_id", gate.userId).eq("module", "rewards").single();
-    canManage = vp?.access === "manage";
-  }
+  const canManage = gate.access === "manage";
 
   return NextResponse.json({
     flags: data ?? [],

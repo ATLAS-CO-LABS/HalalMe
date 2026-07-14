@@ -58,7 +58,7 @@ export async function PATCH(
       console.error("[api/admin/recipes/[id]] restore error", error);
       return NextResponse.json({ error: "Failed to restore recipe" }, { status: 500 });
     }
-    await logAdminAction(gate, {
+    logAdminAction(gate, {
       action: "recipe.restore", module: "kitchen", targetType: "recipe", targetId: id,
       summary: `Restored recipe ${id} from Trash`,
     });
@@ -80,7 +80,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Failed to update recipe" }, { status: 500 });
   }
 
-  await logAdminAction(gate, {
+  logAdminAction(gate, {
     action: "recipe.update", module: "kitchen", targetType: "recipe", targetId: id,
     summary: `Updated recipe flags: ${Object.entries(update).map(([k, v]) => `${k}=${v}`).join(", ")}`,
     metadata: update,
@@ -111,7 +111,7 @@ export async function DELETE(
       console.error("[api/admin/recipes/[id]] purge error", error);
       return NextResponse.json({ error: "Failed to delete recipe" }, { status: 500 });
     }
-    await logAdminAction(gate, {
+    logAdminAction(gate, {
       action: "recipe.purge", module: "kitchen", targetType: "recipe", targetId: id,
       summary: `Permanently deleted recipe ${recipe?.title ?? id}`,
       metadata: { title: recipe?.title ?? null },
@@ -128,7 +128,7 @@ export async function DELETE(
     return NextResponse.json({ error: "Failed to delete recipe" }, { status: 500 });
   }
 
-  await logAdminAction(gate, {
+  logAdminAction(gate, {
     action: "recipe.delete", module: "kitchen", targetType: "recipe", targetId: id,
     summary: `Moved recipe ${recipe?.title ?? id} to Trash`,
     metadata: { title: recipe?.title ?? null },

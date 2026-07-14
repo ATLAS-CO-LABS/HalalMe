@@ -40,6 +40,7 @@ interface Balance {
   next_tier: string | null;
   points_to_next_tier: number;
   current_tier_min_points: number;
+  profile_flair: string | null;
 }
 
 // Mirrors the cap enforced server-side in redeem_reward (052) — shown here so
@@ -73,12 +74,14 @@ export default function RewardsTab() {
   const [hasMoreHistory, setHasMoreHistory] = useState(false);
   const [loadingMoreHistory, setLoadingMoreHistory] = useState(false);
   const [recentRedemptionTimes, setRecentRedemptionTimes] = useState<string[]>([]);
+  const [ownedCounts, setOwnedCounts] = useState<Record<string, number>>({});
+  const [equippingId, setEquippingId] = useState<string | null>(null);
 
   const loadAll = useCallback(async () => {
     if (!user) return;
     try {
       const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      const [balRes, catalogRes, histRes, badgesRes, allBadgesRes, recipesRes, postsRes, redemptionsRes] = await Promise.all([
+      const [balRes, catalogRes, histRes, badgesRes, allBadgesRes, recipesRes, postsRes, redemptionsRes, ownedRes] = await Promise.all([
         fetch("/api/rewards/balance").then((r) => r.json()),
         supabase.from("reward_catalog").select("*").eq("is_active", true).order("points_required"),
         fetch("/api/rewards/history").then((r) => r.json()),
@@ -87,6 +90,7 @@ export default function RewardsTab() {
         supabase.from("recipes").select("id, title, cuisine, image_url").eq("user_id", user.id).order("created_at", { ascending: false }).limit(50),
         supabase.from("posts").select("id, content, media_urls, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(50),
         supabase.from("reward_redemptions").select("created_at").eq("user_id", user.id).gte("created_at", oneDayAgo).order("created_at", { ascending: true }),
+        supabase.from("reward_redemptions").select("catalog_item_id").eq("user_id", user.id).in("status", ["pending", "fulfilled"]),
       ]);
 
       setBalance(balRes);
@@ -95,6 +99,12 @@ export default function RewardsTab() {
       setHasMoreHistory(histRes.hasMore ?? false);
       setAllBadges((allBadgesRes.data ?? []) as RewardBadge[]);
       setRecentRedemptionTimes((redemptionsRes.data ?? []).map((r: { created_at: string }) => r.created_at));
+      setOwnedCounts(
+        (ownedRes.data ?? []).reduce((acc: Record<string, number>, r: { catalog_item_id: string }) => {
+          acc[r.catalog_item_id] = (acc[r.catalog_item_id] ?? 0) + 1;
+          return acc;
+        }, {})
+      );
       setEarnedSlugs(new Set((badgesRes.badges ?? []).map((b: { badge_slug: string }) => b.badge_slug)));
       setMyRecipes((recipesRes.data ?? []).map((r: { id: string; title: string; cuisine: string | null; image_url: string | null }) => ({
         id: r.id, label: r.title, subtitle: r.cuisine ?? undefined, imageUrl: r.image_url,
@@ -165,6 +175,25 @@ export default function RewardsTab() {
       setFeedback({ type: "error", message: err instanceof Error ? err.message : "Redemption failed" });
     } finally {
       setRedeemingId(null);
+    }
+  }
+
+  async function handleEquip(item: RewardCatalogItem) {
+    setEquippingId(item.id);
+    try {
+      const res = await fetch("/api/rewards/equip-flair", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ catalogItemId: item.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Equip failed");
+      setFeedback({ type: "success", message: `Equipped: ${item.name}` });
+      await loadAll();
+    } catch (err) {
+      setFeedback({ type: "error", message: err instanceof Error ? err.message : "Equip failed" });
+    } finally {
+      setEquippingId(null);
     }
   }
 
@@ -304,7 +333,10 @@ export default function RewardsTab() {
             const tierRank = TIER_ORDER.indexOf(item.min_tier_required);
             const tierLocked = currentTierIdx < tierRank;
             const cantAfford = (balance?.reward_points ?? 0) < item.points_required;
-            const disabled = tierLocked || cantAfford || velocityCapped || (needsTarget && options.length === 0) || redeemingId === item.id;
+            const isFlair = item.category === "profile_flair";
+            const owned = item.max_per_user != null && (ownedCounts[item.id] ?? 0) >= item.max_per_user;
+            const equipped = isFlair && owned && balance?.profile_flair === item.value_metadata?.flair_slug;
+            const disabled = tierLocked || cantAfford || velocityCapped || owned || (needsTarget && options.length === 0) || redeemingId === item.id;
 
             return (
               <div key={item.id} className="bg-[#0A1C19] p-6 flex flex-col">
@@ -335,23 +367,45 @@ export default function RewardsTab() {
                   )
                 )}
 
-                <button
-                  onClick={() => handleRedeem(item)}
-                  disabled={disabled}
-                  className={
-                    disabled
-                      ? "mt-auto h-10 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 border border-[#F7E7CE]/20 text-[#F7E7CE]/40 opacity-60 cursor-not-allowed"
-                      : "mt-auto h-10 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 bg-[#14B8A6] text-[#0A1C19] hover:bg-[#0d9488] active:bg-[#0b7c72] transition-colors cursor-pointer"
-                  }
-                >
-                  {redeemingId === item.id ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  ) : velocityCapped && !tierLocked ? (
-                    "Daily limit reached"
-                  ) : (
-                    <>{item.points_required.toLocaleString()} pts {cantAfford && !tierLocked ? "· Need more points" : ""}</>
-                  )}
-                </button>
+                {isFlair && owned ? (
+                  <button
+                    onClick={() => handleEquip(item)}
+                    disabled={equipped || equippingId === item.id}
+                    className={
+                      equipped || equippingId === item.id
+                        ? "mt-auto h-10 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 border border-[#F7E7CE]/20 text-[#F7E7CE]/40 opacity-60 cursor-not-allowed"
+                        : "mt-auto h-10 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 bg-[#14B8A6] text-[#0A1C19] hover:bg-[#0d9488] active:bg-[#0b7c72] transition-colors cursor-pointer"
+                    }
+                  >
+                    {equippingId === item.id ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : equipped ? (
+                      "Equipped"
+                    ) : (
+                      "Equip"
+                    )}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleRedeem(item)}
+                    disabled={disabled}
+                    className={
+                      disabled
+                        ? "mt-auto h-10 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 border border-[#F7E7CE]/20 text-[#F7E7CE]/40 opacity-60 cursor-not-allowed"
+                        : "mt-auto h-10 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 bg-[#14B8A6] text-[#0A1C19] hover:bg-[#0d9488] active:bg-[#0b7c72] transition-colors cursor-pointer"
+                    }
+                  >
+                    {redeemingId === item.id ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : owned ? (
+                      "Already claimed"
+                    ) : velocityCapped && !tierLocked ? (
+                      "Daily limit reached"
+                    ) : (
+                      <>{item.points_required.toLocaleString()} pts {cantAfford && !tierLocked ? "· Need more points" : ""}</>
+                    )}
+                  </button>
+                )}
               </div>
             );
           })}

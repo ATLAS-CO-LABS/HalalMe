@@ -1,4 +1,5 @@
 import { supabase, supabasePublic, supabaseUrl, supabaseAnonKey } from "./supabase";
+import { uploadWithProgress } from "@/lib/uploadWithProgress";
 import type {
   Recipe,
   RecipeReview,
@@ -128,18 +129,21 @@ export const recipeService = {
     if (error) throw new Error(error.message);
   },
 
-  async uploadRecipeImage(recipeId: string, file: File): Promise<string> {
+  async uploadRecipeImage(
+    recipeId: string,
+    file: File,
+    onProgress?: (percent: number) => void
+  ): Promise<string> {
     const form = new FormData();
     form.append("file", file);
     form.append("folder", "halalme/recipes");
     form.append("public_id", `${recipeId}/cover`);
 
-    const res = await fetch("/api/upload", { method: "POST", body: form });
-    if (!res.ok) {
-      const { error } = await res.json();
-      throw new Error(error ?? "Upload failed");
-    }
-    const { url, public_id } = await res.json() as { url: string; public_id: string };
+    const { url, public_id } = await uploadWithProgress<{ url: string; public_id: string }>(
+      "/api/upload",
+      form,
+      onProgress
+    );
 
     await supabase
       .from("recipes")

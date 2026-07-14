@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
 import { logAdminAction } from "@/lib/adminAudit";
 import { sendMerchantInviteSentEmail } from "@/services/emailService";
+import * as Sentry from "@sentry/nextjs";
 
 export async function PATCH(req: NextRequest) {
   // ── Auth gate ──────────────────────────────────────────────────────────────
@@ -38,12 +39,13 @@ export async function PATCH(req: NextRequest) {
       to: merchant.email,
       restaurantName: merchant.name,
       ownerName: merchant.owner_name ?? undefined,
-    }).catch((err) =>
-      console.error(`[bulk-invite] email failed for ${merchant.email}`, err)
-    );
+    }).catch((err) => {
+      console.error(`[bulk-invite] email failed for ${merchant.email}`, err);
+      Sentry.captureException(err);
+    });
   }
 
-  await logAdminAction(gate, {
+  logAdminAction(gate, {
     action: "merchant.bulk_invite", module: "merchants", targetType: "merchant",
     summary: `Marked ${updated?.length ?? 0} merchant${(updated?.length ?? 0) !== 1 ? "s" : ""} as invited`,
     metadata: { count: updated?.length ?? 0, ids: (updated ?? []).map((m) => m.id) },

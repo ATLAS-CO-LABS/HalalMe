@@ -42,6 +42,11 @@ export const colors = {
 // Brand wordmark font (matches the app's --font-logo: Poppins).
 const LOGO_FONT =
   "'Poppins', 'Helvetica Neue', Helvetica, Arial, sans-serif";
+// Shared across every email template so the domain/support address only
+// needs to change in one place.
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://halalme.co.uk";
+export const SUPPORT_EMAIL = "support@halalme.co.uk";
+
 // Absolute base for email image assets. Defaults to production; override with
 // EMAIL_ASSET_BASE_URL (e.g. http://localhost:3000) to preview images locally.
 const ASSET_BASE = process.env.EMAIL_ASSET_BASE_URL || "https://halalme.co.uk";

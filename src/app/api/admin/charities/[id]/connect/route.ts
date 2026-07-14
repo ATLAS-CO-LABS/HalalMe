@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/adminAuth";
 import { logAdminAction } from "@/lib/adminAudit";
 import { issueCharityOnboardingLink } from "@/lib/charityConnect";
 import { sendCharityConnectInviteEmail } from "@/services/emailService";
+import * as Sentry from "@sentry/nextjs";
 
 // POST /api/admin/charities/[id]/connect
 // Creates the charity's Stripe Express account (if it doesn't have one yet),
@@ -68,6 +69,7 @@ export async function POST(
     // The link is saved — only the email failed. Return partial success so the
     // admin can copy the link and send it manually.
     console.error("[charities/connect] email failed", e);
+    Sentry.captureException(e);
     return NextResponse.json({
       ok: true,
       emailed: false,
@@ -76,7 +78,7 @@ export async function POST(
     });
   }
 
-  await logAdminAction(gate, {
+  logAdminAction(gate, {
     action: isResend ? "charity.connect_resend" : "charity.connect_invite",
     module: "rewards",
     targetType: "charity",

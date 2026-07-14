@@ -9,6 +9,7 @@ import {
 } from "@/lib/merchantStages";
 import { requireAdmin as requireAdminAccess, type AccessLevel } from "@/lib/adminAuth";
 import { logAdminAction } from "@/lib/adminAudit";
+import * as Sentry from "@sentry/nextjs";
 
 async function requireAdmin(level: AccessLevel) {
   const gate = await requireAdminAccess("merchants", level);
@@ -68,7 +69,7 @@ export async function PATCH(
   }
 
   if (gate) {
-    await logAdminAction(gate, {
+    logAdminAction(gate, {
       action: body.action === "approve" ? "merchant_document.approve" : "merchant_document.reject",
       module: "merchants", targetType: "merchant", targetId: id,
       summary: `${body.action === "approve" ? "Approved" : "Rejected"} ${docLabel(doc.doc_type)}`,
@@ -93,7 +94,10 @@ export async function PATCH(
         ownerName: merchant.owner_name ?? undefined,
         documentLabel: docLabel(doc.doc_type),
         reason: body.reason!.trim(),
-      }).catch((err) => console.error("[admin/documents] action-needed email failed", err));
+      }).catch((err) => {
+        console.error("[admin/documents] action-needed email failed", err);
+        Sentry.captureException(err);
+      });
     } else {
       // Approved — if this completes all required docs, send the verified email.
       const { data: allDocs } = await serviceClient
@@ -110,7 +114,10 @@ export async function PATCH(
           to,
           restaurantName: merchant.name,
           ownerName: merchant.owner_name ?? undefined,
-        }).catch((err) => console.error("[admin/documents] approved email failed", err));
+        }).catch((err) => {
+          console.error("[admin/documents] approved email failed", err);
+          Sentry.captureException(err);
+        });
       }
     }
   }

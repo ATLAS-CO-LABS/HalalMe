@@ -41,7 +41,7 @@ export async function PATCH(
   }
   if (c && !c.parent_id && c.post_id) await bumpCommentCount(db, c.post_id as string, +1);
 
-  await logAdminAction(gate, {
+  logAdminAction(gate, {
     action: "comment.restore", module: "hub", targetType: "comment", targetId: id,
     summary: "Restored comment from Trash",
   });
@@ -76,7 +76,7 @@ export async function DELETE(
       console.error("[api/admin/hub/comments/[id]] purge error", error);
       return NextResponse.json({ error: "Failed to delete comment" }, { status: 500 });
     }
-    await logAdminAction(gate, {
+    logAdminAction(gate, {
       action: "comment.purge", module: "hub", targetType: "comment", targetId: id,
       summary: "Permanently deleted comment and any replies",
     });
@@ -93,7 +93,7 @@ export async function DELETE(
   }
   if (topLevel && c?.post_id) await bumpCommentCount(db, c.post_id as string, -1);
 
-  await logAdminAction(gate, {
+  logAdminAction(gate, {
     action: "comment.delete", module: "hub", targetType: "comment", targetId: id,
     summary: "Moved comment to Trash",
   });

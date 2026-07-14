@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
+import { logAdminAction } from "@/lib/adminAudit";
 
 const STATUSES = ["open", "pending", "resolved", "closed"];
 const PRIORITIES = ["low", "normal", "high"];
@@ -41,13 +42,7 @@ export async function GET(
     .eq("conversation_id", id)
     .order("created_at", { ascending: true });
 
-  let canManage = gate.role === "super_admin";
-  if (!canManage) {
-    const { data: vp } = await serviceClient
-      .from("admin_permissions").select("access")
-      .eq("user_id", gate.userId).eq("module", "support").single();
-    canManage = vp?.access === "manage";
-  }
+  const canManage = gate.access === "manage";
 
   // Evermile deep-link for delivery escalations (P1: deep-link only).
   // The multi-FK-hint embed isn't in the generated types, so cast for the
@@ -64,6 +59,43 @@ export async function GET(
     viewerId: gate.userId,
     evermileUrl,
   });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DELETE /api/admin/support/conversations/[id] — manage-only. Messages cascade.
+// ─────────────────────────────────────────────────────────────────────────────
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
+
+  const gate = await requireAdmin("support", "manage");
+  if (!gate.ok) return NextResponse.json({ error: gate.error }, { status: gate.status });
+  const { serviceClient } = gate;
+
+  const { data: conversation } = await serviceClient
+    .from("support_conversations")
+    .select("id, subject")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (!conversation) {
+    return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
+  }
+
+  const { error } = await serviceClient.from("support_conversations").delete().eq("id", id);
+  if (error) {
+    console.error("[api/admin/support/conversations/[id]] delete error", error);
+    return NextResponse.json({ error: "Failed to delete conversation" }, { status: 500 });
+  }
+
+  logAdminAction(gate, {
+    action: "support.conversation_delete", module: "support", targetType: "support_conversation", targetId: id,
+    summary: `Deleted conversation: ${conversation.subject}`,
+  });
+
+  return NextResponse.json({ ok: true });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

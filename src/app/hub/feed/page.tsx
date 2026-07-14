@@ -430,7 +430,8 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
   const handleCreatePost = async (
     content: string,
     mediaFile?: File,
-    postType: PostType = "general"
+    postType: PostType = "general",
+    onProgress?: (percent: number) => void
   ) => {
     if (!user) return;
 
@@ -441,7 +442,7 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
     const ownProfiles = { username: user.username, full_name: user.full_name, avatar_url: user.avatar_url, is_verified: user.is_verified };
 
     if (mediaFile) {
-      const { url, public_id } = await hubService.uploadPostMedia(user.id, newPost.id, mediaFile);
+      const { url, public_id } = await hubService.uploadPostMedia(user.id, newPost.id, mediaFile, onProgress);
       const updatedPost = await hubService.updatePost(newPost.id, content, [url], [public_id]);
       const enriched    = { ...updatedPost, profiles: ownProfiles, is_liked: false, is_bookmarked: false };
       setPosts((prev) => {

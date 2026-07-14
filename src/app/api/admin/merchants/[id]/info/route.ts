@@ -91,7 +91,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Failed to save changes" }, { status: 500 });
   }
 
-  await logAdminAction(gate, {
+  logAdminAction(gate, {
     action: "merchant.info_edit", module: "merchants", targetType: "merchant", targetId: id,
     summary: `Edited merchant details: ${Object.keys(updates).filter((k) => k !== "hyperzod_sync_failed").join(", ")}`,
     metadata: { fields: Object.keys(updates), hyperzod_synced: !hyperzodWarning },

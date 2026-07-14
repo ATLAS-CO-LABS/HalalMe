@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient, createServiceClient } from "@/lib/supabase-server";
 import { sendMerchantAgreementEmail, sendMerchantContractEmail } from "@/services/emailService";
+import * as Sentry from "@sentry/nextjs";
 import {
   COMMISSION_QUESTIONS,
   evaluateCommission,
@@ -191,7 +192,10 @@ export async function POST(req: NextRequest) {
         to: merchant.email,
         restaurantName: merchant.name,
         ownerName: merchant.owner_name ?? undefined,
-      }).catch((err) => console.error("[merchant/commission] agreement email failed", err));
+      }).catch((err) => {
+        console.error("[merchant/commission] agreement email failed", err);
+        Sentry.captureException(err);
+      });
     }
 
     return NextResponse.json({ commission: updated });
@@ -199,6 +203,11 @@ export async function POST(req: NextRequest) {
 
   // ── sign_contract: Agreed-stage tick + timestamp (admin still reviews → Live) ─
   if (action === "sign_contract") {
+    // Already signed — don't re-stamp or re-email on a duplicate/retried request.
+    if (existing.contract_signed_at) {
+      return NextResponse.json({ commission: existing });
+    }
+
     const signedAtIso = new Date().toISOString();
     const { data: updated, error } = await service
       .from("merchant_commission")
@@ -222,7 +231,10 @@ export async function POST(req: NextRequest) {
         signedAt: new Date(signedAtIso).toLocaleString("en-GB", {
           day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit",
         }),
-      }).catch((err) => console.error("[merchant/commission] contract email failed", err));
+      }).catch((err) => {
+        console.error("[merchant/commission] contract email failed", err);
+        Sentry.captureException(err);
+      });
     }
 
     return NextResponse.json({ commission: updated });

@@ -91,7 +91,7 @@ export async function PATCH(
       notes: typeof body.notes === "string" ? body.notes.trim() || null : null,
     });
 
-    await logAdminAction(gate, {
+    logAdminAction(gate, {
       action: suspending ? "charity.suspend" : "charity.reinstate", module: "rewards", targetType: "charity", targetId: id,
       summary: suspending ? "Suspended charity" : "Reinstated charity",
       metadata: { from: charity.verification_status, to: update.verification_status },
@@ -169,10 +169,56 @@ export async function PATCH(
     return NextResponse.json({ error: "Failed to update charity" }, { status: 500 });
   }
 
-  await logAdminAction(gate, {
+  logAdminAction(gate, {
     action: "charity.update", module: "rewards", targetType: "charity", targetId: id,
     summary: `Updated charity fields: ${Object.keys(update).join(", ")}`,
     metadata: update,
+  });
+
+  return NextResponse.json({ ok: true });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DELETE /api/admin/charities/[id] — manage-only. Blocked at the database level
+// (donations.charity_id is ON DELETE RESTRICT) if the charity has any donation
+// history — suspend it instead to preserve that record.
+// ─────────────────────────────────────────────────────────────────────────────
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
+
+  const gate = await requireAdmin("rewards", "manage");
+  if (!gate.ok) return NextResponse.json({ error: gate.error }, { status: gate.status });
+  const { serviceClient } = gate;
+
+  const { data: charity, error: loadErr } = await serviceClient
+    .from("charities")
+    .select("id, name")
+    .eq("id", id)
+    .single();
+
+  if (loadErr || !charity) {
+    return NextResponse.json({ error: "Charity not found" }, { status: 404 });
+  }
+
+  const { error } = await serviceClient.from("charities").delete().eq("id", id);
+  if (error) {
+    // 23503 = foreign_key_violation — donations (or applications) still reference this charity.
+    if (error.code === "23503") {
+      return NextResponse.json(
+        { error: "This charity has existing donations or applications and can't be deleted. Suspend it instead to keep that history." },
+        { status: 409 },
+      );
+    }
+    console.error("[charities DELETE] delete error", error);
+    return NextResponse.json({ error: "Failed to delete charity" }, { status: 500 });
+  }
+
+  logAdminAction(gate, {
+    action: "charity.delete", module: "rewards", targetType: "charity", targetId: id,
+    summary: `Deleted charity ${charity.name}`,
   });
 
   return NextResponse.json({ ok: true });

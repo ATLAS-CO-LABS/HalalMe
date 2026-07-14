@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
 import { sendSupportNotifyEmail } from "@/services/emailService";
+import { createRateLimiter, rateLimitResponse } from "@/lib/rateLimit";
+import * as Sentry from "@sentry/nextjs";
 
 export const runtime = "nodejs";
+
+const limiter = createRateLimiter("support-conversations", 5, "10 m");
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /api/support/conversations — the caller's own support conversations.
@@ -38,6 +42,9 @@ export async function POST(req: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+
+  const { success, reset } = await limiter.limit(user.id);
+  if (!success) return rateLimitResponse(reset);
 
   let body: { subject?: string; message?: string };
   try {
@@ -79,24 +86,23 @@ export async function POST(req: NextRequest) {
   }
 
   // Notify the support team (non-blocking — ticket already exists).
-  try {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("full_name")
-      .eq("id", user.id)
-      .maybeSingle();
-    await sendSupportNotifyEmail({
-      requesterName: profile?.full_name ?? user.email ?? "A user",
-      requesterEmail: user.email ?? "",
-      source: "user",
-      subject,
-      messagePreview: message,
-      conversationId: conversation.id,
-      isNew: true,
-    });
-  } catch (err) {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", user.id)
+    .maybeSingle();
+  sendSupportNotifyEmail({
+    requesterName: profile?.full_name ?? user.email ?? "A user",
+    requesterEmail: user.email ?? "",
+    source: "user",
+    subject,
+    messagePreview: message,
+    conversationId: conversation.id,
+    isNew: true,
+  }).catch((err) => {
     console.error("[api/support/conversations] notify failed", err);
-  }
+    Sentry.captureException(err);
+  });
 
   return NextResponse.json({ id: conversation.id });
 }

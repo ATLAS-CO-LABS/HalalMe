@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient, createServiceClient } from "@/lib/supabase-server";
 import { sendSupportNotifyEmail } from "@/services/emailService";
 import { createRateLimiter, getClientIp, rateLimitResponse } from "@/lib/rateLimit";
+import * as Sentry from "@sentry/nextjs";
 
 const limiter = createRateLimiter("contact", 5, "10 m");
 
@@ -87,20 +88,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Could not send your message. Please try again." }, { status: 500 });
   }
 
-  // Notify the support team (non-blocking — ticket already exists).
-  try {
-    await sendSupportNotifyEmail({
-      requesterName: fullName,
-      requesterEmail: email,
-      source: "user",
-      subject,
-      messagePreview: message,
-      conversationId: conversation.id,
-      isNew: true,
-    });
-  } catch (err) {
+  // Notify the support team (non-blocking — ticket already exists). For a
+  // logged-in submitter, reply-to uses their verified session email — never
+  // the typed form field, which an admin's "reply" could otherwise be spoofed
+  // into sending to an arbitrary address.
+  sendSupportNotifyEmail({
+    requesterName: fullName,
+    requesterEmail: user?.email ?? email,
+    source: "user",
+    subject,
+    messagePreview: message,
+    conversationId: conversation.id,
+    isNew: true,
+  }).catch((err) => {
     console.error("[api/contact] notify failed", err);
-  }
+    Sentry.captureException(err);
+  });
 
   return NextResponse.json({ ok: true });
 }

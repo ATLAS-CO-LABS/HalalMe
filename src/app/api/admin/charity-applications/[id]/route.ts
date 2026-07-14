@@ -66,16 +66,7 @@ export async function GET(
   );
 
   // Manage gate for action buttons.
-  let canManage = gate.role === "super_admin";
-  if (!canManage) {
-    const { data: vp } = await serviceClient
-      .from("admin_permissions")
-      .select("access")
-      .eq("user_id", gate.userId)
-      .eq("module", "rewards")
-      .single();
-    canManage = vp?.access === "manage";
-  }
+  const canManage = gate.access === "manage";
 
   return NextResponse.json({ application, applicant: applicant ?? null, reviewerName, documents, canManage });
 }

@@ -1,5 +1,5 @@
 import { Button, Heading, Text } from "@react-email/components";
-import { EmailLayout, styles } from "./theme";
+import { EmailLayout, styles, SITE_URL, SUPPORT_EMAIL } from "./theme";
 
 interface MerchantDocsApprovedEmailProps {
   restaurantName: string;
@@ -10,7 +10,7 @@ interface MerchantDocsApprovedEmailProps {
 export default function MerchantDocsApprovedEmail({
   restaurantName,
   ownerName,
-  dashboardUrl = "https://halalme.co.uk/merchant",
+  dashboardUrl = `${SITE_URL}/merchant`,
 }: MerchantDocsApprovedEmailProps) {
   const greeting = ownerName ? `Hi ${ownerName},` : "Hi there,";
 
@@ -38,8 +38,8 @@ export default function MerchantDocsApprovedEmail({
 
       <Text style={styles.paragraph}>
         Questions? Reply to this email or contact us at{" "}
-        <a href="mailto:support@halalme.co.uk" style={styles.link}>
-          support@halalme.co.uk
+        <a href={`mailto:${SUPPORT_EMAIL}`} style={styles.link}>
+          {SUPPORT_EMAIL}
         </a>
         .
       </Text>

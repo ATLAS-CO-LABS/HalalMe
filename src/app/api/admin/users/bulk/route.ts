@@ -70,7 +70,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Bulk action failed" }, { status: 500 });
   }
 
-  await logAdminAction(gate, {
+  logAdminAction(gate, {
     action: `user.bulk_${action}`, module: "users", targetType: "user",
     summary: `Bulk ${action} on ${eligible.length} user${eligible.length !== 1 ? "s" : ""}`,
     metadata: { count: eligible.length, ids: eligible, reason: reason ?? null },

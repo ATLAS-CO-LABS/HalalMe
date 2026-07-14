@@ -36,115 +36,126 @@ export async function GET() {
   const needsAttention: { id: string; label: string; detail: string; href: string; severity: "warn" | "urgent" }[] = [];
   const recent: { type: string; label: string; detail: string; at: string }[] = [];
 
-  // ── Users ──────────────────────────────────────────────────────────────
-  if (can("users")) {
-    const [{ count: total }, { count: newThisWeek }, { data: signups }] = await Promise.all([
-      db.from("profiles").select("id", { count: "exact", head: true }),
-      db.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", weekAgo),
-      db.from("profiles").select("full_name, username, created_at").order("created_at", { ascending: false }).limit(5),
-    ]);
-    stats.users = { total: total ?? 0, newThisWeek: newThisWeek ?? 0 };
-    for (const u of signups ?? []) {
-      recent.push({ type: "user", label: u.full_name ?? (u.username ? `@${u.username}` : "New user"), detail: "signed up", at: u.created_at });
-    }
-  }
+  // Each block below only touches its own keys in stats/needsAttention/recent,
+  // so they're independent — run them concurrently instead of one after another
+  // (this used to be ~15 sequential round-trips; now it's one wait for the slowest).
+  await Promise.all([
+    // ── Users ────────────────────────────────────────────────────────────
+    (async () => {
+      if (!can("users")) return;
+      const [{ count: total }, { count: newThisWeek }, { data: signups }] = await Promise.all([
+        db.from("profiles").select("id", { count: "exact", head: true }),
+        db.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", weekAgo),
+        db.from("profiles").select("full_name, username, created_at").order("created_at", { ascending: false }).limit(5),
+      ]);
+      stats.users = { total: total ?? 0, newThisWeek: newThisWeek ?? 0 };
+      for (const u of signups ?? []) {
+        recent.push({ type: "user", label: u.full_name ?? (u.username ? `@${u.username}` : "New user"), detail: "signed up", at: u.created_at });
+      }
+    })(),
 
-  // ── Merchants ──────────────────────────────────────────────────────────
-  if (can("merchants")) {
-    const { data: merchants } = await db
-      .from("merchants")
-      .select("id, name, status, created_at, invited_at, contacted_at, next_followup_on, updated_at");
-    const rows = merchants ?? [];
-    let attn = 0;
-    for (const m of rows) {
-      const fu = getFollowUp({
-        status: m.status,
-        created_at: m.created_at,
-        invited_at: m.invited_at,
-        contacted_at: m.contacted_at,
-        next_followup_on: m.next_followup_on,
-      });
-      if (fu) {
-        attn++;
-        if (needsAttention.filter((n) => n.id.startsWith("merchant-")).length < 6) {
-          needsAttention.push({
-            id: `merchant-${m.id}`,
-            label: m.name,
-            detail: `${fu.label} · ${fu.days}d`,
-            href: "/admin/merchants",
-            severity: fu.severity,
-          });
+    // ── Merchants ────────────────────────────────────────────────────────
+    (async () => {
+      if (!can("merchants")) return;
+      const { data: merchants } = await db
+        .from("merchants")
+        .select("id, name, status, created_at, invited_at, contacted_at, next_followup_on, updated_at");
+      const rows = merchants ?? [];
+      let attn = 0;
+      for (const m of rows) {
+        const fu = getFollowUp({
+          status: m.status,
+          created_at: m.created_at,
+          invited_at: m.invited_at,
+          contacted_at: m.contacted_at,
+          next_followup_on: m.next_followup_on,
+        });
+        if (fu) {
+          attn++;
+          if (needsAttention.filter((n) => n.id.startsWith("merchant-")).length < 6) {
+            needsAttention.push({
+              id: `merchant-${m.id}`,
+              label: m.name,
+              detail: `${fu.label} · ${fu.days}d`,
+              href: "/admin/merchants",
+              severity: fu.severity,
+            });
+          }
         }
       }
-    }
-    stats.merchants = { total: rows.length, needsAttention: attn };
-    for (const m of [...rows].sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()).slice(0, 5)) {
-      recent.push({ type: "merchant", label: m.name, detail: `status: ${m.status}`, at: m.updated_at });
-    }
-  }
+      stats.merchants = { total: rows.length, needsAttention: attn };
+      for (const m of [...rows].sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()).slice(0, 5)) {
+        recent.push({ type: "merchant", label: m.name, detail: `status: ${m.status}`, at: m.updated_at });
+      }
+    })(),
 
-  // ── Kitchen ────────────────────────────────────────────────────────────
-  if (can("kitchen")) {
-    const [{ count: total }, { count: pendingHalal }, { data: newRecipes }] = await Promise.all([
-      db.from("recipes").select("id", { count: "exact", head: true }).is("deleted_at", null),
-      db.from("recipes").select("id", { count: "exact", head: true }).eq("is_halal_verified", false).is("deleted_at", null),
-      db.from("recipes").select("title, created_at").is("deleted_at", null).order("created_at", { ascending: false }).limit(5),
-    ]);
-    stats.kitchen = { total: total ?? 0, pendingHalal: pendingHalal ?? 0 };
-    for (const r of newRecipes ?? []) {
-      recent.push({ type: "recipe", label: r.title, detail: "new recipe", at: r.created_at });
-    }
-  }
+    // ── Kitchen ──────────────────────────────────────────────────────────
+    (async () => {
+      if (!can("kitchen")) return;
+      const [{ count: total }, { count: pendingHalal }, { data: newRecipes }] = await Promise.all([
+        db.from("recipes").select("id", { count: "exact", head: true }).is("deleted_at", null),
+        db.from("recipes").select("id", { count: "exact", head: true }).eq("is_halal_verified", false).is("deleted_at", null),
+        db.from("recipes").select("title, created_at").is("deleted_at", null).order("created_at", { ascending: false }).limit(5),
+      ]);
+      stats.kitchen = { total: total ?? 0, pendingHalal: pendingHalal ?? 0 };
+      for (const r of newRecipes ?? []) {
+        recent.push({ type: "recipe", label: r.title, detail: "new recipe", at: r.created_at });
+      }
+    })(),
 
-  // ── Hub (recent posts for the activity feed) ─────────────────────────────
-  if (can("hub")) {
-    const { data: newPosts } = await db
-      .from("posts")
-      .select("content, post_type, created_at")
-      .is("deleted_at", null)
-      .order("created_at", { ascending: false })
-      .limit(5);
-    for (const p of newPosts ?? []) {
-      const text = (p.content ?? "").trim();
-      recent.push({
-        type: "post",
-        label: text ? (text.length > 40 ? `${text.slice(0, 40)}…` : text) : `New ${p.post_type ?? "post"}`,
-        detail: "posted to Hub",
-        at: p.created_at,
-      });
-    }
-  }
+    // ── Hub (recent posts for the activity feed) ────────────────────────
+    (async () => {
+      if (!can("hub")) return;
+      const { data: newPosts } = await db
+        .from("posts")
+        .select("content, post_type, created_at")
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      for (const p of newPosts ?? []) {
+        const text = (p.content ?? "").trim();
+        recent.push({
+          type: "post",
+          label: text ? (text.length > 40 ? `${text.slice(0, 40)}…` : text) : `New ${p.post_type ?? "post"}`,
+          detail: "posted to Hub",
+          at: p.created_at,
+        });
+      }
+    })(),
 
-  // ── Rewards / charity / fraud (all under the rewards module) ────────────
-  if (can("rewards")) {
-    const [{ data: charities }, { count: pendingApps }, { count: underReview }, { count: fraud }, { data: donations }] = await Promise.all([
-      db.from("charities").select("raised_amount"),
-      db.from("charity_applications").select("id", { count: "exact", head: true }).eq("status", "pending"),
-      db.from("charity_applications").select("id", { count: "exact", head: true }).eq("status", "under_review"),
-      db.from("donation_flags").select("id", { count: "exact", head: true }).eq("status", "pending_review"),
-      db.from("donations").select("amount, created_at, status").eq("status", "completed").order("created_at", { ascending: false }).limit(5),
-    ]);
-    const totalRaised = (charities ?? []).reduce((s, c) => s + Number(c.raised_amount ?? 0), 0);
-    const apps = (pendingApps ?? 0) + (underReview ?? 0);
-    stats.rewards = { totalRaised: Math.round(totalRaised), pendingApplications: apps };
-    stats.fraud = { pending: fraud ?? 0 };
+    // ── Rewards / charity / fraud (all under the rewards module) ────────
+    (async () => {
+      if (!can("rewards")) return;
+      const [{ data: charities }, { count: pendingApps }, { count: underReview }, { count: fraud }, { data: donations }] = await Promise.all([
+        db.from("charities").select("raised_amount"),
+        db.from("charity_applications").select("id", { count: "exact", head: true }).eq("status", "pending"),
+        db.from("charity_applications").select("id", { count: "exact", head: true }).eq("status", "under_review"),
+        db.from("donation_flags").select("id", { count: "exact", head: true }).eq("status", "pending_review"),
+        db.from("donations").select("amount, created_at, status").eq("status", "completed").order("created_at", { ascending: false }).limit(5),
+      ]);
+      const totalRaised = (charities ?? []).reduce((s, c) => s + Number(c.raised_amount ?? 0), 0);
+      const apps = (pendingApps ?? 0) + (underReview ?? 0);
+      stats.rewards = { totalRaised: Math.round(totalRaised), pendingApplications: apps };
+      stats.fraud = { pending: fraud ?? 0 };
 
-    if (apps > 0) needsAttention.push({ id: "charity-apps", label: `${apps} charity application${apps !== 1 ? "s" : ""}`, detail: "awaiting review", href: "/admin/rewards", severity: "warn" });
-    if ((fraud ?? 0) > 0) needsAttention.push({ id: "fraud", label: `${fraud} fraud flag${fraud !== 1 ? "s" : ""}`, detail: "pending review", href: "/admin/rewards", severity: "urgent" });
-    for (const d of donations ?? []) {
-      recent.push({ type: "donation", label: `£${Math.round(Number(d.amount ?? 0))} donation`, detail: "completed", at: d.created_at });
-    }
-  }
+      if (apps > 0) needsAttention.push({ id: "charity-apps", label: `${apps} charity application${apps !== 1 ? "s" : ""}`, detail: "awaiting review", href: "/admin/rewards", severity: "warn" });
+      if ((fraud ?? 0) > 0) needsAttention.push({ id: "fraud", label: `${fraud} fraud flag${fraud !== 1 ? "s" : ""}`, detail: "pending review", href: "/admin/rewards", severity: "urgent" });
+      for (const d of donations ?? []) {
+        recent.push({ type: "donation", label: `£${Math.round(Number(d.amount ?? 0))} donation`, detail: "completed", at: d.created_at });
+      }
+    })(),
 
-  // ── Support ────────────────────────────────────────────────────────────
-  if (can("support")) {
-    const [{ count: open }, { count: unassigned }] = await Promise.all([
-      db.from("support_conversations").select("id", { count: "exact", head: true }).in("status", ["open", "pending"]),
-      db.from("support_conversations").select("id", { count: "exact", head: true }).is("assigned_to", null).in("status", ["open", "pending"]),
-    ]);
-    stats.support = { open: open ?? 0 };
-    if ((unassigned ?? 0) > 0) needsAttention.push({ id: "support-unassigned", label: `${unassigned} unassigned ticket${unassigned !== 1 ? "s" : ""}`, detail: "no owner yet", href: "/admin/chat", severity: "warn" });
-  }
+    // ── Support ──────────────────────────────────────────────────────────
+    (async () => {
+      if (!can("support")) return;
+      const [{ count: open }, { count: unassigned }] = await Promise.all([
+        db.from("support_conversations").select("id", { count: "exact", head: true }).in("status", ["open", "pending"]),
+        db.from("support_conversations").select("id", { count: "exact", head: true }).is("assigned_to", null).in("status", ["open", "pending"]),
+      ]);
+      stats.support = { open: open ?? 0 };
+      if ((unassigned ?? 0) > 0) needsAttention.push({ id: "support-unassigned", label: `${unassigned} unassigned ticket${unassigned !== 1 ? "s" : ""}`, detail: "no owner yet", href: "/admin/chat", severity: "warn" });
+    })(),
+  ]);
 
   // Sort the merged activity feed newest-first.
   recent.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());

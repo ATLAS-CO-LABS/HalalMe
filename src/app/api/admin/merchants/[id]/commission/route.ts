@@ -7,6 +7,7 @@ import {
 import { COMMISSION_PROTECTED_THRESHOLD } from "@/lib/merchantStages";
 import { requireAdmin as requireAdminAccess, type AccessLevel } from "@/lib/adminAuth";
 import { logAdminAction } from "@/lib/adminAudit";
+import * as Sentry from "@sentry/nextjs";
 
 // Default shape so a null readiness_checklist isn't clobbered when we tick a flag.
 const DEFAULT_CHECKLIST = {
@@ -63,6 +64,18 @@ export async function POST(
 
   if (!row) return NextResponse.json({ error: "No commission record for this merchant" }, { status: 404 });
 
+  // Guard against double-clicks/retries re-running an already-decided review —
+  // re-processing would resend the merchant email and duplicate the audit log.
+  if (
+    (action === "approve" || action === "counter" || action === "reject") &&
+    !["none", "pending"].includes(row.review_status)
+  ) {
+    return NextResponse.json(
+      { error: `This commission review was already decided (status: ${row.review_status})` },
+      { status: 409 },
+    );
+  }
+
   const { data: merchant } = await service
     .from("merchants")
     .select("id, status, name, email, owner_name, readiness_checklist")
@@ -114,10 +127,13 @@ export async function POST(
         to: merchant.email,
         restaurantName: merchant.name,
         ownerName: merchant.owner_name ?? undefined,
-      }).catch((err) => console.error("[admin/commission] agreement email failed", err));
+      }).catch((err) => {
+        console.error("[admin/commission] agreement email failed", err);
+        Sentry.captureException(err);
+      });
     }
 
-    if (gate) await logAdminAction(gate, {
+    if (gate) logAdminAction(gate, {
       action: "merchant.commission_approve", module: "merchants", targetType: "merchant", targetId: id,
       summary: `Approved commission ${rate}% for ${merchant.name}`,
       metadata: { rate, requested: row.requested_commission, recommended: row.recommended_commission },
@@ -147,9 +163,12 @@ export async function POST(
       restaurantName: merchant.name,
       ownerName: merchant.owner_name ?? undefined,
       commission: rate,
-    }).catch((err) => console.error("[admin/commission] counter email failed", err));
+    }).catch((err) => {
+      console.error("[admin/commission] counter email failed", err);
+      Sentry.captureException(err);
+    });
 
-    if (gate) await logAdminAction(gate, {
+    if (gate) logAdminAction(gate, {
       action: "merchant.commission_counter", module: "merchants", targetType: "merchant", targetId: id,
       summary: `Countered commission at ${rate}% for ${merchant.name}`,
       metadata: { rate },
@@ -174,9 +193,12 @@ export async function POST(
       restaurantName: merchant.name,
       ownerName: merchant.owner_name ?? undefined,
       standardRate: row.recommended_commission,
-    }).catch((err) => console.error("[admin/commission] decline email failed", err));
+    }).catch((err) => {
+      console.error("[admin/commission] decline email failed", err);
+      Sentry.captureException(err);
+    });
 
-    if (gate) await logAdminAction(gate, {
+    if (gate) logAdminAction(gate, {
       action: "merchant.commission_reject", module: "merchants", targetType: "merchant", targetId: id,
       summary: `Declined commission review for ${merchant.name} (standard rate stands)`,
       metadata: { standardRate: row.recommended_commission },

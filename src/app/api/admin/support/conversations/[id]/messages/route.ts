@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
 import { sendSupportReplyEmail } from "@/services/emailService";
+import * as Sentry from "@sentry/nextjs";
 
 export const runtime = "nodejs";
 
@@ -46,13 +47,17 @@ export async function POST(
     return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
   }
 
-  const { error: msgErr } = await serviceClient.from("support_messages").insert({
-    conversation_id: id,
-    sender_id: gate.userId,
-    sender_role: "admin",
-    body: message,
-    is_internal: isInternal,
-  });
+  const { data: newMessage, error: msgErr } = await serviceClient
+    .from("support_messages")
+    .insert({
+      conversation_id: id,
+      sender_id: gate.userId,
+      sender_role: "admin",
+      body: message,
+      is_internal: isInternal,
+    })
+    .select("id, sender_role, body, created_at, is_internal")
+    .single();
 
   if (msgErr) {
     console.error("[api/admin/support/.../messages] insert error", msgErr);
@@ -61,7 +66,7 @@ export async function POST(
 
   // Internal notes are never emailed to the requester.
   if (isInternal) {
-    return NextResponse.json({ ok: true, internal: true });
+    return NextResponse.json({ ok: true, internal: true, message: newMessage });
   }
 
   // Notify the requester (non-blocking — reply already saved). Prefer the linked
@@ -76,18 +81,19 @@ export async function POST(
   const toEmail = linked?.email ?? conv.requester_email;
   const toName = linked?.full_name ?? conv.requester_name ?? undefined;
   if (toEmail) {
-    try {
-      await sendSupportReplyEmail({
-        to: toEmail,
-        recipientName: toName,
-        subject: conv.subject,
-        replyPreview: message,
-        conversationId: id,
-      });
-    } catch (err) {
+    // Fire-and-forget — the reply is already saved, don't make the admin wait
+    // on Resend's round-trip before seeing "sent".
+    sendSupportReplyEmail({
+      to: toEmail,
+      recipientName: toName,
+      subject: conv.subject,
+      replyPreview: message,
+      conversationId: id,
+    }).catch((err) => {
       console.error("[api/admin/support/.../messages] reply email failed", err);
-    }
+      Sentry.captureException(err);
+    });
   }
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, message: newMessage });
 }

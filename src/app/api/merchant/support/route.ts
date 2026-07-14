@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient, createServiceClient } from "@/lib/supabase-server";
 import { sendMerchantSupportEmail } from "@/services/emailService";
+import { createRateLimiter, rateLimitResponse } from "@/lib/rateLimit";
+
+const limiter = createRateLimiter("merchant-support", 5, "10 m");
 
 export async function POST(req: NextRequest) {
   const authed = await createServerClient();
   const { data: { user } } = await authed.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+
+  const { success, reset } = await limiter.limit(user.id);
+  if (!success) return rateLimitResponse(reset);
 
   let body: { subject?: string; message?: string };
   try {

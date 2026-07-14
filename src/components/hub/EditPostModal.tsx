@@ -8,6 +8,11 @@ import { withTimeout } from "@/lib/withTimeout";
 import { friendlyError } from "@/lib/friendlyError";
 import Avatar from "./Avatar";
 
+const BG = "#0B0D0F";
+const BG2 = "#111418";
+const AMBER = "#F59E0B";
+const CREAM = "#F7E7CE";
+
 interface EditPostModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -71,7 +76,7 @@ export default function EditPostModal({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
             onClick={handleClose}
-            className="fixed inset-0 bg-black/60 z-50"
+            className="fixed inset-0 bg-black/70 z-50"
           />
 
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -80,20 +85,24 @@ export default function EditPostModal({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 8 }}
               transition={{ type: "tween", duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="bg-gray-800 rounded-2xl border border-gray-700 w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
+              className="w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col border shadow-2xl"
+              style={{ backgroundColor: BG2, borderColor: `${CREAM}12` }}
             >
               {/* Header */}
-              <div className="flex items-center justify-between p-4 md:p-5 border-b border-gray-700">
+              <div className="flex items-center justify-between p-4 md:p-5 border-b" style={{ borderColor: `${CREAM}10` }}>
                 <h2
-                  className="text-xl font-bold text-white"
-                  style={{ fontFamily: "var(--font-headline)" }}
+                  className="text-lg md:text-xl font-extrabold uppercase tracking-tight"
+                  style={{ color: CREAM, fontFamily: "var(--font-headline)" }}
                 >
                   Edit Post
                 </h2>
                 <motion.button
                   onClick={handleClose}
                   disabled={isSubmitting}
-                  className="text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+                  className="transition-colors disabled:opacity-50"
+                  style={{ color: `${CREAM}45` }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = CREAM)}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = `${CREAM}45`)}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                 >
@@ -102,19 +111,19 @@ export default function EditPostModal({
               </div>
 
               {/* User Info */}
-              <div className="p-4 md:p-5 flex items-center gap-3 border-b border-gray-700">
+              <div className="p-4 md:p-5 flex items-center gap-3 border-b" style={{ borderColor: `${CREAM}10` }}>
                 <Avatar src={avatarUrl} alt={displayName} size="lg" />
                 <div>
                   <h3
-                    className="font-semibold text-white"
-                    style={{ fontFamily: "var(--font-headline)" }}
+                    className="font-semibold"
+                    style={{ color: CREAM, fontFamily: "var(--font-headline)" }}
                   >
                     {displayName}
                   </h3>
                   {username && (
                     <p
-                      className="text-gray-400 text-sm font-normal"
-                      style={{ fontFamily: "var(--font-body)" }}
+                      className="text-sm font-normal"
+                      style={{ color: `${CREAM}45`, fontFamily: "var(--font-body)" }}
                     >
                       {username}
                     </p>
@@ -128,8 +137,8 @@ export default function EditPostModal({
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   placeholder="What's on your mind?"
-                  className="w-full bg-transparent text-white placeholder-gray-500 text-base resize-none focus:outline-none min-h-30 font-normal"
-                  style={{ fontFamily: "var(--font-body)" }}
+                  className="w-full text-base resize-none focus:outline-none min-h-30 font-normal border p-3"
+                  style={{ backgroundColor: BG, borderColor: `${CREAM}12`, color: CREAM, caretColor: AMBER, fontFamily: "var(--font-body)" }}
                   autoFocus
                   disabled={isSubmitting}
                 />
@@ -139,12 +148,15 @@ export default function EditPostModal({
               </div>
 
               {/* Actions */}
-              <div className="p-4 md:p-5 border-t border-gray-700">
+              <div className="p-4 md:p-5 border-t" style={{ borderColor: `${CREAM}10` }}>
                 <div className="flex items-center justify-end gap-2">
                   <motion.button
                     onClick={handleClose}
                     disabled={isSubmitting}
-                    className="px-4 py-2 rounded-full font-semibold text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+                    className="px-4 py-2 font-semibold transition-colors disabled:opacity-50"
+                    style={{ color: `${CREAM}45` }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = CREAM)}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = `${CREAM}45`)}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
@@ -153,11 +165,12 @@ export default function EditPostModal({
                   <motion.button
                     onClick={handleSubmit}
                     disabled={!content.trim() || isSubmitting}
-                    className={`flex items-center gap-2 px-6 py-2.5 rounded-full font-semibold transition-all ${
+                    className="flex items-center gap-2 px-6 py-2.5 font-extrabold uppercase tracking-tighter text-sm transition-all"
+                    style={
                       content.trim() && !isSubmitting
-                        ? "bg-linear-to-br from-[#F59E0B] to-[#D97706] text-white hover:shadow-lg"
-                        : "bg-gray-700 text-gray-500 cursor-not-allowed"
-                    }`}
+                        ? { backgroundColor: AMBER, color: BG }
+                        : { backgroundColor: BG, color: `${CREAM}30`, cursor: "not-allowed" }
+                    }
                     whileHover={content.trim() && !isSubmitting ? { scale: 1.05 } : {}}
                     whileTap={content.trim() && !isSubmitting ? { scale: 0.95 } : {}}
                   >

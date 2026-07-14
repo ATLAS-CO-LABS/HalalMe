@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  ArrowLeft, Loader2, Send, Store, User as UserIcon, ExternalLink, Mail, AlertCircle, Lock,
+  ArrowLeft, Loader2, Send, Store, User as UserIcon, ExternalLink, Mail, AlertCircle, Lock, Trash2,
 } from "lucide-react";
 import { display } from "../../_fonts";
-import { useToast, ToastView, Badge } from "../../_ui";
+import { useToast, ToastView, Badge, Modal } from "../../_ui";
 import { useAdmin } from "../../AdminProvider";
 import ThemedSelect from "@/components/admin/ThemedSelect";
 import RecordNav from "@/components/admin/RecordNav";
@@ -62,6 +62,7 @@ function fmtTime(iso: string): string {
 
 export default function AdminThreadPage() {
   const { id } = useParams<{ id: string }>();
+  const router = useRouter();
   const { toast, flash } = useToast();
 
   const { team } = useAdmin();
@@ -77,6 +78,8 @@ export default function AdminThreadPage() {
   const [sending, setSending] = useState(false);
   const [savingField, setSavingField] = useState<string | null>(null);
   const [deliveryRef, setDeliveryRef] = useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -129,6 +132,21 @@ export default function AdminThreadPage() {
     }
   }
 
+  async function deleteConversation() {
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/admin/support/conversations/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const j = await res.json().catch(() => null);
+        flash("err", j?.error ?? "Could not delete conversation.");
+        return;
+      }
+      router.push("/admin/chat");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
     const m = reply.trim();
@@ -139,11 +157,22 @@ export default function AdminThreadPage() {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: m, internal: replyInternal }),
       });
       if (!res.ok) { const j = await res.json().catch(() => null); flash("err", j?.error ?? "Could not send reply."); return; }
+      const data = await res.json();
       setReply("");
       flash("ok", replyInternal ? "Internal note added." : "Reply sent.");
-      await load();
+      // Show it immediately rather than waiting on a full reload — the reply
+      // notification email is sent in the background on the server now too.
+      if (data.message) setMessages((prev) => [...prev, data.message]);
+      load(); // background refresh, e.g. to pick up sender name / status change
     } finally {
       setSending(false);
+    }
+  }
+
+  function handleReplyKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      e.currentTarget.form?.requestSubmit();
     }
   }
 
@@ -249,8 +278,9 @@ export default function AdminThreadPage() {
               <textarea
                 value={reply}
                 onChange={(e) => setReply(e.target.value)}
+                onKeyDown={handleReplyKeyDown}
                 rows={3}
-                placeholder={replyInternal ? "Write a private note for your team…" : "Type your reply…"}
+                placeholder={replyInternal ? "Write a private note for your team… (Enter to send, Shift+Enter for a new line)" : "Type your reply… (Enter to send, Shift+Enter for a new line)"}
                 className={`w-full px-3 py-2.5 text-sm text-gray-900 border bg-gray-50 rounded-none focus:outline-none focus:ring-2 focus:bg-white placeholder:text-gray-500 resize-none transition-colors ${replyInternal ? "border-amber-300 focus:ring-amber-400/30 focus:border-amber-500" : "border-gray-200 focus:ring-[#102C26]/15 focus:border-[#102C26]"}`}
               />
               <div className="mt-3 flex items-center justify-between gap-3 flex-wrap">
@@ -307,6 +337,16 @@ export default function AdminThreadPage() {
             </div>
           </div>
 
+          {canManage && (
+            <button
+              type="button"
+              onClick={() => setShowDeleteConfirm(true)}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-red-200 text-red-600 rounded-none text-sm font-semibold hover:bg-red-50 transition-colors"
+            >
+              <Trash2 size={14} /> Delete conversation
+            </button>
+          )}
+
           {/* Delivery escalation — attach an Evermile order ref (P1: deep-link only) */}
           {(canManage || conversation.delivery_reference) && (
             <div className="bg-white rounded-none border border-[#102C26]/12 p-4">
@@ -360,6 +400,27 @@ export default function AdminThreadPage() {
           )}
         </div>
       </div>
+
+      {showDeleteConfirm && (
+        <Modal open busy={deleting} onClose={() => setShowDeleteConfirm(false)} labelledBy="chat-del-title" describedBy="chat-del-desc" className="p-6">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-none flex items-center justify-center shrink-0 bg-red-50 text-red-600"><Trash2 size={18} /></div>
+            <div className="min-w-0">
+              <h3 id="chat-del-title" className={`${display.className} text-lg font-bold text-[#102C26]`}>Delete this conversation?</h3>
+              <p id="chat-del-desc" className="text-sm text-gray-600 mt-1">
+                This permanently removes <span className="font-semibold">{conversation.subject}</span> and every message in it. This cannot be undone.
+              </p>
+            </div>
+          </div>
+          <div className="mt-5 flex items-center justify-end gap-2">
+            <button onClick={() => setShowDeleteConfirm(false)} disabled={deleting} className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">Cancel</button>
+            <button onClick={deleteConversation} disabled={deleting}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-bold uppercase tracking-tight text-white rounded-none disabled:opacity-50 bg-red-600 hover:bg-red-700 transition-colors">
+              {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />} Delete forever
+            </button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

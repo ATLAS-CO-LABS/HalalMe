@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { uploadWithProgress } from "@/lib/uploadWithProgress";
 import type { Post, Comment, Notification, PaginatedResult, UserSearchResult } from "@/types";
 
 export type FeedMode = "latest" | "trending" | "following";
@@ -232,7 +233,8 @@ export const hubService = {
   async uploadPostMedia(
     userId: string,
     postId: string,
-    file: File
+    file: File,
+    onProgress?: (percent: number) => void
   ): Promise<{ url: string; public_id: string }> {
     // video/quicktime (.mov) is how iPhones record video and Live Photos, and
     // image/heic/heif is the default iPhone photo format — Cloudinary transcodes
@@ -257,17 +259,16 @@ export const hubService = {
     form.append("upload_preset", uploadPreset!);
     form.append("folder", `halalme/posts/${userId}/${postId}`);
 
-    const res = await fetch(
+    const data = await uploadWithProgress<{ secure_url?: string; public_id?: string; error?: { message?: string } }>(
       `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`,
-      { method: "POST", body: form }
+      form,
+      onProgress
     );
 
-    if (!res.ok) {
-      const data = await res.json() as { error?: { message?: string } };
+    if (!data.secure_url || !data.public_id) {
       throw new Error(data.error?.message ?? "Upload failed");
     }
 
-    const data = await res.json() as { secure_url: string; public_id: string };
     return { url: data.secure_url, public_id: data.public_id };
   },
 

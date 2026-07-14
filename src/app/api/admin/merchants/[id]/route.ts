@@ -7,12 +7,16 @@ import {
   sendMerchantCommissionInviteEmail,
 } from "@/services/emailService";
 import { deleteHyperzodMerchant } from "@/services/hyperzodService";
+import * as Sentry from "@sentry/nextjs";
 
 async function getAdminServiceClient(level: AccessLevel) {
   const gate = await requireAdmin("merchants", level);
   if (!gate.ok) return { error: gate.error, status: gate.status, serviceClient: null, gate: null };
   return { error: null, status: 200, serviceClient: gate.serviceClient, gate };
 }
+
+// Internal statuses (DB): pending | invited | contacted | negotiating | agreed | live | rejected
+const VALID_STATUSES = new Set(["pending", "invited", "contacted", "negotiating", "agreed", "live", "rejected"]);
 
 export async function GET(
   _req: NextRequest,
@@ -51,6 +55,10 @@ export async function PATCH(
     readiness_checklist?: Record<string, boolean>;
     note?: string;
   };
+
+  if (body.status !== undefined && !VALID_STATUSES.has(body.status)) {
+    return NextResponse.json({ error: `Invalid status: ${body.status}` }, { status: 400 });
+  }
 
   // Fetch current record so we can append notes and conditionally set timestamps
   const { data: current } = await serviceClient
@@ -107,16 +115,26 @@ export async function PATCH(
     updates.notes = current.notes ? `${newLine}\n${current.notes}` : newLine;
   }
 
-  const { data: updated, error: dbError } = await serviceClient
-    .from("merchants")
-    .update(updates)
-    .eq("id", id)
-    .select("*")
-    .single();
+  let updateQuery = serviceClient.from("merchants").update(updates).eq("id", id);
+  // Guard status transitions against a concurrent double-submit (double-click,
+  // retried request): only apply if the row's status hasn't already moved
+  // since we read it above — otherwise we'd re-fire the same stage email.
+  if (body.status !== undefined) {
+    updateQuery = updateQuery.eq("status", current.status);
+  }
+
+  const { data: updated, error: dbError } = await updateQuery.select("*").maybeSingle();
 
   if (dbError) {
     console.error("[api/admin/merchants/[id]] patch error", dbError);
     return NextResponse.json({ error: "Update failed" }, { status: 500 });
+  }
+
+  if (!updated) {
+    return NextResponse.json(
+      { error: "This merchant's status already changed. Please refresh and try again." },
+      { status: 409 },
+    );
   }
 
   // Audit — describe the most significant change (status transition wins, else
@@ -128,7 +146,7 @@ export async function PATCH(
   if (body.readiness_checklist !== undefined) changed.push("checklist updated");
   if (body.note?.trim()) changed.push("note added");
   if (changed.length > 0 && gate) {
-    await logAdminAction(gate, {
+    logAdminAction(gate, {
       action: body.status !== undefined && body.status !== current.status ? "merchant.status_change" : "merchant.update",
       module: "merchants", targetType: "merchant", targetId: id,
       summary: `${current.name}: ${changed.join(", ")}`,
@@ -142,9 +160,10 @@ export async function PATCH(
       to: current.email,
       restaurantName: current.name,
       ownerName: current.owner_name ?? undefined,
-    }).catch((err) =>
-      console.error("[api/admin/merchants/[id]] invite email failed", err)
-    );
+    }).catch((err) => {
+      console.error("[api/admin/merchants/[id]] invite email failed", err);
+      Sentry.captureException(err);
+    });
   }
 
   // Commission nudge — fire-and-forget when the merchant reaches "negotiating",
@@ -154,9 +173,10 @@ export async function PATCH(
       to: current.email,
       restaurantName: current.name,
       ownerName: current.owner_name ?? undefined,
-    }).catch((err) =>
-      console.error("[api/admin/merchants/[id]] commission invite email failed", err)
-    );
+    }).catch((err) => {
+      console.error("[api/admin/merchants/[id]] commission invite email failed", err);
+      Sentry.captureException(err);
+    });
   }
 
   // Email #3 — fire-and-forget when the merchant first reaches "agreed"
@@ -165,9 +185,10 @@ export async function PATCH(
       to: current.email,
       restaurantName: current.name,
       ownerName: current.owner_name ?? undefined,
-    }).catch((err) =>
-      console.error("[api/admin/merchants/[id]] agreement email failed", err)
-    );
+    }).catch((err) => {
+      console.error("[api/admin/merchants/[id]] agreement email failed", err);
+      Sentry.captureException(err);
+    });
   }
 
   return NextResponse.json({ merchant: updated });
@@ -224,7 +245,7 @@ export async function DELETE(
   }
 
   if (gate) {
-    await logAdminAction(gate, {
+    logAdminAction(gate, {
       action: "merchant.delete", module: "merchants", targetType: "merchant", targetId: id,
       summary: `Deleted merchant ${merchant.name}`,
       metadata: { name: merchant.name, hyperzod_merchant_id: merchant.hyperzod_merchant_id },

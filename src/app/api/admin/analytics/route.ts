@@ -194,10 +194,16 @@ export async function GET(req: NextRequest) {
         const fetchFromISO = prevSince?.toISOString() ?? sinceISO;
         if (fetchFromISO) dq = dq.gte("created_at", fetchFromISO);
         dq = dq.lte("created_at", untilISO);
+        // Bound the same way as the donations query above — was previously an
+        // unfiltered full-table select in a block where its sibling query is
+        // already range-bound.
+        let rtq = db.from("reward_transactions").select("points");
+        if (fetchFromISO) rtq = rtq.gte("created_at", fetchFromISO);
+        rtq = rtq.lte("created_at", untilISO);
         const [{ data: don }, { data: charities }, { data: rt }] = await Promise.all([
           dq,
           db.from("charities").select("name, raised_amount").order("raised_amount", { ascending: false }).limit(6),
-          db.from("reward_transactions").select("points"),
+          rtq,
         ]);
         const allDon = don ?? [];
         // Current window = on/after `since` (all rows when all-time).

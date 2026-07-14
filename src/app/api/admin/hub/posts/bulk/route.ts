@@ -44,7 +44,7 @@ export async function PATCH(req: NextRequest) {
     }
     const updated = data?.length ?? 0;
     const verb = action === "delete" ? "moved to Trash" : action === "restore" ? "restored" : "permanently deleted";
-    await logAdminAction(gate, {
+    logAdminAction(gate, {
       action: `post.bulk_${action}`, module: "hub", targetType: "post",
       summary: `Bulk ${verb} ${updated} post${updated !== 1 ? "s" : ""}`,
       metadata: { count: updated, ids },
@@ -59,7 +59,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Bulk action failed" }, { status: 500 });
   }
   const updated = data?.length ?? 0;
-  await logAdminAction(gate, {
+  logAdminAction(gate, {
     action: is_published ? "post.bulk_publish" : "post.bulk_unpublish", module: "hub", targetType: "post",
     summary: `Bulk ${is_published ? "published" : "hid"} ${updated} post${updated !== 1 ? "s" : ""}`,
     metadata: { count: updated, ids },

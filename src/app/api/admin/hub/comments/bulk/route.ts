@@ -73,7 +73,7 @@ export async function PATCH(req: NextRequest) {
 
   const updated = data?.length ?? 0;
   const verb = action === "delete" ? "moved to Trash" : action === "restore" ? "restored" : "permanently deleted";
-  await logAdminAction(gate, {
+  logAdminAction(gate, {
     action: `comment.bulk_${action}`, module: "hub", targetType: "comment",
     summary: `Bulk ${verb} ${updated} comment${updated !== 1 ? "s" : ""}`,
     metadata: { count: updated, ids },

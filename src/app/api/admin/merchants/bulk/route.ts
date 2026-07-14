@@ -30,7 +30,7 @@ export async function PATCH(req: NextRequest) {
       console.error("[bulk] reject error", error);
       return NextResponse.json({ error: "Update failed" }, { status: 500 });
     }
-    await logAdminAction(gate, {
+    logAdminAction(gate, {
       action: "merchant.bulk_reject", module: "merchants", targetType: "merchant",
       summary: `Bulk rejected ${data?.length ?? 0} merchant${(data?.length ?? 0) !== 1 ? "s" : ""}`,
       metadata: { count: data?.length ?? 0, ids: data?.map((d) => d.id) ?? [] },
@@ -64,7 +64,7 @@ export async function PATCH(req: NextRequest) {
       console.error("[bulk] assign error", error);
       return NextResponse.json({ error: "Update failed" }, { status: 500 });
     }
-    await logAdminAction(gate, {
+    logAdminAction(gate, {
       action: "merchant.bulk_assign", module: "merchants", targetType: "merchant",
       summary: `Bulk assigned ${data?.length ?? 0} merchant${(data?.length ?? 0) !== 1 ? "s" : ""} to ${repName ?? "Unassigned"}`,
       metadata: { count: data?.length ?? 0, repId, repName },

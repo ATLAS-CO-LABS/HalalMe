@@ -104,12 +104,24 @@ export default function MessageThreadPage() {
         body: JSON.stringify({ message: m }),
       });
       if (!res.ok) throw new Error();
+      const data = await res.json();
       setReply("");
-      await load();
+      // Show it immediately rather than waiting on a full reload — the reply
+      // notification email is sent in the background on the server, so this
+      // no longer waits on that round-trip either.
+      if (data.message) setMessages((prev) => [...prev, data.message]);
+      load(); // background refresh, e.g. to pick up a status change
     } catch {
       setError("Could not send your message. Please try again.");
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleReplyKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      e.currentTarget.form?.requestSubmit();
     }
   };
 
@@ -210,8 +222,9 @@ export default function MessageThreadPage() {
             <textarea
               value={reply}
               onChange={(e) => setReply(e.target.value)}
+              onKeyDown={handleReplyKeyDown}
               rows={3}
-              placeholder="Type your reply…"
+              placeholder="Type your reply… (Enter to send, Shift+Enter for a new line)"
               className="w-full rounded-md border border-[#F7E7CE]/15 bg-[#F7E7CE]/5 px-3 py-2.5 text-sm text-[#F7E7CE] placeholder-[#F7E7CE]/20 outline-none transition-colors focus:border-[#F59E0B]/60 focus:ring-1 focus:ring-[#F59E0B]/15 resize-none"
             />
             {error && <p className="mt-2 text-sm text-red-400">{error}</p>}

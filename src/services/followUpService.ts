@@ -5,6 +5,8 @@
 // Slack / Discord / Telegram later, you only change this function.
 
 import { Resend } from "resend";
+import { escapeHtml } from "@/services/emailService";
+import * as Sentry from "@sentry/nextjs";
 
 export interface FollowUpSummaryItem {
   id: string;
@@ -44,10 +46,10 @@ export async function notifyTeam(summary: FollowUpSummary): Promise<void> {
     .map(
       (i) => `
     <tr>
-      <td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:600;color:#102C26;">${i.name}</td>
-      <td style="padding:8px 12px;border-bottom:1px solid #eee;color:#b45309;">${i.reason} · ${i.days}d</td>
-      <td style="padding:8px 12px;border-bottom:1px solid #eee;color:#555;">${i.action}</td>
-      <td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;">${i.rep ?? "Unassigned"}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:600;color:#102C26;">${escapeHtml(i.name)}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;color:#b45309;">${escapeHtml(i.reason)} · ${i.days}d</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;color:#555;">${escapeHtml(i.action)}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #eee;color:#888;">${escapeHtml(i.rep ?? "Unassigned")}</td>
     </tr>`,
     )
     .join("");
@@ -82,5 +84,6 @@ export async function notifyTeam(summary: FollowUpSummary): Promise<void> {
     });
   } catch (err) {
     console.error("[follow-ups] digest email failed", err);
+    Sentry.captureException(err);
   }
 }
