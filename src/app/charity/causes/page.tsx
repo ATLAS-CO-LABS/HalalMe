@@ -6,7 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Search, Filter, Heart, ArrowLeft } from "lucide-react";
 import Header from "@/components/layout/Header";
-import CharityCard from "@/components/rewards/CharityCard";
+import CharityCard from "@/components/charity/CharityCard";
 import { rewardsService } from "@/services/rewardsService";
 import type { Charity } from "@/types/app";
 import AuthGuard from "@/components/auth/AuthGuard";
@@ -71,14 +71,14 @@ function CausesContent() {
         </div>
         <div className="relative z-10 max-w-[95vw] mx-auto">
           <Link
-            href="/rewards"
+            href="/charity"
             className="inline-flex items-center gap-2 mb-10 font-semibold text-sm uppercase tracking-wider transition-colors"
             style={{ color: `${CREAM}40` }}
             onMouseEnter={(e) => (e.currentTarget.style.color = TEAL)}
             onMouseLeave={(e) => (e.currentTarget.style.color = `${CREAM}40`)}
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Rewards
+            Back to Charity
           </Link>
 
           <div className="flex items-center gap-3 mb-5">

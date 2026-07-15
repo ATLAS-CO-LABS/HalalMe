@@ -1,7 +1,14 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import { motion, useInView, AnimatePresence } from "framer-motion";
+import {
+  motion,
+  useInView,
+  AnimatePresence,
+  useScroll,
+  useTransform,
+  useReducedMotion,
+} from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import HorizontalServices from "@/components/navigation/HorizontalServices";
@@ -73,7 +80,7 @@ export default function Home() {
                 </span>
               </div>
               <h2 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-extrabold uppercase tracking-tighter leading-[0.88] text-[#F7E7CE]">
-                Four Services.
+                Five Services.
                 <br />
                 <span className="text-[#F7E7CE]/50">One Unified Account.</span>
               </h2>
@@ -97,25 +104,44 @@ export default function Home() {
 function HeroSection() {
   const [wordIndex, setWordIndex] = useState(0);
   const { user } = useAuth();
+  const reduceMotion = useReducedMotion();
+
+  // Content recedes as the page scrolls over the fixed hero - motion values, no re-renders
+  const { scrollY } = useScroll();
+  const contentOpacity = useTransform(scrollY, [0, 560], [1, 0]);
+  const contentY = useTransform(scrollY, [0, 560], [0, -70]);
 
   useEffect(() => {
     const interval = setInterval(() => {
       setWordIndex((prev) => (prev + 1) % CYCLE_WORDS.length);
-    }, 2400);
+    }, 2600);
     return () => clearInterval(interval);
   }, []);
+
+  const word = CYCLE_WORDS[wordIndex];
 
   return (
     <section className="fixed top-0 left-0 w-full h-screen z-0 flex items-center justify-center overflow-hidden bg-[#102C26]">
       <div className="absolute inset-0 z-0">
-        <Image
-          src="/images/hero/halal5.jpg"
-          alt="Halal Lifestyle"
-          fill
-          className="object-cover scale-105"
-          priority
-          sizes="100vw"
-        />
+        {/* Slow Ken Burns drift on the backdrop */}
+        <motion.div
+          className="absolute inset-0"
+          animate={reduceMotion ? { scale: 1.05 } : { scale: [1.05, 1.14] }}
+          transition={
+            reduceMotion
+              ? { duration: 0 }
+              : { duration: 26, repeat: Infinity, repeatType: "reverse", ease: "linear" }
+          }
+        >
+          <Image
+            src="/images/hero/halal5.jpg"
+            alt="Halal Lifestyle"
+            fill
+            className="object-cover"
+            priority
+            sizes="100vw"
+          />
+        </motion.div>
         <div
           className="absolute inset-0"
           style={{
@@ -124,40 +150,33 @@ function HeroSection() {
         />
       </div>
 
-      <div className="relative z-10 flex flex-col items-center text-center px-6 pt-20 w-full">
-        {/* Top ornament */}
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05 }}
-          className="mb-3"
-        >
-          <span className="text-[#F59E0B] text-xl select-none">✦</span>
-        </motion.div>
-
-        {/* Eyebrow */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.12 }}
-          className="flex items-center gap-3 mb-3"
-        >
-          <div className="w-8 h-px bg-[#F59E0B]" />
-          <span className="text-[#F59E0B] text-[10px] md:text-xs font-bold uppercase tracking-[0.3em]">
+      <motion.div
+        style={{ opacity: contentOpacity, y: contentY }}
+        className="relative z-10 flex flex-col items-center text-center px-6 pt-20 w-full"
+      >
+        {/* Eyebrow - lines draw outward from the label */}
+        <div className="flex items-center gap-3 mb-6 md:mb-8">
+          <motion.div
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ delay: 0.3, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            className="w-8 h-px bg-[#F59E0B] origin-right"
+          />
+          <motion.span
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.12 }}
+            className="text-[#F59E0B] text-[10px] md:text-xs font-bold uppercase tracking-[0.3em]"
+          >
             The All-in-One Halal Platform
-          </span>
-          <div className="w-8 h-px bg-[#F59E0B]" />
-        </motion.div>
-
-        {/* Eyebrow bottom ornament */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.18 }}
-          className="mb-6 md:mb-8"
-        >
-          <span className="text-[#F59E0B]/35 text-sm select-none">◆</span>
-        </motion.div>
+          </motion.span>
+          <motion.div
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ delay: 0.3, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            className="w-8 h-px bg-[#F59E0B] origin-left"
+          />
+        </div>
 
         {/* Heading */}
         <h1 className="font-extrabold uppercase tracking-tighter leading-[0.88]">
@@ -173,36 +192,58 @@ function HeroSection() {
             <AnimatePresence mode="wait">
               <motion.span
                 key={wordIndex}
-                initial={{ opacity: 0, y: 36 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -36 }}
-                transition={{ duration: 0.36, ease: [0.22, 1, 0.36, 1] }}
-                className="inline-block text-[#F7E7CE]/70"
+                className="relative inline-block text-[#F7E7CE]/70 pb-1"
+                initial={reduceMotion ? { opacity: 0 } : "hidden"}
+                animate={reduceMotion ? { opacity: 1 } : "show"}
+                exit={reduceMotion ? { opacity: 0 } : "exit"}
+                variants={{
+                  show: { transition: { staggerChildren: 0.038 } },
+                  exit: { transition: { staggerChildren: 0.016, staggerDirection: -1 } },
+                }}
               >
-                {CYCLE_WORDS[wordIndex]}
+                {word.split("").map((ch, i) => (
+                  <motion.span
+                    key={`${wordIndex}-${i}`}
+                    className="inline-block"
+                    variants={{
+                      hidden: { opacity: 0, y: 30, filter: "blur(7px)" },
+                      show: {
+                        opacity: 1,
+                        y: 0,
+                        filter: "blur(0px)",
+                        transition: { duration: 0.42, ease: [0.22, 1, 0.36, 1] },
+                      },
+                      exit: {
+                        opacity: 0,
+                        y: -24,
+                        filter: "blur(5px)",
+                        transition: { duration: 0.2, ease: "easeIn" },
+                      },
+                    }}
+                  >
+                    {ch}
+                  </motion.span>
+                ))}
+                {/* Amber baseline redraws under each word */}
+                <motion.span
+                  aria-hidden="true"
+                  className="absolute bottom-0 left-0 h-[3px] bg-[#F59E0B]"
+                  initial={{ width: "0%" }}
+                  animate={{ width: "100%" }}
+                  exit={{ width: "0%", transition: { duration: 0.18 } }}
+                  transition={{ duration: 0.55, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                />
               </motion.span>
             </AnimatePresence>
           </span>
         </h1>
-
-        {/* Middle ornament separator */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.55 }}
-          className="mt-6 mb-5 flex items-center gap-4"
-        >
-          <div className="w-14 h-px bg-[#F59E0B]/30" />
-          <span className="text-[#F59E0B]/55 text-xs select-none">✦</span>
-          <div className="w-14 h-px bg-[#F59E0B]/30" />
-        </motion.div>
 
         {/* Subtitle */}
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.62 }}
-          className="text-base md:text-lg text-[#F7E7CE] max-w-sm leading-relaxed"
+          className="mt-7 text-base md:text-lg text-[#F7E7CE] max-w-sm leading-relaxed"
         >
           Live daily life the halal way, without switching apps.
         </motion.p>
@@ -240,41 +281,7 @@ function HeroSection() {
             </motion.button>
           </a>
         </motion.div>
-
-        {/* Promo nudge */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.82 }}
-          className="mt-4 text-xs font-semibold text-[#F59E0B]"
-        >
-          New customer? Use code{" "}
-          <span className="font-extrabold tracking-wider">HALAL10</span> for £10
-          off your first delivery.
-        </motion.p>
-
-        {/* Trust badges */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.9 }}
-          className="mt-6 flex items-center divide-x divide-[#F7E7CE]/15 max-w-full overflow-hidden"
-        >
-          {[
-            { icon: ShieldCheck, text: "Halal Verified Services" },
-            { icon: LayoutGrid, text: "One App for Everything" },
-            { icon: UserCircle, text: "Muslim-First Experience" },
-          ].map((item, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-2 px-4 sm:px-5 text-[#F7E7CE]/40 text-[10px] sm:text-xs font-semibold uppercase tracking-wide"
-            >
-              <item.icon className="w-3.5 h-3.5 shrink-0" />
-              {item.text}
-            </div>
-          ))}
-        </motion.div>
-      </div>
+      </motion.div>
     </section>
   );
 }
@@ -286,6 +293,7 @@ function ServiceTicker() {
     { label: "HalalMe Delivery", href: "/delivery" },
     { label: "HalalMe Kitchen", href: "/kitchen" },
     { label: "HalalMe Social", href: "/hub" },
+    { label: "HalalMe Charity", href: "/charity" },
     { label: "HalalMe Rewards", href: "/rewards" },
   ];
 
@@ -369,7 +377,7 @@ function FeaturesSection() {
     {
       num: "01",
       title: "One Identity",
-      desc: "Single sign-on for all 4 services. Your profile, preferences, and rewards sync seamlessly across the entire HalalMe ecosystem.",
+      desc: "Single sign-on for all 5 services. Your profile, preferences, and rewards sync seamlessly across the entire HalalMe ecosystem.",
       Icon: Fingerprint,
     },
     {

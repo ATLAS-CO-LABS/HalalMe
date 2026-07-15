@@ -11,7 +11,8 @@ const serviceLinks = [
   { href: '/delivery', label: 'Delivery', desc: 'Halal food to your door'    },
   { href: '/kitchen',  label: 'Kitchen',  desc: 'Recipes & AI assistant'     },
   { href: '/hub',      label: 'Social',   desc: 'Community & sharing'        },
-  { href: '/rewards',  label: 'Rewards',  desc: 'Give back, get rewarded'    },
+  { href: '/charity',  label: 'Charity',  desc: 'Give back, verified'        },
+  { href: '/rewards',  label: 'Rewards',  desc: 'Earn points, redeem perks'  },
 ];
 
 const infoLinks = [
@@ -387,7 +388,7 @@ export default function Header() {
                   className="mx-3 mt-3 mb-4 bg-[#0A1C19] border border-[#F7E7CE]/8 px-4 py-3"
                 >
                   <p className="text-[#F59E0B] text-[10px] font-bold uppercase tracking-widest mb-0.5">HalalMe</p>
-                  <p className="text-[#F7E7CE] text-sm font-bold leading-snug">Four services.<br />One account.</p>
+                  <p className="text-[#F7E7CE] text-sm font-bold leading-snug">Five services.<br />One account.</p>
                 </motion.div>
 
                 {/* Services */}

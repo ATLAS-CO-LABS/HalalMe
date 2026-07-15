@@ -498,7 +498,7 @@ export default function TravelLandingPage() {
       {/* Back Links */}
       <section className="px-4 md:px-6 py-8 bg-gray-900">
         <div className="mx-auto max-w-4xl text-center flex justify-center gap-6">
-          <Link href="/rewards" className="text-gray-400 hover:text-sky-400 transition-colors text-sm font-semibold">← Rewards</Link>
+          <Link href="/charity" className="text-gray-400 hover:text-sky-400 transition-colors text-sm font-semibold">← Charity</Link>
           <Link href="/kitchen" className="text-gray-400 hover:text-sky-400 transition-colors text-sm font-semibold">Kitchen →</Link>
         </div>
       </section>

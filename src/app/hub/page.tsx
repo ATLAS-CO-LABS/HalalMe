@@ -1034,10 +1034,10 @@ export default function HubLandingPage() {
             ← Kitchen
           </Link>
           <Link
-            href="/rewards"
+            href="/charity"
             className="text-xs font-bold uppercase tracking-[0.2em] text-white/25 transition-colors hover:text-amber-400"
           >
-            Rewards →
+            Charity →
           </Link>
         </div>
       </div>

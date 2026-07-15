@@ -47,10 +47,19 @@ const services = [
     tag: "Beta",
   },
   {
+    name: "Charity",
+    description:
+      "Donate to verified Islamic charities and track the real-world impact of every contribution.",
+    accent: "#14B8A6",
+    href: "/charity",
+    external: false,
+    tag: "Live",
+  },
+  {
     name: "Rewards",
     description:
-      "Earn points across all HalalMe services. Redeem for discounts, donate to charity, or unlock exclusive perks.",
-    accent: "#14B8A6",
+      "Earn points from Kitchen, Hub, and Charity activity. Redeem for boosts, flair, and AI perks.",
+    accent: "#FB7185",
     href: "/rewards",
     external: false,
     tag: "Live",
@@ -205,7 +214,7 @@ export default function OverviewTab({ isMerchant }: { isMerchant: boolean }) {
                 : "Make your first donation",
             icon: HandHeart,
             num: "02",
-            href: "/rewards#donations",
+            href: "/charity",
           },
           {
             label: "Saved Recipes",
@@ -273,7 +282,7 @@ export default function OverviewTab({ isMerchant }: { isMerchant: boolean }) {
           <span className="text-[#F7E7CE]/40">Services</span>
         </h2>
         <p className="text-sm text-[#F7E7CE]/35 mt-3 mb-8">
-          Four services, one unified account
+          Five services, one unified account
         </p>
       </div>
 

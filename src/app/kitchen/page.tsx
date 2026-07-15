@@ -1133,11 +1133,11 @@ export default function KitchenLandingPage() {
             ← Hub
           </Link>
           <Link
-            href="/rewards"
+            href="/charity"
             className="text-xs font-bold uppercase tracking-[0.2em] transition-colors hover:text-fuchsia-400"
             style={{ color: `${CREAM}60` }}
           >
-            Rewards →
+            Charity →
           </Link>
         </div>
       </div>

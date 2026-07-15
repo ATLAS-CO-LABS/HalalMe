@@ -5,6 +5,7 @@ const SUBDOMAIN_MAP: Record<string, string> = {
   kitchen: '/kitchen',
   social:  '/hub',
   rewards: '/rewards',
+  charity: '/charity',
 };
 
 export function middleware(request: NextRequest) {

@@ -10,7 +10,6 @@ const BG    = "#0F1F17";
 const BG2   = "#162B20";
 const CREAM = "#F7E7CE";
 const TEAL  = "#14B8A6";
-const DEEP  = "#0D9488";
 
 interface CharityCardProps {
   charity: Charity;
@@ -20,7 +19,7 @@ export default function CharityCard({ charity }: CharityCardProps) {
   const pct = Math.min((charity.raised_amount / (charity.goal_amount || 1)) * 100, 100);
 
   return (
-    <Link href={`/rewards/causes/${charity.slug}`}>
+    <Link href={`/charity/causes/${charity.slug}`}>
       <div
         className="group relative flex flex-col min-h-[320px] overflow-hidden transition-colors duration-300 cursor-pointer"
         style={{ backgroundColor: BG2, border: `1px solid ${CREAM}05` }}

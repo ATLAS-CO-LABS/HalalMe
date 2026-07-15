@@ -909,10 +909,10 @@ function FinalCTA() {
           className="flex justify-center gap-8"
         >
           <Link
-            href="/rewards"
+            href="/charity"
             className="text-gray-500 hover:text-indigo-400 transition-colors text-sm font-semibold"
           >
-            &larr; Rewards
+            &larr; Charity
           </Link>
           <Link
             href="/hub"

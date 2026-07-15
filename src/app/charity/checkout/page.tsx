@@ -92,7 +92,7 @@ function PaymentForm({
     const { error } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: `${window.location.origin}/rewards/success`,
+        return_url: `${window.location.origin}/charity/success`,
       },
     });
 
@@ -181,7 +181,7 @@ function CheckoutContent() {
           Invalid checkout
         </p>
         <Link
-          href="/rewards/causes"
+          href="/charity/causes"
           className="text-xs font-bold uppercase tracking-[0.2em] transition-opacity hover:opacity-60"
           style={{ color: TEAL }}
         >
@@ -198,7 +198,7 @@ function CheckoutContent() {
       <section className="pt-24 md:pt-32 px-6 md:px-10 pb-20">
         <div className="max-w-[95vw] mx-auto">
           <Link
-            href={`/rewards/causes/${charityId}`}
+            href={`/charity/causes/${charityId}`}
             className="inline-flex items-center gap-2 mb-10 font-semibold text-sm uppercase tracking-wider transition-colors"
             style={{ color: `${CREAM}40` }}
             onMouseEnter={(e) => (e.currentTarget.style.color = TEAL)}

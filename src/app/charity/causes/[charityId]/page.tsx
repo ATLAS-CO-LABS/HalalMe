@@ -7,7 +7,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Heart, Users, Target, Share2, CheckCircle } from "lucide-react";
 import Header from "@/components/layout/Header";
-import DonationAmountSelector from "@/components/rewards/DonationAmountSelector";
+import DonationAmountSelector from "@/components/charity/DonationAmountSelector";
 import { rewardsService } from "@/services/rewardsService";
 import type { Charity } from "@/types/app";
 import AuthGuard from "@/components/auth/AuthGuard";
@@ -45,7 +45,7 @@ function CharityDetailContent() {
 
   const handleDonate = () => {
     if (selectedAmount && charity)
-      router.push(`/rewards/checkout?charityId=${charity.id}&amount=${selectedAmount}`);
+      router.push(`/charity/checkout?charityId=${charity.id}&amount=${selectedAmount}`);
   };
 
   if (loading) return (
@@ -66,7 +66,7 @@ function CharityDetailContent() {
         <p className="mb-6 text-sm font-normal" style={{ color: `${CREAM}40`, fontFamily: "var(--font-body)" }}>
           The cause you&apos;re looking for doesn&apos;t exist.
         </p>
-        <Link href="/rewards/causes" className="text-sm font-bold uppercase tracking-wider" style={{ color: TEAL }}>
+        <Link href="/charity/causes" className="text-sm font-bold uppercase tracking-wider" style={{ color: TEAL }}>
           ← Browse all causes
         </Link>
       </div>
@@ -83,7 +83,7 @@ function CharityDetailContent() {
       <section className="pt-24 md:pt-32 px-6 md:px-10">
         <div className="max-w-[95vw] mx-auto">
           <Link
-            href="/rewards/causes"
+            href="/charity/causes"
             className="inline-flex items-center gap-2 mb-8 font-semibold text-sm uppercase tracking-wider transition-colors"
             style={{ color: `${CREAM}40` }}
             onMouseEnter={(e) => (e.currentTarget.style.color = TEAL)}

@@ -522,7 +522,7 @@ export default function RewardsTab() {
       </div>
 
       <div className="mt-12 text-center">
-        <Link href="/rewards" className="text-xs font-bold uppercase tracking-wider text-[#14B8A6] hover:text-[#F7E7CE] transition-colors">
+        <Link href="/charity" className="text-xs font-bold uppercase tracking-wider text-[#14B8A6] hover:text-[#F7E7CE] transition-colors">
           Visit the Charity &amp; Giving page →
         </Link>
       </div>

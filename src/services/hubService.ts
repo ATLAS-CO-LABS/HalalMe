@@ -207,8 +207,15 @@ export const hubService = {
       .eq("id", id)
       .single();
 
-    const { error } = await supabase.from("posts").delete().eq("id", id);
+    // .select() forces PostgREST to return the deleted row(s) (Prefer:
+    // return=representation) instead of a bare 204 — which Postgres/Supabase
+    // returns on success whether a row was actually deleted or the delete
+    // silently matched zero rows (RLS block, already-gone id, etc). Without
+    // this, a no-op delete looks identical to a real one and the caller's
+    // optimistic UI removal never gets reverted.
+    const { data: deleted, error } = await supabase.from("posts").delete().eq("id", id).select("id");
     if (error) throw new Error(error.message);
+    if (!deleted || deleted.length === 0) throw new Error("Post could not be deleted");
 
     // Best-effort Cloudinary cleanup — fire-and-forget, never block.
     // media_urls is sent alongside so the API can delete videos with the correct

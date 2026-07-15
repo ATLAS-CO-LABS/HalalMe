@@ -28,6 +28,7 @@ const hideFooterPaths = [
   "/delivery",
   "/travel",
   "/rewards",
+  "/charity",
   "/admin",
   "/merchant",
 ];

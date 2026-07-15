@@ -247,7 +247,7 @@ function SuccessContent() {
             </motion.button>
 
             <motion.button
-              onClick={() => router.push("/rewards/causes")}
+              onClick={() => router.push("/charity/causes")}
               className="flex-1 flex items-center justify-center gap-2 py-4 border font-extrabold uppercase tracking-tighter text-sm transition-all"
               style={{ borderColor: `${CREAM}18`, color: CREAM }}
               whileHover={{ scale: 1.02, backgroundColor: "rgba(247,231,206,0.04)" }}

@@ -1,14 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
+import { ArrowUpRight } from "lucide-react";
 
 const services = [
-  { label: "Delivery", href: "/delivery" },
-  { label: "Kitchen", href: "/kitchen" },
-  { label: "Social", href: "/hub" },
-  { label: "Rewards", href: "/rewards" },
+  { label: "Delivery", href: "/delivery", accent: "#B96AF0" },
+  { label: "Kitchen", href: "/kitchen", accent: "#F03E9E" },
+  { label: "Social", href: "/hub", accent: "#F59E0B" },
+  { label: "Charity", href: "/charity", accent: "#14B8A6" },
+  { label: "Rewards", href: "/rewards", accent: "#FB7185" },
 ];
 
 const companyLinks = [
@@ -26,11 +28,68 @@ const legalLinks = [
   { label: "Cookie Policy", href: "/cookies" },
 ];
 
+/* Column entrance - shared variants for the staggered grid reveal */
+const colVariants = {
+  hidden: { opacity: 0, y: 28 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] as const },
+  },
+};
+
+/* ─── Giant wordmark - letters rise out of the page edge ───── */
+function FooterWordmark() {
+  const reduce = useReducedMotion();
+  const letters = "HalalMe".split("");
+
+  return (
+    <div aria-hidden="true" className="overflow-hidden select-none pointer-events-auto">
+      <motion.div
+        initial={reduce ? undefined : "hidden"}
+        whileInView={reduce ? undefined : "show"}
+        viewport={{ once: true, amount: 0.4 }}
+        variants={{ show: { transition: { staggerChildren: 0.05, delayChildren: 0.1 } } }}
+        className="flex justify-between items-end px-2 md:px-6 translate-y-[0.14em]"
+        style={{ fontFamily: "var(--font-logo)" }}
+      >
+        {letters.map((ch, i) => (
+          <motion.span
+            key={i}
+            variants={{
+              hidden: { y: "110%" },
+              show: { y: 0, transition: { duration: 0.9, ease: [0.22, 1, 0.36, 1] } },
+            }}
+            whileHover={{ y: "-6%", color: "rgba(245,158,11,0.45)" }}
+            transition={{ type: "spring", stiffness: 260, damping: 20 }}
+            className="inline-block font-black leading-none tracking-tighter cursor-default"
+            style={{
+              fontSize: "clamp(3.5rem, 13.5vw, 15rem)",
+              color: "rgba(247,231,206,0.07)",
+            }}
+          >
+            {ch}
+          </motion.span>
+        ))}
+      </motion.div>
+    </div>
+  );
+}
+
 export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="relative bg-[#0A1C19]">
+    <footer className="relative bg-[#0A1C19] overflow-hidden">
+      {/* Faint radial glow anchoring the wordmark */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute bottom-0 left-1/2 -translate-x-1/2 w-[120vw] h-[40vh]"
+        style={{
+          background: "radial-gradient(ellipse at bottom, rgba(245,158,11,0.05) 0%, transparent 60%)",
+        }}
+      />
+
       {/* ── Trust Strip ──────────────────────────────────────── */}
       <div className="border-b border-[#F7E7CE]/8">
         <div className="mx-auto max-w-[95vw] px-6 grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0 divide-[#F7E7CE]/8">
@@ -55,11 +114,18 @@ export default function Footer() {
               title: "One Account",
               body: "Your profile, rewards, and history unified across all services.",
             },
-          ].map((item) => (
-            <div key={item.num} className="relative px-6 py-8 overflow-hidden">
+          ].map((item, i) => (
+            <motion.div
+              key={item.num}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.08, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              className="group relative px-6 py-8 overflow-hidden transition-colors duration-300 hover:bg-[#F7E7CE]/[0.03]"
+            >
               <span
                 aria-hidden="true"
-                className="absolute -bottom-2 -right-1 text-[4rem] font-extrabold text-[#F7E7CE]/[0.04] leading-none select-none pointer-events-none"
+                className="absolute -bottom-2 -right-1 text-[4rem] font-extrabold text-[#F7E7CE]/[0.04] leading-none select-none pointer-events-none transition-transform duration-500 group-hover:-translate-y-1.5 group-hover:text-[#F7E7CE]/[0.07]"
               >
                 {item.num}
               </span>
@@ -72,17 +138,23 @@ export default function Footer() {
               <p className="text-xs text-[#F7E7CE]/35 leading-relaxed">
                 {item.body}
               </p>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
 
       {/* ── Main Footer Grid ──────────────────────────────────── */}
-      <div className="mx-auto max-w-[95vw] px-6 pt-14 pb-8">
-        <div className="grid gap-10 lg:grid-cols-12">
+      <div className="relative mx-auto max-w-[95vw] px-6 pt-14 pb-8">
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.15 }}
+          variants={{ show: { transition: { staggerChildren: 0.1 } } }}
+          className="grid gap-10 lg:grid-cols-12"
+        >
           {/* Brand Column */}
-          <div className="lg:col-span-4 flex flex-col gap-5">
-            <Link href="/" className="inline-flex items-center gap-3">
+          <motion.div variants={colVariants} className="lg:col-span-4 flex flex-col gap-5">
+            <Link href="/" className="inline-flex items-center gap-3 w-fit">
               <span
                 style={{
                   position: "relative",
@@ -116,7 +188,7 @@ export default function Footer() {
               </span>
             </Link>
             <p className="text-[#F7E7CE]/45 text-sm leading-relaxed max-w-xs">
-              The complete Halal ecosystem - food, travel, community, and more.
+              The complete Halal ecosystem - food, community, giving, and more.
               Built for Muslims, trusted worldwide.
             </p>
             {/* Trust badge */}
@@ -186,48 +258,63 @@ export default function Footer() {
                 </motion.a>
               ))}
             </div>
-          </div>
+          </motion.div>
 
-          {/* Services */}
-          <div className="lg:col-span-3">
+          {/* Services - each link lights up in its own service accent */}
+          <motion.div variants={colVariants} className="lg:col-span-3">
             <h3 className="text-[10px] font-bold text-[#F7E7CE]/30 uppercase tracking-[0.25em] mb-5">
               Our Services
             </h3>
-            <ul className="space-y-2.5">
+            <ul className="space-y-1">
               {services.map((s) => (
                 <li key={s.href}>
                   <Link
                     href={s.href}
-                    className="text-[#F7E7CE]/50 hover:text-[#F7E7CE] text-sm transition-colors"
+                    className="group flex items-center gap-3 py-1.5 text-sm text-[#F7E7CE]/50 transition-colors duration-200"
+                    onMouseEnter={(e) => (e.currentTarget.style.color = s.accent)}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = "")}
                   >
-                    {s.label}
+                    <span
+                      className="h-px w-0 group-hover:w-5 transition-all duration-300"
+                      style={{ backgroundColor: s.accent }}
+                    />
+                    <span className="transition-transform duration-300 group-hover:translate-x-0.5">
+                      {s.label}
+                    </span>
+                    <ArrowUpRight
+                      className="w-3 h-3 opacity-0 -translate-x-1 translate-y-1 group-hover:opacity-100 group-hover:translate-x-0 group-hover:translate-y-0 transition-all duration-300"
+                      style={{ color: s.accent }}
+                    />
                   </Link>
                 </li>
               ))}
             </ul>
-          </div>
+          </motion.div>
 
           {/* Company links */}
-          <div className="lg:col-span-2">
+          <motion.div variants={colVariants} className="lg:col-span-2">
             <h3 className="text-[10px] font-bold text-[#F7E7CE]/30 uppercase tracking-[0.25em] mb-5">
               Company
             </h3>
-            <ul className="space-y-2.5">
+            <ul className="space-y-1">
               {companyLinks.map((link) => (
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="text-[#F7E7CE]/50 hover:text-[#F7E7CE] text-sm transition-colors"
+                    className="group flex items-center gap-3 py-1.5 text-sm text-[#F7E7CE]/50 hover:text-[#F7E7CE] transition-colors duration-200"
                   >
-                    {link.label}
+                    <span className="h-px w-0 bg-[#F7E7CE]/60 group-hover:w-5 transition-all duration-300" />
+                    <span className="transition-transform duration-300 group-hover:translate-x-0.5">
+                      {link.label}
+                    </span>
                   </Link>
                 </li>
               ))}
             </ul>
-          </div>
+          </motion.div>
 
           {/* Newsletter */}
-          <div className="lg:col-span-3">
+          <motion.div variants={colVariants} className="lg:col-span-3">
             <h3 className="text-[10px] font-bold text-[#F7E7CE]/30 uppercase tracking-[0.25em] mb-5">
               Stay in the loop
             </h3>
@@ -242,7 +329,7 @@ export default function Footer() {
                 <input
                   type="email"
                   placeholder="your@email.com"
-                  className="w-full px-4 py-2.5 bg-[#0A1C19] border border-[#F7E7CE]/12 text-sm text-[#F7E7CE] placeholder-[#F7E7CE]/25 focus:outline-none focus:border-[#F7E7CE]/35 transition-all"
+                  className="w-full px-4 py-2.5 bg-[#0A1C19] border border-[#F7E7CE]/12 text-sm text-[#F7E7CE] placeholder-[#F7E7CE]/25 focus:outline-none focus:border-[#F59E0B]/60 transition-all"
                 />
                 <motion.button
                   whileHover={{ scale: 1.02 }}
@@ -257,8 +344,8 @@ export default function Footer() {
                 No spam. Unsubscribe any time.
               </p>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {/* ── Disclaimer ───────────────────────────────────────── */}
         <div className="mt-12 pt-8 border-t border-[#F7E7CE]/8">
@@ -295,6 +382,11 @@ export default function Footer() {
             All systems operational
           </div>
         </div>
+      </div>
+
+      {/* ── Giant typographic sign-off ────────────────────────── */}
+      <div className="relative mt-4">
+        <FooterWordmark />
       </div>
     </footer>
   );
