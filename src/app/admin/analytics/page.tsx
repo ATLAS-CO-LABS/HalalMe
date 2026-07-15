@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { display } from "../_fonts";
 import { StatCard, FilterPills, fmtMoney, DateRange } from "../_ui";
-import { ChartCard, TimeSeries, BarList, Donut, Funnel, CHART_COLORS, ORDINAL_GREEN } from "./_charts";
+import { ChartCard, TimeSeries, BarSeries, BarList, Donut, Funnel, CHART_COLORS, ORDINAL_GREEN } from "./_charts";
 
 type Point = { label: string; value: number };
 interface Data {
@@ -179,7 +179,7 @@ export default function AnalyticsPage() {
                   </ChartCard>
                 </div>
                 <ChartCard title="Merchants Added" subtitle="New merchant records over time">
-                  <TimeSeries data={data.addedOverTime ?? []} color={FOREST} />
+                  <BarSeries data={data.addedOverTime ?? []} color={FOREST} />
                 </ChartCard>
               </>
             )}
@@ -193,7 +193,7 @@ export default function AnalyticsPage() {
                   <StatCard label="Verified" value={`${s.verifiedPct ?? 0}%`} sub="Of all users" icon={BadgeCheck} tone="purple" />
                 </div>
                 <ChartCard title="Signups" subtitle="New accounts over time">
-                  <TimeSeries data={data.signups ?? []} color={AMBER} />
+                  <BarSeries data={data.signups ?? []} color={AMBER} />
                 </ChartCard>
                 <div className="grid lg:grid-cols-2 gap-5">
                   <ChartCard title="Verification" subtitle="Verified vs unverified">
@@ -240,7 +240,7 @@ export default function AnalyticsPage() {
                   <StatCard label="Session → Recipe" value={`${s.sessionConversion ?? 0}%`} sub="Produced a recipe" icon={TrendingUp} tone="green" />
                 </div>
                 <ChartCard title="Recipes Published" subtitle="Published recipes over time">
-                  <TimeSeries data={data.publishedOverTime ?? []} color={AMBER} />
+                  <BarSeries data={data.publishedOverTime ?? []} color={AMBER} />
                 </ChartCard>
                 <div className="grid lg:grid-cols-2 gap-5">
                   <ChartCard title="Source" subtitle="AI vs user-submitted">
@@ -267,7 +267,7 @@ export default function AnalyticsPage() {
                   <StatCard label="Avg Comments / Post" value={s.avgComments ?? "—"} sub="Engagement" icon={MessageCircle} tone="amber" />
                 </div>
                 <ChartCard title="Posts Over Time" subtitle="New posts in the period">
-                  <TimeSeries data={data.postsOverTime ?? []} color={AMBER} />
+                  <BarSeries data={data.postsOverTime ?? []} color={AMBER} />
                 </ChartCard>
                 <ChartCard title="Most Followed" subtitle="Top users by followers">
                   <BarList data={data.mostFollowed ?? []} color={AMBER} />

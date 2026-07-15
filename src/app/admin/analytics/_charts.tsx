@@ -41,6 +41,25 @@ function niceStep(max: number, targetTicks = 4): number {
   return step * mag;
 }
 
+/**
+ * Nice round y-axis ticks. Forces a whole-number step (≥1) when every value
+ * in the series is an integer (counts) — fractional ticks are meaningless for
+ * a count ("0.6 merchants") and niceStep's float step (e.g. 0.2) accumulates
+ * binary floating-point error under repeated addition (0.4 + 0.2 renders as
+ * 0.6000000000000001), which shows up as a garbled/clipped axis label.
+ * Ticks are also built by multiplying the index (not repeated `+=`) and
+ * rounded to 12 significant digits to kill any remaining float noise.
+ */
+function computeTicks(rawMax: number, wholeNumbers: boolean, targetTicks = 4) {
+  let step = niceStep(rawMax, targetTicks);
+  if (wholeNumbers) step = Math.max(1, Math.round(step));
+  const niceMax = Math.max(step, Math.ceil(rawMax / step) * step);
+  const count = Math.round(niceMax / step);
+  const ticks: number[] = [];
+  for (let i = 0; i <= count; i++) ticks.push(Number((i * step).toPrecision(12)));
+  return { ticks, niceMax };
+}
+
 // ─── Card wrapper ───────────────────────────────────────────────────────────
 export function ChartCard({
   title, subtitle, children, right,
@@ -97,10 +116,8 @@ export function TimeSeries({
   const plotH = H - padTop - padBottom;
 
   const rawMax = Math.max(1, ...data.map((d) => d.value));
-  const step = niceStep(rawMax);
-  const niceMax = Math.max(step, Math.ceil(rawMax / step) * step);
-  const ticks: number[] = [];
-  for (let t = 0; t <= niceMax; t += step) ticks.push(t);
+  const wholeNumbers = data.every((d) => Number.isInteger(d.value));
+  const { ticks, niceMax } = computeTicks(rawMax, wholeNumbers);
 
   const n = data.length;
   const x = (i: number) => padLeft + (n === 1 ? plotW / 2 : (i * plotW) / (n - 1));
@@ -185,6 +202,110 @@ export function TimeSeries({
       {hoveredPoint && hover !== null && (
         <ChartTooltip
           leftPct={(x(hover) / W) * 100}
+          topPct={(y(hoveredPoint.value) / H) * 100}
+          value={format(hoveredPoint.value)}
+          label={hoveredPoint.label}
+        />
+      )}
+    </div>
+  );
+}
+
+// ─── Bar series (vertical bars, gridlines) ──────────────────────────────────
+// For sparse per-period counts (records added per day) where a line/area
+// chart would imply a continuous trend between points that don't really
+// connect. One bar per period reads as what it is: a count on that day.
+export function BarSeries({
+  data, color = CHART_COLORS.green, height = 200, format = (n: number) => String(n),
+}: {
+  data: Point[]; color?: string; height?: number; format?: (n: number) => string;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [hover, setHover] = useState<number | null>(null);
+  if (data.length === 0) return <ChartEmpty />;
+
+  const W = 600, H = height;
+  const padLeft = 38, padRight = 8, padTop = 10, padBottom = 20;
+  const plotW = W - padLeft - padRight;
+  const plotH = H - padTop - padBottom;
+
+  const rawMax = Math.max(1, ...data.map((d) => d.value));
+  const wholeNumbers = data.every((d) => Number.isInteger(d.value));
+  const { ticks, niceMax } = computeTicks(rawMax, wholeNumbers);
+
+  const n = data.length;
+  const slot = plotW / n;
+  const barW = Math.max(1, Math.min(28, slot * 0.6));
+  const cx = (i: number) => padLeft + slot * (i + 0.5);
+  const y = (v: number) => padTop + plotH * (1 - v / niceMax);
+
+  const xLabelStep = Math.max(1, Math.ceil(n / 6));
+
+  function nearestIndex(clientX: number): number {
+    const el = containerRef.current;
+    if (!el) return 0;
+    const rect = el.getBoundingClientRect();
+    const dataX = ((clientX - rect.left) / rect.width) * W;
+    const idx = Math.floor((dataX - padLeft) / slot);
+    return Math.max(0, Math.min(n - 1, idx));
+  }
+
+  const hoveredPoint = hover !== null ? data[hover] : null;
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative select-none"
+      onPointerMove={(e) => setHover(nearestIndex(e.clientX))}
+      onPointerLeave={() => setHover(null)}
+    >
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={height} preserveAspectRatio="none" className="overflow-visible block">
+        {/* gridlines + y-axis labels */}
+        {ticks.map((t, i) => (
+          <g key={i}>
+            <line x1={padLeft} y1={y(t)} x2={W - padRight} y2={y(t)} stroke={INK} strokeOpacity="0.07" strokeWidth="1" />
+            <text x={padLeft - 6} y={y(t)} textAnchor="end" dominantBaseline="middle" fontSize="9" fill="#9ca3af">
+              {format(t)}
+            </text>
+          </g>
+        ))}
+
+        {/* bars */}
+        {data.map((d, i) => {
+          const isHover = hover === i;
+          const barH = Math.max(0, y(0) - y(d.value));
+          return (
+            <rect
+              key={i}
+              x={cx(i) - barW / 2}
+              y={y(d.value)}
+              width={barW}
+              height={barH}
+              fill={color}
+              opacity={isHover ? 1 : 0.85}
+            />
+          );
+        })}
+
+        {/* x-axis labels — placed in data space so they stay aligned with bars */}
+        {data.map((d, i) => (
+          <text
+            key={i}
+            x={cx(i)}
+            y={H - 4}
+            textAnchor={i === 0 ? "start" : i === n - 1 ? "end" : "middle"}
+            fontSize="9"
+            fill="#9ca3af"
+            style={{ visibility: i % xLabelStep === 0 || i === n - 1 ? "visible" : "hidden" }}
+          >
+            {d.label}
+          </text>
+        ))}
+      </svg>
+
+      {hoveredPoint && hover !== null && (
+        <ChartTooltip
+          leftPct={(cx(hover) / W) * 100}
           topPct={(y(hoveredPoint.value) / H) * 100}
           value={format(hoveredPoint.value)}
           label={hoveredPoint.label}
