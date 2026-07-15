@@ -152,7 +152,9 @@ const logoCol: React.CSSProperties = {
 
 const badgeImg: React.CSSProperties = {
   display: "block",
-  borderRadius: "50%",
+  // Fixed px radius (not 50%) — Gmail renders percentage border-radius
+  // inconsistently, so a circle needs an explicit half-of-dimension value.
+  borderRadius: "20px",
 };
 
 const brandCol: React.CSSProperties = {
@@ -164,7 +166,10 @@ const brand: React.CSSProperties = {
   color: colors.cream,
   fontSize: "25px",
   fontWeight: 800,
-  letterSpacing: "-0.4px",
+  // Poppins is stripped by Gmail/Outlook, which fall back to bold Arial —
+  // its wider glyphs read cramped under Poppins-tuned tight tracking, so
+  // keep this close to neutral rather than matching the webfont exactly.
+  letterSpacing: "-0.1px",
   lineHeight: "40px",
   margin: 0,
 };
@@ -198,7 +203,9 @@ export const styles = {
     color: colors.ink,
     fontSize: "25px",
     fontWeight: 800,
-    letterSpacing: "-0.3px",
+    // See brand style above: kept close to neutral so the bold-Arial
+    // fallback (Gmail/Outlook) doesn't read cramped.
+    letterSpacing: "-0.1px",
     marginTop: 0,
     marginBottom: "16px",
   } as React.CSSProperties,
@@ -247,7 +254,9 @@ export const styles = {
     display: "inline-block",
     backgroundColor: colors.purple,
     color: colors.white,
-    borderRadius: "50%",
+    // Fixed px radius (not 50%) — Gmail renders percentage border-radius
+    // inconsistently, so a circle needs an explicit half-of-dimension value.
+    borderRadius: "12px",
     width: "24px",
     height: "24px",
     lineHeight: "24px",
@@ -387,7 +396,9 @@ export const styles = {
     color: colors.ink,
     fontSize: "25px",
     fontWeight: 800,
-    letterSpacing: "-0.3px",
+    // See brand style above: kept close to neutral so the bold-Arial
+    // fallback (Gmail/Outlook) doesn't read cramped.
+    letterSpacing: "-0.1px",
     margin: 0,
     textAlign: "center",
   } as React.CSSProperties,

@@ -75,3 +75,10 @@ export default function MerchantContractEmail({
     </EmailLayout>
   );
 }
+
+MerchantContractEmail.PreviewProps = {
+  restaurantName: "Dar Par",
+  ownerName: "Ahmed",
+  commission: 20,
+  signedAt: "15 July 2026, 10:32am",
+} as MerchantContractEmailProps;

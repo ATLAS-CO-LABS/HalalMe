@@ -56,3 +56,9 @@ export default function MerchantCounterOfferEmail({
     </EmailLayout>
   );
 }
+
+MerchantCounterOfferEmail.PreviewProps = {
+  restaurantName: "Dar Par",
+  ownerName: "Ahmed",
+  commission: 22.5,
+} as MerchantCounterOfferEmailProps;
