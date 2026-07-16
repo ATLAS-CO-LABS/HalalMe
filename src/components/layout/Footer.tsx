@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUp, ArrowUpRight } from "lucide-react";
 
 const services = [
   { label: "Delivery", href: "/delivery", accent: "#B96AF0" },
@@ -50,8 +50,8 @@ function FooterWordmark() {
         whileInView={reduce ? undefined : "show"}
         viewport={{ once: true, amount: 0.4 }}
         variants={{ show: { transition: { staggerChildren: 0.05, delayChildren: 0.1 } } }}
-        className="flex justify-between items-end px-2 md:px-6 translate-y-[0.14em]"
-        style={{ fontFamily: "var(--font-logo)" }}
+        className="flex justify-center items-end pb-3 md:pb-5 whitespace-nowrap"
+        style={{ fontFamily: "var(--font-logo)", letterSpacing: "-0.045em" }}
       >
         {letters.map((ch, i) => (
           <motion.span
@@ -62,9 +62,9 @@ function FooterWordmark() {
             }}
             whileHover={{ y: "-6%", color: "rgba(245,158,11,0.45)" }}
             transition={{ type: "spring", stiffness: 260, damping: 20 }}
-            className="inline-block font-black leading-none tracking-tighter cursor-default"
+            className="inline-block font-black leading-none cursor-default"
             style={{
-              fontSize: "clamp(3.5rem, 13.5vw, 15rem)",
+              fontSize: "clamp(4rem, 21vw, 24rem)",
               color: "rgba(247,231,206,0.07)",
             }}
           >
@@ -80,7 +80,7 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="relative bg-[#0A1C19] overflow-hidden">
+    <footer className="relative bg-[#0A1C19] overflow-hidden border-t border-[#F7E7CE]/8">
       {/* Faint radial glow anchoring the wordmark */}
       <div
         aria-hidden="true"
@@ -89,59 +89,6 @@ export default function Footer() {
           background: "radial-gradient(ellipse at bottom, rgba(245,158,11,0.05) 0%, transparent 60%)",
         }}
       />
-
-      {/* ── Trust Strip ──────────────────────────────────────── */}
-      <div className="border-b border-[#F7E7CE]/8">
-        <div className="mx-auto max-w-[95vw] px-6 grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0 divide-[#F7E7CE]/8">
-          {[
-            {
-              num: "01",
-              title: "Halal Certified",
-              body: "Every partner and product is scholar-reviewed and certified.",
-            },
-            {
-              num: "02",
-              title: "Scholar Verified",
-              body: "Our standards are set and audited by qualified Islamic scholars.",
-            },
-            {
-              num: "03",
-              title: "Community First",
-              body: "Built by Muslims, for Muslims - recommendations from real people.",
-            },
-            {
-              num: "04",
-              title: "One Account",
-              body: "Your profile, rewards, and history unified across all services.",
-            },
-          ].map((item, i) => (
-            <motion.div
-              key={item.num}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.08, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-              className="group relative px-6 py-8 overflow-hidden transition-colors duration-300 hover:bg-[#F7E7CE]/[0.03]"
-            >
-              <span
-                aria-hidden="true"
-                className="absolute -bottom-2 -right-1 text-[4rem] font-extrabold text-[#F7E7CE]/[0.04] leading-none select-none pointer-events-none transition-transform duration-500 group-hover:-translate-y-1.5 group-hover:text-[#F7E7CE]/[0.07]"
-              >
-                {item.num}
-              </span>
-              <p className="text-[9px] font-bold text-[#F59E0B] uppercase tracking-[0.25em] mb-2">
-                {item.num}
-              </p>
-              <h3 className="text-sm font-extrabold uppercase tracking-tight text-[#F7E7CE]/80 mb-2">
-                {item.title}
-              </h3>
-              <p className="text-xs text-[#F7E7CE]/35 leading-relaxed">
-                {item.body}
-              </p>
-            </motion.div>
-          ))}
-        </div>
-      </div>
 
       {/* ── Main Footer Grid ──────────────────────────────────── */}
       <div className="relative mx-auto max-w-[95vw] px-6 pt-14 pb-8">
@@ -153,7 +100,7 @@ export default function Footer() {
           className="grid gap-10 lg:grid-cols-12"
         >
           {/* Brand Column */}
-          <motion.div variants={colVariants} className="lg:col-span-4 flex flex-col gap-5">
+          <motion.div variants={colVariants} className="lg:col-span-6 flex flex-col gap-5">
             <Link href="/" className="inline-flex items-center gap-3 w-fit">
               <span
                 style={{
@@ -292,7 +239,7 @@ export default function Footer() {
           </motion.div>
 
           {/* Company links */}
-          <motion.div variants={colVariants} className="lg:col-span-2">
+          <motion.div variants={colVariants} className="lg:col-span-3">
             <h3 className="text-[10px] font-bold text-[#F7E7CE]/30 uppercase tracking-[0.25em] mb-5">
               Company
             </h3>
@@ -313,47 +260,15 @@ export default function Footer() {
             </ul>
           </motion.div>
 
-          {/* Newsletter */}
-          <motion.div variants={colVariants} className="lg:col-span-3">
-            <h3 className="text-[10px] font-bold text-[#F7E7CE]/30 uppercase tracking-[0.25em] mb-5">
-              Stay in the loop
-            </h3>
-            <div className="bg-[#102C26] border border-[#F7E7CE]/8 p-5">
-              <p className="text-[#F7E7CE]/70 text-sm font-medium mb-1">
-                Get weekly halal restaurant picks.
-              </p>
-              <p className="text-[#F7E7CE]/35 text-xs mb-5 leading-relaxed">
-                New openings, exclusive offers & halal living tips - delivered to your inbox.
-              </p>
-              <form className="flex flex-col gap-2.5">
-                <input
-                  type="email"
-                  placeholder="your@email.com"
-                  className="w-full px-4 py-2.5 bg-[#0A1C19] border border-[#F7E7CE]/12 text-sm text-[#F7E7CE] placeholder-[#F7E7CE]/25 focus:outline-none focus:border-[#F59E0B]/60 transition-all"
-                />
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  type="submit"
-                  className="w-full px-4 py-2.5 bg-[#F7E7CE] text-[#102C26] text-sm font-bold uppercase tracking-tight hover:bg-[#F7E7CE]/90 transition-colors"
-                >
-                  Subscribe
-                </motion.button>
-              </form>
-              <p className="text-[#F7E7CE]/20 text-[10px] mt-2.5">
-                No spam. Unsubscribe any time.
-              </p>
-            </div>
-          </motion.div>
         </motion.div>
 
         {/* ── Disclaimer ───────────────────────────────────────── */}
         <div className="mt-12 pt-8 border-t border-[#F7E7CE]/8">
-          <p className="text-[#F7E7CE]/25 text-[11px] leading-relaxed max-w-4xl">
+          <p className="text-[#F7E7CE]/20 text-[11px] leading-[1.8] max-w-5xl">
             HalalMe verifies halal certification for all listed merchants at onboarding but cannot guarantee the halal status of every individual item at all times. Report concerns to{" "}
             <a
               href="mailto:Support@HalalMe.co.uk"
-              className="underline underline-offset-2 hover:text-[#F7E7CE]/40 transition-colors"
+              className="underline underline-offset-2 decoration-[#F7E7CE]/20 hover:text-[#F7E7CE]/45 hover:decoration-[#F59E0B]/50 transition-colors"
             >
               Support@HalalMe.co.uk
             </a>
@@ -366,20 +281,32 @@ export default function Footer() {
           <p className="text-[#F7E7CE]/25 text-xs">
             © {currentYear} HalalMe Delivery LTD. All Rights Reserved.
           </p>
-          <div className="flex items-center gap-4 flex-wrap justify-center">
+          <div className="flex items-center gap-5 flex-wrap justify-center">
             {legalLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-[#F7E7CE]/25 hover:text-[#F7E7CE]/55 text-xs transition-colors"
+                className="group relative text-[#F7E7CE]/25 hover:text-[#F7E7CE]/60 text-xs transition-colors duration-300"
               >
                 {link.label}
+                <span className="absolute -bottom-0.5 left-0 h-px w-0 bg-[#F59E0B]/60 group-hover:w-full transition-all duration-300" />
               </Link>
             ))}
           </div>
-          <div className="flex items-center gap-2 text-[#F7E7CE]/25 text-xs">
-            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-            All systems operational
+          <div className="flex items-center gap-5">
+            <div className="flex items-center gap-2 text-[#F7E7CE]/25 text-xs">
+              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+              All systems operational
+            </div>
+            <motion.button
+              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.94 }}
+              aria-label="Back to top"
+              className="w-8 h-8 flex items-center justify-center border border-[#F7E7CE]/15 text-[#F7E7CE]/40 hover:text-[#F59E0B] hover:border-[#F59E0B]/50 transition-colors duration-300"
+            >
+              <ArrowUp className="w-3.5 h-3.5" />
+            </motion.button>
           </div>
         </div>
       </div>
