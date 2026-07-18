@@ -30,8 +30,12 @@ export const metadata: Metadata = {
   },
   description: "Four halal services. One account. Order food, discover recipes, connect with the community and earn charity rewards.",
   metadataBase: new URL(BASE_URL),
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     type: "website",
+    url: "/",
     siteName: "HalalMe",
     images: [{ url: DEFAULT_OG_IMAGE, width: 1200, height: 630, alt: "HalalMe" }],
   },

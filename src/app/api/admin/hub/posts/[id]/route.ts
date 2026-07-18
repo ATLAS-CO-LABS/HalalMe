@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
 import { logAdminAction } from "@/lib/adminAudit";
+import { pingIndexNow } from "@/lib/indexNow";
 
 // GET /api/admin/hub/posts/[id] — full post + author + a sample of recent
 // comments, via service role so admins can preview even hidden posts.
@@ -87,6 +88,10 @@ export async function PATCH(
     summary: body.is_published ? "Published post" : "Hid post",
     metadata: { is_published: body.is_published },
   });
+
+  if (body.is_published === true) {
+    pingIndexNow([`https://halalme.co.uk/hub/post/${id}`]).catch(() => {});
+  }
 
   return NextResponse.json({ ok: true });
 }

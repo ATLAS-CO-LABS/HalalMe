@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
 import { logAdminAction } from "@/lib/adminAudit";
+import { pingIndexNow } from "@/lib/indexNow";
 
 const BOOL_FLAGS = ["is_published", "is_halal_verified", "is_featured"] as const;
 
@@ -85,6 +86,10 @@ export async function PATCH(
     summary: `Updated recipe flags: ${Object.entries(update).map(([k, v]) => `${k}=${v}`).join(", ")}`,
     metadata: update,
   });
+
+  if (update.is_published === true) {
+    pingIndexNow([`https://halalme.co.uk/kitchen/recipes/${id}`]).catch(() => {});
+  }
 
   return NextResponse.json({ ok: true });
 }
