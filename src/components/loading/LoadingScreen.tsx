@@ -16,7 +16,6 @@ export default function LoadingScreen({ onLoadingComplete }: { onLoadingComplete
     const letters   = container.querySelectorAll('.loading-letter');
     const tagline   = container.querySelector('.loading-tagline');
     const mainLogo  = container.querySelector('.loading-main-logo');
-    const pulseRing = container.querySelector('.loading-pulse-ring');
 
     gsap.set(mainLogo, { opacity: 0, scale: 0.5, y: 20 });
     gsap.set(tagline,  { opacity: 0, y: 10 });
@@ -34,17 +33,6 @@ export default function LoadingScreen({ onLoadingComplete }: { onLoadingComplete
       ease: 'back.out(1.6)',
     }, 0.05);
 
-    // Pulse ring loop starts after logo lands
-    tl.call(() => {
-      gsap.to(pulseRing, {
-        scale: 1.9,
-        opacity: 0,
-        duration: 1.4,
-        repeat: -1,
-        ease: 'power2.out',
-      });
-    }, [], 0.5);
-
     // Phase 2 - wordmark letters rise in
     tl.from(letters, {
       yPercent: 100,
@@ -59,8 +47,6 @@ export default function LoadingScreen({ onLoadingComplete }: { onLoadingComplete
     tl.to({}, { duration: 0.55 }, 2.1);
 
     // Phase 3 - exit
-    tl.call(() => gsap.killTweensOf(pulseRing), [], 2.65);
-
     tl.to(letters,  { yPercent: -100, stagger: 0.02, duration: 0.4, ease: 'expo.in' }, 2.65);
     if (tagline)  tl.to(tagline,  { opacity: 0, y: -12, duration: 0.3 }, 2.65);
     if (mainLogo) tl.to(mainLogo, { opacity: 0, scale: 1.15, y: -16, duration: 0.4 }, 2.65);
@@ -73,7 +59,6 @@ export default function LoadingScreen({ onLoadingComplete }: { onLoadingComplete
 
     return () => {
       tl.kill();
-      gsap.killTweensOf(pulseRing);
     };
   }, [onLoadingComplete]);
 
@@ -81,13 +66,10 @@ export default function LoadingScreen({ onLoadingComplete }: { onLoadingComplete
     <div ref={containerRef} className="loading-header">
       <div className="loading-loader">
 
-        {/* Logo with pulse ring */}
+        {/* Logo */}
         <div className="loading-main-logo">
-          <div className="loading-logo-ring-wrap">
-            <div className="loading-pulse-ring" />
-            <div className="loading-logo-circle">
-              <Image src="/logo/logo.png" alt="HalalMe" width={80} height={80} priority className="object-contain w-full h-full" />
-            </div>
+          <div className="loading-logo-circle">
+            <Image src="/logo/logo.png" alt="HalalMe" width={80} height={80} priority className="object-contain w-full h-full" />
           </div>
         </div>
 

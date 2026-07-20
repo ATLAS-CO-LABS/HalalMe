@@ -212,10 +212,7 @@ function SidebarContent({ convs, activeConv, onConvClick, onNewChat, onDelete, u
       {/* Logo header */}
       <div className="shrink-0 px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="relative">
-            <Image src="/logo/aqi.png" alt="AQI" width={32} height={32} className="object-contain rounded-full bg-white p-1.5" />
-            <div className="absolute inset-0 rounded-full" style={{ boxShadow: `0 0 12px rgba(240,62,158,0.5)` }} />
-          </div>
+          <Image src="/logo/aqi.png" alt="AQI" width={32} height={32} className="object-contain rounded-full bg-white p-1.5" />
           <div>
             <span className="text-sm font-black uppercase" style={{ color: CREAM, letterSpacing: "0.22em" }}>AQI</span>
             <div className="text-[8px] font-bold uppercase" style={{ color: `${CREAM}35`, letterSpacing: "0.2em" }}>by HalalMe</div>
@@ -682,30 +679,27 @@ export default function AIAssistantPage() {
               <Menu className="w-5 h-5" strokeWidth={1.75} />
             </button>
             <div className="flex items-center gap-2.5">
-              <div className="relative">
-                <Image src="/logo/aqi.png" alt="AQI" width={26} height={26} className="object-contain shrink-0 rounded-full bg-white p-1" />
-                <div className="absolute inset-0" style={{ boxShadow: "0 0 10px rgba(240,62,158,0.4)" }} />
-              </div>
-              <div className="hidden sm:block">
+              <Image src="/logo/aqi.png" alt="AQI" width={26} height={26} className="object-contain shrink-0 rounded-full bg-white p-1" />
+              <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-black uppercase" style={{ color: CREAM, letterSpacing: "0.22em" }}>AQI</span>
-                  <span className="text-[8px] px-1.5 py-0.5 font-black uppercase"
-                    style={{ background: "rgba(240,62,158,0.12)", color: VIOLET, border: "1px solid rgba(240,62,158,0.2)", letterSpacing: "0.15em" }}>
+                  <span className="text-xs font-black uppercase" style={{ color: CREAM, letterSpacing: "0.16em" }}>AQI</span>
+                  <span className="hidden sm:inline-block text-[8px] px-1.5 py-0.5 font-black uppercase"
+                    style={{ background: "rgba(240,62,158,0.12)", color: VIOLET, border: "1px solid rgba(240,62,158,0.2)", letterSpacing: "0.12em" }}>
                     Halal AI
                   </span>
                 </div>
                 <div className="flex items-center gap-1 mt-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "#4ade80", boxShadow: "0 0 4px #4ade80" }} />
-                  <span className="text-[8px] font-bold uppercase" style={{ color: "#4ade8080", letterSpacing: "0.16em" }}>Online</span>
+                  <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: "#4ade80" }} />
+                  <span className="text-[8px] font-bold uppercase" style={{ color: "#4ade8080", letterSpacing: "0.14em" }}>Online</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {requestsLeft !== null && (
               <div className="flex items-center gap-2">
-                <div className="hidden sm:flex gap-0.5">
+                <div className="hidden md:flex gap-0.5">
                   {Array.from({ length: 10 }).map((_, i) => (
                     <div key={i} className="w-1 h-3 transition-all"
                       style={{
@@ -757,11 +751,9 @@ export default function AIAssistantPage() {
         {/* Chat area */}
         <div ref={chatRef} className="flex-1 min-h-0 overflow-y-auto relative">
 
-          {/* Atmospheric background orbs */}
+          {/* Ambient background wash */}
           <div className="pointer-events-none fixed inset-0 overflow-hidden" style={{ zIndex: 0 }}>
             <div className="aqi-orb-1" />
-            <div className="aqi-orb-2" />
-            <div className="aqi-orb-3" />
           </div>
 
           {/* Welcome screen */}
@@ -777,11 +769,9 @@ export default function AIAssistantPage() {
                   transition={{ delay: 0.05, type: "spring", stiffness: 200 }}
                   className="relative mb-10"
                 >
-                  <div className="aqi-logo-ring-3" />
-                  <div className="aqi-logo-ring-2" />
                   <div className="aqi-logo-ring-1" />
                   <div className="relative z-10 w-20 h-20 rounded-full flex items-center justify-center"
-                    style={{ background: "rgba(240,62,158,0.08)", border: "1px solid rgba(240,62,158,0.2)" }}>
+                    style={{ background: "rgba(240,62,158,0.06)", border: "1px solid rgba(240,62,158,0.16)" }}>
                     <Image src="/logo/aqi.png" alt="AQI" width={52} height={52} className="object-contain rounded-full bg-white p-2" />
                   </div>
                 </motion.div>
@@ -821,7 +811,7 @@ export default function AIAssistantPage() {
                 {/* Suggestion cards */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-                  className="grid grid-cols-2 gap-3 w-full max-w-md"
+                  className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-md"
                 >
                   {SUGGESTIONS.map((s, i) => (
                     <motion.button
@@ -865,13 +855,10 @@ export default function AIAssistantPage() {
                     {isFirstInGroup && (
                       <div className={`flex items-center gap-2 mb-2 ${isUser ? "justify-end" : "justify-start"}`}>
                         {!isUser && (
-                          <div className="relative">
-                            <Image src="/logo/aqi.png" alt="AQI" width={18} height={18} className="object-contain rounded-full bg-white p-1" />
-                            <div className="absolute inset-0" style={{ boxShadow: "0 0 6px rgba(240,62,158,0.5)" }} />
-                          </div>
+                          <Image src="/logo/aqi.png" alt="AQI" width={18} height={18} className="object-contain rounded-full bg-white p-1" />
                         )}
                         <span className="text-[9px] font-black uppercase"
-                          style={{ color: isUser ? `${CREAM}28` : `${VIOLET}90`, letterSpacing: "0.24em" }}>
+                          style={{ color: isUser ? `${CREAM}28` : `${VIOLET}90`, letterSpacing: "0.16em" }}>
                           {isUser ? "You" : "AQI"}
                         </span>
                         {isUser && (
@@ -892,13 +879,12 @@ export default function AIAssistantPage() {
                       <div className="max-w-[88%]">
                         <div
                           style={isUser ? {
-                            background: "linear-gradient(135deg, #2A2A2A 0%, #222222 100%)",
-                            border: "1px solid rgba(240,62,158,0.2)",
+                            background: "rgba(240,62,158,0.1)",
+                            borderRadius: 3,
                             padding: "12px 16px",
                           } : {
-                            background: "rgba(38,38,38,0.95)",
-                            border: "1px solid rgba(240,62,158,0.12)",
-                            borderLeft: `3px solid ${VIOLET}70`,
+                            background: "rgba(38,38,38,0.9)",
+                            borderRadius: 3,
                             padding: "12px 16px",
                           }}
                         >
@@ -1037,18 +1023,14 @@ export default function AIAssistantPage() {
               {streamingContent !== null && (
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="relative">
-                      <Image src="/logo/aqi.png" alt="AQI" width={18} height={18} className="object-contain rounded-full bg-white p-1" />
-                      <div className="absolute inset-0" style={{ boxShadow: "0 0 6px rgba(240,62,158,0.5)" }} />
-                    </div>
-                    <span className="text-[9px] font-black uppercase" style={{ color: `${VIOLET}90`, letterSpacing: "0.24em" }}>AQI</span>
+                    <Image src="/logo/aqi.png" alt="AQI" width={18} height={18} className="object-contain rounded-full bg-white p-1" />
+                    <span className="text-[9px] font-black uppercase" style={{ color: `${VIOLET}90`, letterSpacing: "0.18em" }}>AQI</span>
                   </div>
                   <div className="flex justify-start">
                     <div className="max-w-[88%]">
                       <div style={{
-                        background: "rgba(38,38,38,0.95)",
-                        border: "1px solid rgba(240,62,158,0.12)",
-                        borderLeft: `3px solid ${VIOLET}70`,
+                        background: "rgba(38,38,38,0.9)",
+                        borderRadius: 3,
                         padding: "12px 16px",
                       }}>
                         <div className="whitespace-pre-wrap text-sm leading-[1.8]" style={{ color: `${CREAM}CC` }}>
@@ -1071,14 +1053,12 @@ export default function AIAssistantPage() {
                         <Image src="/logo/aqi.png" alt="AQI" width={18} height={18} className="object-contain rounded-full bg-white p-1" />
                         <Loader2 className="absolute inset-0 w-5 h-5 text-violet-400/40 animate-spin" strokeWidth={1.5} />
                       </div>
-                      <span className="text-[9px] font-black uppercase" style={{ color: `${VIOLET}70`, letterSpacing: "0.24em" }}>AQI</span>
+                      <span className="text-[9px] font-black uppercase" style={{ color: `${VIOLET}70`, letterSpacing: "0.18em" }}>AQI</span>
                     </div>
                     <div className="inline-flex items-center gap-1.5 px-4 py-3"
                       style={{
-                        background: "rgba(38,38,38,0.95)",
-                        borderLeft: "3px solid",
-                        borderImage: `linear-gradient(180deg, ${FUCHSIA}, ${VIOLET}) 1`,
-                        border: "1px solid rgba(240,62,158,0.1)",
+                        background: "rgba(38,38,38,0.9)",
+                        borderRadius: 3,
                       }}>
                       {[0, 1, 2].map((i) => (
                         <motion.span key={i} className="block w-1.5 h-1.5"
@@ -1111,7 +1091,7 @@ export default function AIAssistantPage() {
                   ? "1px solid rgba(240,62,158,0.5)"
                   : "1px solid rgba(240,62,158,0.12)",
                 boxShadow: inputFocused
-                  ? "0 0 0 3px rgba(240,62,158,0.08), 0 0 20px rgba(240,62,158,0.06)"
+                  ? "0 0 0 3px rgba(240,62,158,0.08)"
                   : "none",
               }}
             >
@@ -1153,10 +1133,10 @@ export default function AIAssistantPage() {
             </div>
 
             <div className="flex items-center justify-between mt-2 px-1">
-              <span className="text-[8px] font-semibold uppercase" style={{ color: `${CREAM}15`, letterSpacing: "0.14em" }}>
+              <span className="hidden sm:inline text-[8px] font-semibold uppercase" style={{ color: `${CREAM}15`, letterSpacing: "0.12em" }}>
                 Enter to send · Shift+Enter for new line
               </span>
-              <span className="flex items-center gap-1 text-[8px] font-semibold uppercase" style={{ color: `${CREAM}15`, letterSpacing: "0.14em" }}>
+              <span className="flex items-center gap-1 text-[8px] font-semibold uppercase ml-auto" style={{ color: `${CREAM}15`, letterSpacing: "0.12em" }}>
                 <Sparkles className="w-2.5 h-2.5" />
                 Always verify halal
               </span>
@@ -1189,50 +1169,28 @@ export default function AIAssistantPage() {
         }
         @keyframes aqi-blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
 
-        /* Atmospheric orbs */
+        /* Ambient background wash — a single static gradient, no animation */
         .aqi-orb-1 {
           position: absolute;
           top: -20%;
           left: -15%;
           width: 60%;
           height: 60%;
-          background: radial-gradient(circle, rgba(180,20,100,0.09) 0%, rgba(180,20,100,0.03) 40%, transparent 70%);
-          pointer-events: none;
-        }
-        .aqi-orb-2 {
-          position: absolute;
-          bottom: -15%;
-          right: -10%;
-          width: 55%;
-          height: 55%;
-          background: radial-gradient(circle, rgba(196,30,115,0.07) 0%, rgba(196,30,115,0.02) 40%, transparent 70%);
-          pointer-events: none;
-        }
-        .aqi-orb-3 {
-          position: absolute;
-          top: 35%;
-          left: 40%;
-          width: 40%;
-          height: 40%;
-          background: radial-gradient(circle, rgba(240,62,158,0.04) 0%, transparent 60%);
+          background: radial-gradient(circle, rgba(180,20,100,0.06) 0%, rgba(180,20,100,0.02) 40%, transparent 70%);
           pointer-events: none;
         }
 
-        /* Welcome logo glow rings */
-        .aqi-logo-ring-1,
-        .aqi-logo-ring-2,
-        .aqi-logo-ring-3 {
+        /* Welcome logo glow ring */
+        .aqi-logo-ring-1 {
           position: absolute;
           inset: 0;
           border-radius: 50%;
-          border: 1px solid rgba(240,62,158,0.25);
+          border: 1px solid rgba(240,62,158,0.2);
           animation: aqi-ring 2.5s ease-out infinite;
         }
-        .aqi-logo-ring-2 { animation-delay: 0.8s; border-color: rgba(196,30,115,0.15); }
-        .aqi-logo-ring-3 { animation-delay: 1.6s; border-color: rgba(240,62,158,0.08); }
         @keyframes aqi-ring {
-          0%   { transform: scale(1);    opacity: 0.8; }
-          100% { transform: scale(1.8);  opacity: 0;   }
+          0%   { transform: scale(1);    opacity: 0.7; }
+          100% { transform: scale(1.6);  opacity: 0;   }
         }
       `}</style>
     </div>

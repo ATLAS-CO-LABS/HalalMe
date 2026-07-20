@@ -6,10 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { profileService } from "@/services/profileService";
 import { CheckCircle2, XCircle, Loader2, Camera, ArrowRight, Phone } from "lucide-react";
-
-const COUNTRY_CODES = [
-  { code: "GB", label: "🇬🇧 +44" },
-];
+import { COUNTRY_CODES, flagEmoji } from "@/data/countryCodes";
 
 function validateUsername(value: string): string | null {
   if (value.length < 3) return "At least 3 characters";
@@ -251,10 +248,12 @@ export default function CompleteProfilePage() {
             <select
               value={countryCode}
               onChange={(e) => setCountryCode(e.target.value)}
-              className="h-11 rounded-lg border border-[#F7E7CE]/12 bg-[#F7E7CE]/5 px-2 text-sm text-[#F7E7CE] outline-none focus:border-[#F59E0B]/50 focus:ring-1 focus:ring-[#F59E0B]/15 shrink-0"
+              className="h-11 max-w-30 rounded-lg border border-[#F7E7CE]/12 bg-[#F7E7CE]/5 px-2 text-sm text-[#F7E7CE] outline-none focus:border-[#F59E0B]/50 focus:ring-1 focus:ring-[#F59E0B]/15 shrink-0"
             >
-              {COUNTRY_CODES.map(({ code, label }) => (
-                <option key={code} value={code} className="bg-[#0A1C19]">{label}</option>
+              {COUNTRY_CODES.map(({ code, dial, name }) => (
+                <option key={code} value={code} className="bg-[#0A1C19]">
+                  {flagEmoji(code)} {dial} · {name}
+                </option>
               ))}
             </select>
             <input

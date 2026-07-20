@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, LayoutDashboard, LogOut, UserRound } from 'lucide-react';
 
 const serviceLinks = [
   { href: '/delivery', label: 'Delivery', desc: 'Halal food to your door',   num: '01', accent: '#B96AF0' },
@@ -118,7 +118,7 @@ export default function Header() {
                 />
               </span>
               <span
-                className="text-xl font-black text-[#F7E7CE] tracking-tight"
+                className="text-lg sm:text-xl font-black text-[#F7E7CE] tracking-tight"
                 style={{ fontFamily: 'var(--font-logo)' }}
               >
                 HalalMe
@@ -157,29 +157,40 @@ export default function Header() {
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: -6, scale: 0.97 }}
                           transition={{ duration: 0.18, ease: 'easeOut' }}
-                          className="absolute right-0 mt-2 w-56 bg-[#102C26] border border-[#F7E7CE]/10 shadow-2xl shadow-black/40 overflow-hidden"
+                          className="absolute right-0 mt-2 w-64 bg-[#102C26] border border-[#F7E7CE]/10 shadow-2xl shadow-black/40 overflow-hidden"
                         >
-                          <div className="bg-[#0A1C19] px-4 py-3 border-b border-[#F7E7CE]/8">
-                            <p className="text-xs text-[#F7E7CE]/40">Signed in as</p>
-                            <p className="text-sm font-semibold text-[#F7E7CE] truncate">{user.email}</p>
+                          <div style={{ height: 2, background: 'linear-gradient(to right, #F03E9E, #F59E0B, transparent)' }} />
+                          <div className="flex items-center gap-3 bg-[#0A1C19] px-4 py-3.5 border-b border-[#F7E7CE]/8">
+                            <div className="h-10 w-10 shrink-0 bg-[#F7E7CE]/15 border border-[#F7E7CE]/25 flex items-center justify-center">
+                              <span className="text-sm font-bold text-[#F7E7CE]">
+                                {(user.full_name ?? user.username ?? 'U').charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold text-[#F7E7CE] truncate">{user.full_name ?? user.username}</p>
+                              <p className="text-xs text-[#F7E7CE]/40 truncate">{user.email}</p>
+                            </div>
                           </div>
-                          <div className="py-1">
+                          <div className="py-1.5">
                             <Link href="/profile">
-                              <div className="px-4 py-2.5 text-sm text-[#F7E7CE]/70 hover:bg-[#F7E7CE]/8 hover:text-[#F7E7CE] cursor-pointer transition-colors">
+                              <div className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#F7E7CE]/70 hover:bg-[#F7E7CE]/8 hover:text-[#F7E7CE] cursor-pointer transition-colors">
+                                <UserRound className="h-4 w-4 shrink-0 text-[#F7E7CE]/40" strokeWidth={1.75} />
                                 Profile Settings
                               </div>
                             </Link>
                             <Link href="/dashboard">
-                              <div className="px-4 py-2.5 text-sm text-[#F7E7CE]/70 hover:bg-[#F7E7CE]/8 hover:text-[#F7E7CE] cursor-pointer transition-colors">
+                              <div className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#F7E7CE]/70 hover:bg-[#F7E7CE]/8 hover:text-[#F7E7CE] cursor-pointer transition-colors">
+                                <LayoutDashboard className="h-4 w-4 shrink-0 text-[#F7E7CE]/40" strokeWidth={1.75} />
                                 Dashboard
                               </div>
                             </Link>
-                            <hr className="my-1 border-[#F7E7CE]/8" />
+                            <hr className="my-1.5 border-[#F7E7CE]/8" />
                             <button
                               onClick={handleLogout}
                               disabled={isLoggingOut}
-                              className="flex w-full px-4 py-2.5 text-sm text-red-400 hover:bg-red-900/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-red-400 hover:bg-red-900/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
+                              <LogOut className="h-4 w-4 shrink-0" strokeWidth={1.75} />
                               {isLoggingOut ? 'Logging out…' : 'Logout'}
                             </button>
                           </div>

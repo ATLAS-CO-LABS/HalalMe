@@ -32,7 +32,7 @@ export const blogPosts: BlogPost[] = [
     excerpt:
       "Understanding halal certification goes beyond food labels. Discover the rigorous process behind certification and how to verify authentic halal products in your daily life.",
     content: `
-<p>Halal certification is more than just a label on your food packaging — it represents a comprehensive system of quality assurance rooted in Islamic principles. For the growing global Muslim population, and increasingly for health-conscious consumers of all backgrounds, understanding what halal certification truly means has never been more important.</p>
+<p>Halal certification is more than just a label on your food packaging. It represents a comprehensive system of quality assurance rooted in Islamic principles. For the growing global Muslim population, and increasingly for health-conscious consumers of all backgrounds, understanding what halal certification truly means has never been more important.</p>
 
 <h2>What Does Halal Really Mean?</h2>
 <p>The Arabic word "halal" translates to "permissible" or "lawful." In the context of food and consumer products, it refers to items that are prepared, processed, and manufactured according to Islamic dietary guidelines. This encompasses everything from the sourcing of ingredients to the methods of preparation and the cleanliness of the production environment.</p>
@@ -41,17 +41,17 @@ export const blogPosts: BlogPost[] = [
 <p>Halal certification is a rigorous, multi-step process that involves thorough inspection of facilities, ingredients, and production methods. Certified halal auditors examine every aspect of the supply chain to ensure compliance with Islamic standards.</p>
 <p>Key steps in the certification process include:</p>
 <ul>
-<li><strong>Application & Documentation Review</strong> — The manufacturer submits detailed information about ingredients, suppliers, and production processes.</li>
-<li><strong>On-Site Inspection</strong> — Trained auditors visit the facility to examine equipment, storage, and handling procedures.</li>
-<li><strong>Ingredient Verification</strong> — Every ingredient is traced back to its source to ensure it meets halal requirements.</li>
-<li><strong>Ongoing Monitoring</strong> — Certified businesses undergo regular re-inspections to maintain their certification status.</li>
+<li><strong>Application & Documentation Review</strong>: the manufacturer submits detailed information about ingredients, suppliers, and production processes.</li>
+<li><strong>On-Site Inspection</strong>: trained auditors visit the facility to examine equipment, storage, and handling procedures.</li>
+<li><strong>Ingredient Verification</strong>: every ingredient is traced back to its source to ensure it meets halal requirements.</li>
+<li><strong>Ongoing Monitoring</strong>: certified businesses undergo regular re-inspections to maintain their certification status.</li>
 </ul>
 
 <h2>How to Verify Authentic Certification</h2>
 <p>With the growing demand for halal products, it's important to know how to identify legitimate certification. Look for recognized certification body logos, check the certification number, and verify through the certifying organization's database when possible.</p>
 
 <h2>Beyond Food: Halal in Everyday Life</h2>
-<p>Halal certification extends beyond food to cosmetics, pharmaceuticals, and even financial products. As the halal economy grows — projected to reach $3.2 trillion by 2027 — understanding these certifications becomes increasingly relevant for mindful consumers everywhere.</p>
+<p>Halal certification extends beyond food to cosmetics, pharmaceuticals, and even financial products. As the halal economy grows (projected to reach $3.2 trillion by 2027), understanding these certifications becomes increasingly relevant for mindful consumers everywhere.</p>
 
 <p>At HalalMe, we take certification seriously. Every vendor on our platform undergoes strict verification to ensure you can shop, order, and dine with complete confidence.</p>
     `,
@@ -71,7 +71,7 @@ export const blogPosts: BlogPost[] = [
     slug: "ramadan-meal-prep-guide",
     title: "Ramadan Meal Prep: 30 Days of Nourishing Suhoor & Iftar Recipes",
     excerpt:
-      "Plan your entire Ramadan with balanced, energy-sustaining meals. From protein-rich suhoor bowls to comforting iftar spreads — we've got you covered.",
+      "Plan your entire Ramadan with balanced, energy-sustaining meals. From protein-rich suhoor bowls to comforting iftar spreads, we've got you covered.",
     content: `
 <p>Ramadan is a time of spiritual reflection, community, and mindful eating. Proper meal planning during this holy month ensures you maintain energy levels throughout fasting hours while making the most of your time for worship and family.</p>
 
@@ -79,9 +79,9 @@ export const blogPosts: BlogPost[] = [
 <p>Your pre-dawn meal is the foundation of a successful fasting day. Focus on complex carbohydrates, lean proteins, and healthy fats that release energy slowly throughout the day.</p>
 
 <h2>Top Suhoor Recipes</h2>
-<p><strong>1. Overnight Oats with Dates & Almonds</strong> — Combine rolled oats with milk, chia seeds, chopped dates, and a handful of almonds. Prepare the night before for a grab-and-go suhoor.</p>
-<p><strong>2. Egg & Avocado Whole Wheat Wrap</strong> — Scrambled eggs with mashed avocado, a sprinkle of za'atar, wrapped in whole wheat flatbread. Rich in protein and healthy fats.</p>
-<p><strong>3. Banana & Peanut Butter Smoothie Bowl</strong> — Blend frozen bananas with peanut butter and a splash of milk. Top with granola and honey for sustained energy.</p>
+<p><strong>1. Overnight Oats with Dates & Almonds</strong>: combine rolled oats with milk, chia seeds, chopped dates, and a handful of almonds. Prepare the night before for a grab-and-go suhoor.</p>
+<p><strong>2. Egg & Avocado Whole Wheat Wrap</strong>: scrambled eggs with mashed avocado, a sprinkle of za'atar, wrapped in whole wheat flatbread. Rich in protein and healthy fats.</p>
+<p><strong>3. Banana & Peanut Butter Smoothie Bowl</strong>: blend frozen bananas with peanut butter and a splash of milk. Top with granola and honey for sustained energy.</p>
 
 <h2>Iftar Essentials</h2>
 <p>Break your fast gently with dates and water, following the Sunnah. Then move to a balanced meal that replenishes nutrients without overwhelming your digestive system.</p>
@@ -106,7 +106,7 @@ export const blogPosts: BlogPost[] = [
     slug: "halal-friendly-destinations-2026",
     title: "Top 10 Halal-Friendly Travel Destinations for 2026",
     excerpt:
-      "From the vibrant streets of Istanbul to the serene beaches of Malaysia — explore the world's best destinations where halal dining and prayer facilities are never far away.",
+      "From the vibrant streets of Istanbul to the serene beaches of Malaysia, explore the world's best destinations where halal dining and prayer facilities are never far away.",
     content: `
 <p>Traveling as a Muslim has never been easier, but finding destinations that truly cater to halal lifestyles can still be a challenge. We've curated the top 10 destinations for 2026 that combine stunning experiences with excellent halal infrastructure.</p>
 
@@ -120,7 +120,7 @@ export const blogPosts: BlogPost[] = [
 <p>The city of superlatives continues to innovate with world-class attractions, luxury hotels with prayer facilities, and an exclusively halal dining scene.</p>
 
 <h2>4. Marrakech, Morocco</h2>
-<p>Lose yourself in the medina's spice markets, enjoy traditional riads, and feast on authentic Moroccan tagines — all naturally halal.</p>
+<p>Lose yourself in the medina's spice markets, enjoy traditional riads, and feast on authentic Moroccan tagines, all naturally halal.</p>
 
 <h2>5. Tokyo, Japan</h2>
 <p>Japan has made remarkable strides in halal tourism. Tokyo now boasts hundreds of halal-certified restaurants and prayer rooms in major shopping districts.</p>
@@ -142,9 +142,9 @@ export const blogPosts: BlogPost[] = [
     slug: "building-muslim-community-digital-age",
     title: "Building Muslim Community in the Digital Age",
     excerpt:
-      "How technology is bringing the ummah closer together. From online study circles to neighborhood food sharing — discover the new wave of digital Muslim community building.",
+      "How technology is bringing the ummah closer together. From online study circles to neighborhood food sharing, discover the new wave of digital Muslim community building.",
     content: `
-<p>The concept of ummah — the global Muslim community — has taken on new dimensions in the digital age. Technology is no longer just a convenience; it's becoming a vital tool for maintaining and strengthening the bonds that connect Muslims worldwide.</p>
+<p>The concept of ummah, the global Muslim community, has taken on new dimensions in the digital age. Technology is no longer just a convenience: it's becoming a vital tool for maintaining and strengthening the bonds that connect Muslims worldwide.</p>
 
 <h2>The Rise of Digital Communities</h2>
 <p>From WhatsApp groups organizing local iftars to dedicated platforms connecting Muslim professionals, digital tools are creating new pathways for community engagement that transcend geographical boundaries.</p>
@@ -156,7 +156,7 @@ export const blogPosts: BlogPost[] = [
 <p>Online Islamic education has exploded in quality and accessibility. Whether it's learning Quran recitation via video call or attending virtual lectures by scholars worldwide, technology has democratized Islamic knowledge.</p>
 
 <h2>The HalalMe Hub Approach</h2>
-<p>At HalalMe Hub, we're building a space where community happens naturally. Share recipes, review halal businesses, organize local events, and connect with like-minded individuals in your area — all within a platform designed with Islamic values at its core.</p>
+<p>At HalalMe Hub, we're building a space where community happens naturally. Share recipes, review halal businesses, organize local events, and connect with like-minded individuals in your area, all within a platform designed with Islamic values at its core.</p>
 
 <p>Join the conversation on HalalMe Hub and be part of a community that's shaping the future of Muslim life in the digital era.</p>
     `,
@@ -175,7 +175,7 @@ export const blogPosts: BlogPost[] = [
     slug: "health-benefits-halal-diet",
     title: "The Surprising Health Benefits of a Halal Diet",
     excerpt:
-      "Modern science is catching up with centuries-old wisdom. Research reveals how halal dietary practices promote better health outcomes — from cleaner meat to mindful eating habits.",
+      "Modern science is catching up with centuries-old wisdom. Research reveals how halal dietary practices promote better health outcomes, from cleaner meat to mindful eating habits.",
     content: `
 <p>While halal dietary practices are rooted in religious observance, modern nutritional science is increasingly recognizing the health benefits inherent in these age-old guidelines. From the method of animal slaughter to the prohibition of harmful substances, halal eating aligns remarkably with contemporary health recommendations.</p>
 
@@ -243,7 +243,7 @@ export const blogPosts: BlogPost[] = [
     excerpt:
       "Practical tips for teaching your children about halal values while embracing diversity. Build their confidence, faith, and understanding from an early age.",
     content: `
-<p>Raising children with a strong understanding of halal values while navigating a multicultural society is one of the most meaningful challenges facing Muslim parents today. The goal isn't isolation — it's empowerment through knowledge and confidence.</p>
+<p>Raising children with a strong understanding of halal values while navigating a multicultural society is one of the most meaningful challenges facing Muslim parents today. The goal isn't isolation. It's empowerment through knowledge and confidence.</p>
 
 <h2>Start with the Why</h2>
 <p>Children are naturally curious. Instead of simply saying "we don't eat that," explain the reasoning behind halal choices in age-appropriate ways. Connect it to kindness to animals, gratitude for food, and caring for our bodies.</p>
@@ -257,7 +257,7 @@ export const blogPosts: BlogPost[] = [
 <h2>Build Community</h2>
 <p>Connect your children with other Muslim families. HalalMe Hub's family groups make it easy to organize halal playdates, cooking parties, and educational events.</p>
 
-<p>Explore family-friendly halal recipes on HalalMe Kitchen — designed to get little hands involved in the cooking process.</p>
+<p>Explore family-friendly halal recipes on HalalMe Kitchen, designed to get little hands involved in the cooking process.</p>
     `,
     category: "Community",
     image: "https://images.unsplash.com/photo-1605433247501-698725862cea?w=800&q=80",
@@ -274,17 +274,17 @@ export const blogPosts: BlogPost[] = [
     slug: "spice-route-cooking-traditions",
     title: "The Spice Route: How Islamic Trade Routes Shaped Global Cuisine",
     excerpt:
-      "From cardamom in Scandinavia to turmeric in the Caribbean — trace how Muslim merchants transformed the world's palate through centuries of trade and cultural exchange.",
+      "From cardamom in Scandinavia to turmeric in the Caribbean, trace how Muslim merchants transformed the world's palate through centuries of trade and cultural exchange.",
     content: `
-<p>Long before globalization connected the world's kitchens, Muslim merchants were carrying spices, recipes, and culinary traditions along vast trade networks that stretched from China to West Africa. The flavors you enjoy today — in cuisines from Spanish to Indonesian — owe much to these Islamic trade routes.</p>
+<p>Long before globalization connected the world's kitchens, Muslim merchants were carrying spices, recipes, and culinary traditions along vast trade networks that stretched from China to West Africa. The flavors you enjoy today, in cuisines from Spanish to Indonesian, owe much to these Islamic trade routes.</p>
 
 <h2>The Golden Age of Islamic Trade</h2>
 <p>During the Islamic Golden Age (8th to 14th century), Muslim traders established maritime routes across the Indian Ocean and overland paths through Central Asia. Along with textiles and precious metals, they carried something equally valuable: spices and culinary knowledge.</p>
 
 <h2>Spices That Changed Everything</h2>
-<p><strong>Cinnamon</strong> — Originally from Sri Lanka, Muslim traders brought cinnamon to the Middle East and Europe, where it transformed both sweet and savory dishes.</p>
-<p><strong>Saffron</strong> — The Moors introduced saffron cultivation to Spain, giving birth to iconic dishes like paella.</p>
-<p><strong>Cardamom</strong> — Arab traders carried cardamom to Scandinavia, where it became a beloved ingredient in Nordic baking traditions that persist today.</p>
+<p><strong>Cinnamon</strong>: originally from Sri Lanka, Muslim traders brought cinnamon to the Middle East and Europe, where it transformed both sweet and savory dishes.</p>
+<p><strong>Saffron</strong>: the Moors introduced saffron cultivation to Spain, giving birth to iconic dishes like paella.</p>
+<p><strong>Cardamom</strong>: Arab traders carried cardamom to Scandinavia, where it became a beloved ingredient in Nordic baking traditions that persist today.</p>
 
 <h2>Cooking Techniques</h2>
 <p>Beyond ingredients, Islamic culture spread cooking methods like distillation (used in making rosewater and essential oils), sugar refining, and the art of making confections.</p>
@@ -306,7 +306,7 @@ export const blogPosts: BlogPost[] = [
     slug: "muslim-athletes-nutrition-guide",
     title: "Fueling Performance: A Halal Nutrition Guide for Muslim Athletes",
     excerpt:
-      "Train harder, recover faster — all while staying true to your values. Sports nutritionists share halal-certified supplement stacks and meal plans for peak performance.",
+      "Train harder and recover faster, all while staying true to your values. Sports nutritionists share halal-certified supplement stacks and meal plans for peak performance.",
     content: `
 <p>Muslim athletes face unique challenges when it comes to sports nutrition. From finding halal-certified supplements to managing nutrition during Ramadan training, this guide covers everything you need to perform at your best.</p>
 
@@ -322,7 +322,7 @@ export const blogPosts: BlogPost[] = [
 <h2>Training During Ramadan</h2>
 <p>Many elite Muslim athletes maintain their training through Ramadan with smart timing and nutrition strategies. Training just before iftar allows immediate refueling, while suhoor should focus on slow-releasing energy foods.</p>
 
-<p>Get personalized halal meal plans for your training regimen using HalalMe Kitchen's AI assistant — just input your sport, training schedule, and goals.</p>
+<p>Get personalized halal meal plans for your training regimen using HalalMe Kitchen's AI assistant. Just input your sport, training schedule, and goals.</p>
     `,
     category: "Health & Wellness",
     image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&q=80",
@@ -341,7 +341,7 @@ export const blogPosts: BlogPost[] = [
     excerpt:
       "Modest fashion meets sustainability. Explore brands that are redefining halal fashion with ethical sourcing, fair labor practices, and stunning contemporary designs.",
     content: `
-<p>The modest fashion industry is booming — projected to reach $402 billion by 2027. But beyond aesthetics, a growing movement within the Muslim fashion community is demanding that style come with ethical substance.</p>
+<p>The modest fashion industry is booming, projected to reach $402 billion by 2027. But beyond aesthetics, a growing movement within the Muslim fashion community is demanding that style come with ethical substance.</p>
 
 <h2>What Makes Fashion "Halal"?</h2>
 <p>Halal fashion goes beyond modesty in design. It encompasses the entire production chain: ethical sourcing of materials, fair wages for workers, no animal cruelty, and environmentally responsible manufacturing processes.</p>
@@ -355,7 +355,7 @@ export const blogPosts: BlogPost[] = [
 <h2>The Second-Hand Solution</h2>
 <p>Thrift shopping aligns perfectly with Islamic values of avoiding waste. Many Muslim communities are now organizing clothing swaps and establishing online marketplaces for pre-loved modest fashion.</p>
 
-<p>Discover ethical halal fashion brands and sustainable modest wear on HalalMe Marketplace — where every listed brand meets our ethical sourcing standards.</p>
+<p>Discover ethical halal fashion brands and sustainable modest wear on HalalMe Marketplace, where every listed brand meets our ethical sourcing standards.</p>
     `,
     category: "Halal Living",
     image: "https://images.unsplash.com/photo-1571513800374-df1bbe650e56?w=800&q=80",

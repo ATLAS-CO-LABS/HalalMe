@@ -112,7 +112,7 @@ export const meals: Meal[] = [
     id: "meal-6",
     name: "Vegetable Curry",
     description: "Mixed vegetables in a rich coconut curry sauce with fragrant jasmine rice",
-    longDescription: "A hearty plant-based curry featuring seasonal vegetables — sweet potato, aubergine, spinach, and chickpeas — simmered in a fragrant coconut and tomato sauce with curry leaves and mustard seeds. Served with fluffy jasmine rice.",
+    longDescription: "A hearty plant-based curry featuring seasonal vegetables (sweet potato, aubergine, spinach, and chickpeas) simmered in a fragrant coconut and tomato sauce with curry leaves and mustard seeds. Served with fluffy jasmine rice.",
     price: 9.99,
     image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=1200&auto=format&fit=crop&q=80",
     category: "Curries",

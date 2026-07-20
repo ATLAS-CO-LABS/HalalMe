@@ -43,14 +43,14 @@ export const hubService = {
 
       const followingQuery = supabase
         .from("following_posts_view")
-        .select("*", { count: "exact" })
+        .select("*")
         .eq("follower_id", userId)
         .order("is_featured", { ascending: false })
         .order("created_at", { ascending: false })
         .range(from, to);
 
       if (postType) followingQuery.eq("post_type", postType);
-      const { data, error, count } = await (signal ? followingQuery.abortSignal(signal) : followingQuery);
+      const { data, error } = await (signal ? followingQuery.abortSignal(signal) : followingQuery);
 
       if (error) throw new Error(error.message);
 
@@ -72,15 +72,12 @@ export const hubService = {
         is_bookmarked: bookmarkedSet.has(p.id),
       }));
 
-      return { data: posts, count: count ?? 0, page, pageSize, hasMore: (count ?? 0) > page * pageSize };
+      return { data: posts, count: posts.length, page, pageSize, hasMore: posts.length === pageSize };
     }
 
     let query = supabase
       .from("posts")
-      .select(
-        "*, profiles!user_id(username, full_name, avatar_url, is_verified, profile_flair)",
-        { count: "exact" }
-      )
+      .select("*, profiles!user_id(username, full_name, avatar_url, is_verified, profile_flair)")
       .eq("is_published", true)
       .range(from, to);
 
@@ -91,14 +88,18 @@ export const hubService = {
     query = query.order("is_featured", { ascending: false });
 
     if (mode === "trending") {
+      // Windowed to the last 7 days so trending reflects what's hot now.
+      // Without this, an old high-like post would outrank everything new, forever.
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
       query = query
+        .gte("created_at", sevenDaysAgo)
         .order("like_count", { ascending: false })
         .order("created_at", { ascending: false });
     } else {
       query = query.order("created_at", { ascending: false });
     }
 
-    const { data, error, count } = await (signal ? query.abortSignal(signal) : query);
+    const { data, error } = await (signal ? query.abortSignal(signal) : query);
     if (error) throw new Error(error.message);
 
     let posts = (data ?? []) as Post[];
@@ -123,10 +124,10 @@ export const hubService = {
 
     return {
       data: posts,
-      count: count ?? 0,
+      count: posts.length,
       page,
       pageSize,
-      hasMore: (count ?? 0) > page * pageSize,
+      hasMore: posts.length === pageSize,
     };
   },
 
