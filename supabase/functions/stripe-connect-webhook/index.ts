@@ -48,7 +48,8 @@ serve(async (req: Request) => {
   }
 
   const stripe = new Stripe(stripeSecretKey, {
-    apiVersion: "2024-04-10",
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    apiVersion: "2026-06-24.dahlia" as any,
     httpClient: Stripe.createFetchHttpClient(),
   });
 
