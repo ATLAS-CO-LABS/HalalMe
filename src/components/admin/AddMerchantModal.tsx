@@ -133,7 +133,7 @@ export default function AddMerchantModal({
         </div>
 
         {/* Form */}
-        <div className="px-6 py-5 overflow-y-auto space-y-4">
+        <div className="px-6 py-5 overflow-y-auto overscroll-contain space-y-4">
           <div>
             <Label>Restaurant name *</Label>
             <input className={inputCls} value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="e.g. Muz & Sam's" />

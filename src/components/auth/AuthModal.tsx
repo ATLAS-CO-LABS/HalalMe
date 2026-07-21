@@ -281,7 +281,7 @@ export function AuthModal({ isOpen, onClose, onSuccess, message }: AuthGateModal
 
           {/* Card */}
           <motion.div
-            className="relative w-full max-w-sm overflow-y-auto max-h-[90vh]"
+            className="relative w-full max-w-sm overflow-y-auto overscroll-contain max-h-[90vh]"
             style={{ backgroundColor: BG, border: `1px solid ${CREAM}10` }}
             initial={{ opacity: 0, scale: 0.96, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}

@@ -91,7 +91,7 @@ export default function Header() {
           menuOpen
             ? 'bg-transparent'
             : scrolled
-              ? 'bg-[#0A1C19]/96 backdrop-blur-md border-b border-[#F7E7CE]/8'
+              ? 'bg-[#0A1C19]/96 md:backdrop-blur-md border-b border-[#F7E7CE]/8'
               : 'bg-transparent'
         }`}
       >
@@ -292,7 +292,7 @@ export default function Header() {
             animate={reduce ? { opacity: 1 } : { clipPath: 'inset(0 0 0% 0)' }}
             exit={reduce ? { opacity: 0 } : { clipPath: 'inset(0 0 100% 0)' }}
             transition={{ duration: reduce ? 0.2 : 0.6, ease: EASE }}
-            className="fixed inset-0 z-60 bg-[#0A1C19] overflow-y-auto"
+            className="fixed inset-0 z-[60] bg-[#0A1C19] overflow-y-auto overflow-x-hidden overscroll-contain"
           >
             {/* Faint watermark anchoring the layer */}
             <div

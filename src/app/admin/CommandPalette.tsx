@@ -115,7 +115,7 @@ export default function CommandPalette() {
           <kbd className="hidden sm:inline text-[10px] font-semibold text-gray-400 border border-gray-200 rounded px-1.5 py-0.5 shrink-0">ESC</kbd>
         </div>
 
-        <div className="max-h-[55vh] overflow-y-auto">
+        <div className="max-h-[55vh] overflow-y-auto overscroll-contain">
           {q.trim().length < 2 ? (
             <p className="px-4 py-8 text-center text-sm text-gray-400">Type at least 2 characters to search across the platform.</p>
           ) : hits.length === 0 && !loading ? (

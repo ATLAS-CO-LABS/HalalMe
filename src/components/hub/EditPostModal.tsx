@@ -132,7 +132,7 @@ export default function EditPostModal({
               </div>
 
               {/* Content Area */}
-              <div className="flex-1 overflow-y-auto p-4 md:p-5">
+              <div className="flex-1 overflow-y-auto overscroll-contain p-4 md:p-5">
                 <textarea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
