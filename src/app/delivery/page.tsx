@@ -141,7 +141,7 @@ function AnnouncementBanner() {
 /* ───────────────────────── Promo Ticker ───────────────────────── */
 function PromoBar() {
   const tickerText =
-    "£10 OFF YOUR FIRST ORDER  ·  100% HALAL CERTIFIED  ·  FREE DELIVERY OVER £25  ·  500+ ACTIVE RESTAURANTS  ·  30-60 MIN AVG DELIVERY  ·  ";
+    "£10 OFF YOUR FIRST ORDER  ·  100% HALAL CERTIFIED  ·  FREE DELIVERY OVER £25  ·  900+ ACTIVE RESTAURANTS  ·  30-60 MIN AVG DELIVERY  ·  ";
   return (
     <div className="overflow-hidden" style={{ backgroundColor: PURPLE }}>
       <div
@@ -342,7 +342,7 @@ function HeroSection() {
             {[
               { icon: ShieldCheck, text: "100% Halal" },
               { icon: Timer, text: "30-60 Min Delivery" },
-              { icon: Store, text: "500+ Active Restaurants" },
+              { icon: Store, text: "900+ Active Restaurants" },
             ].map((item, i) => (
               <div
                 key={i}
@@ -377,7 +377,7 @@ function StatsStrip() {
       }}
     >
       {[
-        { value: "500+", label: "Active Restaurants", icon: Store },
+        { value: "900+", label: "Active Restaurants", icon: Store },
         { value: "30-60m", label: "Avg Delivery", icon: Timer },
         { value: "Free", label: "Over £25 Delivery", icon: BadgePercent },
         { value: "100%", label: "Halal Verified", icon: ShieldCheck },
@@ -425,7 +425,7 @@ function HowItWorksSection() {
       num: "01",
       icon: Store,
       title: "Browse Restaurants",
-      desc: "Explore 500+ certified halal restaurants near you. Filter by cuisine, rating, or delivery time.",
+      desc: "Explore 900+ certified halal restaurants near you. Filter by cuisine, rating, or delivery time.",
     },
     {
       num: "02",
@@ -930,7 +930,7 @@ function FinalCTA() {
           transition={{ delay: 0.2 }}
           className="text-white/60 text-base md:text-lg max-w-xl mb-12 leading-relaxed"
         >
-          500+ halal restaurants. 30-60 minute delivery. Zero compromise. Your
+          900+ halal restaurants. 30-60 minute delivery. Zero compromise. Your
           next favourite meal is just a tap away.
         </motion.p>
 
@@ -960,7 +960,7 @@ function FinalCTA() {
           {[
             { icon: ShieldCheck, text: "100% Halal Verified" },
             { icon: Timer, text: "30-60 Min Delivery" },
-            { icon: Store, text: "500+ Restaurants" },
+            { icon: Store, text: "900+ Restaurants" },
           ].map((item, i) => (
             <div
               key={i}

@@ -464,6 +464,7 @@ export async function sendCharityConnectInviteEmail({
   const { error } = await resend.emails.send({
     from: FROM,
     to,
+    replyTo: SUPPORT_INBOX,
     subject: `Set up donation payouts - ${charityName}`,
     html,
   });

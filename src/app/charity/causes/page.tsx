@@ -201,6 +201,19 @@ function CausesContent() {
                 </motion.div>
               ))}
             </div>
+          ) : charities.length === 0 ? (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-24">
+              <Heart className="w-14 h-14 mx-auto mb-4" style={{ color: `${CREAM}15` }} />
+              <h3
+                className="text-xl font-extrabold uppercase tracking-tighter mb-2"
+                style={{ color: CREAM, fontFamily: "var(--font-headline)" }}
+              >
+                Our First Causes Are Coming Soon
+              </h3>
+              <p className="text-sm font-normal max-w-md mx-auto" style={{ color: `${CREAM}40`, fontFamily: "var(--font-body)" }}>
+                We&apos;re onboarding our first charity partners. Check back shortly to start giving.
+              </p>
+            </motion.div>
           ) : (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-24">
               <Heart className="w-14 h-14 mx-auto mb-4" style={{ color: `${CREAM}15` }} />

@@ -35,7 +35,12 @@ import {
   Upload,
   RotateCcw,
   Eye,
+  ExternalLink,
 } from "lucide-react";
+
+// Merchants only get a Hyperzod account once they're invited, so the link is
+// pointless (and confusing) before that stage.
+const HYPERZOD_VISIBLE_STAGES = new Set<MerchantStageKey>(["invited", "commission", "agreed", "live"]);
 
 export default function MerchantDashboardPage() {
   const { logout } = useAuth();
@@ -183,6 +188,9 @@ export default function MerchantDashboardPage() {
               />
             )}
             {currentStage === "live" && <LiveSection />}
+
+            {/* ── Hyperzod dashboard link (once invited — nothing to see there before) ── */}
+            {currentStage && HYPERZOD_VISIBLE_STAGES.has(currentStage) && <HyperzodLinkCard />}
 
             {/* ── Restaurant info ── */}
             <RestaurantInfo merchant={merchant} onSaved={setMerchant} />
@@ -338,6 +346,10 @@ function DocumentsSection({
   const requiredApproved = REQUIRED_DOC_KEYS.filter((k) =>
     documents.some((d) => d.doc_type === k && d.status === "approved"),
   ).length;
+  // Every required doc has a file on it (any status) — nothing left to do but
+  // wait, since uploading a file already submits it for review.
+  const allRequiredSubmitted = REQUIRED_DOC_KEYS.every((k) => byType(k));
+  const anyRequiredRejected = REQUIRED_DOC_KEYS.some((k) => byType(k)?.status === "rejected");
 
   async function handleFile(docType: string, file: File | undefined) {
     if (!file) return;
@@ -381,7 +393,8 @@ function DocumentsSection({
         </span>
       </div>
       <p className="text-xs text-[#F7E7CE]/40 mb-3">
-        Upload these so our team can verify your restaurant. PDF, JPG, PNG or WEBP · max 10 MB.
+        Each file is submitted for review the moment it uploads. There&apos;s no separate
+        submit step. PDF, JPG, PNG or WEBP · max 10 MB.
       </p>
 
       {/* progress */}
@@ -394,6 +407,16 @@ function DocumentsSection({
 
       {error && (
         <p className="text-xs text-red-400 bg-red-400/10 border border-red-400/20 px-3 py-2 mb-4">{error}</p>
+      )}
+
+      {allRequiredSubmitted && !anyRequiredRejected && (
+        <div className="flex items-start gap-2.5 bg-emerald-500/8 border border-emerald-500/20 px-3.5 py-3 mb-4">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+          <p className="text-sm text-emerald-400/90 leading-relaxed">
+            All required documents submitted. There&apos;s nothing more to do. Our team
+            is reviewing them and will email you once they&apos;re verified.
+          </p>
+        </div>
       )}
 
       <div className="space-y-2">
@@ -485,6 +508,36 @@ function DocumentsSection({
   );
 }
 
+// ── Hyperzod link ────────────────────────────────────────────────────────────
+
+function HyperzodLinkCard() {
+  return (
+    <section className="bg-[#0A1C19] border border-[#F7E7CE]/8 p-5 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-[#F7E7CE]/6 border border-[#F7E7CE]/12 flex items-center justify-center shrink-0">
+            <Store className="w-5 h-5 text-[#F59E0B]" />
+          </div>
+          <div>
+            <h2 className="text-sm font-bold uppercase tracking-wide text-[#F7E7CE]">Hyperzod dashboard</h2>
+            <p className="text-xs text-[#F7E7CE]/40 mt-0.5">
+              Manage your menu, orders and opening hours from your Hyperzod account.
+            </p>
+          </div>
+        </div>
+        <a
+          href="https://admin.halalme.co.uk"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full sm:w-auto shrink-0 h-10 px-5 border border-[#F7E7CE]/15 text-xs font-bold text-[#F7E7CE]/60 uppercase tracking-wide hover:border-[#F7E7CE]/30 hover:text-[#F7E7CE]/85 transition-colors flex items-center justify-center gap-1.5"
+        >
+          Open Hyperzod <ExternalLink className="w-3.5 h-3.5" />
+        </a>
+      </div>
+    </section>
+  );
+}
+
 // ── Invited / Live info sections ───────────────────────────────────────────────
 
 function InvitedSection() {
@@ -497,7 +550,7 @@ function InvitedSection() {
       <p className="text-sm text-[#F7E7CE]/55 leading-relaxed">
         Check your email for your Hyperzod dashboard invite (don&apos;t forget your spam
         folder). Once you&apos;ve accepted, our team will be in touch to agree your
-        commission — and you&apos;ll do that right here.
+        commission, and you&apos;ll do that right here.
       </p>
     </section>
   );
@@ -589,7 +642,7 @@ function RestaurantInfo({
           {rows.map((r) => (
             <div key={r.label} className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 py-2.5">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#F7E7CE]/35 shrink-0">{r.label}</span>
-              <span className="text-sm text-[#F7E7CE]/75 sm:text-right break-words">{r.value ?? "—"}</span>
+              <span className="text-sm text-[#F7E7CE]/75 sm:text-right break-words">{r.value ?? "Not set"}</span>
             </div>
           ))}
         </div>
@@ -613,7 +666,7 @@ function RestaurantInfo({
             {saving ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving…</> : <><Check className="w-3.5 h-3.5" /> Save changes</>}
           </button>
           <p className="text-[10px] text-[#F7E7CE]/25 text-center">
-            Restaurant name and owner can only be changed by our team — contact support.
+            Restaurant name and owner can only be changed by our team. Contact support.
           </p>
         </div>
       )}
@@ -692,7 +745,7 @@ function SupportCard({ merchant }: { merchant: MerchantRecord }) {
       {sent && (
         <div className="mt-4 flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-2.5">
           <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-          <p className="text-sm text-emerald-400">Message sent — we&apos;ll get back to you by email.</p>
+          <p className="text-sm text-emerald-400">Message sent. We&apos;ll get back to you by email.</p>
         </div>
       )}
 
