@@ -16,11 +16,11 @@ import { useAuthGate } from "@/hooks/useAuthGate";
 import { useResumeKey } from "@/context/AppResumeContext";
 import type { Recipe } from "@/types";
 
-const BG      = '#1C1C1C';
-const BG2     = '#161616';
-const CREAM   = '#F7E7CE';
-const MAGENTA = '#F03E9E';
-const DEEP    = '#C41E73';
+const BG      = 'var(--kitchen-bg)';
+const BG2     = 'var(--kitchen-bg2)';
+const CREAM   = 'var(--hm-text)';
+const MAGENTA = 'var(--hm-magenta)';
+const DEEP    = 'var(--hm-magenta-deep)';
 
 // Module-level cache - survives navigations within the same session
 let _recipesCache: Recipe[] = [];
@@ -63,11 +63,11 @@ function RecipeCard({
       <Link href={`/kitchen/recipes/${recipe.id}`}>
         <motion.div
           className="overflow-hidden cursor-pointer transition-colors duration-300"
-          style={{ backgroundColor: BG2, border: `1px solid ${CREAM}08` }}
+          style={{ backgroundColor: BG2, border: `1px solid color-mix(in oklab, var(--hm-text) 3%, transparent)` }}
           whileHover={{
             y: -4,
             borderColor: MAGENTA,
-            boxShadow: `0 16px 40px -12px ${MAGENTA}40`,
+            boxShadow: `0 16px 40px -12px color-mix(in oklab, var(--hm-magenta) 25%, transparent)`,
           }}
         >
           {/* Image */}
@@ -90,8 +90,8 @@ function RecipeCard({
             {/* Badges */}
             <div className="absolute top-2 left-2 flex gap-1.5">
               {recipe.is_featured && (
-                <span className="flex items-center gap-1 text-[#1C1C1C] text-[10px] font-bold uppercase tracking-wide px-2 py-0.5" style={{ backgroundColor: CREAM }}>
-                  <Star className="w-2.5 h-2.5 fill-[#1C1C1C]" /> Featured
+                <span className="flex items-center gap-1 text-(--kitchen-bg) text-[10px] font-bold uppercase tracking-wide px-2 py-0.5" style={{ backgroundColor: CREAM }}>
+                  <Star className="w-2.5 h-2.5 fill-(--kitchen-bg)" /> Featured
                 </span>
               )}
               {recipe.is_ai_generated && (
@@ -120,16 +120,16 @@ function RecipeCard({
             <h3 className="text-sm font-extrabold uppercase tracking-tighter mb-1.5 line-clamp-1 transition-colors duration-300 group-hover:opacity-80" style={{ color: CREAM }}>
               {recipe.title}
             </h3>
-            <p className="text-xs mb-3 line-clamp-2 font-normal" style={{ color: `${CREAM}50` }}>
+            <p className="text-xs mb-3 line-clamp-2 font-normal" style={{ color: `color-mix(in oklab, var(--hm-text) 31%, var(--hm-lm-anchor))` }}>
               {recipe.description}
             </p>
 
             <div className="flex items-center justify-between mb-2.5">
-              <div className="flex items-center gap-1.5 text-xs" style={{ color: `${CREAM}50` }}>
+              <div className="flex items-center gap-1.5 text-xs" style={{ color: `color-mix(in oklab, var(--hm-text) 31%, var(--hm-lm-anchor))` }}>
                 <Clock className="w-3.5 h-3.5" />
                 <span>{cookTimeLabel(recipe.cook_time_mins)}</span>
               </div>
-              <div className="flex items-center gap-1.5 text-xs" style={{ color: `${CREAM}50` }}>
+              <div className="flex items-center gap-1.5 text-xs" style={{ color: `color-mix(in oklab, var(--hm-text) 31%, var(--hm-lm-anchor))` }}>
                 <Users className="w-3.5 h-3.5" />
                 <span>{recipe.servings ?? "-"} servings</span>
               </div>
@@ -160,7 +160,7 @@ function RecipeCard({
                     </span>
                   </div>
                 )}
-                <span className="text-xs truncate" style={{ color: `${CREAM}30` }}>
+                <span className="text-xs truncate" style={{ color: `color-mix(in oklab, var(--hm-text) 19%, var(--hm-lm-anchor))` }}>
                   {recipe.profiles?.username ?? "Unknown"}
                 </span>
                 {recipe.profiles?.is_verified && (
@@ -179,9 +179,9 @@ function RecipeCard({
             <button
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(); }}
               className="w-8 h-8 bg-black/70 backdrop-blur-sm border flex items-center justify-center text-white transition-colors"
-              style={{ borderColor: `${CREAM}20` }}
-              onMouseEnter={e => { e.currentTarget.style.backgroundColor = `${MAGENTA}cc`; e.currentTarget.style.borderColor = MAGENTA; }}
-              onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.7)'; e.currentTarget.style.borderColor = `${CREAM}20`; }}
+              style={{ borderColor: `color-mix(in oklab, var(--hm-text) 13%, transparent)` }}
+              onMouseEnter={e => { e.currentTarget.style.backgroundColor = `color-mix(in oklab, var(--hm-magenta) 80%, transparent)`; e.currentTarget.style.borderColor = MAGENTA; }}
+              onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.7)'; e.currentTarget.style.borderColor = `color-mix(in oklab, var(--hm-text) 13%, transparent)`; }}
               title="Edit recipe"
             >
               <Pencil className="w-3.5 h-3.5" />
@@ -191,7 +191,7 @@ function RecipeCard({
             <button
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(); }}
               className="w-8 h-8 bg-black/70 backdrop-blur-sm border flex items-center justify-center text-white hover:bg-red-600/80 hover:border-red-500 transition-colors"
-              style={{ borderColor: `${CREAM}20` }}
+              style={{ borderColor: `color-mix(in oklab, var(--hm-text) 13%, transparent)` }}
               title="Delete recipe"
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -208,11 +208,11 @@ function EmptyState({ tab, onUpload }: { tab: Tab; onUpload: () => void }) {
   if (tab === "mine") {
     return (
       <div className="text-center py-20">
-        <Bookmark className="w-14 h-14 mx-auto mb-4" style={{ color: `${CREAM}15` }} />
+        <Bookmark className="w-14 h-14 mx-auto mb-4" style={{ color: `color-mix(in oklab, var(--hm-text) 8%, var(--hm-lm-anchor))` }} />
         <h3 className="text-xl font-extrabold uppercase tracking-tighter mb-2" style={{ color: CREAM }}>
           No recipes yet
         </h3>
-        <p className="text-sm mb-6" style={{ color: `${CREAM}50` }}>
+        <p className="text-sm mb-6" style={{ color: `color-mix(in oklab, var(--hm-text) 31%, var(--hm-lm-anchor))` }}>
           You haven&apos;t uploaded any recipes. Share your first halal creation!
         </p>
         <motion.button
@@ -229,21 +229,21 @@ function EmptyState({ tab, onUpload }: { tab: Tab; onUpload: () => void }) {
   if (tab === "saved") {
     return (
       <div className="text-center py-20">
-        <Bookmark className="w-14 h-14 mx-auto mb-4" style={{ color: `${CREAM}15` }} />
+        <Bookmark className="w-14 h-14 mx-auto mb-4" style={{ color: `color-mix(in oklab, var(--hm-text) 8%, var(--hm-lm-anchor))` }} />
         <h3 className="text-xl font-extrabold uppercase tracking-tighter mb-2" style={{ color: CREAM }}>
           No saved recipes
         </h3>
-        <p className="text-sm" style={{ color: `${CREAM}50` }}>Tap the bookmark icon on any recipe to save it here.</p>
+        <p className="text-sm" style={{ color: `color-mix(in oklab, var(--hm-text) 31%, var(--hm-lm-anchor))` }}>Tap the bookmark icon on any recipe to save it here.</p>
       </div>
     );
   }
   return (
     <div className="text-center py-20">
-      <ChefHat className="w-14 h-14 mx-auto mb-4" style={{ color: `${CREAM}15` }} />
+      <ChefHat className="w-14 h-14 mx-auto mb-4" style={{ color: `color-mix(in oklab, var(--hm-text) 8%, var(--hm-lm-anchor))` }} />
       <h3 className="text-xl font-extrabold uppercase tracking-tighter mb-2" style={{ color: CREAM }}>
         No recipes found
       </h3>
-      <p className="text-sm" style={{ color: `${CREAM}50` }}>Try adjusting your search or filters.</p>
+      <p className="text-sm" style={{ color: `color-mix(in oklab, var(--hm-text) 31%, var(--hm-lm-anchor))` }}>Try adjusting your search or filters.</p>
     </div>
   );
 }
@@ -425,7 +425,7 @@ function RecipesContent() {
       {/* ── Header ──────────────────────────────────────────────── */}
       <div
         className="backdrop-blur-lg border-b sticky top-0 z-10"
-        style={{ backgroundColor: `${BG}F5`, borderColor: `${CREAM}08` }}
+        style={{ backgroundColor: `color-mix(in oklab, var(--kitchen-bg) 96%, transparent)`, borderColor: `color-mix(in oklab, var(--hm-text) 3%, transparent)` }}
       >
         <div className="mx-auto max-w-7xl px-4 md:px-6 py-4 md:py-5">
 
@@ -435,9 +435,9 @@ function RecipesContent() {
               <Link href="/kitchen">
                 <motion.button
                   className="transition-colors"
-                  style={{ color: `${CREAM}50` }}
+                  style={{ color: `color-mix(in oklab, var(--hm-text) 31%, var(--hm-lm-anchor))` }}
                   onMouseEnter={e => e.currentTarget.style.color = CREAM}
-                  onMouseLeave={e => e.currentTarget.style.color = `${CREAM}50`}
+                  onMouseLeave={e => e.currentTarget.style.color = `color-mix(in oklab, var(--hm-text) 31%, transparent)`}
                   whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
                 >
                   <ArrowLeft className="w-5 h-5 md:w-6 md:h-6" />
@@ -447,7 +447,7 @@ function RecipesContent() {
                 <h1 className="text-xl md:text-2xl lg:text-3xl font-extrabold uppercase tracking-tighter" style={{ color: CREAM }}>
                   {activeTab === "mine" ? "My Recipes" : activeTab === "saved" ? "Saved Recipes" : "Explore Recipes"}
                 </h1>
-                <p className="mt-0.5 text-sm font-normal" style={{ color: `${CREAM}45` }}>
+                <p className="mt-0.5 text-sm font-normal" style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))` }}>
                   {activeTab === "mine" ? "Manage your uploaded recipes" : activeTab === "saved" ? "Recipes you've bookmarked" : "Discover and share halal recipes"}
                 </p>
               </div>
@@ -466,7 +466,7 @@ function RecipesContent() {
           </div>
 
           {/* Tabs - underline style */}
-          <div className="flex mb-4 border-b" style={{ borderColor: `${CREAM}08` }}>
+          <div className="flex mb-4 border-b" style={{ borderColor: `color-mix(in oklab, var(--hm-text) 3%, transparent)` }}>
             {(["all", "mine", "saved"] as Tab[]).map((tab) => (
               <motion.button
                 key={tab}
@@ -480,19 +480,19 @@ function RecipesContent() {
                   }
                 }}
                 className="relative px-5 py-2.5 text-xs font-extrabold uppercase tracking-[0.15em] transition-colors"
-                style={{ color: activeTab === tab ? MAGENTA : `${CREAM}40` }}
+                style={{ color: activeTab === tab ? MAGENTA : `color-mix(in oklab, var(--hm-text) 25%, transparent)` }}
                 whileTap={{ scale: 0.97 }}
               >
                 <span className="flex items-center gap-1.5">
                   {(tab === "mine" || tab === "saved") && !user && <Lock className="w-3 h-3" />}
                   {tab === "all" ? "Browse All" : tab === "mine" ? "My Recipes" : "Saved"}
                   {tab === "mine" && myLoaded && myRecipes.length > 0 && (
-                    <span className="text-[10px] px-1.5 py-0.5 font-bold" style={{ backgroundColor: `${MAGENTA}25`, color: MAGENTA }}>
+                    <span className="text-[10px] px-1.5 py-0.5 font-bold" style={{ backgroundColor: `color-mix(in oklab, var(--hm-magenta) 15%, transparent)`, color: MAGENTA }}>
                       {myRecipes.length}
                     </span>
                   )}
                   {tab === "saved" && savedLoaded && savedRecipes.length > 0 && (
-                    <span className="text-[10px] px-1.5 py-0.5 font-bold" style={{ backgroundColor: `${MAGENTA}25`, color: MAGENTA }}>
+                    <span className="text-[10px] px-1.5 py-0.5 font-bold" style={{ backgroundColor: `color-mix(in oklab, var(--hm-magenta) 15%, transparent)`, color: MAGENTA }}>
                       {savedRecipes.length}
                     </span>
                   )}
@@ -512,16 +512,16 @@ function RecipesContent() {
           {/* Search + difficulty filters */}
           <div className="flex flex-col md:flex-row gap-2">
             <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: `${CREAM}35` }} />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: `color-mix(in oklab, var(--hm-text) 21%, var(--hm-lm-anchor))` }} />
               <input
                 type="text"
                 placeholder="Search recipes…"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full text-white text-base pl-11 pr-5 py-2.5 border focus:outline-none transition-colors"
-                style={{ backgroundColor: BG2, borderColor: `${CREAM}10`, caretColor: MAGENTA }}
+                className="w-full text-(--kitchen-fg) text-base pl-11 pr-5 py-2.5 border focus:outline-none transition-colors"
+                style={{ backgroundColor: BG2, borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)`, caretColor: MAGENTA }}
                 onFocus={e => e.target.style.borderColor = MAGENTA}
-                onBlur={e => e.target.style.borderColor = `${CREAM}10`}
+                onBlur={e => e.target.style.borderColor = `color-mix(in oklab, var(--hm-text) 6%, transparent)`}
               />
             </div>
             {activeTab === "all" && (
@@ -534,7 +534,7 @@ function RecipesContent() {
                     style={
                       selectedDifficulty === d
                         ? { backgroundColor: MAGENTA, color: 'white' }
-                        : { backgroundColor: BG2, color: `${CREAM}45`, border: `1px solid ${CREAM}10` }
+                        : { backgroundColor: BG2, color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))`, border: `1px solid color-mix(in oklab, var(--hm-text) 6%, transparent)` }
                     }
                     whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
                   >
@@ -556,7 +556,7 @@ function RecipesContent() {
                   style={
                     selectedCuisine === c
                       ? { backgroundColor: MAGENTA, color: 'white' }
-                      : { backgroundColor: BG2, color: `${CREAM}35`, border: `1px solid ${CREAM}08` }
+                      : { backgroundColor: BG2, color: `color-mix(in oklab, var(--hm-text) 21%, var(--hm-lm-anchor))`, border: `1px solid color-mix(in oklab, var(--hm-text) 3%, transparent)` }
                   }
                   whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
                 >
@@ -575,11 +575,11 @@ function RecipesContent() {
         {(activeTab === "mine" || activeTab === "saved") && !user && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             className="text-center py-20">
-            <Lock className="w-12 h-12 mx-auto mb-4" style={{ color: `${CREAM}15` }} />
+            <Lock className="w-12 h-12 mx-auto mb-4" style={{ color: `color-mix(in oklab, var(--hm-text) 8%, var(--hm-lm-anchor))` }} />
             <h3 className="text-xl font-extrabold uppercase tracking-tighter mb-2" style={{ color: CREAM }}>
               Sign in to see your recipes
             </h3>
-            <p className="text-sm mb-6" style={{ color: `${CREAM}50` }}>
+            <p className="text-sm mb-6" style={{ color: `color-mix(in oklab, var(--hm-text) 31%, var(--hm-lm-anchor))` }}>
               Your uploaded and AI-generated recipes will appear here.
             </p>
             <motion.button
@@ -600,7 +600,7 @@ function RecipesContent() {
         {allLoading && activeTab === "all" && (
           <div
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-            style={{ gap: '1px', backgroundColor: `${CREAM}05` }}
+            style={{ gap: '1px', backgroundColor: `color-mix(in oklab, var(--hm-text) 2%, transparent)` }}
           >
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="overflow-hidden animate-pulse" style={{ backgroundColor: BG2 }}>
@@ -619,7 +619,7 @@ function RecipesContent() {
         {((myLoading && activeTab === "mine") || (savedLoading && activeTab === "saved")) && user && (
           <div
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-            style={{ gap: '1px', backgroundColor: `${CREAM}05` }}
+            style={{ gap: '1px', backgroundColor: `color-mix(in oklab, var(--hm-text) 2%, transparent)` }}
           >
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="overflow-hidden animate-pulse" style={{ backgroundColor: BG2 }}>
@@ -653,7 +653,7 @@ function RecipesContent() {
               >
                 <div
                   className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-                  style={{ gap: '1px', backgroundColor: `${CREAM}05` }}
+                  style={{ gap: '1px', backgroundColor: `color-mix(in oklab, var(--hm-text) 2%, transparent)` }}
                 >
                   {displayed.map((recipe, i) => (
                     <RecipeCard
@@ -673,16 +673,16 @@ function RecipesContent() {
                       onClick={handleLoadMore}
                       disabled={loadingMore}
                       className="flex items-center gap-2 border text-white px-8 py-3 font-extrabold uppercase tracking-tighter text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      style={{ backgroundColor: BG2, borderColor: `${CREAM}10`, color: CREAM }}
+                      style={{ backgroundColor: BG2, borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)`, color: CREAM }}
                       onMouseEnter={e => !loadingMore && (e.currentTarget.style.borderColor = MAGENTA)}
-                      onMouseLeave={e => (e.currentTarget.style.borderColor = `${CREAM}10`)}
+                      onMouseLeave={e => (e.currentTarget.style.borderColor = `color-mix(in oklab, var(--hm-text) 6%, transparent)`)}
                       whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                     >
                       {loadingMore ? (
                         <>
                           <span
                             className="w-4 h-4 border-2 rounded-full animate-spin"
-                            style={{ borderColor: `${CREAM}25`, borderTopColor: MAGENTA }}
+                            style={{ borderColor: `color-mix(in oklab, var(--hm-text) 15%, transparent)`, borderTopColor: MAGENTA }}
                           />
                           Loading…
                         </>

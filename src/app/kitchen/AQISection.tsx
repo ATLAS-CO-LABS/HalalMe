@@ -8,10 +8,10 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthGate } from "@/hooks/useAuthGate";
 
-const BG2 = "#161616";
-const CREAM = "#F7E7CE";
-const MAGENTA = "#F03E9E";
-const DEEP = "#C41E73";
+const BG2 = "var(--kitchen-bg2)";
+const CREAM = "var(--hm-text)";
+const MAGENTA = "var(--hm-magenta)";
+const DEEP = "var(--hm-magenta-deep)";
 
 const DEMO_SEQUENCES = [
   [
@@ -135,7 +135,7 @@ export default function AQISection() {
     <section
       ref={ref}
       className="relative overflow-hidden py-24 md:py-32"
-      style={{ backgroundColor: BG2, borderTop: `1px solid ${MAGENTA}50`, borderBottom: `1px solid ${MAGENTA}50` }}
+      style={{ backgroundColor: BG2, borderTop: `1px solid color-mix(in oklab, var(--hm-magenta) 31%, transparent)`, borderBottom: `1px solid color-mix(in oklab, var(--hm-magenta) 31%, transparent)` }}
     >
       {/* Animated background orbs */}
       <motion.div
@@ -221,7 +221,7 @@ export default function AQISection() {
               animate={inView ? { opacity: 1 } : {}}
               transition={{ delay: 0.22 }}
               className="text-sm md:text-base leading-relaxed mb-8 max-w-sm"
-              style={{ color: `${CREAM}55` }}
+              style={{ color: `color-mix(in oklab, var(--hm-text) 33%, var(--hm-lm-anchor))` }}
             >
               Cook smarter with AI-powered recipes, guidance, and substitutions
               - halal every time.
@@ -250,7 +250,7 @@ export default function AQISection() {
                     show: { opacity: 1, x: 0 },
                   }}
                   className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-wider"
-                  style={{ color: `${CREAM}55` }}
+                  style={{ color: `color-mix(in oklab, var(--hm-text) 33%, var(--hm-lm-anchor))` }}
                 >
                   <motion.span
                     className="w-1.5 h-1.5 shrink-0"
@@ -317,7 +317,7 @@ export default function AQISection() {
                 </span>
                 <span
                   className="text-[8px] font-medium ml-1"
-                  style={{ color: `${CREAM}30` }}
+                  style={{ color: `color-mix(in oklab, var(--hm-text) 19%, var(--hm-lm-anchor))` }}
                 >
                   · AI Kitchen Assistant
                 </span>
@@ -358,8 +358,7 @@ export default function AQISection() {
                       <div
                         className="max-w-[78%] px-3.5 py-2.5 text-xs leading-relaxed"
                         style={{
-                          background:
-                            "linear-gradient(135deg, #2A1020, #1E0A18)",
+                          background: `color-mix(in oklab, var(--hm-magenta) 12%, var(--kitchen-bg2))`,
                           border: "1px solid rgba(240,62,158,0.18)",
                           color: CREAM,
                         }}
@@ -390,7 +389,7 @@ export default function AQISection() {
                         <span
                           className="text-[8px] font-black uppercase"
                           style={{
-                            color: `${MAGENTA}90`,
+                            color: `color-mix(in oklab, var(--hm-magenta) 56%, var(--hm-text))`,
                             letterSpacing: "0.22em",
                           }}
                         >
@@ -400,9 +399,9 @@ export default function AQISection() {
                       <div
                         className="ml-2 px-3 py-2.5 flex items-center gap-1"
                         style={{
-                          background: "rgba(28,8,18,0.85)",
+                          background: "var(--kitchen-bubble-bg)",
                           border: "1px solid rgba(240,62,158,0.10)",
-                          borderLeft: `3px solid ${MAGENTA}70`,
+                          borderLeft: `3px solid color-mix(in oklab, var(--hm-magenta) 44%, transparent)`,
                         }}
                       >
                         {[0, 1, 2].map((i) => (
@@ -448,7 +447,7 @@ export default function AQISection() {
                           <span
                             className="text-[8px] font-black uppercase"
                             style={{
-                              color: `${MAGENTA}90`,
+                              color: `color-mix(in oklab, var(--hm-magenta) 56%, var(--hm-text))`,
                               letterSpacing: "0.22em",
                             }}
                           >
@@ -458,10 +457,10 @@ export default function AQISection() {
                         <div
                           className="px-3.5 py-2.5 text-xs leading-relaxed"
                           style={{
-                            background: "rgba(28,8,18,0.85)",
+                            background: "var(--kitchen-bubble-bg)",
                             border: "1px solid rgba(240,62,158,0.10)",
-                            borderLeft: `3px solid ${MAGENTA}70`,
-                            color: `${CREAM}CC`,
+                            borderLeft: `3px solid color-mix(in oklab, var(--hm-magenta) 44%, transparent)`,
+                            color: `color-mix(in oklab, var(--hm-text) 80%, var(--hm-lm-anchor))`,
                           }}
                         >
                           {currentSeq[1].text}
@@ -496,7 +495,7 @@ export default function AQISection() {
                   onKeyDown={(e) => { if (e.key === "Enter") handleSubmit(); }}
                   placeholder="Ask AQI anything…"
                   className="flex-1 bg-transparent outline-none text-[11px] min-w-0"
-                  style={{ color: query ? CREAM : `${CREAM}30`, caretColor: MAGENTA }}
+                  style={{ color: query ? CREAM : `color-mix(in oklab, var(--hm-text) 19%, transparent)`, caretColor: MAGENTA }}
                 />
                 <motion.button
                   onClick={handleSubmit}

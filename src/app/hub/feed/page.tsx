@@ -39,10 +39,10 @@ import NotificationPanel from "@/components/hub/NotificationPanel";
 import { PostCardSkeletonList } from "@/components/hub/PostCardSkeleton";
 import EmptyState from "@/components/hub/EmptyState";
 
-const BG = "#0B0D0F";
-const BG2 = "#111418";
-const AMBER = "#F59E0B";
-const CREAM = "#F7E7CE";
+const BG = "var(--hub-bg)";
+const BG2 = "var(--hub-bg2)";
+const AMBER = "var(--hm-amber)";
+const CREAM = "var(--hm-text)";
 
 type TabType = FeedMode | "bookmarks";
 
@@ -526,7 +526,7 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
     <div className="min-h-screen pt-16" style={{ backgroundColor: BG }}>
 
       {/* Sticky header - solid bg (no blur) avoids scroll-repaint tearing under the fixed app header */}
-      <div className="border-b sticky top-16 z-40" style={{ backgroundColor: BG2, borderColor: `${CREAM}10` }}>
+      <div className="border-b sticky top-16 z-40" style={{ backgroundColor: BG2, borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)` }}>
         <div className="mx-auto max-w-4xl px-4 md:px-6 py-3 md:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -534,9 +534,9 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
               <Link href="/hub" className="hidden md:block">
                 <motion.button
                   className="transition-colors"
-                  style={{ color: `${CREAM}50` }}
+                  style={{ color: `color-mix(in oklab, var(--hm-text) 31%, var(--hm-lm-anchor))` }}
                   onMouseEnter={(e) => (e.currentTarget.style.color = CREAM)}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = `${CREAM}50`)}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = `color-mix(in oklab, var(--hm-text) 31%, transparent)`)}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -548,7 +548,7 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
               <motion.button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="md:hidden transition-colors"
-                style={{ color: `${CREAM}50` }}
+                style={{ color: `color-mix(in oklab, var(--hm-text) 31%, var(--hm-lm-anchor))` }}
                 whileTap={{ scale: 0.95 }}
               >
                 {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -588,14 +588,14 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
                 className="md:hidden border-t mt-3"
-                style={{ borderColor: `${CREAM}10` }}
+                style={{ borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)` }}
               >
                 <div className="py-3 space-y-1">
                   <Link href="/hub" onClick={() => setMobileMenuOpen(false)}>
                     <div
                       className="flex items-center gap-3 px-3 py-2.5 transition-colors"
                       style={{ color: CREAM }}
-                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `${CREAM}08`)}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `color-mix(in oklab, var(--hm-text) 3%, transparent)`)}
                       onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                     >
                       <Home className="w-5 h-5" />
@@ -606,7 +606,7 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
                     <div
                       className="flex items-center gap-3 px-3 py-2.5 transition-colors"
                       style={{ color: CREAM }}
-                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `${CREAM}08`)}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `color-mix(in oklab, var(--hm-text) 3%, transparent)`)}
                       onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                     >
                       <ArrowLeft className="w-5 h-5" />
@@ -620,7 +620,7 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
         </div>
 
         {/* Tabs - underline style, matches Kitchen recipes tabs */}
-        <div className="mx-auto max-w-4xl px-4 md:px-6 pt-1 flex border-b" style={{ borderColor: `${CREAM}08` }}>
+        <div className="mx-auto max-w-4xl px-4 md:px-6 pt-1 flex border-b" style={{ borderColor: `color-mix(in oklab, var(--hm-text) 3%, transparent)` }}>
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const active = activeTab === tab.id;
@@ -629,7 +629,7 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
                 key={tab.id}
                 onClick={() => { setActiveTab(tab.id); loadFeed(tab.id, 1, false); setTypeFilter("all"); typeFilterRef.current = "all"; setSearchQuery(""); setSearchResults([]); }}
                 className="relative flex items-center gap-1.5 px-3 md:px-4 py-2.5 font-extrabold uppercase tracking-widest transition-colors whitespace-nowrap text-xs"
-                style={{ color: active ? AMBER : `${CREAM}40` }}
+                style={{ color: active ? AMBER : `color-mix(in oklab, var(--hm-text) 25%, transparent)` }}
                 whileTap={{ scale: 0.97 }}
               >
                 <Icon className="w-3.5 h-3.5" />
@@ -667,7 +667,7 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
               style={
                 typeFilter === f.value
                   ? { backgroundColor: AMBER, color: BG, borderColor: AMBER }
-                  : { backgroundColor: "transparent", color: `${CREAM}40`, borderColor: `${CREAM}12` }
+                  : { backgroundColor: "transparent", color: `color-mix(in oklab, var(--hm-text) 25%, var(--hm-lm-anchor))`, borderColor: `color-mix(in oklab, var(--hm-text) 7%, transparent)` }
               }
             >
               <f.Icon className="w-3 h-3" />
@@ -679,22 +679,22 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
         {/* Search */}
         <div className="mx-auto max-w-4xl px-4 md:px-6 pb-3">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: `${CREAM}35` }} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: `color-mix(in oklab, var(--hm-text) 21%, var(--hm-lm-anchor))` }} />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search posts, users..."
               className="w-full text-base pl-10 pr-10 py-2.5 border focus:outline-none font-normal transition-colors"
-              style={{ backgroundColor: BG, borderColor: `${CREAM}12`, color: CREAM, caretColor: AMBER }}
+              style={{ backgroundColor: BG, borderColor: `color-mix(in oklab, var(--hm-text) 7%, transparent)`, color: CREAM, caretColor: AMBER }}
               onFocus={(e) => (e.target.style.borderColor = AMBER)}
-              onBlur={(e) => (e.target.style.borderColor = `${CREAM}12`)}
+              onBlur={(e) => (e.target.style.borderColor = `color-mix(in oklab, var(--hm-text) 7%, transparent)`)}
             />
             {searchQuery && (
               <motion.button
                 onClick={() => setSearchQuery("")}
                 className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
-                style={{ color: `${CREAM}35` }}
+                style={{ color: `color-mix(in oklab, var(--hm-text) 21%, var(--hm-lm-anchor))` }}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
               >
@@ -713,9 +713,9 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
           <div className="mb-4 flex items-center gap-2">
             {isSearching
               ? <Loader2 className="w-4 h-4 animate-spin" style={{ color: AMBER }} />
-              : <Search className="w-4 h-4" style={{ color: `${CREAM}30` }} />
+              : <Search className="w-4 h-4" style={{ color: `color-mix(in oklab, var(--hm-text) 19%, var(--hm-lm-anchor))` }} />
             }
-            <span className="text-sm font-normal" style={{ color: `${CREAM}45`, fontFamily: "var(--font-body)" }}>
+            <span className="text-sm font-normal" style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))`, fontFamily: "var(--font-body)" }}>
               {isSearching ? "Searching..." : `${userResults.length + searchResults.length} result${userResults.length + searchResults.length !== 1 ? "s" : ""} for "${searchQuery}"`}
             </span>
           </div>
@@ -724,7 +724,7 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
         {/* User results */}
         {searchQuery && !isSearching && userResults.length > 0 && (
           <div className="mb-6">
-            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: `${CREAM}30` }}>People</p>
+            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: `color-mix(in oklab, var(--hm-text) 19%, var(--hm-lm-anchor))` }}>People</p>
             <div className="space-y-2">
               {userResults.map((u) => (
                 <motion.button
@@ -739,9 +739,9 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
                     bio: u.bio,
                   })}
                   className="w-full flex items-center gap-3 border px-4 py-3 text-left transition-colors"
-                  style={{ backgroundColor: BG2, borderColor: `${CREAM}10` }}
-                  onMouseEnter={(e) => (e.currentTarget.style.borderColor = `${AMBER}40`)}
-                  onMouseLeave={(e) => (e.currentTarget.style.borderColor = `${CREAM}10`)}
+                  style={{ backgroundColor: BG2, borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)` }}
+                  onMouseEnter={(e) => (e.currentTarget.style.borderColor = `color-mix(in oklab, var(--hm-amber) 25%, transparent)`)}
+                  onMouseLeave={(e) => (e.currentTarget.style.borderColor = `color-mix(in oklab, var(--hm-text) 6%, transparent)`)}
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.99 }}
                 >
@@ -755,7 +755,7 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
                         </svg>
                       )}
                     </div>
-                    {u.username && <p className="text-xs truncate" style={{ color: `${CREAM}30` }}>@{u.username}</p>}
+                    {u.username && <p className="text-xs truncate" style={{ color: `color-mix(in oklab, var(--hm-text) 19%, var(--hm-lm-anchor))` }}>@{u.username}</p>}
                   </div>
                 </motion.button>
               ))}
@@ -764,7 +764,7 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
         )}
 
         {searchQuery && !isSearching && searchResults.length > 0 && (
-          <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: `${CREAM}30` }}>Posts</p>
+          <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: `color-mix(in oklab, var(--hm-text) 19%, var(--hm-lm-anchor))` }}>Posts</p>
         )}
 
         {isLoading ? (
@@ -839,9 +839,9 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
               onClick={() => loadFeed(activeTab, page + 1, true)}
               disabled={isLoadingMore}
               className="flex items-center gap-2 px-8 py-3 font-extrabold uppercase tracking-tighter text-sm border transition-all disabled:opacity-60"
-              style={{ backgroundColor: BG2, borderColor: `${CREAM}10`, color: CREAM }}
+              style={{ backgroundColor: BG2, borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)`, color: CREAM }}
               onMouseEnter={(e) => !isLoadingMore && (e.currentTarget.style.borderColor = AMBER)}
-              onMouseLeave={(e) => (e.currentTarget.style.borderColor = `${CREAM}10`)}
+              onMouseLeave={(e) => (e.currentTarget.style.borderColor = `color-mix(in oklab, var(--hm-text) 6%, transparent)`)}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
             >

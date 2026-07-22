@@ -98,15 +98,15 @@ export default function OtpForm({ value, onChange, onSubmit, isLoading, error, l
             onFocus={(e) => e.target.select()}
             aria-label={`OTP digit ${idx + 1}`}
             className={[
-              "h-12 w-10 sm:h-14 sm:w-12 rounded-lg border text-center text-lg font-bold",
-              "bg-[#0A1C19] text-[#F7E7CE] outline-none transition-all",
-              "focus:ring-2 focus:ring-[#F7E7CE]/40 focus:border-[#F7E7CE]/60",
+              "h-12 w-10 sm:h-14 sm:w-12 border text-center text-lg font-bold",
+              "bg-[#102C26] text-[#F7E7CE] outline-none transition-colors",
+              "focus:border-[#F7E7CE]/60",
               "disabled:opacity-50 disabled:cursor-not-allowed",
               error
                 ? "border-red-500/60"
                 : digit
-                ? "border-[#F7E7CE]/40"
-                : "border-[#F7E7CE]/20",
+                ? "border-[#F59E0B]/60"
+                : "border-[#F7E7CE]/12",
             ].join(" ")}
           />
         ))}
@@ -120,18 +120,13 @@ export default function OtpForm({ value, onChange, onSubmit, isLoading, error, l
         type="button"
         onClick={onSubmit}
         disabled={!isFilled || isLoading}
-        className="w-full py-3 rounded-lg font-bold text-sm uppercase tracking-widest transition-all
-          bg-[#F7E7CE] text-[#102C26] hover:bg-[#F7E7CE]/90
-          disabled:opacity-40 disabled:cursor-not-allowed"
+        className="w-full h-12 bg-[#F7E7CE] text-[#102C26] font-extrabold uppercase tracking-tighter text-sm hover:bg-[#F7E7CE]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
       >
         {isLoading ? (
-          <span className="flex items-center justify-center gap-2">
-            <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-            </svg>
+          <>
+            <span className="w-4 h-4 border-2 border-[#102C26]/30 border-t-[#102C26] rounded-full animate-spin" />
             Verifying…
-          </span>
+          </>
         ) : (
           "Verify Code"
         )}

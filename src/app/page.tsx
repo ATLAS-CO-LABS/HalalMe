@@ -23,6 +23,7 @@ import {
   ArrowRight,
   ChevronDown,
   Fingerprint,
+  Gift,
 } from "lucide-react";
 
 declare global {
@@ -130,7 +131,12 @@ function HeroSection() {
           transition={
             reduceMotion
               ? { duration: 0 }
-              : { duration: 26, repeat: Infinity, repeatType: "reverse", ease: "linear" }
+              : {
+                  duration: 26,
+                  repeat: Infinity,
+                  repeatType: "reverse",
+                  ease: "linear",
+                }
           }
         >
           <Image
@@ -198,7 +204,12 @@ function HeroSection() {
                 exit={reduceMotion ? { opacity: 0 } : "exit"}
                 variants={{
                   show: { transition: { staggerChildren: 0.038 } },
-                  exit: { transition: { staggerChildren: 0.016, staggerDirection: -1 } },
+                  exit: {
+                    transition: {
+                      staggerChildren: 0.016,
+                      staggerDirection: -1,
+                    },
+                  },
                 }}
               >
                 {word.split("").map((ch, i) => (
@@ -211,7 +222,10 @@ function HeroSection() {
                         opacity: 1,
                         y: 0,
                         filter: "blur(0px)",
-                        transition: { duration: 0.42, ease: [0.22, 1, 0.36, 1] },
+                        transition: {
+                          duration: 0.42,
+                          ease: [0.22, 1, 0.36, 1],
+                        },
                       },
                       exit: {
                         opacity: 0,
@@ -231,7 +245,11 @@ function HeroSection() {
                   initial={{ width: "0%" }}
                   animate={{ width: "100%" }}
                   exit={{ width: "0%", transition: { duration: 0.18 } }}
-                  transition={{ duration: 0.55, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                  transition={{
+                    duration: 0.55,
+                    delay: 0.3,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
                 />
               </motion.span>
             </AnimatePresence>
@@ -367,7 +385,7 @@ function StatsStrip() {
   );
 }
 
-/* ─── Features - champagne hover inversion ─────────────────────────── */
+/* ─── What is HalalMe - editorial split, sticky intro + accent rows ─── */
 
 function FeaturesSection() {
   const ref = useRef(null);
@@ -382,89 +400,105 @@ function FeaturesSection() {
     },
     {
       num: "02",
-      title: "Verified Halal",
-      desc: "Every vendor undergoes strict certification. Our audit process ensures authentic Halal standards you can trust.",
-      Icon: ShieldCheck,
+      title: "AI-Powered Kitchen",
+      desc: "Get personalized Halal recipes and meal ideas, generated instantly for your taste and dietary needs.",
+      Icon: BookOpen,
     },
     {
       num: "03",
-      title: "Smart Recipes",
-      desc: "AI-powered meal planning tailored to your dietary needs. Discover new Halal recipes personalized just for you.",
-      Icon: BookOpen,
+      title: "Earn & Give Back",
+      desc: "Collect rewards on every order and turn your points into real charity donations, all from one place.",
+      Icon: Gift,
     },
   ];
 
   return (
     <section
       ref={ref}
-      className="bg-[#102C26] py-24 md:py-32"
+      className="bg-[#102C26] py-24 md:py-32 relative overflow-hidden"
       style={{
         borderTop: "1px solid #F59E0B50",
         borderBottom: "1px solid #F59E0B50",
       }}
     >
-      <div className="max-w-[95vw] mx-auto px-6 md:px-10 mb-14 md:mb-20">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={isInView ? { opacity: 1, x: 0 } : {}}
-          className="flex items-center gap-3 mb-6"
-        >
-          <div className="w-8 h-px bg-[#F59E0B]" />
-          <span className="text-[#F59E0B] text-[10px] md:text-xs uppercase tracking-[0.3em] font-bold">
-            What is HalalMe
-          </span>
-        </motion.div>
-        <motion.h2
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-          className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-extrabold uppercase tracking-tighter leading-[0.88] text-[#F7E7CE]"
-        >
-          Redefining the
-          <br />
-          <span className="text-[#F7E7CE]/50">Halal Experience</span>
-        </motion.h2>
+      {/* Oversized ghost mark - texture unique to this section */}
+      <div
+        aria-hidden="true"
+        className="absolute -right-16 -top-10 md:-right-24 md:-top-20 text-[16rem] md:text-[26rem] font-extrabold text-[#F7E7CE]/[0.025] leading-none select-none pointer-events-none tracking-tighter"
+      >
+        H
       </div>
 
-      {/* gap-px hairline grid - hover inverts to champagne */}
-      <div
-        className="max-w-[95vw] mx-auto px-6 md:px-10 grid md:grid-cols-3"
-        style={{
-          gap: "1px",
-          backgroundColor: "#F7E7CE",
-          borderLeft: "2px solid #F7E7CE",
-          borderRight: "2px solid #F7E7CE",
-        }}
-      >
-        {features.map((f, i) => {
-          const Icon = f.Icon;
-          return (
+      <div className="max-w-[95vw] mx-auto px-6 md:px-10 relative z-10 grid md:grid-cols-12 gap-y-14 md:gap-x-12 lg:gap-x-20">
+        {/* Left - sticky intro column */}
+        <div className="md:col-span-5">
+          <div className="md:sticky md:top-32">
             <motion.div
-              key={i}
+              initial={{ opacity: 0, x: -20 }}
+              animate={isInView ? { opacity: 1, x: 0 } : {}}
+              className="flex items-center gap-3 mb-6"
+            >
+              <div className="w-8 h-px bg-[#F59E0B]" />
+              <span className="text-[#F59E0B] text-[10px] md:text-xs uppercase tracking-[0.3em] font-bold">
+                What is HalalMe
+              </span>
+            </motion.div>
+            <motion.h2
               initial={{ opacity: 0, y: 30 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: i * 0.12, duration: 0.5 }}
-              className="group relative bg-[#102C26] border border-[#F7E7CE]/8 p-8 md:p-10 overflow-hidden hover:bg-[#F7E7CE] transition-colors duration-300 cursor-default"
+              transition={{ duration: 0.6 }}
+              className="text-4xl sm:text-5xl md:text-6xl font-extrabold uppercase tracking-tighter leading-[0.9] text-[#F7E7CE]"
             >
-              <span
-                aria-hidden="true"
-                className="absolute -top-6 -right-3 text-[8rem] md:text-[10rem] font-extrabold text-[#F7E7CE]/8 group-hover:text-[#102C26]/20 leading-none select-none pointer-events-none transition-colors duration-300"
-              >
-                {f.num}
-              </span>
+              Redefining the
+              <br />
+              <span className="text-[#bf9518]">Halal</span> Experience
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ delay: 0.15, duration: 0.5 }}
+              className="mt-6 text-[#F7E7CE]/50 text-base md:text-lg leading-relaxed max-w-md"
+            >
+              One ecosystem built from the ground up around Halal life:
+              identity, food, and trust, unified under a single platform.
+            </motion.p>
+          </div>
+        </div>
 
-              <div className="relative z-10 flex flex-col min-h-[200px] md:min-h-[240px]">
-                <Icon className="w-7 h-7 text-[#F7E7CE]/60 group-hover:text-[#102C26] mb-8 flex-shrink-0 transition-colors duration-300" />
-                <h3 className="text-xl md:text-2xl lg:text-3xl font-extrabold uppercase tracking-tighter text-[#F7E7CE] group-hover:text-[#102C26] mb-4 transition-colors duration-300">
-                  {f.title}
-                </h3>
-                <p className="text-[#F7E7CE]/50 group-hover:text-[#102C26]/65 leading-relaxed text-sm md:text-base transition-colors duration-300">
-                  {f.desc}
-                </p>
-              </div>
-            </motion.div>
-          );
-        })}
+        {/* Right - stacked rows, accent bar reveal on hover (no color inversion) */}
+        <div className="md:col-span-7 flex flex-col">
+          {features.map((f, i) => {
+            const Icon = f.Icon;
+            return (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 24 }}
+                animate={isInView ? { opacity: 1, y: 0 } : {}}
+                transition={{ delay: 0.2 + i * 0.12, duration: 0.5 }}
+                className={`group relative pl-6 md:pl-8 py-8 md:py-10 flex gap-5 md:gap-8 items-start ${
+                  i !== 0 ? "border-t border-[#F7E7CE]/10" : ""
+                }`}
+              >
+                <div className="absolute left-0 top-8 md:top-10 bottom-8 md:bottom-10 w-[2px] bg-[#F7E7CE]/10 overflow-hidden">
+                  <div className="absolute inset-x-0 top-0 h-0 group-hover:h-full bg-[#F59E0B] transition-[height] duration-500 ease-out" />
+                </div>
+
+                <span className="text-xs font-bold text-[#F7E7CE]/25 mt-1.5 shrink-0">
+                  {f.num}
+                </span>
+                <Icon className="w-6 h-6 md:w-7 md:h-7 text-[#F59E0B] shrink-0 mt-0.5 transition-transform duration-300 group-hover:scale-110" />
+                <div>
+                  <h3 className="text-xl md:text-2xl font-extrabold uppercase tracking-tighter text-[#F7E7CE] mb-2.5">
+                    {f.title}
+                  </h3>
+                  <p className="text-[#F7E7CE]/45 leading-relaxed text-sm md:text-base max-w-lg">
+                    {f.desc}
+                  </p>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
       </div>
     </section>
   );

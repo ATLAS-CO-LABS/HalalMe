@@ -6,6 +6,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import { useTheme } from '@/context/ThemeContext';
+import ThemeToggle from '@/components/layout/ThemeToggle';
 import { ArrowUpRight, LayoutDashboard, LogOut, UserRound } from 'lucide-react';
 
 const serviceLinks = [
@@ -29,6 +31,7 @@ export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const { isThemedRoute } = useTheme();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -91,14 +94,14 @@ export default function Header() {
           menuOpen
             ? 'bg-transparent'
             : scrolled
-              ? 'bg-[#0A1C19]/96 md:backdrop-blur-md border-b border-[#F7E7CE]/8'
+              ? 'bg-(--hm-bg-alt)/96 md:backdrop-blur-md border-b border-(--hm-text)/8'
               : 'bg-transparent'
         }`}
       >
         {/* Soft scrim so the nav stays legible over hero imagery - fades out once scrolled */}
         <div
           aria-hidden="true"
-          className={`pointer-events-none absolute inset-x-0 top-0 h-28 bg-linear-to-b from-[#050F0D]/65 via-[#050F0D]/25 to-transparent transition-opacity duration-300 ${
+          className={`pointer-events-none absolute inset-x-0 top-0 h-28 bg-linear-to-b from-(--hm-scrim)/65 via-(--hm-scrim)/25 to-transparent transition-opacity duration-300 ${
             scrolled || menuOpen ? 'opacity-0' : 'opacity-100'
           }`}
         />
@@ -118,7 +121,7 @@ export default function Header() {
                 />
               </span>
               <span
-                className="text-lg sm:text-xl font-black text-[#F7E7CE] tracking-tight"
+                className="text-lg sm:text-xl font-black text-(--hm-text) tracking-tight"
                 style={{ fontFamily: 'var(--font-logo)' }}
               >
                 HalalMe
@@ -134,16 +137,16 @@ export default function Header() {
                   <div className="relative" ref={userMenuRef}>
                     <button
                       onClick={() => setUserMenuOpen(!userMenuOpen)}
-                      className="flex items-center gap-2 text-sm font-semibold text-[#F7E7CE]/70 hover:text-[#F7E7CE] transition-colors pl-1 pr-3 py-1 hover:bg-[#F7E7CE]/8 border border-transparent hover:border-[#F7E7CE]/15"
+                      className="flex items-center gap-2 text-sm font-semibold text-[color:color-mix(in_oklab,var(--hm-text)_70%,var(--hm-lm-anchor))] hover:text-(--hm-text) transition-colors pl-1 pr-3 py-1 hover:bg-(--hm-text)/8 border border-transparent hover:border-(--hm-text)/15"
                     >
-                      <div className="h-8 w-8 bg-[#F7E7CE]/15 border border-[#F7E7CE]/25 flex items-center justify-center">
-                        <span className="text-xs font-bold text-[#F7E7CE]">
+                      <div className="h-8 w-8 bg-(--hm-text)/15 border border-(--hm-text)/25 flex items-center justify-center">
+                        <span className="text-xs font-bold text-(--hm-text)">
                           {(user.full_name ?? user.username ?? 'U').charAt(0).toUpperCase()}
                         </span>
                       </div>
                       <span className="max-w-24 truncate">{user.full_name ?? user.username}</span>
                       <svg
-                        className={`h-4 w-4 text-[#F7E7CE]/40 transition-transform duration-200 ${userMenuOpen ? 'rotate-180' : ''}`}
+                        className={`h-4 w-4 text-[color:color-mix(in_oklab,var(--hm-text)_40%,var(--hm-lm-anchor))] transition-transform duration-200 ${userMenuOpen ? 'rotate-180' : ''}`}
                         fill="none" viewBox="0 0 24 24" stroke="currentColor"
                       >
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -157,34 +160,34 @@ export default function Header() {
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: -6, scale: 0.97 }}
                           transition={{ duration: 0.18, ease: 'easeOut' }}
-                          className="absolute right-0 mt-2 w-64 bg-[#102C26] border border-[#F7E7CE]/10 shadow-2xl shadow-black/40 overflow-hidden"
+                          className="absolute right-0 mt-2 w-64 bg-(--hm-bg) border border-(--hm-text)/10 shadow-2xl shadow-black/40 overflow-hidden"
                         >
                           <div style={{ height: 2, background: 'linear-gradient(to right, #F03E9E, #F59E0B, transparent)' }} />
-                          <div className="flex items-center gap-3 bg-[#0A1C19] px-4 py-3.5 border-b border-[#F7E7CE]/8">
-                            <div className="h-10 w-10 shrink-0 bg-[#F7E7CE]/15 border border-[#F7E7CE]/25 flex items-center justify-center">
-                              <span className="text-sm font-bold text-[#F7E7CE]">
+                          <div className="flex items-center gap-3 bg-(--hm-bg-alt) px-4 py-3.5 border-b border-(--hm-text)/8">
+                            <div className="h-10 w-10 shrink-0 bg-(--hm-text)/15 border border-(--hm-text)/25 flex items-center justify-center">
+                              <span className="text-sm font-bold text-(--hm-text)">
                                 {(user.full_name ?? user.username ?? 'U').charAt(0).toUpperCase()}
                               </span>
                             </div>
                             <div className="min-w-0">
-                              <p className="text-sm font-semibold text-[#F7E7CE] truncate">{user.full_name ?? user.username}</p>
-                              <p className="text-xs text-[#F7E7CE]/40 truncate">{user.email}</p>
+                              <p className="text-sm font-semibold text-(--hm-text) truncate">{user.full_name ?? user.username}</p>
+                              <p className="text-xs text-[color:color-mix(in_oklab,var(--hm-text)_40%,var(--hm-lm-anchor))] truncate">{user.email}</p>
                             </div>
                           </div>
                           <div className="py-1.5">
                             <Link href="/profile">
-                              <div className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#F7E7CE]/70 hover:bg-[#F7E7CE]/8 hover:text-[#F7E7CE] cursor-pointer transition-colors">
-                                <UserRound className="h-4 w-4 shrink-0 text-[#F7E7CE]/40" strokeWidth={1.75} />
+                              <div className="flex items-center gap-3 px-4 py-2.5 text-sm text-[color:color-mix(in_oklab,var(--hm-text)_70%,var(--hm-lm-anchor))] hover:bg-(--hm-text)/8 hover:text-(--hm-text) cursor-pointer transition-colors">
+                                <UserRound className="h-4 w-4 shrink-0 text-[color:color-mix(in_oklab,var(--hm-text)_40%,var(--hm-lm-anchor))]" strokeWidth={1.75} />
                                 Profile Settings
                               </div>
                             </Link>
                             <Link href="/dashboard">
-                              <div className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#F7E7CE]/70 hover:bg-[#F7E7CE]/8 hover:text-[#F7E7CE] cursor-pointer transition-colors">
-                                <LayoutDashboard className="h-4 w-4 shrink-0 text-[#F7E7CE]/40" strokeWidth={1.75} />
+                              <div className="flex items-center gap-3 px-4 py-2.5 text-sm text-[color:color-mix(in_oklab,var(--hm-text)_70%,var(--hm-lm-anchor))] hover:bg-(--hm-text)/8 hover:text-(--hm-text) cursor-pointer transition-colors">
+                                <LayoutDashboard className="h-4 w-4 shrink-0 text-[color:color-mix(in_oklab,var(--hm-text)_40%,var(--hm-lm-anchor))]" strokeWidth={1.75} />
                                 Dashboard
                               </div>
                             </Link>
-                            <hr className="my-1.5 border-[#F7E7CE]/8" />
+                            <hr className="my-1.5 border-(--hm-text)/8" />
                             <button
                               onClick={handleLogout}
                               disabled={isLoggingOut}
@@ -199,8 +202,8 @@ export default function Header() {
                     </AnimatePresence>
                   </div>
                 ) : isLoggingOut ? (
-                  <div className="h-8 w-8 bg-[#F7E7CE]/10 border border-[#F7E7CE]/20 flex items-center justify-center">
-                    <svg className="h-4 w-4 text-[#F7E7CE]/40 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <div className="h-8 w-8 bg-(--hm-text)/10 border border-(--hm-text)/20 flex items-center justify-center">
+                    <svg className="h-4 w-4 text-[color:color-mix(in_oklab,var(--hm-text)_40%,var(--hm-lm-anchor))] animate-spin" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
                     </svg>
@@ -209,13 +212,13 @@ export default function Header() {
                   <>
                     <button
                       onClick={() => router.push('/login')}
-                      className="text-sm font-semibold text-[#F7E7CE]/60 hover:text-[#F7E7CE] px-4 py-2 transition-colors"
+                      className="text-sm font-semibold text-[color:color-mix(in_oklab,var(--hm-text)_60%,var(--hm-lm-anchor))] hover:text-(--hm-text) px-4 py-2 transition-colors"
                     >
                       Log in
                     </button>
                     <button
                       onClick={() => router.push('/select-role')}
-                      className="text-sm font-bold text-[#102C26] bg-[#F7E7CE] hover:bg-[#F7E7CE]/90 px-5 py-2.5 transition-colors uppercase tracking-tight"
+                      className="text-sm font-bold text-(--hm-bg) bg-(--hm-text) hover:bg-(--hm-text)/90 px-5 py-2.5 transition-colors uppercase tracking-tight"
                     >
                       Sign Up
                     </button>
@@ -227,15 +230,15 @@ export default function Header() {
               <div className="md:hidden flex items-center">
                 {user ? (
                   <Link href="/dashboard" onClick={() => setMenuOpen(false)}>
-                    <div className="h-8 w-8 bg-[#F7E7CE]/15 border border-[#F7E7CE]/25 flex items-center justify-center">
-                      <span className="text-xs font-bold text-[#F7E7CE]">
+                    <div className="h-8 w-8 bg-(--hm-text)/15 border border-(--hm-text)/25 flex items-center justify-center">
+                      <span className="text-xs font-bold text-(--hm-text)">
                         {(user.full_name ?? user.username ?? 'U').charAt(0).toUpperCase()}
                       </span>
                     </div>
                   </Link>
                 ) : isLoggingOut ? (
-                  <div className="h-8 w-8 bg-[#F7E7CE]/10 border border-[#F7E7CE]/20 flex items-center justify-center">
-                    <svg className="h-4 w-4 text-[#F7E7CE]/40 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <div className="h-8 w-8 bg-(--hm-text)/10 border border-(--hm-text)/20 flex items-center justify-center">
+                    <svg className="h-4 w-4 text-[color:color-mix(in_oklab,var(--hm-text)_40%,var(--hm-lm-anchor))] animate-spin" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
                     </svg>
@@ -243,19 +246,22 @@ export default function Header() {
                 ) : (
                   <button
                     onClick={() => router.push('/select-role')}
-                    className="text-xs font-bold text-[#102C26] bg-[#F7E7CE] hover:bg-[#F7E7CE]/90 px-3.5 py-2 transition-colors uppercase tracking-tight"
+                    className="text-xs font-bold text-(--hm-bg) bg-(--hm-text) hover:bg-(--hm-text)/90 px-3.5 py-2 transition-colors uppercase tracking-tight"
                   >
                     Sign Up
                   </button>
                 )}
               </div>
 
+              {/* Theme toggle - only meaningful on themed routes (Social, Kitchen) */}
+              {isThemedRoute && <ThemeToggle />}
+
               {/* Menu trigger - morphing lines + label */}
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
                 aria-label={menuOpen ? 'Close menu' : 'Open menu'}
                 aria-expanded={menuOpen}
-                className="group flex items-center gap-2.5 pl-3 pr-3.5 py-2.5 border border-[#F7E7CE]/15 hover:border-[#F7E7CE]/40 text-[#F7E7CE]/70 hover:text-[#F7E7CE] transition-colors duration-200"
+                className="group flex items-center gap-2.5 pl-3 pr-3.5 py-2.5 border border-(--hm-text)/15 hover:border-(--hm-text)/40 text-[color:color-mix(in_oklab,var(--hm-text)_70%,var(--hm-lm-anchor))] hover:text-(--hm-text) transition-colors duration-200"
               >
                 <span className="relative w-4.5 h-3 flex flex-col justify-between">
                   <motion.span
@@ -292,12 +298,12 @@ export default function Header() {
             animate={reduce ? { opacity: 1 } : { clipPath: 'inset(0 0 0% 0)' }}
             exit={reduce ? { opacity: 0 } : { clipPath: 'inset(0 0 100% 0)' }}
             transition={{ duration: reduce ? 0.2 : 0.6, ease: EASE }}
-            className="fixed inset-0 z-[60] bg-[#0A1C19] overflow-y-auto overflow-x-hidden overscroll-contain"
+            className="fixed inset-0 z-[60] bg-(--hm-bg-alt) overflow-y-auto overflow-x-hidden overscroll-contain"
           >
             {/* Faint watermark anchoring the layer */}
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute bottom-0 right-0 font-black leading-none tracking-tighter select-none text-[#F7E7CE]/3 translate-x-[4%] translate-y-[12%]"
+              className="pointer-events-none absolute bottom-0 right-0 font-black leading-none tracking-tighter select-none text-[color:color-mix(in_oklab,var(--hm-text)_3%,var(--hm-lm-anchor))] translate-x-[4%] translate-y-[12%]"
               style={{ fontFamily: 'var(--font-logo)', fontSize: 'clamp(8rem, 24vw, 26rem)' }}
             >
               HalalMe
@@ -322,7 +328,7 @@ export default function Header() {
                       show: { opacity: 1 },
                       exit: { opacity: 0 },
                     }}
-                    className="text-[10px] font-bold text-[#F7E7CE]/30 uppercase tracking-[0.3em] mb-6"
+                    className="text-[10px] font-bold text-[color:color-mix(in_oklab,var(--hm-text)_30%,var(--hm-lm-anchor))] uppercase tracking-[0.3em] mb-6"
                   >
                     Services
                   </motion.p>
@@ -330,7 +336,7 @@ export default function Header() {
                     {serviceLinks.map((s) => {
                       const active = pathname?.startsWith(s.href);
                       return (
-                        <li key={s.href} className="overflow-hidden border-b border-[#F7E7CE]/8 last:border-b-0">
+                        <li key={s.href} className="overflow-hidden border-b border-(--hm-text)/8 last:border-b-0">
                           <motion.div
                             variants={{
                               hidden: { y: '105%' },
@@ -352,12 +358,12 @@ export default function Header() {
                             >
                               <span
                                 className="text-[10px] sm:text-xs font-bold tracking-[0.25em] shrink-0"
-                                style={{ color: active ? s.accent : 'rgba(247,231,206,0.3)' }}
+                                style={{ color: active ? s.accent : 'color-mix(in oklab, var(--hm-text) 30%, transparent)' }}
                               >
                                 {s.num}
                               </span>
                               <span
-                                className="nav-name font-extrabold uppercase tracking-tighter leading-[0.95] transition-all duration-300 group-hover:translate-x-2 text-[#F7E7CE]"
+                                className="nav-name font-extrabold uppercase tracking-tighter leading-[0.95] transition-all duration-300 group-hover:translate-x-2 text-(--hm-text)"
                                 style={{
                                   fontSize: 'clamp(2.2rem, 6.5vw, 4.75rem)',
                                   color: active ? s.accent : undefined,
@@ -365,7 +371,7 @@ export default function Header() {
                               >
                                 {s.label}
                               </span>
-                              <span className="hidden md:flex items-center gap-2 ml-auto text-[10px] uppercase tracking-[0.2em] text-[#F7E7CE]/30 group-hover:text-[#F7E7CE]/60 transition-colors duration-300 shrink-0">
+                              <span className="hidden md:flex items-center gap-2 ml-auto text-[10px] uppercase tracking-[0.2em] text-[color:color-mix(in_oklab,var(--hm-text)_30%,var(--hm-lm-anchor))] group-hover:text-[color:color-mix(in_oklab,var(--hm-text)_60%,var(--hm-lm-anchor))] transition-colors duration-300 shrink-0">
                                 {s.desc}
                                 <ArrowUpRight
                                   className="w-3.5 h-3.5 opacity-0 -translate-x-1 translate-y-1 group-hover:opacity-100 group-hover:translate-x-0 group-hover:translate-y-0 transition-all duration-300"
@@ -381,7 +387,7 @@ export default function Header() {
                 </nav>
 
                 {/* Info + account column */}
-                <div className="lg:col-span-4 flex flex-col justify-center gap-10 lg:pl-10 lg:border-l lg:border-[#F7E7CE]/8">
+                <div className="lg:col-span-4 flex flex-col justify-center gap-10 lg:pl-10 lg:border-l lg:border-(--hm-text)/8">
                   <div>
                     <motion.p
                       variants={{
@@ -389,7 +395,7 @@ export default function Header() {
                         show: { opacity: 1 },
                         exit: { opacity: 0 },
                       }}
-                      className="text-[10px] font-bold text-[#F7E7CE]/30 uppercase tracking-[0.3em] mb-5"
+                      className="text-[10px] font-bold text-[color:color-mix(in_oklab,var(--hm-text)_30%,var(--hm-lm-anchor))] uppercase tracking-[0.3em] mb-5"
                     >
                       Company
                     </motion.p>
@@ -408,11 +414,11 @@ export default function Header() {
                               <Link
                                 href={link.href}
                                 className={`group flex items-center gap-3 py-1.5 text-lg font-bold uppercase tracking-tight transition-colors duration-200 ${
-                                  active ? 'text-[#F59E0B]' : 'text-[#F7E7CE]/55 hover:text-[#F7E7CE]'
+                                  active ? 'text-(--hm-amber)' : 'text-[color:color-mix(in_oklab,var(--hm-text)_55%,var(--hm-lm-anchor))] hover:text-(--hm-text)'
                                 }`}
                               >
                                 <span
-                                  className={`h-px bg-[#F59E0B] transition-all duration-300 ${active ? 'w-5' : 'w-0 group-hover:w-5'}`}
+                                  className={`h-px bg-(--hm-amber) transition-all duration-300 ${active ? 'w-5' : 'w-0 group-hover:w-5'}`}
                                 />
                                 {link.label}
                               </Link>
@@ -432,22 +438,22 @@ export default function Header() {
                     }}
                   >
                     {user ? (
-                      <div className="border border-[#F7E7CE]/10 p-4">
+                      <div className="border border-(--hm-text)/10 p-4">
                         <div className="flex items-center gap-3 mb-4">
-                          <div className="h-10 w-10 bg-[#F7E7CE]/15 border border-[#F7E7CE]/20 flex items-center justify-center shrink-0">
-                            <span className="text-sm font-bold text-[#F7E7CE]">
+                          <div className="h-10 w-10 bg-(--hm-text)/15 border border-(--hm-text)/20 flex items-center justify-center shrink-0">
+                            <span className="text-sm font-bold text-(--hm-text)">
                               {(user.full_name ?? user.username ?? 'U').charAt(0).toUpperCase()}
                             </span>
                           </div>
                           <div className="min-w-0">
-                            <p className="text-sm font-semibold text-[#F7E7CE] truncate">{user.full_name ?? user.username}</p>
-                            <p className="text-xs text-[#F7E7CE]/40 truncate">{user.email}</p>
+                            <p className="text-sm font-semibold text-(--hm-text) truncate">{user.full_name ?? user.username}</p>
+                            <p className="text-xs text-[color:color-mix(in_oklab,var(--hm-text)_40%,var(--hm-lm-anchor))] truncate">{user.email}</p>
                           </div>
                         </div>
                         <div className="flex gap-2">
                           <Link
                             href="/dashboard"
-                            className="flex-1 text-center text-xs font-bold text-[#102C26] bg-[#F7E7CE] hover:bg-[#F7E7CE]/90 py-2.5 transition-colors uppercase tracking-tight"
+                            className="flex-1 text-center text-xs font-bold text-(--hm-bg) bg-(--hm-text) hover:bg-(--hm-text)/90 py-2.5 transition-colors uppercase tracking-tight"
                           >
                             Dashboard
                           </Link>
@@ -464,13 +470,13 @@ export default function Header() {
                       <div className="flex flex-col gap-2.5">
                         <button
                           onClick={() => { setMenuOpen(false); router.push('/select-role'); }}
-                          className="w-full text-sm font-bold text-[#102C26] bg-[#F7E7CE] hover:bg-[#F7E7CE]/90 py-3 transition-colors uppercase tracking-tight"
+                          className="w-full text-sm font-bold text-(--hm-bg) bg-(--hm-text) hover:bg-(--hm-text)/90 py-3 transition-colors uppercase tracking-tight"
                         >
                           Create Free Account
                         </button>
                         <button
                           onClick={() => { setMenuOpen(false); router.push('/login'); }}
-                          className="w-full text-sm font-semibold text-[#F7E7CE]/60 hover:text-[#F7E7CE] py-3 border border-[#F7E7CE]/15 hover:border-[#F7E7CE]/30 hover:bg-[#F7E7CE]/5 transition-colors"
+                          className="w-full text-sm font-semibold text-[color:color-mix(in_oklab,var(--hm-text)_60%,var(--hm-lm-anchor))] hover:text-(--hm-text) py-3 border border-(--hm-text)/15 hover:border-(--hm-text)/30 hover:bg-(--hm-text)/5 transition-colors"
                         >
                           Log in
                         </button>
@@ -485,7 +491,7 @@ export default function Header() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1, transition: { delay: reduce ? 0 : 0.55, duration: 0.5 } }}
                 exit={{ opacity: 0, transition: { duration: 0.15 } }}
-                className="mt-10 pt-5 border-t border-[#F7E7CE]/8 flex items-center justify-between gap-4 text-[10px] uppercase tracking-[0.2em] text-[#F7E7CE]/25"
+                className="mt-10 pt-5 border-t border-(--hm-text)/8 flex items-center justify-between gap-4 text-[10px] uppercase tracking-[0.2em] text-[color:color-mix(in_oklab,var(--hm-text)_25%,var(--hm-lm-anchor))]"
               >
                 <span>© {new Date().getFullYear()} HalalMe</span>
                 <span>Five services. One account.</span>

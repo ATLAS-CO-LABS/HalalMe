@@ -242,7 +242,7 @@ export default function CompleteProfilePage() {
             Mobile number
           </h2>
           <p className="text-xs text-[#F7E7CE]/35 mb-5">
-            Required to activate your HalalMe account.
+            Required to activate your account.
           </p>
           <div className="flex gap-2">
             <select

@@ -640,7 +640,7 @@ const SERVICES = [
     desc: "Order from the best halal restaurants near you, delivered in minutes.",
     features: ["Certified halal restaurants only", "Live order & rider tracking", "Delivery in minutes, not hours"],
     link: "/delivery",
-    image: "/images/services/halal_delivery1.png",
+    image: "/images/services/halal01.jpg",
     accent: "#B96AF0",
     logoColor: "#5E188F",
     Preview: DeliveryPreview,

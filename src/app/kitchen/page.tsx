@@ -19,11 +19,11 @@ import { cldUrl } from "@/lib/cldUrl";
 import type { Recipe } from "@/types";
 
 /* ─── Magenta base - matches AI assistant palette ───── */
-const BG = "#1C1C1C";
-const BG2 = "#161616";
-const CREAM = "#F7E7CE";
-const MAGENTA = "#F03E9E";
-const DEEP = "#C41E73";
+const BG = "var(--kitchen-bg)";
+const BG2 = "var(--kitchen-bg2)";
+const CREAM = "var(--hm-text)";
+const MAGENTA = "var(--hm-magenta)";
+const DEEP = "var(--hm-magenta-deep)";
 
 function cookTimeLabel(mins: number | null) {
   if (!mins) return "—";
@@ -86,8 +86,11 @@ export default function KitchenLandingPage() {
       {/* ─── Hero ───────────────────────────────────────── */}
       <section
         className="relative h-screen min-h-150 flex items-center justify-center overflow-hidden"
-        style={{ backgroundColor: BG, borderBottom: `1px solid ${MAGENTA}50` }}
+        style={{ backgroundColor: "#1C1C1C", borderBottom: `1px solid color-mix(in oklab, var(--hm-magenta) 31%, transparent)` }}
       >
+        {/* This hero is a full-bleed photograph, not a page surface - the scrim and
+            text below stay fixed dark/light regardless of theme so the photo stays
+            visible and legible in both, instead of washing out under a light-mode tint. */}
         <div className="absolute inset-0 z-0">
           <Image
             src="/images/services/halal02.png"
@@ -99,12 +102,12 @@ export default function KitchenLandingPage() {
           />
           <div
             className="absolute inset-0"
-            style={{ backgroundColor: `${BG}CC` }}
+            style={{ backgroundColor: "rgba(28,28,28,0.8)" }}
           />
           <div
             className="absolute inset-0"
             style={{
-              background: `radial-gradient(ellipse at center, transparent 0%, ${BG}50 55%, ${BG}90 100%)`,
+              background: "radial-gradient(ellipse at center, transparent 0%, rgba(28,28,28,0.31) 55%, rgba(28,28,28,0.56) 100%)",
             }}
           />
         </div>
@@ -171,7 +174,7 @@ export default function KitchenLandingPage() {
                 </div>
                 <span
                   className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight"
-                  style={{ fontFamily: "var(--font-logo)", color: CREAM }}
+                  style={{ fontFamily: "var(--font-logo)", color: "#F7E7CE" }}
                 >
                   HalalMe
                 </span>
@@ -190,7 +193,7 @@ export default function KitchenLandingPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.44, duration: 0.7 }}
                 className="block text-[clamp(1.5rem,5vw,5rem)]"
-                style={{ color: CREAM }}
+                style={{ color: "#F7E7CE" }}
               >
                 AI-Powered.
               </motion.span>
@@ -201,7 +204,7 @@ export default function KitchenLandingPage() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.6 }}
               className="mt-6 md:mt-7 text-base md:text-lg max-w-md leading-relaxed mx-auto"
-              style={{ color: `${CREAM}75` }}
+              style={{ color: "rgba(247,231,206,0.46)" }}
             >
               Get AI-powered recipe suggestions, discover community recipes, and
               master the art of halal cooking with your personal culinary
@@ -234,8 +237,8 @@ export default function KitchenLandingPage() {
                 whileTap={{ scale: 0.97 }}
                 className="flex items-center gap-3 px-7 sm:px-8 py-3.5 sm:py-4 border-2 font-extrabold uppercase tracking-tighter text-sm sm:text-base transition-all"
                 style={{
-                  borderColor: `${CREAM}25`,
-                  color: CREAM,
+                  borderColor: "rgba(247,231,206,0.15)",
+                  color: "#F7E7CE",
                 }}
               >
                 Browse Recipes
@@ -257,7 +260,7 @@ export default function KitchenLandingPage() {
                 <div
                   key={i}
                   className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide"
-                  style={{ color: `${CREAM}65` }}
+                  style={{ color: "rgba(247,231,206,0.4)" }}
                 >
                   <item.Icon className="w-4 h-4" style={{ color: MAGENTA }} />
                   {item.text}
@@ -274,9 +277,9 @@ export default function KitchenLandingPage() {
         className="grid grid-cols-2 md:grid-cols-4"
         style={{
           gap: "1px",
-          backgroundColor: `${MAGENTA}50`,
-          borderTop: `1px solid ${MAGENTA}80`,
-          borderBottom: `1px solid ${MAGENTA}80`,
+          backgroundColor: `color-mix(in oklab, var(--hm-magenta) 31%, transparent)`,
+          borderTop: `1px solid color-mix(in oklab, var(--hm-magenta) 50%, transparent)`,
+          borderBottom: `1px solid color-mix(in oklab, var(--hm-magenta) 50%, transparent)`,
         }}
       >
         {[
@@ -318,8 +321,8 @@ export default function KitchenLandingPage() {
         className="py-24 md:py-32"
         style={{
           backgroundColor: BG,
-          borderTop: `1px solid ${MAGENTA}50`,
-          borderBottom: `1px solid ${MAGENTA}50`,
+          borderTop: `1px solid color-mix(in oklab, var(--hm-magenta) 31%, transparent)`,
+          borderBottom: `1px solid color-mix(in oklab, var(--hm-magenta) 31%, transparent)`,
         }}
       >
         <div className="max-w-[95vw] mx-auto px-6 md:px-10 mb-14 md:mb-20">
@@ -345,7 +348,7 @@ export default function KitchenLandingPage() {
           >
             Cook Smarter
             <br />
-            <span style={{ color: `${CREAM}75` }}>Eat Halal.</span>
+            <span style={{ color: `color-mix(in oklab, var(--hm-text) 46%, var(--hm-lm-anchor))` }}>Eat Halal.</span>
           </motion.h2>
         </div>
 
@@ -353,9 +356,9 @@ export default function KitchenLandingPage() {
           className="max-w-[95vw] mx-auto px-6 md:px-10 grid md:grid-cols-2"
           style={{
             gap: "1px",
-            backgroundColor: `${MAGENTA}50`,
-            borderLeft: `2px solid ${MAGENTA}80`,
-            borderRight: `2px solid ${MAGENTA}80`,
+            backgroundColor: `color-mix(in oklab, var(--hm-magenta) 31%, transparent)`,
+            borderLeft: `2px solid color-mix(in oklab, var(--hm-magenta) 50%, transparent)`,
+            borderRight: `2px solid color-mix(in oklab, var(--hm-magenta) 50%, transparent)`,
           }}
         >
           {/* AI Card - hover to fuchsia */}
@@ -371,17 +374,17 @@ export default function KitchenLandingPage() {
                   (e.currentTarget.style.backgroundColor = DEEP)
                 }
                 onMouseLeave={(e) =>
-                  (e.currentTarget.style.backgroundColor = "#0F0F0F")
+                  (e.currentTarget.style.backgroundColor = "var(--kitchen-bg2)")
                 }
                 style={{
-                  backgroundColor: "#0F0F0F",
-                  border: `1px solid ${CREAM}08`,
+                  backgroundColor: "var(--kitchen-bg2)",
+                  border: `1px solid color-mix(in oklab, var(--hm-text) 3%, transparent)`,
                 }}
               >
                 <span
                   aria-hidden="true"
                   className="absolute -top-6 -right-3 text-[8rem] md:text-[10rem] font-extrabold leading-none select-none pointer-events-none"
-                  style={{ color: "#2A2A2A" }}
+                  style={{ color: "color-mix(in oklab, var(--hm-text) 10%, transparent)" }}
                 >
                   01
                 </span>
@@ -398,7 +401,7 @@ export default function KitchenLandingPage() {
                   </h3>
                   <p
                     className="leading-relaxed text-sm md:text-base transition-colors duration-300 group-hover:text-black/70! flex-1"
-                    style={{ color: `${CREAM}75` }}
+                    style={{ color: `color-mix(in oklab, var(--hm-text) 46%, var(--hm-lm-anchor))` }}
                   >
                     Have ingredients but don&apos;t know what to cook? Let our
                     AI create delicious halal recipes with step-by-step
@@ -413,7 +416,7 @@ export default function KitchenLandingPage() {
                       <div
                         key={i}
                         className="flex items-start gap-3 text-sm transition-colors duration-300 group-hover:text-black/70!"
-                        style={{ color: `${CREAM}65` }}
+                        style={{ color: `color-mix(in oklab, var(--hm-text) 40%, var(--hm-lm-anchor))` }}
                       >
                         <span
                           className="group-hover:text-black! mt-0.5 font-bold"
@@ -449,17 +452,17 @@ export default function KitchenLandingPage() {
                   (e.currentTarget.style.backgroundColor = DEEP)
                 }
                 onMouseLeave={(e) =>
-                  (e.currentTarget.style.backgroundColor = "#0F0F0F")
+                  (e.currentTarget.style.backgroundColor = "var(--kitchen-bg2)")
                 }
                 style={{
-                  backgroundColor: "#0F0F0F",
-                  border: `1px solid ${CREAM}08`,
+                  backgroundColor: "var(--kitchen-bg2)",
+                  border: `1px solid color-mix(in oklab, var(--hm-text) 3%, transparent)`,
                 }}
               >
                 <span
                   aria-hidden="true"
                   className="absolute -top-6 -right-3 text-[8rem] md:text-[10rem] font-extrabold leading-none select-none pointer-events-none"
-                  style={{ color: "#2A2A2A" }}
+                  style={{ color: "color-mix(in oklab, var(--hm-text) 10%, transparent)" }}
                 >
                   02
                 </span>
@@ -476,7 +479,7 @@ export default function KitchenLandingPage() {
                   </h3>
                   <p
                     className="leading-relaxed text-sm md:text-base transition-colors duration-300 group-hover:text-black/70! flex-1"
-                    style={{ color: `${CREAM}75` }}
+                    style={{ color: `color-mix(in oklab, var(--hm-text) 46%, var(--hm-lm-anchor))` }}
                   >
                     Browse thousands of halal recipes from our community. Find
                     inspiration and share your own creations.
@@ -490,7 +493,7 @@ export default function KitchenLandingPage() {
                       <div
                         key={i}
                         className="flex items-start gap-3 text-sm transition-colors duration-300 group-hover:text-black/70!"
-                        style={{ color: `${CREAM}65` }}
+                        style={{ color: `color-mix(in oklab, var(--hm-text) 40%, var(--hm-lm-anchor))` }}
                       >
                         <span
                           className="mt-0.5 font-bold group-hover:text-black!"
@@ -521,8 +524,8 @@ export default function KitchenLandingPage() {
         className="py-24 md:py-32"
         style={{
           backgroundColor: BG2,
-          borderTop: `1px solid ${MAGENTA}50`,
-          borderBottom: `1px solid ${MAGENTA}50`,
+          borderTop: `1px solid color-mix(in oklab, var(--hm-magenta) 31%, transparent)`,
+          borderBottom: `1px solid color-mix(in oklab, var(--hm-magenta) 31%, transparent)`,
         }}
       >
         <div className="max-w-[95vw] mx-auto px-6 md:px-10 mb-14 md:mb-20">
@@ -548,13 +551,13 @@ export default function KitchenLandingPage() {
           >
             Your Complete
             <br />
-            <span style={{ color: `${CREAM}75` }}>Culinary Companion.</span>
+            <span style={{ color: `color-mix(in oklab, var(--hm-text) 46%, var(--hm-lm-anchor))` }}>Culinary Companion.</span>
           </motion.h2>
         </div>
 
         <div
           className="max-w-[95vw] mx-auto px-6 md:px-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
-          style={{ gap: "1px", backgroundColor: `${MAGENTA}50` }}
+          style={{ gap: "1px", backgroundColor: `color-mix(in oklab, var(--hm-magenta) 31%, transparent)` }}
         >
           {features.map((f, i) => {
             const Icon = f.Icon;
@@ -564,17 +567,17 @@ export default function KitchenLandingPage() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={featuresInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ delay: i * 0.1, duration: 0.5 }}
-                className="group relative p-8 overflow-hidden hover:bg-[#F7E7CE] transition-colors duration-300 cursor-default"
+                className="group relative p-8 overflow-hidden hover:bg-(--hm-text) transition-colors duration-300 cursor-default"
                 style={{
                   backgroundColor: BG,
-                  border: `1px solid ${CREAM}08`,
+                  border: `1px solid color-mix(in oklab, var(--hm-text) 3%, transparent)`,
                   minHeight: "220px",
                 }}
               >
                 <span
                   aria-hidden="true"
                   className="absolute -top-6 -right-3 text-[7rem] font-extrabold leading-none select-none pointer-events-none transition-colors duration-300"
-                  style={{ color: "#2A2A2A" }}
+                  style={{ color: "color-mix(in oklab, var(--hm-text) 10%, transparent)" }}
                 >
                   {f.num}
                 </span>
@@ -583,18 +586,18 @@ export default function KitchenLandingPage() {
                   style={{ minHeight: "180px" }}
                 >
                   <Icon
-                    className="w-6 h-6 mb-6 transition-colors duration-300 group-hover:text-[#C41E73]"
+                    className="w-6 h-6 mb-6 transition-colors duration-300 group-hover:text-(--hm-magenta-deep)"
                     style={{ color: MAGENTA }}
                   />
                   <h3
-                    className="text-lg md:text-xl font-extrabold uppercase tracking-tighter mb-3 transition-colors duration-300 group-hover:text-[#08060F]"
+                    className="text-lg md:text-xl font-extrabold uppercase tracking-tighter mb-3 transition-colors duration-300 group-hover:text-(--kitchen-bg)"
                     style={{ color: CREAM }}
                   >
                     {f.title}
                   </h3>
                   <p
-                    className="text-sm leading-relaxed transition-colors duration-300 group-hover:text-[#08060F]/65"
-                    style={{ color: `${CREAM}75` }}
+                    className="text-sm leading-relaxed transition-colors duration-300 group-hover:text-(--kitchen-bg)/65"
+                    style={{ color: `color-mix(in oklab, var(--hm-text) 46%, var(--hm-lm-anchor))` }}
                   >
                     {f.desc}
                   </p>
@@ -610,22 +613,22 @@ export default function KitchenLandingPage() {
         className="py-24 md:py-32 relative overflow-hidden"
         style={{
           backgroundColor: BG,
-          borderTop: `1px solid ${MAGENTA}50`,
-          borderBottom: `1px solid ${MAGENTA}50`,
+          borderTop: `1px solid color-mix(in oklab, var(--hm-magenta) 31%, transparent)`,
+          borderBottom: `1px solid color-mix(in oklab, var(--hm-magenta) 31%, transparent)`,
         }}
       >
         {/* Pink glow accent */}
         <div
           className="pointer-events-none absolute inset-0"
           style={{
-            background: `radial-gradient(ellipse 70% 50% at 50% 0%, ${MAGENTA}12 0%, transparent 70%)`,
+            background: `radial-gradient(ellipse 70% 50% at 50% 0%, color-mix(in oklab, var(--hm-magenta) 7%, transparent) 0%, transparent 70%)`,
           }}
         />
         {/* Top border accent */}
         <div
           className="absolute top-0 left-0 right-0 h-px"
           style={{
-            background: `linear-gradient(to right, transparent, ${MAGENTA}80, transparent)`,
+            background: `linear-gradient(to right, transparent, color-mix(in oklab, var(--hm-magenta) 50%, transparent), transparent)`,
           }}
         />
 
@@ -696,12 +699,12 @@ export default function KitchenLandingPage() {
               <div className="flex">
                 {[...Array(6)].map((_, i) => (
                   <div key={i} className="shrink-0 mx-2" style={{ width: "260px" }}>
-                    <div style={{ backgroundColor: BG2, border: `1px solid ${MAGENTA}25` }}>
-                      <div className="w-full h-36 animate-pulse" style={{ backgroundColor: `${MAGENTA}12` }} />
+                    <div style={{ backgroundColor: BG2, border: `1px solid color-mix(in oklab, var(--hm-magenta) 15%, transparent)` }}>
+                      <div className="w-full h-36 animate-pulse" style={{ backgroundColor: `color-mix(in oklab, var(--hm-magenta) 7%, transparent)` }} />
                       <div className="p-4 space-y-2">
-                        <div className="h-3 w-3/4 animate-pulse" style={{ backgroundColor: `${CREAM}15` }} />
-                        <div className="h-2 w-1/2 animate-pulse" style={{ backgroundColor: `${CREAM}10` }} />
-                        <div className="h-2 w-full animate-pulse" style={{ backgroundColor: `${CREAM}08` }} />
+                        <div className="h-3 w-3/4 animate-pulse" style={{ backgroundColor: `color-mix(in oklab, var(--hm-text) 8%, transparent)` }} />
+                        <div className="h-2 w-1/2 animate-pulse" style={{ backgroundColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)` }} />
+                        <div className="h-2 w-full animate-pulse" style={{ backgroundColor: `color-mix(in oklab, var(--hm-text) 3%, transparent)` }} />
                       </div>
                     </div>
                   </div>
@@ -736,14 +739,14 @@ export default function KitchenLandingPage() {
                         }
                         style={{
                           backgroundColor: BG2,
-                          border: `1px solid ${MAGENTA}25`,
+                          border: `1px solid color-mix(in oklab, var(--hm-magenta) 15%, transparent)`,
                         }}
                       >
                         <div
                           className="relative w-full h-36 overflow-hidden"
                           style={{
-                            backgroundColor: `${MAGENTA}12`,
-                            borderBottom: `1px solid ${MAGENTA}20`,
+                            backgroundColor: `color-mix(in oklab, var(--hm-magenta) 7%, transparent)`,
+                            borderBottom: `1px solid color-mix(in oklab, var(--hm-magenta) 13%, transparent)`,
                           }}
                         >
                           {recipe.image_url ? (
@@ -756,7 +759,7 @@ export default function KitchenLandingPage() {
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
-                              <ChefHat className="w-10 h-10 text-gray-600" />
+                              <ChefHat className="w-10 h-10 text-[color:color-mix(in_oklab,var(--kitchen-fg)_35%,var(--hm-lm-anchor))]" />
                             </div>
                           )}
                         </div>
@@ -771,7 +774,7 @@ export default function KitchenLandingPage() {
                             {recipe.avg_rating ? (
                               <span
                                 className="text-xs font-bold shrink-0 group-hover:text-black/60! transition-colors"
-                                style={{ color: `${CREAM}75` }}
+                                style={{ color: `color-mix(in oklab, var(--hm-text) 46%, var(--hm-lm-anchor))` }}
                               >
                                 ★ {Number(recipe.avg_rating).toFixed(1)}
                               </span>
@@ -785,7 +788,7 @@ export default function KitchenLandingPage() {
                           </p>
                           <div
                             className="flex items-center justify-between text-[10px] group-hover:text-black/65! transition-colors"
-                            style={{ color: `${CREAM}55` }}
+                            style={{ color: `color-mix(in oklab, var(--hm-text) 33%, var(--hm-lm-anchor))` }}
                           >
                             <span>⏱ {cookTimeLabel(recipe.cook_time_mins)}</span>
                             {recipe.difficulty && (
@@ -826,36 +829,36 @@ export default function KitchenLandingPage() {
         className="py-24 md:py-32 relative overflow-hidden"
         style={{
           backgroundColor: BG2,
-          borderTop: `1px solid ${MAGENTA}50`,
-          borderBottom: `1px solid ${MAGENTA}50`,
+          borderTop: `1px solid color-mix(in oklab, var(--hm-magenta) 31%, transparent)`,
+          borderBottom: `1px solid color-mix(in oklab, var(--hm-magenta) 31%, transparent)`,
         }}
       >
         {/* Pink glow accent */}
         <div
           className="pointer-events-none absolute inset-0"
           style={{
-            background: `radial-gradient(ellipse 70% 50% at 50% 100%, ${MAGENTA}12 0%, transparent 70%)`,
+            background: `radial-gradient(ellipse 70% 50% at 50% 100%, color-mix(in oklab, var(--hm-magenta) 7%, transparent) 0%, transparent 70%)`,
           }}
         />
         {/* Bottom border accent */}
         <div
           className="absolute bottom-0 left-0 right-0 h-px"
           style={{
-            background: `linear-gradient(to right, transparent, ${MAGENTA}80, transparent)`,
+            background: `linear-gradient(to right, transparent, color-mix(in oklab, var(--hm-magenta) 50%, transparent), transparent)`,
           }}
         />
         {/* Left border accent */}
         <div
           className="absolute top-0 left-0 bottom-0 w-px"
           style={{
-            background: `linear-gradient(to bottom, transparent, ${MAGENTA}60, transparent)`,
+            background: `linear-gradient(to bottom, transparent, color-mix(in oklab, var(--hm-magenta) 38%, transparent), transparent)`,
           }}
         />
 
         <div className="relative z-10 max-w-[95vw] mx-auto px-6 md:px-10">
           <div
             className="grid md:grid-cols-2 gap-px"
-            style={{ backgroundColor: `${MAGENTA}50` }}
+            style={{ backgroundColor: `color-mix(in oklab, var(--hm-magenta) 31%, transparent)` }}
           >
             {/* Left: form mockup */}
             <div className="p-8 md:p-12" style={{ backgroundColor: BG2 }}>
@@ -875,7 +878,7 @@ export default function KitchenLandingPage() {
                 <div>
                   <label
                     className="block text-[10px] uppercase tracking-[0.2em] font-bold mb-1.5"
-                    style={{ color: `${CREAM}75` }}
+                    style={{ color: `color-mix(in oklab, var(--hm-text) 46%, var(--hm-lm-anchor))` }}
                   >
                     Recipe Title
                   </label>
@@ -883,8 +886,8 @@ export default function KitchenLandingPage() {
                     className="px-4 py-3 text-sm"
                     style={{
                       backgroundColor: BG,
-                      border: `1px solid ${CREAM}15`,
-                      color: `${CREAM}40`,
+                      border: `1px solid color-mix(in oklab, var(--hm-text) 8%, transparent)`,
+                      color: `color-mix(in oklab, var(--hm-text) 25%, var(--hm-lm-anchor))`,
                     }}
                   >
                     e.g. Mum&apos;s Lamb Biryani
@@ -893,7 +896,7 @@ export default function KitchenLandingPage() {
                 <div>
                   <label
                     className="block text-[10px] uppercase tracking-[0.2em] font-bold mb-1.5"
-                    style={{ color: `${CREAM}75` }}
+                    style={{ color: `color-mix(in oklab, var(--hm-text) 46%, var(--hm-lm-anchor))` }}
                   >
                     Photo
                   </label>
@@ -901,11 +904,11 @@ export default function KitchenLandingPage() {
                     className="h-28 flex flex-col items-center justify-center gap-2"
                     style={{
                       backgroundColor: BG,
-                      border: `1px dashed ${CREAM}20`,
+                      border: `1px dashed color-mix(in oklab, var(--hm-text) 13%, transparent)`,
                     }}
                   >
                     <span className="text-2xl">📷</span>
-                    <span className="text-xs" style={{ color: `${CREAM}50` }}>
+                    <span className="text-xs" style={{ color: `color-mix(in oklab, var(--hm-text) 31%, var(--hm-lm-anchor))` }}>
                       Click to upload image
                     </span>
                   </div>
@@ -914,7 +917,7 @@ export default function KitchenLandingPage() {
                   <div>
                     <label
                       className="block text-[10px] uppercase tracking-[0.2em] font-bold mb-1.5"
-                      style={{ color: `${CREAM}75` }}
+                      style={{ color: `color-mix(in oklab, var(--hm-text) 46%, var(--hm-lm-anchor))` }}
                     >
                       Cuisine
                     </label>
@@ -922,8 +925,8 @@ export default function KitchenLandingPage() {
                       className="px-4 py-3 text-sm"
                       style={{
                         backgroundColor: BG,
-                        border: `1px solid ${CREAM}15`,
-                        color: `${CREAM}40`,
+                        border: `1px solid color-mix(in oklab, var(--hm-text) 8%, transparent)`,
+                        color: `color-mix(in oklab, var(--hm-text) 25%, var(--hm-lm-anchor))`,
                       }}
                     >
                       South Asian
@@ -932,7 +935,7 @@ export default function KitchenLandingPage() {
                   <div>
                     <label
                       className="block text-[10px] uppercase tracking-[0.2em] font-bold mb-1.5"
-                      style={{ color: `${CREAM}75` }}
+                      style={{ color: `color-mix(in oklab, var(--hm-text) 46%, var(--hm-lm-anchor))` }}
                     >
                       Cook Time
                     </label>
@@ -940,8 +943,8 @@ export default function KitchenLandingPage() {
                       className="px-4 py-3 text-sm"
                       style={{
                         backgroundColor: BG,
-                        border: `1px solid ${CREAM}15`,
-                        color: `${CREAM}40`,
+                        border: `1px solid color-mix(in oklab, var(--hm-text) 8%, transparent)`,
+                        color: `color-mix(in oklab, var(--hm-text) 25%, var(--hm-lm-anchor))`,
                       }}
                     >
                       45 min
@@ -995,7 +998,7 @@ export default function KitchenLandingPage() {
               </h2>
               <p
                 className="text-sm md:text-base leading-relaxed mb-8"
-                style={{ color: `${CREAM}75` }}
+                style={{ color: `color-mix(in oklab, var(--hm-text) 46%, var(--hm-lm-anchor))` }}
               >
                 Have a recipe the community should know about? Upload your halal
                 creations, get rated, and inspire cooks around the world.
@@ -1009,7 +1012,7 @@ export default function KitchenLandingPage() {
                   <div
                     key={i}
                     className="flex items-start gap-3 text-sm"
-                    style={{ color: `${CREAM}75` }}
+                    style={{ color: `color-mix(in oklab, var(--hm-text) 46%, var(--hm-lm-anchor))` }}
                   >
                     <span
                       style={{ color: MAGENTA }}
@@ -1038,7 +1041,7 @@ export default function KitchenLandingPage() {
       <section
         ref={ctaRef}
         className="relative overflow-hidden py-28 md:py-36"
-        style={{ backgroundColor: DEEP, borderTop: `1px solid ${MAGENTA}80` }}
+        style={{ backgroundColor: DEEP, borderTop: `1px solid color-mix(in oklab, var(--hm-magenta) 50%, transparent)` }}
       >
         <div className="relative z-10 max-w-[95vw] mx-auto px-6 md:px-10">
           <motion.div
@@ -1080,7 +1083,7 @@ export default function KitchenLandingPage() {
           >
             <button
               onClick={() => router.push("/kitchen/ai-assistant")}
-              className="flex items-center gap-3 px-8 py-4 bg-white font-extrabold uppercase tracking-tighter text-base hover:bg-[#F7E7CE] transition-colors"
+              className="flex items-center gap-3 px-8 py-4 bg-white font-extrabold uppercase tracking-tighter text-base hover:bg-(--hm-text) transition-colors"
               style={{ color: DEEP }}
             >
               Start Cooking with AQI
@@ -1122,20 +1125,20 @@ export default function KitchenLandingPage() {
       {/* ─── Back Links ───────────────────────────────────── */}
       <div
         className="px-6 py-8"
-        style={{ backgroundColor: BG, borderTop: `1px solid ${CREAM}08` }}
+        style={{ backgroundColor: BG, borderTop: `1px solid color-mix(in oklab, var(--hm-text) 3%, transparent)` }}
       >
         <div className="max-w-[95vw] mx-auto flex justify-between items-center">
           <Link
             href="/hub"
             className="text-xs font-bold uppercase tracking-[0.2em] transition-colors hover:text-fuchsia-400"
-            style={{ color: `${CREAM}60` }}
+            style={{ color: `color-mix(in oklab, var(--hm-text) 38%, var(--hm-lm-anchor))` }}
           >
             ← Hub
           </Link>
           <Link
             href="/charity"
             className="text-xs font-bold uppercase tracking-[0.2em] transition-colors hover:text-fuchsia-400"
-            style={{ color: `${CREAM}60` }}
+            style={{ color: `color-mix(in oklab, var(--hm-text) 38%, var(--hm-lm-anchor))` }}
           >
             Charity →
           </Link>

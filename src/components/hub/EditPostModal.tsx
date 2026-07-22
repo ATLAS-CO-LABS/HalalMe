@@ -8,10 +8,10 @@ import { withTimeout } from "@/lib/withTimeout";
 import { friendlyError } from "@/lib/friendlyError";
 import Avatar from "./Avatar";
 
-const BG = "#0B0D0F";
-const BG2 = "#111418";
-const AMBER = "#F59E0B";
-const CREAM = "#F7E7CE";
+const BG = "var(--hub-bg)";
+const BG2 = "var(--hub-bg2)";
+const AMBER = "var(--hm-amber)";
+const CREAM = "var(--hm-text)";
 
 interface EditPostModalProps {
   isOpen: boolean;
@@ -86,10 +86,10 @@ export default function EditPostModal({
               exit={{ opacity: 0, scale: 0.96, y: 8 }}
               transition={{ type: "tween", duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
               className="w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col border shadow-2xl"
-              style={{ backgroundColor: BG2, borderColor: `${CREAM}12` }}
+              style={{ backgroundColor: BG2, borderColor: `color-mix(in oklab, var(--hm-text) 7%, transparent)` }}
             >
               {/* Header */}
-              <div className="flex items-center justify-between p-4 md:p-5 border-b" style={{ borderColor: `${CREAM}10` }}>
+              <div className="flex items-center justify-between p-4 md:p-5 border-b" style={{ borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)` }}>
                 <h2
                   className="text-lg md:text-xl font-extrabold uppercase tracking-tight"
                   style={{ color: CREAM, fontFamily: "var(--font-headline)" }}
@@ -100,9 +100,9 @@ export default function EditPostModal({
                   onClick={handleClose}
                   disabled={isSubmitting}
                   className="transition-colors disabled:opacity-50"
-                  style={{ color: `${CREAM}45` }}
+                  style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))` }}
                   onMouseEnter={(e) => (e.currentTarget.style.color = CREAM)}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = `${CREAM}45`)}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = `color-mix(in oklab, var(--hm-text) 27%, transparent)`)}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                 >
@@ -111,7 +111,7 @@ export default function EditPostModal({
               </div>
 
               {/* User Info */}
-              <div className="p-4 md:p-5 flex items-center gap-3 border-b" style={{ borderColor: `${CREAM}10` }}>
+              <div className="p-4 md:p-5 flex items-center gap-3 border-b" style={{ borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)` }}>
                 <Avatar src={avatarUrl} alt={displayName} size="lg" />
                 <div>
                   <h3
@@ -123,7 +123,7 @@ export default function EditPostModal({
                   {username && (
                     <p
                       className="text-sm font-normal"
-                      style={{ color: `${CREAM}45`, fontFamily: "var(--font-body)" }}
+                      style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))`, fontFamily: "var(--font-body)" }}
                     >
                       {username}
                     </p>
@@ -138,7 +138,7 @@ export default function EditPostModal({
                   onChange={(e) => setContent(e.target.value)}
                   placeholder="What's on your mind?"
                   className="w-full text-base resize-none focus:outline-none min-h-30 font-normal border p-3"
-                  style={{ backgroundColor: BG, borderColor: `${CREAM}12`, color: CREAM, caretColor: AMBER, fontFamily: "var(--font-body)" }}
+                  style={{ backgroundColor: BG, borderColor: `color-mix(in oklab, var(--hm-text) 7%, transparent)`, color: CREAM, caretColor: AMBER, fontFamily: "var(--font-body)" }}
                   autoFocus
                   disabled={isSubmitting}
                 />
@@ -148,15 +148,15 @@ export default function EditPostModal({
               </div>
 
               {/* Actions */}
-              <div className="p-4 md:p-5 border-t" style={{ borderColor: `${CREAM}10` }}>
+              <div className="p-4 md:p-5 border-t" style={{ borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)` }}>
                 <div className="flex items-center justify-end gap-2">
                   <motion.button
                     onClick={handleClose}
                     disabled={isSubmitting}
                     className="px-4 py-2 font-semibold transition-colors disabled:opacity-50"
-                    style={{ color: `${CREAM}45` }}
+                    style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))` }}
                     onMouseEnter={(e) => (e.currentTarget.style.color = CREAM)}
-                    onMouseLeave={(e) => (e.currentTarget.style.color = `${CREAM}45`)}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = `color-mix(in oklab, var(--hm-text) 27%, transparent)`)}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
@@ -169,7 +169,7 @@ export default function EditPostModal({
                     style={
                       content.trim() && !isSubmitting
                         ? { backgroundColor: AMBER, color: BG }
-                        : { backgroundColor: BG, color: `${CREAM}30`, cursor: "not-allowed" }
+                        : { backgroundColor: BG, color: `color-mix(in oklab, var(--hm-text) 19%, var(--hm-lm-anchor))`, cursor: "not-allowed" }
                     }
                     whileHover={content.trim() && !isSubmitting ? { scale: 1.05 } : {}}
                     whileTap={content.trim() && !isSubmitting ? { scale: 0.95 } : {}}

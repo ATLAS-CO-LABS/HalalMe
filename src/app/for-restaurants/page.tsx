@@ -598,8 +598,8 @@ function ComparisonSection() {
   }[] = [
     {
       feature: "Commission Rate",
-      halalme: "15%",
-      uberEats: "~30%",
+      halalme: "15-25%",
+      uberEats: "~30-40%",
       deliveroo: "~25–35%",
     },
     {

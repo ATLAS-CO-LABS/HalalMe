@@ -36,6 +36,8 @@ import {
   RotateCcw,
   Eye,
   ExternalLink,
+  Mail,
+  PartyPopper,
 } from "lucide-react";
 
 // Merchants only get a Hyperzod account once they're invited, so the link is
@@ -410,12 +412,46 @@ function DocumentsSection({
       )}
 
       {allRequiredSubmitted && !anyRequiredRejected && (
-        <div className="flex items-start gap-2.5 bg-emerald-500/8 border border-emerald-500/20 px-3.5 py-3 mb-4">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-          <p className="text-sm text-emerald-400/90 leading-relaxed">
-            All required documents submitted. There&apos;s nothing more to do. Our team
-            is reviewing them and will email you once they&apos;re verified.
-          </p>
+        <div className="bg-emerald-500/8 border border-emerald-500/20 px-4 sm:px-5 py-4 mb-4">
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-full bg-emerald-500/15 flex items-center justify-center shrink-0">
+              <PartyPopper className="w-4 h-4 text-emerald-400" />
+            </div>
+            <div>
+              <p className="text-sm font-bold uppercase tracking-wide text-emerald-400">
+                All documents submitted successfully
+              </p>
+              <p className="text-sm text-emerald-400/80 leading-relaxed mt-1">
+                There&apos;s nothing more to do on your end for now. Your documents have
+                entered our review queue and our team has started checking them.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-3.5 pt-3.5 border-t border-emerald-500/15 space-y-2">
+            <div className="flex items-start gap-2.5">
+              <Clock className="w-3.5 h-3.5 text-emerald-400/70 shrink-0 mt-0.5" />
+              <p className="text-xs text-emerald-400/70 leading-relaxed">
+                Review is manual, so it can take a little time. You don&apos;t need to
+                re-submit or follow up while it&apos;s in progress.
+              </p>
+            </div>
+            <div className="flex items-start gap-2.5">
+              <Mail className="w-3.5 h-3.5 text-emerald-400/70 shrink-0 mt-0.5" />
+              <p className="text-xs text-emerald-400/70 leading-relaxed">
+                Keep an eye on your email (check spam/junk too) — we&apos;ll message you
+                the moment a document is approved, or if we need something fixed or
+                replaced.
+              </p>
+            </div>
+            <div className="flex items-start gap-2.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400/70 shrink-0 mt-0.5" />
+              <p className="text-xs text-emerald-400/70 leading-relaxed">
+                Once every required document is approved, we&apos;ll send your Hyperzod
+                dashboard invite so you can go live.
+              </p>
+            </div>
+          </div>
         </div>
       )}
 

@@ -4,7 +4,8 @@ import React, { useRef, useState, useEffect } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
-import { ContainerScroll } from "@/components/ui/container-scroll-animation";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import {
   Bike,
   Store,
@@ -18,6 +19,9 @@ import {
   Radio,
   Tag,
   X,
+  Wifi,
+  BatteryFull,
+  SignalHigh,
 } from "lucide-react";
 
 const BG = "#1E0E38";
@@ -27,6 +31,10 @@ const GOLD = "#D4AF37";
 const PURPLE = "#5E188F";
 const LIGHT_PURPLE = "#B96AF0";
 const DEEP = "#4A1270";
+
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 const DELIVERY_URL = "https://delivery.halalme.co.uk";
 
@@ -1070,8 +1078,364 @@ function MerchantSlideshow() {
   );
 }
 
+function POSTerminal3D({ children }: { children: React.ReactNode }) {
+  const stageRef = useRef<HTMLDivElement>(null);
+  const rigRef = useRef<HTMLDivElement>(null);
+  const floatRef = useRef<HTMLDivElement>(null);
+  const shadowRef = useRef<HTMLDivElement>(null);
+  const sheenRef = useRef<HTMLDivElement>(null);
+  const receiptRef = useRef<HTMLDivElement>(null);
+  const ledRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.set([rigRef.current, floatRef.current], {
+        transformPerspective: 2000,
+      });
+      gsap.set(receiptRef.current, { scaleY: 0, transformOrigin: "50% 0%" });
+
+      // Scroll-linked reveal: tilts up into a held, diagonal angle
+      gsap.fromTo(
+        rigRef.current,
+        { rotateX: 34, rotateY: -26, rotation: -20, y: 90, autoAlpha: 0 },
+        {
+          rotateX: 12,
+          rotateY: -16,
+          rotation: -11,
+          y: 0,
+          autoAlpha: 1,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: stageRef.current,
+            start: "top 85%",
+            end: "top 40%",
+            scrub: 0.6,
+          },
+        }
+      );
+
+      const mm = gsap.matchMedia();
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        // Continuous 3D float. Each axis runs on its own period so the cycles
+        // never line up, which reads as organic drifting instead of a loop.
+        const floatTweens = [
+          gsap.fromTo(
+            floatRef.current,
+            { rotateY: -11 },
+            {
+              rotateY: 11,
+              duration: 6.5,
+              ease: "sine.inOut",
+              yoyo: true,
+              repeat: -1,
+            }
+          ),
+          gsap.fromTo(
+            floatRef.current,
+            { rotateX: -7 },
+            {
+              rotateX: 7,
+              duration: 4.7,
+              ease: "sine.inOut",
+              yoyo: true,
+              repeat: -1,
+            }
+          ),
+          gsap.fromTo(
+            floatRef.current,
+            { rotation: -3.5 },
+            {
+              rotation: 3.5,
+              duration: 8.3,
+              ease: "sine.inOut",
+              yoyo: true,
+              repeat: -1,
+            }
+          ),
+          gsap.fromTo(
+            floatRef.current,
+            { y: -16 },
+            { y: 16, duration: 3.9, ease: "sine.inOut", yoyo: true, repeat: -1 }
+          ),
+          // depth push/pull so it drifts toward and away from the viewer
+          gsap.fromTo(
+            floatRef.current,
+            { z: -55 },
+            { z: 55, duration: 5.6, ease: "sine.inOut", yoyo: true, repeat: -1 }
+          ),
+        ];
+
+        // Shadow reacts to the float so the device reads as hovering
+        const shadow = gsap.fromTo(
+          shadowRef.current,
+          { scale: 0.86, opacity: 0.75 },
+          {
+            scale: 1.1,
+            opacity: 0.45,
+            duration: 3.9,
+            ease: "sine.inOut",
+            yoyo: true,
+            repeat: -1,
+          }
+        );
+
+        // Specular sheen sweeping across the glass as it turns
+        const sheen = gsap.fromTo(
+          sheenRef.current,
+          { xPercent: -120, opacity: 0 },
+          {
+            xPercent: 120,
+            opacity: 1,
+            duration: 2.6,
+            ease: "power2.inOut",
+            repeat: -1,
+            repeatDelay: 4.2,
+          }
+        );
+
+        // status LED blink
+        const led = gsap.to(ledRef.current, {
+          opacity: 0.2,
+          duration: 1,
+          ease: "sine.inOut",
+          yoyo: true,
+          repeat: -1,
+        });
+
+        // receipt printing loop
+        const receiptTl = gsap.timeline({ repeat: -1, repeatDelay: 2.2, delay: 1.6 });
+        receiptTl
+          .to(receiptRef.current, { scaleY: 1, duration: 1.1, ease: "steps(16)" })
+          .to({}, { duration: 1.5 })
+          .to(receiptRef.current, { scaleY: 0, duration: 0.45, ease: "power1.in" });
+
+        return () => {
+          floatTweens.forEach((t) => t.kill());
+          shadow.kill();
+          sheen.kill();
+          led.kill();
+          receiptTl.kill();
+        };
+      });
+    }, stageRef);
+
+    return () => ctx.revert();
+  }, []);
+
+  return (
+    <div
+      ref={stageRef}
+      className="relative w-full flex items-center justify-center py-10 md:py-14"
+      style={{ perspective: "2000px" }}
+    >
+      {/* Floor shadow */}
+      <div
+        ref={shadowRef}
+        className="absolute bottom-6 w-[62%] h-[3.5rem] rounded-full"
+        style={{
+          background:
+            "radial-gradient(ellipse at center, rgba(0,0,0,0.5) 0%, transparent 70%)",
+          filter: "blur(10px)",
+          transform: "translateY(1rem) rotateX(60deg)",
+        }}
+      />
+
+      <div
+        ref={rigRef}
+        className="relative w-full max-w-[13.5rem] md:max-w-[14.5rem]"
+        style={{ transformStyle: "preserve-3d" }}
+      >
+       <div ref={floatRef} style={{ transformStyle: "preserve-3d" }}>
+        {/* ── Device body ── */}
+        <div
+          className="relative w-full rounded-[1.7rem] p-[0.5rem] flex flex-col"
+          style={{
+            background:
+              "linear-gradient(150deg, #3a3a3f 0%, #1a1a1d 22%, #050506 55%, #141416 100%)",
+            boxShadow:
+              "0 40px 70px -25px rgba(0,0,0,0.75), 0 2px 0 rgba(255,255,255,0.14) inset, 0 -2px 6px rgba(0,0,0,0.6) inset",
+          }}
+        >
+          {/* Side buttons (left edge) */}
+          <div
+            className="absolute left-[-3px] top-[38%] w-[3px] h-[2.4rem] rounded-l-[3px]"
+            style={{ background: "linear-gradient(180deg,#2a2a2d,#0c0c0e)" }}
+          />
+          <div
+            className="absolute left-[-3px] top-[54%] w-[3px] h-[1.4rem] rounded-l-[3px]"
+            style={{ background: "linear-gradient(180deg,#2a2a2d,#0c0c0e)" }}
+          />
+
+          {/* ── Printer cap ── */}
+          <div className="relative px-[0.55rem] pt-[0.7rem] pb-[0.35rem]">
+            {/* Brand lockup */}
+            <div className="flex items-center justify-center gap-[0.4rem]">
+              <span
+                className="text-white font-black tracking-tight leading-none"
+                style={{ fontSize: "1.05rem", fontFamily: "var(--font-logo)" }}
+              >
+                Halal&nbsp;me
+              </span>
+              <span
+                className="relative shrink-0 rounded-full"
+                style={{ width: 17, height: 17, background: "#fff" }}
+              >
+                <span
+                  className="absolute inset-0"
+                  style={{
+                    background: "#111",
+                    WebkitMaskImage: "url(/logo/logo.png)",
+                    maskImage: "url(/logo/logo.png)",
+                    WebkitMaskSize: "contain",
+                    maskSize: "contain",
+                    WebkitMaskRepeat: "no-repeat",
+                    maskRepeat: "no-repeat",
+                    WebkitMaskPosition: "center",
+                    maskPosition: "center",
+                  }}
+                />
+              </span>
+            </div>
+            <p
+              className="text-center mt-[0.15rem] font-semibold tracking-[0.02em]"
+              style={{ color: "rgba(255,255,255,0.65)", fontSize: "0.46rem" }}
+            >
+              Fresh Food Delivered Fast
+            </p>
+
+            {/* Cutter bar + serrated teeth */}
+            <div className="mt-[0.55rem]">
+              <div
+                className="h-[3px] rounded-[2px]"
+                style={{
+                  background:
+                    "linear-gradient(180deg,#8f9094 0%,#54565a 45%,#232427 100%)",
+                  boxShadow: "0 1px 1px rgba(0,0,0,0.5)",
+                }}
+              />
+              <div
+                className="h-[4px]"
+                style={{
+                  background:
+                    "repeating-linear-gradient(90deg, #6f7175 0 1.5px, #1b1c1e 1.5px 4px)",
+                }}
+              />
+              <div
+                className="h-[3px] rounded-b-[3px]"
+                style={{ background: "#08080a", boxShadow: "inset 0 2px 3px rgba(0,0,0,0.9)" }}
+              />
+            </div>
+          </div>
+
+          {/* ── Receipt paper feeding out of the slot ── */}
+          <div className="relative h-0 z-20">
+            <div
+              ref={receiptRef}
+              className="absolute left-1/2 -translate-x-1/2 top-0 w-[68%] font-mono"
+              style={{
+                background: "#f6f2e8",
+                color: "#241a05",
+                fontSize: "0.4rem",
+                lineHeight: 1.5,
+                padding: "0.35rem 0.3rem 0.45rem",
+                boxShadow: "0 8px 16px -6px rgba(0,0,0,0.6)",
+                transformOrigin: "50% 0%",
+                clipPath:
+                  "polygon(0 0,100% 0,100% calc(100% - 3px),94% 100%,88% calc(100% - 3px),82% 100%,76% calc(100% - 3px),70% 100%,64% calc(100% - 3px),58% 100%,52% calc(100% - 3px),46% 100%,40% calc(100% - 3px),34% 100%,28% calc(100% - 3px),22% 100%,16% calc(100% - 3px),10% 100%,4% calc(100% - 3px),0 100%)",
+              }}
+            >
+              <p className="m-0 whitespace-pre text-center font-bold tracking-[0.1em]">
+                HalalMe
+              </p>
+              <p className="m-0 whitespace-pre opacity-50">*** ORDER #4821 ***</p>
+              <p className="m-0 whitespace-pre">1x Zinger Wrap&nbsp;&nbsp;£6.50</p>
+              <p className="m-0 whitespace-pre">1x Loaded Fries&nbsp;&nbsp;£3.20</p>
+              <p className="m-0 whitespace-pre opacity-50">------------------</p>
+              <p className="m-0 whitespace-pre font-bold">TOTAL&nbsp;&nbsp;&nbsp;£9.70</p>
+              <p className="m-0 whitespace-pre opacity-50">STATUS: PAID ✓</p>
+            </div>
+          </div>
+
+          {/* ── Screen ── */}
+          <div
+            className="relative mx-[0.3rem] mb-[0.3rem] rounded-[0.9rem] overflow-hidden"
+            style={{
+              aspectRatio: "0.62",
+              background: "#000",
+              border: "2px solid #050506",
+              boxShadow:
+                "0 0 0 1px rgba(255,255,255,0.05), 0 6px 14px rgba(0,0,0,0.6) inset",
+            }}
+          >
+            {/* Slideshow content */}
+            <div className="absolute inset-0">{children}</div>
+
+            {/* Status bar */}
+            <div
+              className="absolute top-0 left-0 right-0 flex items-center justify-between px-[0.6rem] py-[0.28rem] z-10"
+              style={{
+                background:
+                  "linear-gradient(180deg, rgba(0,0,0,0.55) 0%, transparent 100%)",
+              }}
+            >
+              <span
+                className="text-white font-semibold"
+                style={{ fontSize: "0.42rem" }}
+              >
+                12:06
+              </span>
+              <div className="flex items-center gap-[0.22rem] text-white">
+                <SignalHigh style={{ width: 7, height: 7 }} />
+                <Wifi style={{ width: 7, height: 7 }} />
+                <BatteryFull style={{ width: 9, height: 9 }} />
+              </div>
+            </div>
+
+            {/* Glass reflection */}
+            <div
+              className="absolute inset-0 pointer-events-none z-10"
+              style={{
+                background:
+                  "linear-gradient(125deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0) 32%)",
+              }}
+            />
+
+            {/* Sweeping specular highlight */}
+            <div
+              ref={sheenRef}
+              className="absolute inset-y-0 -left-1/2 w-[70%] pointer-events-none z-10"
+              style={{
+                background:
+                  "linear-gradient(100deg, transparent 0%, rgba(255,255,255,0.22) 45%, rgba(255,255,255,0.3) 55%, transparent 100%)",
+                filter: "blur(3px)",
+              }}
+            />
+
+            {/* Brand LED */}
+            <span
+              ref={ledRef}
+              className="absolute top-[0.4rem] left-1/2 -translate-x-1/2 w-[4px] h-[4px] rounded-full z-10"
+              style={{ background: GOLD, boxShadow: `0 0 5px 1px ${GOLD}cc` }}
+            />
+
+            {/* Home indicator pill */}
+            <div
+              className="absolute bottom-[0.4rem] left-1/2 -translate-x-1/2 w-[28%] h-[3px] rounded-full z-10"
+              style={{ background: "rgba(255,255,255,0.55)" }}
+            />
+          </div>
+        </div>
+       </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─────────────────── For Restaurants (Merchant) ─────────────────── */
 function ForRestaurantsSection() {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-80px" });
+
   const points = [
     "Manage your menu seamlessly",
     "Receive orders instantly",
@@ -1080,7 +1444,8 @@ function ForRestaurantsSection() {
 
   return (
     <section
-      className="relative overflow-hidden"
+      ref={ref}
+      className="relative overflow-hidden py-24 md:py-32"
       style={{ backgroundColor: BG2 }}
     >
       <span
@@ -1091,70 +1456,73 @@ function ForRestaurantsSection() {
         02
       </span>
 
-      <ContainerScroll
-        cardInnerClassName="bg-[#0D0720]"
-        titleComponent={
-          <div className="flex flex-col items-center gap-6">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-px" style={{ backgroundColor: GOLD }} />
-              <span
-                className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em]"
-                style={{ color: GOLD }}
-              >
-                For Restaurants
-              </span>
-              <div className="w-8 h-px" style={{ backgroundColor: GOLD }} />
-            </div>
-
-            <h2
-              className="text-4xl sm:text-5xl md:text-7xl font-extrabold uppercase tracking-tighter leading-[0.88]"
-              style={{ color: CREAM }}
+      <div className="relative max-w-[95vw] mx-auto px-6 md:px-10 grid md:grid-cols-[1fr_1.05fr] gap-16 md:gap-12 items-center">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6 }}
+          className="flex flex-col gap-6"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-px" style={{ backgroundColor: GOLD }} />
+            <span
+              className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em]"
+              style={{ color: GOLD }}
             >
-              Run Your Kitchen
-              <br />
-              <span style={{ color: `${CREAM}75` }}>Like a System.</span>
-            </h2>
-
-            <div
-              className="w-full max-w-md flex flex-col"
-              style={{ borderTop: `1px solid ${CREAM}12` }}
-            >
-              {points.map((p, i) => (
-                <div
-                  key={i}
-                  className="flex items-center justify-between gap-4 py-3 text-sm font-semibold uppercase tracking-wide"
-                  style={{
-                    color: `${CREAM}B3`,
-                    borderBottom: `1px solid ${CREAM}12`,
-                  }}
-                >
-                  <span>{p}</span>
-                  <span
-                    className="text-[10px] font-bold"
-                    style={{ color: PURPLE }}
-                  >
-                    0{i + 1}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            <Link href="/for-restaurants">
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                className="flex items-center gap-3 px-8 py-4 text-white font-extrabold uppercase tracking-tighter text-sm"
-                style={{ backgroundColor: DEEP }}
-              >
-                Join as a Restaurant
-                <ArrowRight className="w-4 h-4" />
-              </motion.button>
-            </Link>
+              For Restaurants
+            </span>
           </div>
-        }
-      >
-        <MerchantSlideshow />
-      </ContainerScroll>
+
+          <h2
+            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold uppercase tracking-tighter leading-[0.88]"
+            style={{ color: CREAM }}
+          >
+            Run Your Kitchen
+            <br />
+            <span style={{ color: `${CREAM}75` }}>Like a System.</span>
+          </h2>
+
+          <div
+            className="w-full max-w-md flex flex-col"
+            style={{ borderTop: `1px solid ${CREAM}12` }}
+          >
+            {points.map((p, i) => (
+              <div
+                key={i}
+                className="flex items-center justify-between gap-4 py-3 text-sm font-semibold uppercase tracking-wide"
+                style={{
+                  color: `${CREAM}B3`,
+                  borderBottom: `1px solid ${CREAM}12`,
+                }}
+              >
+                <span>{p}</span>
+                <span
+                  className="text-[10px] font-bold"
+                  style={{ color: PURPLE }}
+                >
+                  0{i + 1}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <Link href="/for-restaurants">
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              className="flex items-center gap-3 px-8 py-4 text-white font-extrabold uppercase tracking-tighter text-sm w-fit"
+              style={{ backgroundColor: DEEP }}
+            >
+              Join as a Restaurant
+              <ArrowRight className="w-4 h-4" />
+            </motion.button>
+          </Link>
+        </motion.div>
+
+        <POSTerminal3D>
+          <MerchantSlideshow />
+        </POSTerminal3D>
+      </div>
     </section>
   );
 }

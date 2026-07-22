@@ -10,11 +10,10 @@ async function hydrateProfileFromSession(): Promise<Profile | null> {
   if (sessionError) throw new Error(sessionError.message);
   if (!session?.user) return null;
 
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", session.user.id)
-    .single();
+  // profiles' column grants exclude PII (email/phone/etc.) for anon/authenticated;
+  // this RPC is SECURITY DEFINER and hard-scoped to auth.uid(), so it can still
+  // return the caller's own full row. See migration 067.
+  const { data, error } = await supabase.rpc("get_my_profile");
 
   if (error) throw new Error(error.message);
   return data ? { ...data, email: session.user.email ?? "" } : null;

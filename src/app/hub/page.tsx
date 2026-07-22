@@ -19,11 +19,10 @@ import {
 } from "lucide-react";
 
 /* ─── Hub design tokens - dark + amber ───────────────── */
-const BG = "#0B0D0F"; // near-black with neutral warmth
-const BG2 = "#111418"; // card sections
-const BG3 = "#0D1012"; // deepest (hero overlay)
-const AMBER = "#F59E0B";
-const CREAM = "#F7E7CE";
+const BG = "var(--hub-bg)"; // near-black with neutral warmth
+const BG2 = "var(--hub-bg2)"; // card sections
+const BG3 = "var(--hub-bg3)"; // deepest (hero overlay)
+const AMBER = "var(--hm-amber)";
 /* ─── Mock post data for the landing preview stack ───── */
 const MOCK_POSTS = [
   {
@@ -255,8 +254,11 @@ export default function HubLandingPage() {
       {/* ─── Hero ─────────────────────────────────────────── */}
       <section
         className="relative h-screen min-h-[620px] flex items-center justify-center overflow-hidden"
-        style={{ backgroundColor: BG3 }}
+        style={{ backgroundColor: "#0D1012" }}
       >
+        {/* This hero is a full-bleed photograph, not a page surface - the scrim and
+            text below stay fixed dark/light regardless of theme so the photo stays
+            visible and legible in both, instead of washing out under a light-mode tint. */}
         <div className="absolute inset-0 z-0">
           <Image
             src="/images/services/halal03.png"
@@ -266,11 +268,11 @@ export default function HubLandingPage() {
             priority
             sizes="100vw"
           />
-          <div className="absolute inset-0" style={{ backgroundColor: `${BG3}CC` }} />
+          <div className="absolute inset-0" style={{ backgroundColor: "rgba(13,16,18,0.8)" }} />
           <div
             className="absolute inset-0"
             style={{
-              background: `radial-gradient(ellipse at center, transparent 0%, ${BG3}50 55%, ${BG3}90 100%)`,
+              background: "radial-gradient(ellipse at center, transparent 0%, rgba(13,16,18,0.31) 55%, rgba(13,16,18,0.56) 100%)",
             }}
           />
         </div>
@@ -339,7 +341,7 @@ export default function HubLandingPage() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.32, duration: 0.7 }}
-                className="block text-[clamp(2.25rem,8vw,8rem)] text-white"
+                className="block text-[clamp(2.25rem,8vw,8rem)]"
                 style={{ color: AMBER }}
               >
                 Social
@@ -349,7 +351,7 @@ export default function HubLandingPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.44, duration: 0.7 }}
                 className="block text-[clamp(2rem,4.5vw,4.5rem)]"
-                style={{ color: CREAM }}
+                style={{ color: "#F7E7CE" }}
               >
                 Share. Inspire.
               </motion.span>
@@ -378,7 +380,7 @@ export default function HubLandingPage() {
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
                   className="flex items-center gap-3 px-7 sm:px-8 py-3.5 sm:py-4 font-extrabold uppercase tracking-tighter text-sm sm:text-base"
-                  style={{ backgroundColor: AMBER, color: BG }}
+                  style={{ backgroundColor: AMBER, color: "#0B0D0F" }}
                 >
                   Join HalalMe Social
                   <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -429,9 +431,9 @@ export default function HubLandingPage() {
         className="grid grid-cols-2 md:grid-cols-4"
         style={{
           gap: "1px",
-          backgroundColor: "rgba(255,255,255,0.05)",
-          borderTop: `1px solid ${AMBER}40`,
-          borderBottom: `1px solid ${AMBER}40`,
+          backgroundColor: "color-mix(in oklab, var(--hub-fg) 5%, transparent)",
+          borderTop: `1px solid color-mix(in oklab, var(--hm-amber) 25%, transparent)`,
+          borderBottom: `1px solid color-mix(in oklab, var(--hm-amber) 25%, transparent)`,
         }}
       >
         {[
@@ -448,12 +450,12 @@ export default function HubLandingPage() {
             className="py-10 md:py-14 px-8 md:px-12 text-center md:text-left"
             style={{ backgroundColor: BG2 }}
           >
-            <div className="text-[3rem] md:text-[4.5rem] font-extrabold tracking-tighter leading-none text-white">
+            <div className="text-[3rem] md:text-[4.5rem] font-extrabold tracking-tighter leading-none text-(--hub-fg)">
               {s.value}
             </div>
             <div
               className="text-[10px] md:text-xs uppercase tracking-[0.25em] mt-2 font-medium"
-              style={{ color: `${AMBER}80` }}
+              style={{ color: `color-mix(in oklab, var(--hm-amber) 50%, var(--hm-text))` }}
             >
               {s.label}
             </div>
@@ -486,11 +488,11 @@ export default function HubLandingPage() {
             initial={{ opacity: 0, y: 30 }}
             animate={cardsInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6 }}
-            className="text-4xl sm:text-5xl md:text-7xl font-extrabold uppercase tracking-tighter leading-[0.88] text-white"
+            className="text-4xl sm:text-5xl md:text-7xl font-extrabold uppercase tracking-tighter leading-[0.88] text-(--hub-fg)"
           >
             Connect
             <br />
-            <span className="text-white/40">Build Together.</span>
+            <span className="text-[color:color-mix(in_oklab,var(--hub-fg)_40%,var(--hm-lm-anchor))]">Build Together.</span>
           </motion.h2>
         </div>
 
@@ -522,13 +524,13 @@ export default function HubLandingPage() {
                   }
                   style={{
                     backgroundColor: BG2,
-                    border: `1px solid ${AMBER}30`,
+                    border: `1px solid color-mix(in oklab, var(--hm-amber) 19%, transparent)`,
                   }}
                 >
                   {/* Ghost number */}
                   <span
                     aria-hidden="true"
-                    className="absolute -top-6 -right-3 text-[8rem] md:text-[10rem] font-extrabold leading-none select-none pointer-events-none text-white/[0.03]"
+                    className="absolute -top-6 -right-3 text-[8rem] md:text-[10rem] font-extrabold leading-none select-none pointer-events-none text-[color:color-mix(in_oklab,var(--hub-fg)_3%,var(--hm-lm-anchor))]"
                   >
                     {item.num}
                   </span>
@@ -538,13 +540,13 @@ export default function HubLandingPage() {
                       style={{ color: AMBER }}
                     />
                     <h3
-                      className="text-xl md:text-2xl font-extrabold uppercase tracking-tighter mb-4 text-white transition-colors duration-300 group-hover:text-[#0B0D0F]"
+                      className="text-xl md:text-2xl font-extrabold uppercase tracking-tighter mb-4 text-(--hub-fg) transition-colors duration-300 group-hover:text-[#0B0D0F]"
                       style={{ fontFamily: "var(--font-headline)" }}
                     >
                       {item.title}
                     </h3>
                     <p
-                      className="leading-relaxed text-sm md:text-base text-white/50 transition-colors duration-300 group-hover:text-[#0B0D0F]/70 flex-1"
+                      className="leading-relaxed text-sm md:text-base text-[color:color-mix(in_oklab,var(--hub-fg)_50%,var(--hm-lm-anchor))] transition-colors duration-300 group-hover:text-[#0B0D0F]/70 flex-1"
                       style={{ fontFamily: "var(--font-body)" }}
                     >
                       {item.desc}
@@ -569,14 +571,14 @@ export default function HubLandingPage() {
         className="relative overflow-hidden py-24 md:py-32"
         style={{
           backgroundColor: BG2,
-          borderTop: `1px solid ${AMBER}40`,
-          borderBottom: `1px solid ${AMBER}40`,
+          borderTop: `1px solid color-mix(in oklab, var(--hm-amber) 25%, transparent)`,
+          borderBottom: `1px solid color-mix(in oklab, var(--hm-amber) 25%, transparent)`,
         }}
       >
         <div
           className="pointer-events-none absolute inset-0"
           style={{
-            background: `radial-gradient(ellipse 70% 50% at 50% 0%, rgba(245,158,11,0.08) 0%, transparent 70%)`,
+            background: `radial-gradient(ellipse 70% 50% at 50% 0%, color-mix(in oklab, var(--hm-amber) 8%, transparent) 0%, transparent 70%)`,
           }}
         />
         <div className="max-w-[95vw] mx-auto px-6 md:px-10">
@@ -601,11 +603,11 @@ export default function HubLandingPage() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={feedInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.6 }}
-                className="text-4xl sm:text-5xl md:text-6xl font-extrabold uppercase tracking-tighter leading-[0.88] text-white mb-8"
+                className="text-4xl sm:text-5xl md:text-6xl font-extrabold uppercase tracking-tighter leading-[0.88] text-(--hub-fg) mb-8"
               >
                 Real Posts.
                 <br />
-                <span className="text-white/40">Real People.</span>
+                <span className="text-[color:color-mix(in_oklab,var(--hub-fg)_40%,var(--hm-lm-anchor))]">Real People.</span>
               </motion.h2>
 
               <motion.div
@@ -641,12 +643,12 @@ export default function HubLandingPage() {
                   >
                     <div
                       className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center"
-                      style={{ backgroundColor: `${AMBER}18` }}
+                      style={{ backgroundColor: `color-mix(in oklab, var(--hm-amber) 9%, transparent)` }}
                     >
                       <Icon className="w-4 h-4" style={{ color: AMBER }} />
                     </div>
                     <span
-                      className="text-sm text-white/60 font-normal"
+                      className="text-sm text-[color:color-mix(in_oklab,var(--hub-fg)_60%,var(--hm-lm-anchor))] font-normal"
                       style={{ fontFamily: "var(--font-body)" }}
                     >
                       {text}
@@ -693,13 +695,13 @@ export default function HubLandingPage() {
                       zIndex: s.zIndex,
                     }}
                     transition={{ type: "spring", stiffness: 200, damping: 26 }}
-                    className="absolute inset-0 rounded-2xl border border-gray-800 overflow-hidden cursor-pointer"
+                    className="absolute inset-0 rounded-2xl border border-(--hub-fg)/15 overflow-hidden cursor-pointer"
                     style={{ backgroundColor: BG3 }}
                     onClick={() => setActiveCard(i)}
                   >
                     {/* Post header */}
                     <div className="p-4 flex items-center gap-3">
-                      <div className="relative w-10 h-10 rounded-full overflow-hidden shrink-0 ring-2 ring-gray-700">
+                      <div className="relative w-10 h-10 rounded-full overflow-hidden shrink-0 ring-2 ring-(--hub-fg)/15">
                         <Image
                           src={post.avatar}
                           alt={post.user}
@@ -710,7 +712,7 @@ export default function HubLandingPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
                           <span
-                            className="font-semibold text-white text-sm truncate"
+                            className="font-semibold text-(--hub-fg) text-sm truncate"
                             style={{ fontFamily: "var(--font-headline)" }}
                           >
                             {post.user}
@@ -729,7 +731,7 @@ export default function HubLandingPage() {
                             </svg>
                           )}
                         </div>
-                        <p className="text-xs text-gray-500 font-normal">
+                        <p className="text-xs text-[color:color-mix(in_oklab,var(--hub-fg)_40%,var(--hm-lm-anchor))] font-normal">
                           {post.handle} · {post.time}
                         </p>
                       </div>
@@ -737,7 +739,7 @@ export default function HubLandingPage() {
                         <span
                           className="shrink-0 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full"
                           style={{
-                            backgroundColor: `${AMBER}20`,
+                            backgroundColor: `color-mix(in oklab, var(--hm-amber) 13%, transparent)`,
                             color: AMBER,
                           }}
                         >
@@ -749,7 +751,7 @@ export default function HubLandingPage() {
                     {/* Content */}
                     <div className="px-4 pb-3">
                       <p
-                        className="text-white/80 text-sm leading-relaxed font-normal line-clamp-2"
+                        className="text-[color:color-mix(in_oklab,var(--hub-fg)_80%,var(--hm-lm-anchor))] text-sm leading-relaxed font-normal line-clamp-2"
                         style={{ fontFamily: "var(--font-body)" }}
                       >
                         {post.content}
@@ -778,12 +780,12 @@ export default function HubLandingPage() {
                               className="object-cover"
                             />
                           </div>
-                          <div className="flex-1 min-w-0 bg-gray-800/60 rounded-xl px-3 py-1.5">
-                            <span className="text-[11px] font-semibold text-white/70 mr-1.5">
+                          <div className="flex-1 min-w-0 bg-(--hub-fg)/10 rounded-xl px-3 py-1.5">
+                            <span className="text-[11px] font-semibold text-[color:color-mix(in_oklab,var(--hub-fg)_70%,var(--hm-lm-anchor))] mr-1.5">
                               {reply.user}
                             </span>
                             <span
-                              className="text-[11px] text-white/50 font-normal"
+                              className="text-[11px] text-[color:color-mix(in_oklab,var(--hub-fg)_50%,var(--hm-lm-anchor))] font-normal"
                               style={{ fontFamily: "var(--font-body)" }}
                             >
                               {reply.text}
@@ -794,20 +796,20 @@ export default function HubLandingPage() {
                     </div>
 
                     {/* Actions */}
-                    <div className="px-4 py-3 border-t border-gray-800 flex items-center gap-5">
-                      <div className="flex items-center gap-1.5 text-gray-500">
+                    <div className="px-4 py-3 border-t border-(--hub-fg)/10 flex items-center gap-5">
+                      <div className="flex items-center gap-1.5 text-[color:color-mix(in_oklab,var(--hub-fg)_40%,var(--hm-lm-anchor))]">
                         <Heart className="w-4 h-4" />
                         <span className="text-xs font-semibold">
                           {post.likes}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1.5 text-gray-500">
+                      <div className="flex items-center gap-1.5 text-[color:color-mix(in_oklab,var(--hub-fg)_40%,var(--hm-lm-anchor))]">
                         <MessageCircle className="w-4 h-4" />
                         <span className="text-xs font-semibold">
                           {post.commentCount}
                         </span>
                       </div>
-                      <div className="ml-auto text-gray-600">
+                      <div className="ml-auto text-[color:color-mix(in_oklab,var(--hub-fg)_30%,var(--hm-lm-anchor))]">
                         <Share2 className="w-4 h-4" />
                       </div>
                     </div>
@@ -824,7 +826,7 @@ export default function HubLandingPage() {
                     className="w-1.5 h-1.5 rounded-full transition-all duration-300"
                     style={{
                       backgroundColor:
-                        i === activeCard ? AMBER : "rgba(255,255,255,0.2)",
+                        i === activeCard ? AMBER : "color-mix(in oklab, var(--hub-fg) 20%, transparent)",
                     }}
                   />
                 ))}
@@ -859,11 +861,11 @@ export default function HubLandingPage() {
             initial={{ opacity: 0, y: 30 }}
             animate={featuresInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6 }}
-            className="text-4xl sm:text-5xl md:text-7xl font-extrabold uppercase tracking-tighter leading-[0.88] text-white"
+            className="text-4xl sm:text-5xl md:text-7xl font-extrabold uppercase tracking-tighter leading-[0.88] text-(--hub-fg)"
           >
             Your Food.
             <br />
-            <span className="text-white/40">Your Community.</span>
+            <span className="text-[color:color-mix(in_oklab,var(--hub-fg)_40%,var(--hm-lm-anchor))]">Your Community.</span>
           </motion.h2>
         </div>
 
@@ -886,20 +888,20 @@ export default function HubLandingPage() {
                 transition={{ delay: i * 0.1, duration: 0.5 }}
                 className="group relative p-8 overflow-hidden transition-colors duration-300 cursor-default"
                 onMouseEnter={(e) =>
-                  (e.currentTarget.style.backgroundColor = "#F59E0B")
+                  (e.currentTarget.style.backgroundColor = "var(--hm-amber)")
                 }
                 onMouseLeave={(e) =>
                   (e.currentTarget.style.backgroundColor = BG3)
                 }
                 style={{
                   backgroundColor: BG3,
-                  border: `1px solid ${AMBER}30`,
+                  border: `1px solid color-mix(in oklab, var(--hm-amber) 19%, transparent)`,
                   minHeight: "220px",
                 }}
               >
                 <span
                   aria-hidden="true"
-                  className="absolute -top-6 -right-3 text-[7rem] font-extrabold leading-none select-none pointer-events-none text-white/[0.03]"
+                  className="absolute -top-6 -right-3 text-[7rem] font-extrabold leading-none select-none pointer-events-none text-[color:color-mix(in_oklab,var(--hub-fg)_3%,var(--hm-lm-anchor))]"
                 >
                   {f.num}
                 </span>
@@ -912,13 +914,13 @@ export default function HubLandingPage() {
                     style={{ color: AMBER }}
                   />
                   <h3
-                    className="text-lg md:text-xl font-extrabold uppercase tracking-tighter mb-3 text-white transition-colors duration-300 group-hover:text-[#0B0D0F]"
+                    className="text-lg md:text-xl font-extrabold uppercase tracking-tighter mb-3 text-(--hub-fg) transition-colors duration-300 group-hover:text-[#0B0D0F]"
                     style={{ fontFamily: "var(--font-headline)" }}
                   >
                     {f.title}
                   </h3>
                   <p
-                    className="text-sm leading-relaxed text-white/50 transition-colors duration-300 group-hover:text-[#0B0D0F]/65"
+                    className="text-sm leading-relaxed text-[color:color-mix(in_oklab,var(--hub-fg)_50%,var(--hm-lm-anchor))] transition-colors duration-300 group-hover:text-[#0B0D0F]/65"
                     style={{ fontFamily: "var(--font-body)" }}
                   >
                     {f.desc}
@@ -1023,19 +1025,19 @@ export default function HubLandingPage() {
         className="px-6 py-8"
         style={{
           backgroundColor: BG,
-          borderTop: "1px solid rgba(255,255,255,0.05)",
+          borderTop: "1px solid color-mix(in oklab, var(--hub-fg) 5%, transparent)",
         }}
       >
         <div className="max-w-[95vw] mx-auto flex justify-between items-center">
           <Link
             href="/kitchen"
-            className="text-xs font-bold uppercase tracking-[0.2em] text-white/25 transition-colors hover:text-amber-400"
+            className="text-xs font-bold uppercase tracking-[0.2em] text-[color:color-mix(in_oklab,var(--hub-fg)_25%,var(--hm-lm-anchor))] transition-colors hover:text-amber-400"
           >
             ← Kitchen
           </Link>
           <Link
             href="/charity"
-            className="text-xs font-bold uppercase tracking-[0.2em] text-white/25 transition-colors hover:text-amber-400"
+            className="text-xs font-bold uppercase tracking-[0.2em] text-[color:color-mix(in_oklab,var(--hub-fg)_25%,var(--hm-lm-anchor))] transition-colors hover:text-amber-400"
           >
             Charity →
           </Link>

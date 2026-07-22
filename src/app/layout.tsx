@@ -4,11 +4,30 @@ import "@/app/globals.css";
 
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import Script from "next/script";
 
 import LayoutContent from "@/components/layout/LayoutContent";
 import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
+
+// Runs before hydration so a themed route (/hub, /kitchen) with a stored
+// "light" preference never flashes dark first. Every other route is left
+// untouched (no attribute → CSS default → dark), matching the platform's
+// baseline hardcoded colors.
+const THEME_INIT_SCRIPT = `
+(function () {
+  try {
+    var themed = ["/hub", "/kitchen"].some(function (p) {
+      return window.location.pathname.startsWith(p);
+    });
+    var stored = window.localStorage.getItem("hm-theme");
+    var theme = themed && (stored === "light" || stored === "dark") ? stored : "dark";
+    document.documentElement.setAttribute("data-hm-theme", theme);
+  } catch (e) {}
+})();
+`;
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -56,12 +75,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" data-scroll-behavior="smooth">
+    <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <Script
+          id="hm-theme-init"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }}
+        />
         <ErrorBoundary>
           <AuthProvider>
             <CartProvider>
-              <LayoutContent>{children}</LayoutContent>
+              <ThemeProvider>
+                <LayoutContent>{children}</LayoutContent>
+              </ThemeProvider>
             </CartProvider>
           </AuthProvider>
         </ErrorBoundary>

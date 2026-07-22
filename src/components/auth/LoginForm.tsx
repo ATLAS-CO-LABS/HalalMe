@@ -79,6 +79,35 @@ export default function LoginForm() {
         />
       </div>
 
+      {/* Sign-in method */}
+      <div>
+        <span className={labelClass}>Sign in with</span>
+        <div className="grid grid-cols-2 gap-1.5 p-1 bg-[#102C26] border border-[#F7E7CE]/12">
+          <button
+            type="button"
+            onClick={() => switchMode("password")}
+            className={`h-9 text-xs font-bold uppercase tracking-wide transition-colors ${
+              mode === "password"
+                ? "bg-[#F7E7CE] text-[#102C26]"
+                : "text-[#F7E7CE]/45 hover:text-[#F7E7CE]/70"
+            }`}
+          >
+            Password
+          </button>
+          <button
+            type="button"
+            onClick={() => switchMode("code")}
+            className={`h-9 text-xs font-bold uppercase tracking-wide transition-colors ${
+              mode === "code"
+                ? "bg-[#F7E7CE] text-[#102C26]"
+                : "text-[#F7E7CE]/45 hover:text-[#F7E7CE]/70"
+            }`}
+          >
+            Email Code
+          </button>
+        </div>
+      </div>
+
       {/* Password (password mode only) */}
       {mode === "password" && (
         <div>
@@ -110,8 +139,8 @@ export default function LoginForm() {
 
       {mode === "code" && (
         <p className="text-xs text-[#F7E7CE]/40 leading-relaxed">
-          We&apos;ll email you a 6-digit code to sign in — no password needed.
-          Restaurant partners sign in this way.
+          We&apos;ll email you a 6-digit code to sign in, no password needed.
+          Merchant accounts always sign in this way.
         </p>
       )}
 
@@ -146,27 +175,6 @@ export default function LoginForm() {
           </>
         )}
       </button>
-
-      {/* Mode toggle */}
-      <div className="text-center">
-        {mode === "password" ? (
-          <button
-            type="button"
-            onClick={() => switchMode("code")}
-            className="text-xs text-[#F7E7CE]/40 hover:text-[#F7E7CE]/70 transition-colors underline underline-offset-2"
-          >
-            Log in with a code instead
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={() => switchMode("password")}
-            className="text-xs text-[#F7E7CE]/40 hover:text-[#F7E7CE]/70 transition-colors underline underline-offset-2"
-          >
-            Use a password instead
-          </button>
-        )}
-      </div>
     </form>
   );
 }

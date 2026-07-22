@@ -20,7 +20,7 @@ function escapeRegex(value: string): string {
 
 const nextConfig: NextConfig = {
   async headers() {
-    return ALLOWED_ORIGINS.map((origin) => ({
+    const corsHeaders = ALLOWED_ORIGINS.map((origin) => ({
       source: "/api/:path*",
       has: [{ type: "header" as const, key: "origin", value: `^${escapeRegex(origin)}$` }],
       headers: [
@@ -30,6 +30,17 @@ const nextConfig: NextConfig = {
         { key: "Access-Control-Allow-Credentials", value: "true" },
       ],
     }));
+
+    const securityHeaders = {
+      source: "/:path*",
+      headers: [
+        { key: "X-Content-Type-Options", value: "nosniff" },
+        { key: "X-Frame-Options", value: "SAMEORIGIN" },
+        { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+      ],
+    };
+
+    return [...corsHeaders, securityHeaders];
   },
   images: {
     remotePatterns: [

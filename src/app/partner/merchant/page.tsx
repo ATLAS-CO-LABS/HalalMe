@@ -54,8 +54,16 @@ const COUNTRY_OPTIONS = [
 ];
 
 const ORDER_TYPE_OPTIONS = [
-  { value: "delivery", label: "Delivery" },
-  { value: "pickup", label: "Pickup" },
+  {
+    value: "delivery",
+    label: "Delivery",
+    desc: "A rider delivers the order to the customer's address.",
+  },
+  {
+    value: "pickup",
+    label: "Pickup",
+    desc: "The customer orders online and collects it in person from you.",
+  },
 ];
 
 const STEPS = [
@@ -384,9 +392,12 @@ export default function MerchantSignupPage() {
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-widest text-[#F7E7CE]/50 mb-2">
-                      Order Types *
+                    <label className="block text-[10px] font-bold uppercase tracking-widest text-[#F7E7CE]/50 mb-1">
+                      How do customers get their order? *
                     </label>
+                    <p className="text-[11px] text-[#F7E7CE]/35 mb-2.5">
+                      Select both if you offer delivery and pickup.
+                    </p>
                     <div className="flex gap-3">
                       {ORDER_TYPE_OPTIONS.map((opt) => {
                         const selected = form.order_types.includes(opt.value);
@@ -395,14 +406,27 @@ export default function MerchantSignupPage() {
                             key={opt.value}
                             type="button"
                             onClick={() => toggleOrderType(opt.value)}
-                            className={`flex-1 h-11 text-xs font-bold uppercase tracking-wider border transition-colors flex items-center justify-center gap-2 ${
+                            className={`flex-1 text-left px-3.5 py-2.5 border transition-colors ${
                               selected
-                                ? "bg-[#F7E7CE] text-[#102C26] border-[#F7E7CE]"
-                                : "bg-transparent text-[#F7E7CE]/55 border-[#F7E7CE]/15 hover:border-[#F7E7CE]/35"
+                                ? "bg-[#F7E7CE] border-[#F7E7CE]"
+                                : "bg-transparent border-[#F7E7CE]/15 hover:border-[#F7E7CE]/35"
                             }`}
                           >
-                            {selected && <Check className="w-3.5 h-3.5" />}
-                            {opt.label}
+                            <span
+                              className={`flex items-center gap-2 text-xs font-bold uppercase tracking-wider ${
+                                selected ? "text-[#102C26]" : "text-[#F7E7CE]/70"
+                              }`}
+                            >
+                              {selected && <Check className="w-3.5 h-3.5" />}
+                              {opt.label}
+                            </span>
+                            <span
+                              className={`block mt-1 text-[11px] leading-snug ${
+                                selected ? "text-[#102C26]/70" : "text-[#F7E7CE]/40"
+                              }`}
+                            >
+                              {opt.desc}
+                            </span>
                           </button>
                         );
                       })}

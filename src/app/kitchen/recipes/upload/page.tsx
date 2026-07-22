@@ -13,11 +13,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAuthGate } from "@/hooks/useAuthGate";
 import AuthGuard from "@/components/auth/AuthGuard";
 
-const BG      = '#1C1C1C';
-const BG2     = '#161616';
-const CREAM   = '#F7E7CE';
-const MAGENTA = '#F03E9E';
-const DEEP    = '#C41E73';
+const BG      = 'var(--kitchen-bg)';
+const BG2     = 'var(--kitchen-bg2)';
+const CREAM   = 'var(--hm-text)';
+const MAGENTA = 'var(--hm-magenta)';
+const DEEP    = 'var(--hm-magenta-deep)';
 
 // ── Types ───────────────────────────────────────────────────────────
 interface IngredientRow {
@@ -44,7 +44,7 @@ interface RecipeForm {
 
 // ── Styles ──────────────────────────────────────────────────────────
 const fieldClass =
-  "w-full text-white px-4 py-3 border focus:outline-none transition-colors text-base font-normal";
+  "w-full text-(--kitchen-fg) px-4 py-3 border focus:outline-none transition-colors text-base font-normal";
 // Number inputs: strip the native up/down spinner arrows.
 const numberFieldClass =
   `${fieldClass} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0`;
@@ -52,7 +52,7 @@ const labelClass = "block font-extrabold uppercase tracking-tighter mb-2 text-xs
 
 const fieldStyleBase = {
   backgroundColor: BG2,
-  borderColor: `${CREAM}10`,
+  borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)`,
   caretColor: MAGENTA,
 };
 
@@ -162,14 +162,14 @@ function Dropdown({
         aria-haspopup="listbox"
         aria-expanded={open}
         className={`${compact ? "px-3 py-3" : "px-4 py-3"} w-full border focus:outline-none transition-colors text-base font-normal flex items-center justify-between text-left`}
-        style={{ ...fieldStyleBase, borderColor: open ? MAGENTA : `${CREAM}10` }}
+        style={{ ...fieldStyleBase, borderColor: open ? MAGENTA : `color-mix(in oklab, var(--hm-text) 6%, transparent)` }}
       >
-        <span className="truncate" style={{ color: hasValue || selected ? "#fff" : `${CREAM}35` }}>
+        <span className="truncate" style={{ color: hasValue || selected ? "var(--kitchen-fg)" : `color-mix(in oklab, var(--hm-text) 21%, transparent)` }}>
           {selected ? selected.label : placeholder}
         </span>
         <ChevronDown
           className={`${compact ? "w-3.5 h-3.5" : "w-4 h-4"} shrink-0 ml-1.5 transition-transform duration-200`}
-          style={{ color: `${CREAM}50`, transform: open ? "rotate(180deg)" : "none" }}
+          style={{ color: `color-mix(in oklab, var(--hm-text) 31%, var(--hm-lm-anchor))`, transform: open ? "rotate(180deg)" : "none" }}
         />
       </button>
       <AnimatePresence>
@@ -181,7 +181,7 @@ function Dropdown({
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.12 }}
             className="absolute z-50 w-full mt-1 max-h-60 overflow-auto border shadow-2xl"
-            style={{ backgroundColor: BG2, borderColor: `${CREAM}15` }}
+            style={{ backgroundColor: BG2, borderColor: `color-mix(in oklab, var(--hm-text) 8%, transparent)` }}
           >
             {options.map((o) => {
               const active = o.value === value;
@@ -192,11 +192,11 @@ function Dropdown({
                     onClick={() => { onChange(o.value); setOpen(false); }}
                     className="w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center justify-between"
                     style={{
-                      color: active ? MAGENTA : `${CREAM}80`,
-                      backgroundColor: active ? `${MAGENTA}14` : "transparent",
+                      color: active ? MAGENTA : `color-mix(in oklab, var(--hm-text) 50%, transparent)`,
+                      backgroundColor: active ? `color-mix(in oklab, var(--hm-magenta) 8%, transparent)` : "transparent",
                     }}
-                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `${CREAM}08`)}
-                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = active ? `${MAGENTA}14` : "transparent")}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `color-mix(in oklab, var(--hm-text) 3%, transparent)`)}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = active ? `color-mix(in oklab, var(--hm-magenta) 8%, transparent)` : "transparent")}
                   >
                     {o.label}
                     {active && <Check className="w-3.5 h-3.5 shrink-0 ml-2" />}
@@ -543,7 +543,7 @@ function UploadRecipeInner() {
       <div className="min-h-screen py-6 md:py-8 flex items-center justify-center" style={{ backgroundColor: BG }}>
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3" style={{ color: MAGENTA }} />
-          <p className="text-sm" style={{ color: `${CREAM}50` }}>Loading recipe…</p>
+          <p className="text-sm" style={{ color: `color-mix(in oklab, var(--hm-text) 31%, var(--hm-lm-anchor))` }}>Loading recipe…</p>
         </div>
       </div>
     );
@@ -554,7 +554,7 @@ function UploadRecipeInner() {
   const fieldFocus = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     (e.target.style.borderColor = MAGENTA);
   const fieldBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-    (e.target.style.borderColor = `${CREAM}10`);
+    (e.target.style.borderColor = `color-mix(in oklab, var(--hm-text) 6%, transparent)`);
 
   // ══════════════════════════════════════════════════════════════════
   return (
@@ -567,9 +567,9 @@ function UploadRecipeInner() {
             <Link href="/kitchen/recipes">
               <motion.button
                 className="transition-colors"
-                style={{ color: `${CREAM}50` }}
+                style={{ color: `color-mix(in oklab, var(--hm-text) 31%, var(--hm-lm-anchor))` }}
                 onMouseEnter={e => e.currentTarget.style.color = CREAM}
-                onMouseLeave={e => e.currentTarget.style.color = `${CREAM}50`}
+                onMouseLeave={e => e.currentTarget.style.color = `color-mix(in oklab, var(--hm-text) 31%, transparent)`}
                 whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}
               >
                 <ArrowLeft className="w-5 h-5 md:w-6 md:h-6" />
@@ -579,7 +579,7 @@ function UploadRecipeInner() {
               {isEditMode ? "Edit Recipe" : "Upload Your Recipe"}
             </h1>
           </div>
-          <p className="text-sm font-normal ml-9 md:ml-10" style={{ color: `${CREAM}45` }}>
+          <p className="text-sm font-normal ml-9 md:ml-10" style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))` }}>
             {isEditMode
               ? "Update your recipe details below"
               : "Share your halal culinary creation with the community"}
@@ -599,7 +599,7 @@ function UploadRecipeInner() {
           )}
         </AnimatePresence>
 
-        <form onSubmit={handleSubmit} className="space-y-px" style={{ backgroundColor: `${CREAM}05` }}>
+        <form onSubmit={handleSubmit} className="space-y-px" style={{ backgroundColor: `color-mix(in oklab, var(--hm-text) 2%, transparent)` }}>
 
           {/* ── Basic Info ──────────────────────────────────────── */}
           <motion.div
@@ -617,7 +617,7 @@ function UploadRecipeInner() {
             <div className="space-y-4">
               {/* Title */}
               <div>
-                <label className={labelClass} style={{ color: `${CREAM}60` }}>Recipe Title *</label>
+                <label className={labelClass} style={{ color: `color-mix(in oklab, var(--hm-text) 38%, var(--hm-lm-anchor))` }}>Recipe Title *</label>
                 <input
                   type="text"
                   value={form.title}
@@ -634,7 +634,7 @@ function UploadRecipeInner() {
 
               {/* Description */}
               <div>
-                <label className={labelClass} style={{ color: `${CREAM}60` }}>Description *</label>
+                <label className={labelClass} style={{ color: `color-mix(in oklab, var(--hm-text) 38%, var(--hm-lm-anchor))` }}>Description *</label>
                 <textarea
                   value={form.description}
                   onChange={(e) => set("description", e.target.value)}
@@ -651,7 +651,7 @@ function UploadRecipeInner() {
 
               {/* Cuisine */}
               <div>
-                <label className={labelClass} style={{ color: `${CREAM}60` }}>Cuisine *</label>
+                <label className={labelClass} style={{ color: `color-mix(in oklab, var(--hm-text) 38%, var(--hm-lm-anchor))` }}>Cuisine *</label>
                 <Dropdown
                   value={form.cuisine}
                   onChange={(v) => set("cuisine", v)}
@@ -683,9 +683,9 @@ function UploadRecipeInner() {
               </div>
 
               {/* Time + Servings + Difficulty */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-px" style={{ backgroundColor: `${CREAM}05` }}>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-px" style={{ backgroundColor: `color-mix(in oklab, var(--hm-text) 2%, transparent)` }}>
                 <div className="p-3" style={{ backgroundColor: BG2 }}>
-                  <label className={labelClass} style={{ color: `${CREAM}60` }}>Prep Time (mins)</label>
+                  <label className={labelClass} style={{ color: `color-mix(in oklab, var(--hm-text) 38%, var(--hm-lm-anchor))` }}>Prep Time (mins)</label>
                   <input
                     type="number"
                     value={form.prep_time_mins}
@@ -700,7 +700,7 @@ function UploadRecipeInner() {
                   />
                 </div>
                 <div className="p-3" style={{ backgroundColor: BG2 }}>
-                  <label className={labelClass} style={{ color: `${CREAM}60` }}>Cook Time (mins) *</label>
+                  <label className={labelClass} style={{ color: `color-mix(in oklab, var(--hm-text) 38%, var(--hm-lm-anchor))` }}>Cook Time (mins) *</label>
                   <input
                     type="number"
                     value={form.cook_time_mins}
@@ -716,7 +716,7 @@ function UploadRecipeInner() {
                   />
                 </div>
                 <div className="p-3" style={{ backgroundColor: BG2 }}>
-                  <label className={labelClass} style={{ color: `${CREAM}60` }}>Servings *</label>
+                  <label className={labelClass} style={{ color: `color-mix(in oklab, var(--hm-text) 38%, var(--hm-lm-anchor))` }}>Servings *</label>
                   <input
                     type="number"
                     value={form.servings}
@@ -732,7 +732,7 @@ function UploadRecipeInner() {
                   />
                 </div>
                 <div className="p-3" style={{ backgroundColor: BG2 }}>
-                  <label className={labelClass} style={{ color: `${CREAM}60` }}>Difficulty *</label>
+                  <label className={labelClass} style={{ color: `color-mix(in oklab, var(--hm-text) 38%, var(--hm-lm-anchor))` }}>Difficulty *</label>
                   <Dropdown
                     value={form.difficulty}
                     onChange={(v) => set("difficulty", v as RecipeForm["difficulty"])}
@@ -749,8 +749,8 @@ function UploadRecipeInner() {
 
               {/* Tags */}
               <div>
-                <label className={labelClass} style={{ color: `${CREAM}60` }}>
-                  Tags <span style={{ color: `${CREAM}35` }}>(optional · helps people find your recipe)</span>
+                <label className={labelClass} style={{ color: `color-mix(in oklab, var(--hm-text) 38%, var(--hm-lm-anchor))` }}>
+                  Tags <span style={{ color: `color-mix(in oklab, var(--hm-text) 21%, var(--hm-lm-anchor))` }}>(optional · helps people find your recipe)</span>
                 </label>
                 <div className="flex gap-1">
                   <input
@@ -789,7 +789,7 @@ function UploadRecipeInner() {
                           animate={{ opacity: 1, scale: 1 }}
                           exit={{ opacity: 0, scale: 0.85 }}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold"
-                          style={{ backgroundColor: `${MAGENTA}18`, color: CREAM }}
+                          style={{ backgroundColor: `color-mix(in oklab, var(--hm-magenta) 9%, transparent)`, color: CREAM }}
                         >
                           #{tag}
                           <button
@@ -824,15 +824,15 @@ function UploadRecipeInner() {
             <label
               htmlFor="image-upload"
               className="flex flex-col items-center justify-center w-full h-44 border-2 border-dashed cursor-pointer transition-colors"
-              style={{ backgroundColor: BG, borderColor: `${CREAM}10` }}
+              style={{ backgroundColor: BG, borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)` }}
               onMouseEnter={e => (e.currentTarget.style.borderColor = MAGENTA)}
-              onMouseLeave={e => (e.currentTarget.style.borderColor = `${CREAM}10`)}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = `color-mix(in oklab, var(--hm-text) 6%, transparent)`)}
             >
               {form.image ? (
                 <div className="text-center">
                   <Check className="w-10 h-10 text-emerald-400 mx-auto mb-2" />
                   <p className="font-extrabold uppercase tracking-tight text-sm" style={{ color: CREAM }}>{form.image.name}</p>
-                  <p className="text-xs mt-1" style={{ color: `${CREAM}40` }}>Click to change</p>
+                  <p className="text-xs mt-1" style={{ color: `color-mix(in oklab, var(--hm-text) 25%, var(--hm-lm-anchor))` }}>Click to change</p>
                 </div>
               ) : form.existingImageUrl ? (
                 <div className="text-center">
@@ -842,13 +842,13 @@ function UploadRecipeInner() {
                     alt="Current"
                     className="w-20 h-20 object-cover mx-auto mb-2 opacity-80"
                   />
-                  <p className="text-xs" style={{ color: `${CREAM}40` }}>Current image - click to replace</p>
+                  <p className="text-xs" style={{ color: `color-mix(in oklab, var(--hm-text) 25%, var(--hm-lm-anchor))` }}>Current image - click to replace</p>
                 </div>
               ) : (
                 <div className="text-center">
-                  <ImageIcon className="w-10 h-10 text-gray-500 mx-auto mb-2" />
+                  <ImageIcon className="w-10 h-10 text-[color:color-mix(in_oklab,var(--kitchen-fg)_35%,var(--hm-lm-anchor))] mx-auto mb-2" />
                   <p className="font-extrabold uppercase tracking-tight text-sm" style={{ color: CREAM }}>Upload Recipe Image</p>
-                  <p className="text-xs mt-1" style={{ color: `${CREAM}35` }}>PNG, JPG - max 5 MB (optional)</p>
+                  <p className="text-xs mt-1" style={{ color: `color-mix(in oklab, var(--hm-text) 21%, var(--hm-lm-anchor))` }}>PNG, JPG - max 5 MB (optional)</p>
                 </div>
               )}
             </label>
@@ -866,7 +866,7 @@ function UploadRecipeInner() {
                 Ingredients *
               </h2>
             </div>
-            <p className="text-xs mb-5 ml-9" style={{ color: `${CREAM}40` }}>
+            <p className="text-xs mb-5 ml-9" style={{ color: `color-mix(in oklab, var(--hm-text) 25%, var(--hm-lm-anchor))` }}>
               Type it naturally — e.g. “2 cups basmati rice”, then press Enter
             </p>
 
@@ -910,16 +910,16 @@ function UploadRecipeInner() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 10 }}
                   className="flex items-center justify-between px-4 py-2.5 border mb-1"
-                  style={{ backgroundColor: BG, borderColor: editingIngredient === i ? MAGENTA : `${CREAM}08` }}
+                  style={{ backgroundColor: BG, borderColor: editingIngredient === i ? MAGENTA : `color-mix(in oklab, var(--hm-text) 3%, transparent)` }}
                 >
-                  <span className="text-sm font-normal" style={{ color: `${CREAM}75` }}>
+                  <span className="text-sm font-normal" style={{ color: `color-mix(in oklab, var(--hm-text) 46%, var(--hm-lm-anchor))` }}>
                     {[ing.amount, ing.unit, ing.name].filter(Boolean).join(" ")}
                   </span>
                   <div className="flex items-center gap-2 ml-3 shrink-0">
                     <button type="button" onClick={() => editIngredient(i)} aria-label="Edit ingredient"
-                      className="transition-colors" style={{ color: `${CREAM}45` }}
+                      className="transition-colors" style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))` }}
                       onMouseEnter={e => (e.currentTarget.style.color = MAGENTA)}
-                      onMouseLeave={e => (e.currentTarget.style.color = `${CREAM}45`)}>
+                      onMouseLeave={e => (e.currentTarget.style.color = `color-mix(in oklab, var(--hm-text) 27%, transparent)`)}>
                       <Pencil className="w-3.5 h-3.5" />
                     </button>
                     <button type="button" onClick={() => removeIngredient(i)} aria-label="Remove ingredient"
@@ -983,7 +983,7 @@ function UploadRecipeInner() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 10 }}
                   className="flex gap-3 p-4 border mb-1"
-                  style={{ backgroundColor: BG, borderColor: editingInstruction === i ? MAGENTA : `${CREAM}08` }}
+                  style={{ backgroundColor: BG, borderColor: editingInstruction === i ? MAGENTA : `color-mix(in oklab, var(--hm-text) 3%, transparent)` }}
                 >
                   <div
                     className="w-7 h-7 flex items-center justify-center font-extrabold text-white text-sm shrink-0"
@@ -991,14 +991,14 @@ function UploadRecipeInner() {
                   >
                     {i + 1}
                   </div>
-                  <p className="flex-1 text-sm font-normal whitespace-pre-wrap" style={{ color: `${CREAM}75` }}>
+                  <p className="flex-1 text-sm font-normal whitespace-pre-wrap" style={{ color: `color-mix(in oklab, var(--hm-text) 46%, var(--hm-lm-anchor))` }}>
                     {step}
                   </p>
                   <div className="flex items-start gap-2 shrink-0">
                     <button type="button" onClick={() => editInstruction(i)} aria-label="Edit step"
-                      className="transition-colors" style={{ color: `${CREAM}45` }}
+                      className="transition-colors" style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))` }}
                       onMouseEnter={e => (e.currentTarget.style.color = MAGENTA)}
-                      onMouseLeave={e => (e.currentTarget.style.color = `${CREAM}45`)}>
+                      onMouseLeave={e => (e.currentTarget.style.color = `color-mix(in oklab, var(--hm-text) 27%, transparent)`)}>
                       <Pencil className="w-3.5 h-3.5" />
                     </button>
                     <button type="button" onClick={() => removeInstruction(i)} aria-label="Remove step"
@@ -1018,7 +1018,7 @@ function UploadRecipeInner() {
             className="relative w-full px-8 py-4 font-extrabold uppercase tracking-tighter text-base flex items-center justify-center gap-3 transition-all overflow-hidden"
             style={
               isSubmitting
-                ? { backgroundColor: BG2, color: `${CREAM}40`, cursor: 'not-allowed' }
+                ? { backgroundColor: BG2, color: `color-mix(in oklab, var(--hm-text) 25%, var(--hm-lm-anchor))`, cursor: 'not-allowed' }
                 : { backgroundColor: DEEP, color: 'white' }
             }
             whileHover={!isSubmitting ? { scale: 1.01 } : {}}
@@ -1027,7 +1027,7 @@ function UploadRecipeInner() {
             {isSubmitting && uploadProgress !== null && (
               <span
                 className="absolute inset-y-0 left-0 transition-all duration-150"
-                style={{ width: `${uploadProgress}%`, backgroundColor: `${MAGENTA}20` }}
+                style={{ width: `${uploadProgress}%`, backgroundColor: `color-mix(in oklab, var(--hm-magenta) 13%, transparent)` }}
               />
             )}
             <span className="relative flex items-center justify-center gap-3">

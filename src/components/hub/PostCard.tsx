@@ -27,11 +27,11 @@ import ReportModal from "@/components/common/ReportModal";
 import Avatar from "./Avatar";
 import { getFlairTheme } from "@/lib/flairTheme";
 
-const BG = "#0B0D0F";
-const BG2 = "#111418";
-const BG3 = "#0D1012";
-const AMBER = "#F59E0B";
-const CREAM = "#F7E7CE";
+const BG = "var(--hub-bg)";
+const BG2 = "var(--hub-bg2)";
+const BG3 = "var(--hub-bg3)";
+const AMBER = "var(--hm-amber)";
+const CREAM = "var(--hm-text)";
 
 interface PostCardProps {
   post: Post;
@@ -105,10 +105,10 @@ export default function PostCard({
   return (
     <motion.div
       className="overflow-hidden transition-colors border"
-      style={{ backgroundColor: BG2, borderColor: flairTheme ? flairTheme.cardBorder : `${CREAM}10` }}
+      style={{ backgroundColor: BG2, borderColor: flairTheme ? flairTheme.cardBorder : `color-mix(in oklab, var(--hm-text) 6%, transparent)` }}
       whileHover={{ y: -2, boxShadow: flairTheme ? `0 14px 32px -10px ${flairTheme.glow}` : undefined }}
-      onMouseEnter={(e) => { if (!flairTheme) e.currentTarget.style.borderColor = `${AMBER}30`; }}
-      onMouseLeave={(e) => { if (!flairTheme) e.currentTarget.style.borderColor = `${CREAM}10`; }}
+      onMouseEnter={(e) => { if (!flairTheme) e.currentTarget.style.borderColor = `color-mix(in oklab, var(--hm-amber) 19%, transparent)`; }}
+      onMouseLeave={(e) => { if (!flairTheme) e.currentTarget.style.borderColor = `color-mix(in oklab, var(--hm-text) 6%, transparent)`; }}
     >
       {/* User Info */}
       <div className="p-4 md:p-5 flex items-center gap-3">
@@ -142,7 +142,7 @@ export default function PostCard({
           <div className="flex items-center gap-2 flex-wrap">
             <p
               className="text-sm font-normal truncate"
-              style={{ color: `${CREAM}45`, fontFamily: "var(--font-body)" }}
+              style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))`, fontFamily: "var(--font-body)" }}
             >
               {username && <span>{username} • </span>}
               {formatRelativeTime(post.created_at)}
@@ -167,9 +167,9 @@ export default function PostCard({
             }}
             aria-label="Post options"
             className="p-2 transition-colors"
-            style={{ color: `${CREAM}45` }}
+            style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))` }}
             onMouseEnter={(e) => (e.currentTarget.style.color = CREAM)}
-            onMouseLeave={(e) => (e.currentTarget.style.color = `${CREAM}45`)}
+            onMouseLeave={(e) => (e.currentTarget.style.color = `color-mix(in oklab, var(--hm-text) 27%, transparent)`)}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
           >
@@ -183,7 +183,7 @@ export default function PostCard({
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: -8 }}
                 className="absolute right-0 mt-2 w-52 overflow-hidden z-10 border shadow-xl"
-                style={{ backgroundColor: BG3, borderColor: `${CREAM}10` }}
+                style={{ backgroundColor: BG3, borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)` }}
               >
                 {isOwnPost ? (
                   !confirmingDelete ? (
@@ -195,7 +195,7 @@ export default function PostCard({
                         }}
                         className="flex items-center gap-3 w-full px-4 py-3 text-left transition-colors"
                         style={{ color: CREAM }}
-                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `${CREAM}08`)}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `color-mix(in oklab, var(--hm-text) 3%, transparent)`)}
                         onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                       >
                         <Edit2 className="w-4 h-4" />
@@ -204,7 +204,7 @@ export default function PostCard({
                       <button
                         onClick={() => setConfirmingDelete(true)}
                         className="flex items-center gap-3 w-full px-4 py-3 text-left text-red-500 transition-colors"
-                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `${CREAM}08`)}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `color-mix(in oklab, var(--hm-text) 3%, transparent)`)}
                         onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                       >
                         <Trash2 className="w-4 h-4" />
@@ -220,7 +220,7 @@ export default function PostCard({
                         <button
                           onClick={() => setConfirmingDelete(false)}
                           className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-semibold transition-colors border"
-                          style={{ backgroundColor: BG, color: `${CREAM}70`, borderColor: `${CREAM}10` }}
+                          style={{ backgroundColor: BG, color: `color-mix(in oklab, var(--hm-text) 44%, var(--hm-lm-anchor))`, borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)` }}
                         >
                           <X className="w-3.5 h-3.5" />
                           Cancel
@@ -242,7 +242,7 @@ export default function PostCard({
                       requireAuth(() => setReportOpen(true), "Sign in to report content");
                     }}
                     className="flex items-center gap-3 w-full px-4 py-3 text-left text-red-400 transition-colors"
-                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `${CREAM}08`)}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `color-mix(in oklab, var(--hm-text) 3%, transparent)`)}
                     onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                   >
                     <Flag className="w-4 h-4" />
@@ -279,9 +279,9 @@ export default function PostCard({
           <Link href={`/kitchen/recipes/${post.recipe_id}`}>
             <motion.div
               className="p-4 border transition-colors cursor-pointer"
-              style={{ backgroundColor: `${AMBER}12`, borderColor: `${AMBER}30` }}
+              style={{ backgroundColor: `color-mix(in oklab, var(--hm-amber) 7%, transparent)`, borderColor: `color-mix(in oklab, var(--hm-amber) 19%, transparent)` }}
               onMouseEnter={(e) => (e.currentTarget.style.borderColor = AMBER)}
-              onMouseLeave={(e) => (e.currentTarget.style.borderColor = `${AMBER}30`)}
+              onMouseLeave={(e) => (e.currentTarget.style.borderColor = `color-mix(in oklab, var(--hm-amber) 19%, transparent)`)}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
@@ -344,13 +344,13 @@ export default function PostCard({
       ) : null}
 
       {/* Actions */}
-      <div className="p-4 md:p-5 border-t" style={{ borderColor: `${CREAM}10` }}>
+      <div className="p-4 md:p-5 border-t" style={{ borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)` }}>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-5">
             <motion.button
               onClick={() => onLike(post.id, !!post.is_liked)}
               className="flex items-center gap-2 transition-colors"
-              style={{ color: post.is_liked ? "#EF4444" : `${CREAM}45` }}
+              style={{ color: post.is_liked ? "#EF4444" : `color-mix(in oklab, var(--hm-text) 27%, transparent)` }}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
             >
@@ -361,9 +361,9 @@ export default function PostCard({
             <Link href={`/hub/post/${post.id}`}>
               <motion.button
                 className="flex items-center gap-2 transition-colors"
-                style={{ color: `${CREAM}45` }}
+                style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))` }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = AMBER)}
-                onMouseLeave={(e) => (e.currentTarget.style.color = `${CREAM}45`)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = `color-mix(in oklab, var(--hm-text) 27%, transparent)`)}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
               >
@@ -378,18 +378,18 @@ export default function PostCard({
               <motion.button
                 onClick={() => onBookmark(post.id, !!post.is_bookmarked)}
                 className="transition-colors"
-                style={{ color: post.is_bookmarked ? AMBER : `${CREAM}45` }}
+                style={{ color: post.is_bookmarked ? AMBER : `color-mix(in oklab, var(--hm-text) 27%, transparent)` }}
                 title={post.is_bookmarked ? "Remove bookmark" : "Bookmark"}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
               >
-                <Bookmark className={`w-5 h-5 ${post.is_bookmarked ? "fill-[#F59E0B]" : ""}`} />
+                <Bookmark className={`w-5 h-5 ${post.is_bookmarked ? "fill-(--hm-amber)" : ""}`} />
               </motion.button>
             )}
             <motion.button
               onClick={handleShare}
               className="transition-colors"
-              style={{ color: copied ? AMBER : `${CREAM}45` }}
+              style={{ color: copied ? AMBER : `color-mix(in oklab, var(--hm-text) 27%, transparent)` }}
               title={copied ? "Copied!" : "Share"}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
@@ -404,7 +404,7 @@ export default function PostCard({
           <Link href={`/hub/post/${post.id}`}>
             <motion.div
               className="text-sm cursor-pointer font-normal transition-colors"
-              style={{ color: `${CREAM}45`, fontFamily: "var(--font-body)" }}
+              style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))`, fontFamily: "var(--font-body)" }}
               whileHover={{ x: 4 }}
             >
               View all {post.comment_count} comment{post.comment_count !== 1 ? "s" : ""}

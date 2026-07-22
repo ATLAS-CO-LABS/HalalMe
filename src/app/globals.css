@@ -393,6 +393,93 @@ button {
   }
 }
 
+/* ─────────────────────────────────────────────────────────────────────
+   HalalMe theme tokens (light/dark)
+   Scoped via [data-hm-theme] on <html>. Only Social (/hub) and Kitchen
+   (/kitchen) ever set this to "light" - every other route stays on the
+   "dark" values below, which match the platform's existing hardcoded
+   forest palette exactly (so converting a class to one of these tokens
+   is a no-op in dark mode).
+   ───────────────────────────────────────────────────────────────────── */
+:root {
+  /* Default (no attribute yet, or any non-themed route): dark, matching
+     the platform's baseline hardcoded colors. */
+  --hm-bg: #102C26;
+  --hm-bg-alt: #0A1C19;
+  --hm-scrim: #050F0D;
+  --hm-text: #F7E7CE;
+  --hm-amber: #F59E0B;
+  --hm-magenta: #F03E9E;
+  --hm-lm-anchor: transparent;
+}
+
+:root[data-hm-theme="dark"] {
+  --hm-bg: #102C26;         /* page background - forest */
+  --hm-bg-alt: #0A1C19;     /* secondary surface / cards */
+  --hm-scrim: #050F0D;      /* deepest scrim / overlays */
+  --hm-text: #F7E7CE;       /* primary text - champagne */
+  --hm-amber: #F59E0B;      /* brand accent (unchanged across themes) */
+  --hm-magenta: #F03E9E;    /* brand accent (unchanged across themes) */
+  --hm-lm-anchor: transparent;
+}
+
+:root[data-hm-theme="light"] {
+  --hm-bg: #FAF2E1;         /* page background - creamy champagne tint */
+  --hm-bg-alt: #F4E6CC;     /* secondary surface / cards - a shade creamier than the page */
+  --hm-scrim: #EDD9AF;      /* soft scrim / overlays */
+  --hm-text: #102C26;       /* primary text - forest */
+  --hm-amber: #F59E0B;      /* brand accent (unchanged across themes) */
+  --hm-magenta: #F03E9E;    /* brand accent (unchanged across themes) */
+  /* Muted/secondary text is built as `color-mix(var(--hm-text) N%, transparent)`.
+     Fading a LIGHT color (champagne) toward transparent over a dark page still
+     reads fine at low N - but fading a DARK color (forest) toward transparent
+     over a light page crushes contrast almost immediately. Mixing toward this
+     anchor instead of a literal `transparent` boosts every such call site's
+     effective opacity in light mode only, without changing dark mode (where
+     the anchor stays fully transparent, a no-op). Kept as a two-color
+     color-mix (no calc() in the percentage slot) since that combination
+     doesn't reliably survive this Tailwind v4 / Lightning CSS build. */
+  --hm-lm-anchor: color-mix(in oklab, var(--hm-text) 70%, transparent);
+}
+
+/* Social (/hub) and Kitchen (/kitchen) each ship their own near-black dark
+   palette (not the forest green above) with a per-service accent - amber for
+   Social, magenta for Kitchen. Same scoping, same light-mode direction
+   (near-black → warm cream, white text → forest text). */
+:root {
+  --hub-bg: #0B0D0F;
+  --hub-bg2: #111418;
+  --hub-bg3: #0D1012;
+  --hub-fg: #FFFFFF;
+  --kitchen-bg: #1C1C1C;
+  --kitchen-bg2: #161616;
+  --kitchen-fg: #FFFFFF;
+  --kitchen-bubble-bg: rgba(38, 38, 38, 0.9); /* AI assistant chat bubble */
+  --hm-magenta-deep: #C41E73; /* gradient endpoint, unchanged across themes */
+}
+
+:root[data-hm-theme="dark"] {
+  --hub-bg: #0B0D0F;
+  --hub-bg2: #111418;
+  --hub-bg3: #0D1012;
+  --hub-fg: #FFFFFF;
+  --kitchen-bg: #1C1C1C;
+  --kitchen-bg2: #161616;
+  --kitchen-fg: #FFFFFF;
+  --kitchen-bubble-bg: rgba(38, 38, 38, 0.9);
+}
+
+:root[data-hm-theme="light"] {
+  --hub-bg: #FAF2E1;
+  --hub-bg2: #F4E6CC;
+  --hub-bg3: #F0DFC0;
+  --hub-fg: #102C26;
+  --kitchen-bg: #FAF2E1;
+  --kitchen-bg2: #F4E6CC;
+  --kitchen-fg: #102C26;
+  --kitchen-bubble-bg: rgba(244, 230, 204, 0.9);
+}
+
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);

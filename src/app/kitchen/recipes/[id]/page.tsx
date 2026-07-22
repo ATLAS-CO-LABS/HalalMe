@@ -31,11 +31,11 @@ import { useAuthGate } from "@/hooks/useAuthGate";
 import ReportModal from "@/components/common/ReportModal";
 import type { Recipe, RecipeReview } from "@/types";
 
-const BG = "#1C1C1C";
-const BG2 = "#161616";
-const CREAM = "#F7E7CE";
-const MAGENTA = "#F03E9E";
-const DEEP = "#C41E73";
+const BG = "var(--kitchen-bg)";
+const BG2 = "var(--kitchen-bg2)";
+const CREAM = "var(--hm-text)";
+const MAGENTA = "var(--hm-magenta)";
+const DEEP = "var(--hm-magenta-deep)";
 
 // ── Helpers ─────────────────────────────────────────────────────────
 function difficultyColor(d: string) {
@@ -109,7 +109,7 @@ function ReviewCard({
   return (
     <div
       className="p-4 border"
-      style={{ backgroundColor: `${BG2}80`, borderColor: `${CREAM}08` }}
+      style={{ backgroundColor: `color-mix(in oklab, var(--kitchen-bg2) 50%, transparent)`, borderColor: `color-mix(in oklab, var(--hm-text) 3%, transparent)` }}
     >
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-3">
@@ -138,7 +138,7 @@ function ReviewCard({
             >
               {review.profiles?.username ?? "User"}
             </p>
-            <p className="text-xs" style={{ color: `${CREAM}35` }}>
+            <p className="text-xs" style={{ color: `color-mix(in oklab, var(--hm-text) 21%, var(--hm-lm-anchor))` }}>
               {new Date(review.created_at).toLocaleDateString("en-GB", {
                 day: "numeric",
                 month: "short",
@@ -162,7 +162,7 @@ function ReviewCard({
           {onDelete && (
             confirming ? (
               <div className="flex items-center gap-2">
-                <span className="text-[11px]" style={{ color: `${CREAM}45` }}>Delete?</span>
+                <span className="text-[11px]" style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))` }}>Delete?</span>
                 <button
                   type="button"
                   onClick={onDelete}
@@ -176,7 +176,7 @@ function ReviewCard({
                   onClick={() => setConfirming(false)}
                   disabled={deleting}
                   className="text-[11px] font-bold uppercase tracking-tight disabled:opacity-50"
-                  style={{ color: `${CREAM}45` }}
+                  style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))` }}
                 >
                   No
                 </button>
@@ -187,9 +187,9 @@ function ReviewCard({
                 onClick={() => setConfirming(true)}
                 aria-label="Delete your review"
                 className="text-[11px] font-bold uppercase tracking-tight flex items-center gap-1 transition-colors"
-                style={{ color: `${CREAM}40` }}
+                style={{ color: `color-mix(in oklab, var(--hm-text) 25%, var(--hm-lm-anchor))` }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = "rgb(248,113,113)")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = `${CREAM}40`)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = `color-mix(in oklab, var(--hm-text) 25%, transparent)`)}
               >
                 <Trash2 className="w-3 h-3" /> Delete
               </button>
@@ -198,7 +198,7 @@ function ReviewCard({
         </div>
       </div>
       {review.comment && (
-        <p className="text-sm leading-relaxed" style={{ color: `${CREAM}70` }}>
+        <p className="text-sm leading-relaxed" style={{ color: `color-mix(in oklab, var(--hm-text) 44%, var(--hm-lm-anchor))` }}>
           {review.comment}
         </p>
       )}
@@ -212,8 +212,8 @@ function RelatedCard({ recipe }: { recipe: Recipe }) {
     <Link href={`/kitchen/recipes/${recipe.id}`}>
       <motion.div
         className="group overflow-hidden h-full cursor-pointer"
-        style={{ backgroundColor: BG2, border: `1px solid ${CREAM}08` }}
-        whileHover={{ y: -4, borderColor: MAGENTA, boxShadow: `0 16px 40px -12px ${MAGENTA}40` }}
+        style={{ backgroundColor: BG2, border: `1px solid color-mix(in oklab, var(--hm-text) 3%, transparent)` }}
+        whileHover={{ y: -4, borderColor: MAGENTA, boxShadow: `0 16px 40px -12px color-mix(in oklab, var(--hm-magenta) 25%, transparent)` }}
       >
         <div className="relative h-32" style={{ backgroundColor: "#080612" }}>
           {recipe.image_url ? (
@@ -243,7 +243,7 @@ function RelatedCard({ recipe }: { recipe: Recipe }) {
           >
             {recipe.title}
           </h3>
-          <div className="flex items-center justify-between text-xs" style={{ color: `${CREAM}50` }}>
+          <div className="flex items-center justify-between text-xs" style={{ color: `color-mix(in oklab, var(--hm-text) 31%, var(--hm-lm-anchor))` }}>
             <span className="flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5" /> {cookTimeLabel(recipe.cook_time_mins)}
             </span>
@@ -537,14 +537,14 @@ export default function RecipeDetailPage({
         className="min-h-screen flex flex-col items-center justify-center gap-4"
         style={{ backgroundColor: BG }}
       >
-        <ChefHat className="w-16 h-16 text-gray-600" />
+        <ChefHat className="w-16 h-16 text-[color:color-mix(in_oklab,var(--kitchen-fg)_25%,var(--hm-lm-anchor))]" />
         <h2
           className="text-2xl font-extrabold uppercase tracking-tighter"
           style={{ color: CREAM }}
         >
           {recipeError ? "Couldn't load recipe" : "Recipe not found"}
         </h2>
-        <p className="text-sm" style={{ color: `${CREAM}50` }}>
+        <p className="text-sm" style={{ color: `color-mix(in oklab, var(--hm-text) 31%, var(--hm-lm-anchor))` }}>
           Check your connection and try again.
         </p>
         <div className="flex gap-3">
@@ -562,7 +562,7 @@ export default function RecipeDetailPage({
               className="text-white px-5 py-2.5 font-bold uppercase tracking-tighter text-sm border"
               style={{
                 backgroundColor: BG2,
-                borderColor: `${CREAM}15`,
+                borderColor: `color-mix(in oklab, var(--hm-text) 8%, transparent)`,
                 color: CREAM,
               }}
               whileHover={{ scale: 1.04 }}
@@ -650,7 +650,7 @@ export default function RecipeDetailPage({
             className="w-full h-full flex items-center justify-center"
             style={{ backgroundColor: BG2 }}
           >
-            <ChefHat className="w-16 h-16 text-gray-600" />
+            <ChefHat className="w-16 h-16 text-[color:color-mix(in_oklab,var(--kitchen-fg)_25%,var(--hm-lm-anchor))]" />
           </div>
         )}
         {/* Top fade */}
@@ -664,7 +664,7 @@ export default function RecipeDetailPage({
         <div
           className="absolute inset-x-0 bottom-0 h-48"
           style={{
-            background: `linear-gradient(to top, ${BG} 0%, ${BG}CC 30%, transparent 100%)`,
+            background: `linear-gradient(to top, ${BG} 0%, color-mix(in oklab, var(--kitchen-bg) 80%, transparent) 30%, transparent 100%)`,
           }}
         />
 
@@ -690,7 +690,7 @@ export default function RecipeDetailPage({
                   title="Edit recipe"
                   className="backdrop-blur-sm text-white p-2 md:p-3 border transition-colors"
                   style={{ backgroundColor: "rgba(0,0,0,0.6)", borderColor: "rgba(255,255,255,0.2)" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = `${MAGENTA}cc`; e.currentTarget.style.borderColor = MAGENTA; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = `color-mix(in oklab, var(--hm-magenta) 80%, transparent)`; e.currentTarget.style.borderColor = MAGENTA; }}
                   onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "rgba(0,0,0,0.6)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; }}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
@@ -717,7 +717,7 @@ export default function RecipeDetailPage({
             title="Print or save as PDF"
             className="backdrop-blur-sm text-white p-2 md:p-3 border transition-colors"
             style={{ backgroundColor: "rgba(0,0,0,0.6)", borderColor: "rgba(255,255,255,0.2)" }}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = `${MAGENTA}cc`; e.currentTarget.style.borderColor = MAGENTA; }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = `color-mix(in oklab, var(--hm-magenta) 80%, transparent)`; e.currentTarget.style.borderColor = MAGENTA; }}
             onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "rgba(0,0,0,0.6)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; }}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
@@ -760,8 +760,8 @@ export default function RecipeDetailPage({
             style={
               isBookmarked
                 ? {
-                    backgroundColor: `${MAGENTA}cc`,
-                    borderColor: `${MAGENTA}60`,
+                    backgroundColor: `color-mix(in oklab, var(--hm-magenta) 80%, transparent)`,
+                    borderColor: `color-mix(in oklab, var(--hm-magenta) 38%, transparent)`,
                   }
                 : {
                     backgroundColor: "rgba(0,0,0,0.6)",
@@ -825,7 +825,7 @@ export default function RecipeDetailPage({
           {recipe.description && (
             <p
               className="text-base md:text-lg mb-6 font-normal"
-              style={{ color: `${CREAM}60` }}
+              style={{ color: `color-mix(in oklab, var(--hm-text) 38%, var(--hm-lm-anchor))` }}
             >
               {recipe.description}
             </p>
@@ -837,7 +837,7 @@ export default function RecipeDetailPage({
                 <span
                   key={tag}
                   className="px-3 py-1 text-xs font-semibold lowercase tracking-tight"
-                  style={{ backgroundColor: `${MAGENTA}18`, color: CREAM }}
+                  style={{ backgroundColor: `color-mix(in oklab, var(--hm-magenta) 9%, transparent)`, color: CREAM }}
                 >
                   #{tag}
                 </span>
@@ -847,7 +847,7 @@ export default function RecipeDetailPage({
 
           <div
             className="grid grid-cols-2 md:grid-cols-4"
-            style={{ gap: "1px", backgroundColor: `${CREAM}08` }}
+            style={{ gap: "1px", backgroundColor: `color-mix(in oklab, var(--hm-text) 3%, transparent)` }}
           >
             {[
               {
@@ -884,7 +884,7 @@ export default function RecipeDetailPage({
               >
                 <div
                   className="flex items-center gap-2 mb-1"
-                  style={{ color: `${CREAM}50` }}
+                  style={{ color: `color-mix(in oklab, var(--hm-text) 31%, var(--hm-lm-anchor))` }}
                 >
                   {icon}
                   <span className="text-xs md:text-sm uppercase tracking-wide font-bold">
@@ -906,7 +906,7 @@ export default function RecipeDetailPage({
                   </p>
                 )}
                 {sub && (
-                  <p className="text-[11px] mt-0.5 font-normal" style={{ color: `${CREAM}40` }}>
+                  <p className="text-[11px] mt-0.5 font-normal" style={{ color: `color-mix(in oklab, var(--hm-text) 25%, var(--hm-lm-anchor))` }}>
                     {sub}
                   </p>
                 )}
@@ -939,7 +939,7 @@ export default function RecipeDetailPage({
             <div>
               <p
                 className="text-xs uppercase tracking-wide font-bold"
-                style={{ color: `${CREAM}40` }}
+                style={{ color: `color-mix(in oklab, var(--hm-text) 25%, var(--hm-lm-anchor))` }}
               >
                 Uploaded by
               </p>
@@ -981,7 +981,7 @@ export default function RecipeDetailPage({
         {/* Ingredients + Instructions */}
         <div
           className="grid md:grid-cols-2 mb-10"
-          style={{ gap: "1px", backgroundColor: `${CREAM}08` }}
+          style={{ gap: "1px", backgroundColor: `color-mix(in oklab, var(--hm-text) 3%, transparent)` }}
         >
           {/* Ingredients */}
           <motion.div
@@ -997,7 +997,7 @@ export default function RecipeDetailPage({
                 <span className="text-3xl">🥘</span> Ingredients
               </h2>
               {ingredients.length === 0 ? (
-                <p className="text-sm" style={{ color: `${CREAM}40` }}>
+                <p className="text-sm" style={{ color: `color-mix(in oklab, var(--hm-text) 25%, var(--hm-lm-anchor))` }}>
                   No ingredients listed.
                 </p>
               ) : (
@@ -1015,16 +1015,16 @@ export default function RecipeDetailPage({
                       }}
                       whileHover={{ scale: 1.01 }}
                       whileTap={{ scale: 0.99 }}
-                      className="flex items-start gap-3 p-3 cursor-pointer transition-all border focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F03E9E]"
+                      className="flex items-start gap-3 p-3 cursor-pointer transition-all border focus:outline-none focus-visible:ring-2 focus-visible:ring-(--hm-magenta)"
                       style={
                         checkedIngredients.includes(i)
                           ? {
-                              backgroundColor: `${MAGENTA}18`,
+                              backgroundColor: `color-mix(in oklab, var(--hm-magenta) 9%, transparent)`,
                               borderColor: MAGENTA,
                             }
                           : {
-                              backgroundColor: `${BG}80`,
-                              borderColor: `${CREAM}08`,
+                              backgroundColor: `color-mix(in oklab, var(--kitchen-bg) 50%, transparent)`,
+                              borderColor: `color-mix(in oklab, var(--hm-text) 3%, transparent)`,
                             }
                       }
                     >
@@ -1044,8 +1044,8 @@ export default function RecipeDetailPage({
                         className="text-sm font-normal"
                         style={{
                           color: checkedIngredients.includes(i)
-                            ? `${CREAM}60`
-                            : `${CREAM}80`,
+                            ? `color-mix(in oklab, var(--hm-text) 38%, transparent)`
+                            : `color-mix(in oklab, var(--hm-text) 50%, transparent)`,
                           textDecoration: checkedIngredients.includes(i)
                             ? "line-through"
                             : "none",
@@ -1074,7 +1074,7 @@ export default function RecipeDetailPage({
                 <span className="text-3xl">👨‍🍳</span> Instructions
               </h2>
               {steps.length === 0 ? (
-                <p className="text-sm" style={{ color: `${CREAM}40` }}>
+                <p className="text-sm" style={{ color: `color-mix(in oklab, var(--hm-text) 25%, var(--hm-lm-anchor))` }}>
                   No instructions listed.
                 </p>
               ) : (
@@ -1092,16 +1092,16 @@ export default function RecipeDetailPage({
                       }}
                       whileHover={{ scale: 1.01 }}
                       whileTap={{ scale: 0.99 }}
-                      className="flex gap-4 p-4 cursor-pointer transition-all border focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F03E9E]"
+                      className="flex gap-4 p-4 cursor-pointer transition-all border focus:outline-none focus-visible:ring-2 focus-visible:ring-(--hm-magenta)"
                       style={
                         checkedSteps.includes(i)
                           ? {
-                              backgroundColor: `${MAGENTA}18`,
+                              backgroundColor: `color-mix(in oklab, var(--hm-magenta) 9%, transparent)`,
                               borderColor: MAGENTA,
                             }
                           : {
-                              backgroundColor: `${BG}80`,
-                              borderColor: `${CREAM}08`,
+                              backgroundColor: `color-mix(in oklab, var(--kitchen-bg) 50%, transparent)`,
+                              borderColor: `color-mix(in oklab, var(--hm-text) 3%, transparent)`,
                             }
                       }
                     >
@@ -1110,7 +1110,7 @@ export default function RecipeDetailPage({
                         style={
                           checkedSteps.includes(i)
                             ? { backgroundColor: MAGENTA, color: "white" }
-                            : { backgroundColor: BG, color: `${CREAM}50` }
+                            : { backgroundColor: BG, color: `color-mix(in oklab, var(--hm-text) 31%, var(--hm-lm-anchor))` }
                         }
                       >
                         {checkedSteps.includes(i) ? (
@@ -1123,8 +1123,8 @@ export default function RecipeDetailPage({
                         className="text-sm font-normal leading-relaxed"
                         style={{
                           color: checkedSteps.includes(i)
-                            ? `${CREAM}50`
-                            : `${CREAM}75`,
+                            ? `color-mix(in oklab, var(--hm-text) 31%, transparent)`
+                            : `color-mix(in oklab, var(--hm-text) 46%, transparent)`,
                           textDecoration: checkedSteps.includes(i)
                             ? "line-through"
                             : "none",
@@ -1149,7 +1149,7 @@ export default function RecipeDetailPage({
         >
           <div
             className="p-6 border"
-            style={{ backgroundColor: BG2, borderColor: `${CREAM}08` }}
+            style={{ backgroundColor: BG2, borderColor: `color-mix(in oklab, var(--hm-text) 3%, transparent)` }}
           >
             <div className="flex items-center justify-between mb-6">
               <h2
@@ -1161,7 +1161,7 @@ export default function RecipeDetailPage({
                 {reviews.length > 0 && (
                   <span
                     className="text-base font-normal"
-                    style={{ color: `${CREAM}50` }}
+                    style={{ color: `color-mix(in oklab, var(--hm-text) 31%, var(--hm-lm-anchor))` }}
                   >
                     ({reviews.length})
                   </span>
@@ -1176,7 +1176,7 @@ export default function RecipeDetailPage({
                   >
                     {avgRating}
                   </span>
-                  <span className="text-sm" style={{ color: `${CREAM}50` }}>
+                  <span className="text-sm" style={{ color: `color-mix(in oklab, var(--hm-text) 31%, var(--hm-lm-anchor))` }}>
                     / 5.0
                   </span>
                 </div>
@@ -1187,7 +1187,7 @@ export default function RecipeDetailPage({
             <form
               onSubmit={handleReviewSubmit}
               className="mb-6 p-4 border"
-              style={{ backgroundColor: `${BG}80`, borderColor: `${CREAM}08` }}
+              style={{ backgroundColor: `color-mix(in oklab, var(--kitchen-bg) 50%, transparent)`, borderColor: `color-mix(in oklab, var(--hm-text) 3%, transparent)` }}
             >
               <p
                 className="text-sm font-extrabold uppercase tracking-tighter mb-3"
@@ -1210,14 +1210,14 @@ export default function RecipeDetailPage({
                 placeholder="Share your experience with this recipe… (optional)"
                 rows={3}
                 disabled={submitLoading}
-                className="w-full text-white text-base px-4 py-3 border focus:outline-none transition-colors resize-none font-normal disabled:opacity-50"
+                className="w-full text-(--kitchen-fg) text-base px-4 py-3 border focus:outline-none transition-colors resize-none font-normal disabled:opacity-50"
                 style={{
                   backgroundColor: BG2,
-                  borderColor: `${CREAM}10`,
+                  borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)`,
                   caretColor: MAGENTA,
                 }}
                 onFocus={(e) => (e.target.style.borderColor = MAGENTA)}
-                onBlur={(e) => (e.target.style.borderColor = `${CREAM}10`)}
+                onBlur={(e) => (e.target.style.borderColor = `color-mix(in oklab, var(--hm-text) 6%, transparent)`)}
               />
 
               <AnimatePresence>
@@ -1275,8 +1275,8 @@ export default function RecipeDetailPage({
               </div>
             ) : reviews.length === 0 ? (
               <div className="text-center py-8">
-                <Star className="w-10 h-10 text-gray-600 mx-auto mb-2" />
-                <p className="text-sm" style={{ color: `${CREAM}50` }}>
+                <Star className="w-10 h-10 text-[color:color-mix(in_oklab,var(--kitchen-fg)_25%,var(--hm-lm-anchor))] mx-auto mb-2" />
+                <p className="text-sm" style={{ color: `color-mix(in oklab, var(--hm-text) 31%, var(--hm-lm-anchor))` }}>
                   No reviews yet. Be the first!
                 </p>
               </div>
@@ -1340,7 +1340,7 @@ export default function RecipeDetailPage({
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               className="w-full max-w-sm p-6 border"
-              style={{ backgroundColor: BG2, borderColor: `${CREAM}15` }}
+              style={{ backgroundColor: BG2, borderColor: `color-mix(in oklab, var(--hm-text) 8%, transparent)` }}
               onClick={(e) => e.stopPropagation()}
             >
               <div
@@ -1355,7 +1355,7 @@ export default function RecipeDetailPage({
               >
                 Delete this recipe?
               </h3>
-              <p className="text-sm mb-5" style={{ color: `${CREAM}55` }}>
+              <p className="text-sm mb-5" style={{ color: `color-mix(in oklab, var(--hm-text) 33%, var(--hm-lm-anchor))` }}>
                 “{recipe.title}” will be permanently removed. This can’t be undone.
               </p>
               {deleteError && (
@@ -1369,7 +1369,7 @@ export default function RecipeDetailPage({
                   onClick={() => setShowDeleteConfirm(false)}
                   disabled={deleting}
                   className="flex-1 px-4 py-2.5 text-sm font-extrabold uppercase tracking-tighter border transition-colors disabled:opacity-50"
-                  style={{ color: CREAM, borderColor: `${CREAM}20`, backgroundColor: "transparent" }}
+                  style={{ color: CREAM, borderColor: `color-mix(in oklab, var(--hm-text) 13%, transparent)`, backgroundColor: "transparent" }}
                 >
                   Cancel
                 </button>

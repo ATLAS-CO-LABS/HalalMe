@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, Suspense } from "react";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { authService, isRateLimitError } from "@/services/authService";
 import { useAuth } from "@/hooks/useAuth";
@@ -126,8 +127,8 @@ function VerifyOtpContent() {
 
   if (!email) {
     return (
-      <div className="text-center text-[#F7E7CE]/60 py-12">
-        <p>No email provided. Please go back and try again.</p>
+      <div className="bg-[#0A1C19] border border-[#F7E7CE]/10 p-6 sm:p-8 text-center">
+        <p className="text-sm text-[#F7E7CE]/50">No email provided. Please go back and try again.</p>
       </div>
     );
   }
@@ -140,22 +141,32 @@ function VerifyOtpContent() {
       : "Resend code";
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="text-center space-y-2">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#F7E7CE]/10 border border-[#F7E7CE]/20">
-          <svg className="h-7 w-7 text-[#F7E7CE]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 9v.906a2.25 2.25 0 01-1.183 1.981l-6.478 3.488M2.25 9v.906a2.25 2.25 0 001.183 1.981l6.478 3.488m8.839 2.51l-4.66-2.51m0 0l-1.023-.55a2.25 2.25 0 00-2.134 0l-1.022.55m0 0l-4.661 2.51m16.5 1.615a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V8.844a2.25 2.25 0 011.183-1.98l7.5-4.04a2.25 2.25 0 012.134 0l7.5 4.04a2.25 2.25 0 011.183 1.98V19.5z" />
-          </svg>
+    <div className="bg-[#0A1C19] border border-[#F7E7CE]/10 p-6 sm:p-8">
+      {/* Logo + heading */}
+      <div className="mb-8">
+        <div className="flex items-center gap-2.5 mb-6">
+          <span style={{ position: "relative", display: "inline-flex", width: 26, height: 26, flexShrink: 0 }}>
+              <span style={{ position: "absolute", inset: 0, backgroundColor: "rgba(255,255,255,0.92)", borderRadius: "50%" }} />
+              <Image src="/logo/logo.png" alt="HalalMe" width={26} height={26} className="object-contain relative z-10" />
+            </span>
+          <div className="w-px h-5 bg-[#F7E7CE]/15" />
+          <span className="text-[10px] font-bold text-[#F59E0B] uppercase tracking-[0.3em]">
+            Verify Email
+          </span>
         </div>
-        <h1 className="text-2xl font-black text-[#F7E7CE] tracking-tight">
-          Check your email
+
+        <h1 className="text-3xl sm:text-4xl font-extrabold uppercase tracking-tighter leading-[0.9] text-[#F7E7CE] mb-2">
+          Enter
+          <br />
+          <span className="text-[#F7E7CE]/40">Your Code</span>
         </h1>
-        <p className="text-sm text-[#F7E7CE]/55 leading-relaxed">
+        <p className="text-[#F7E7CE]/45 text-sm mt-3">
           We sent a 6-digit code to{" "}
-          <span className="font-semibold text-[#F7E7CE]/80">{maskEmail(email)}</span>
+          <span className="text-[#F7E7CE]/70 font-semibold">{maskEmail(email)}</span>
         </p>
       </div>
+
+      <div className="h-px w-full bg-[#F7E7CE]/8 mb-7" />
 
       {/* OTP input */}
       <OtpForm
@@ -167,37 +178,32 @@ function VerifyOtpContent() {
         length={6}
       />
 
-      {/* Resend */}
-      <div className="text-center space-y-2">
+      {/* Resend + back */}
+      <div className="mt-6 pt-5 border-t border-[#F7E7CE]/8 space-y-3">
         {resendMessage && (
-          <p className="text-sm text-emerald-400">{resendMessage}</p>
+          <p className="text-center text-xs text-[#F59E0B]">{resendMessage}</p>
         )}
-        <p className="text-sm text-[#F7E7CE]/40">
+        <p className="text-center text-xs text-[#F7E7CE]/30">
           Didn&apos;t receive it?{" "}
           <button
             type="button"
             onClick={handleResend}
             disabled={cooldown > 0 || isResending}
-            className="font-semibold text-[#F7E7CE]/70 hover:text-[#F7E7CE] transition-colors
-              disabled:opacity-40 disabled:cursor-not-allowed underline underline-offset-2"
+            className="text-[#F7E7CE]/60 hover:text-[#F7E7CE] font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {resendLabel}
           </button>
+          {" "}· Check your spam folder
         </p>
-        <p className="text-xs text-[#F7E7CE]/25">
-          Check your spam folder if you don&apos;t see it.
+        <p className="text-center text-xs">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="text-[#F7E7CE]/25 hover:text-[#F7E7CE]/50 transition-colors"
+          >
+            ← Go back
+          </button>
         </p>
-      </div>
-
-      {/* Back link */}
-      <div className="text-center">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="text-xs text-[#F7E7CE]/30 hover:text-[#F7E7CE]/60 transition-colors"
-        >
-          ← Go back
-        </button>
       </div>
     </div>
   );

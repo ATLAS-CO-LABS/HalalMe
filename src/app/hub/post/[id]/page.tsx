@@ -31,10 +31,10 @@ import AuthGuard from "@/components/auth/AuthGuard";
 import { formatRelativeTime } from "@/lib/relativeTime";
 import Avatar from "@/components/hub/Avatar";
 
-const BG = "#0B0D0F";
-const BG2 = "#111418";
-const AMBER = "#F59E0B";
-const CREAM = "#F7E7CE";
+const BG = "var(--hub-bg)";
+const BG2 = "var(--hub-bg2)";
+const AMBER = "var(--hm-amber)";
+const CREAM = "var(--hm-text)";
 
 export default function PostDetailPage({
   params,
@@ -308,14 +308,14 @@ function PostDetailContent({ id }: { id: string }) {
             </span>
             <span
               className="text-xs font-normal"
-              style={{ color: `${CREAM}35`, fontFamily: "var(--font-body)" }}
+              style={{ color: `color-mix(in oklab, var(--hm-text) 21%, var(--hm-lm-anchor))`, fontFamily: "var(--font-body)" }}
             >
               {formatRelativeTime(comment.created_at)}
             </span>
           </div>
           <p
             className="text-sm mb-2 font-normal"
-            style={{ color: `${CREAM}80`, fontFamily: "var(--font-body)" }}
+            style={{ color: `color-mix(in oklab, var(--hm-text) 50%, var(--hm-lm-anchor))`, fontFamily: "var(--font-body)" }}
           >
             {comment.content}
           </p>
@@ -323,7 +323,7 @@ function PostDetailContent({ id }: { id: string }) {
             <motion.button
               onClick={() => handleLikeComment(comment.id, comment.parent_id, !!comment.is_liked)}
               className="flex items-center gap-1 text-xs transition-colors"
-              style={{ color: comment.is_liked ? "#EF4444" : `${CREAM}35` }}
+              style={{ color: comment.is_liked ? "#EF4444" : `color-mix(in oklab, var(--hm-text) 21%, transparent)` }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -343,9 +343,9 @@ function PostDetailContent({ id }: { id: string }) {
                   )
                 }
                 className="text-xs transition-colors font-semibold flex items-center gap-1"
-                style={{ color: `${CREAM}35` }}
+                style={{ color: `color-mix(in oklab, var(--hm-text) 21%, var(--hm-lm-anchor))` }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = AMBER)}
-                onMouseLeave={(e) => (e.currentTarget.style.color = `${CREAM}35`)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = `color-mix(in oklab, var(--hm-text) 21%, transparent)`)}
               >
                 <CornerDownRight className="w-3 h-3" />
                 Reply
@@ -356,9 +356,9 @@ function PostDetailContent({ id }: { id: string }) {
                 onClick={() => handleDeleteComment(comment.id, comment.parent_id)}
                 aria-label="Delete comment"
                 className="text-xs transition-colors flex items-center gap-1"
-                style={{ color: `${CREAM}25` }}
+                style={{ color: `color-mix(in oklab, var(--hm-text) 15%, var(--hm-lm-anchor))` }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = "#F87171")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = `${CREAM}25`)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = `color-mix(in oklab, var(--hm-text) 15%, transparent)`)}
               >
                 <Trash2 className="w-3 h-3" />
               </button>
@@ -367,9 +367,9 @@ function PostDetailContent({ id }: { id: string }) {
                 onClick={() => setReportTarget({ type: "comment", id: comment.id })}
                 aria-label="Report comment"
                 className="text-xs transition-colors flex items-center gap-1"
-                style={{ color: `${CREAM}25` }}
+                style={{ color: `color-mix(in oklab, var(--hm-text) 15%, var(--hm-lm-anchor))` }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = "#F87171")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = `${CREAM}25`)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = `color-mix(in oklab, var(--hm-text) 15%, transparent)`)}
               >
                 <Flag className="w-3 h-3" />
               </button>
@@ -380,7 +380,7 @@ function PostDetailContent({ id }: { id: string }) {
 
       {/* Nested replies */}
       {!isReply && (comment.replies ?? []).length > 0 && (
-        <div className="mt-3 space-y-3 pl-4 ml-6" style={{ borderLeft: `2px solid ${AMBER}20` }}>
+        <div className="mt-3 space-y-3 pl-4 ml-6" style={{ borderLeft: `2px solid color-mix(in oklab, var(--hm-amber) 13%, transparent)` }}>
           {(comment.replies ?? []).map((reply) => renderComment(reply, true))}
         </div>
       )}
@@ -402,7 +402,7 @@ function PostDetailContent({ id }: { id: string }) {
     return (
       <div className="min-h-screen pt-16 flex items-center justify-center" style={{ backgroundColor: BG }}>
         <div className="text-center space-y-4">
-          <AlertCircle className="w-12 h-12 mx-auto" style={{ color: `${CREAM}30` }} />
+          <AlertCircle className="w-12 h-12 mx-auto" style={{ color: `color-mix(in oklab, var(--hm-text) 19%, var(--hm-lm-anchor))` }} />
           <h2 className="text-2xl font-extrabold uppercase tracking-tighter" style={{ color: CREAM, fontFamily: "var(--font-headline)" }}>
             Post not found
           </h2>
@@ -433,15 +433,15 @@ function PostDetailContent({ id }: { id: string }) {
   return (
     <div className="min-h-screen pt-16" style={{ backgroundColor: BG }}>
       {/* Header - sticky top-16 to sit below the fixed app header; solid bg (no blur) avoids scroll-repaint tearing */}
-      <div className="border-b sticky top-16 z-40" style={{ backgroundColor: BG2, borderColor: `${CREAM}10` }}>
+      <div className="border-b sticky top-16 z-40" style={{ backgroundColor: BG2, borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)` }}>
         <div className="mx-auto max-w-4xl px-4 md:px-6 py-4 md:py-5">
           <div className="flex items-center gap-3 md:gap-4">
               <motion.button
                 onClick={() => router.back()}
                 className="transition-colors"
-                style={{ color: `${CREAM}50` }}
+                style={{ color: `color-mix(in oklab, var(--hm-text) 31%, var(--hm-lm-anchor))` }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = CREAM)}
-                onMouseLeave={(e) => (e.currentTarget.style.color = `${CREAM}50`)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = `color-mix(in oklab, var(--hm-text) 31%, transparent)`)}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -465,7 +465,7 @@ function PostDetailContent({ id }: { id: string }) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="overflow-hidden mb-6 border"
-          style={{ backgroundColor: BG2, borderColor: `${CREAM}10` }}
+          style={{ backgroundColor: BG2, borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)` }}
         >
           {/* User Info */}
           <div className="p-4 md:p-5 flex items-center gap-3">
@@ -484,7 +484,7 @@ function PostDetailContent({ id }: { id: string }) {
               </div>
               <p
                 className="text-sm font-normal"
-                style={{ color: `${CREAM}45`, fontFamily: "var(--font-body)" }}
+                style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))`, fontFamily: "var(--font-body)" }}
               >
                 {username && <span>{username} • </span>}
                 {formatRelativeTime(post.created_at)}
@@ -508,9 +508,9 @@ function PostDetailContent({ id }: { id: string }) {
               <Link href={`/kitchen/recipes/${post.recipe_id}`}>
                 <motion.div
                   className="p-4 border transition-colors cursor-pointer"
-                  style={{ backgroundColor: `${AMBER}12`, borderColor: `${AMBER}30` }}
+                  style={{ backgroundColor: `color-mix(in oklab, var(--hm-amber) 7%, transparent)`, borderColor: `color-mix(in oklab, var(--hm-amber) 19%, transparent)` }}
                   onMouseEnter={(e) => (e.currentTarget.style.borderColor = AMBER)}
-                  onMouseLeave={(e) => (e.currentTarget.style.borderColor = `${AMBER}30`)}
+                  onMouseLeave={(e) => (e.currentTarget.style.borderColor = `color-mix(in oklab, var(--hm-amber) 19%, transparent)`)}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
@@ -567,13 +567,13 @@ function PostDetailContent({ id }: { id: string }) {
           ) : null}
 
           {/* Actions */}
-          <div className="p-4 md:p-5 border-t" style={{ borderColor: `${CREAM}10` }}>
+          <div className="p-4 md:p-5 border-t" style={{ borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)` }}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-6">
                 <motion.button
                   onClick={handleLikePost}
                   className="flex items-center gap-2 transition-colors"
-                  style={{ color: post.is_liked ? "#EF4444" : `${CREAM}45` }}
+                  style={{ color: post.is_liked ? "#EF4444" : `color-mix(in oklab, var(--hm-text) 27%, transparent)` }}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                 >
@@ -581,12 +581,12 @@ function PostDetailContent({ id }: { id: string }) {
                   <span className="text-base font-semibold">{post.like_count}</span>
                 </motion.button>
 
-                <div className="flex items-center gap-2" style={{ color: `${CREAM}45` }}>
+                <div className="flex items-center gap-2" style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))` }}>
                   <MessageCircle className="w-6 h-6" />
                   <span className="text-base font-semibold">{post.comment_count}</span>
                 </div>
 
-                <div className="flex items-center gap-2" style={{ color: `${CREAM}30` }}>
+                <div className="flex items-center gap-2" style={{ color: `color-mix(in oklab, var(--hm-text) 19%, var(--hm-lm-anchor))` }}>
                   <Eye className="w-5 h-5" />
                   <span className="text-sm font-semibold">{post.view_count}</span>
                 </div>
@@ -595,9 +595,9 @@ function PostDetailContent({ id }: { id: string }) {
               <motion.button
                 onClick={handleShare}
                 className="transition-colors"
-                style={{ color: `${CREAM}45` }}
+                style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))` }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = AMBER)}
-                onMouseLeave={(e) => (e.currentTarget.style.color = `${CREAM}45`)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = `color-mix(in oklab, var(--hm-text) 27%, transparent)`)}
                 title="Copy link"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
@@ -614,10 +614,10 @@ function PostDetailContent({ id }: { id: string }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
           className="overflow-hidden border"
-          style={{ backgroundColor: BG2, borderColor: `${CREAM}10` }}
+          style={{ backgroundColor: BG2, borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)` }}
         >
           {/* Add comment / reply input */}
-          <div className="p-4 md:p-5 border-b" style={{ borderColor: `${CREAM}10` }}>
+          <div className="p-4 md:p-5 border-b" style={{ borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)` }}>
             <AnimatePresence>
               {replyingTo && (
                 <motion.div
@@ -632,7 +632,7 @@ function PostDetailContent({ id }: { id: string }) {
                   <button
                     onClick={() => setReplyingTo(null)}
                     className="transition-colors"
-                    style={{ color: `${CREAM}35` }}
+                    style={{ color: `color-mix(in oklab, var(--hm-text) 21%, var(--hm-lm-anchor))` }}
                   >
                     <span className="text-xs">Cancel</span>
                   </button>
@@ -650,9 +650,9 @@ function PostDetailContent({ id }: { id: string }) {
                   onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleAddComment()}
                   placeholder={replyingTo ? `Reply to @${replyingTo.username}...` : "Write a comment..."}
                   className="flex-1 text-base px-4 py-2.5 border focus:outline-none font-normal transition-colors"
-                  style={{ backgroundColor: BG, borderColor: `${CREAM}15`, color: CREAM, caretColor: AMBER }}
+                  style={{ backgroundColor: BG, borderColor: `color-mix(in oklab, var(--hm-text) 8%, transparent)`, color: CREAM, caretColor: AMBER }}
                   onFocus={(e) => (e.target.style.borderColor = AMBER)}
-                  onBlur={(e) => (e.target.style.borderColor = `${CREAM}15`)}
+                  onBlur={(e) => (e.target.style.borderColor = `color-mix(in oklab, var(--hm-text) 8%, transparent)`)}
                   disabled={isSubmittingComment}
                 />
                 <motion.button
@@ -662,7 +662,7 @@ function PostDetailContent({ id }: { id: string }) {
                   style={
                     newComment.trim() && !isSubmittingComment
                       ? { backgroundColor: AMBER, color: BG }
-                      : { backgroundColor: BG, color: `${CREAM}30`, border: `1px solid ${CREAM}10` }
+                      : { backgroundColor: BG, color: `color-mix(in oklab, var(--hm-text) 19%, var(--hm-lm-anchor))`, border: `1px solid color-mix(in oklab, var(--hm-text) 6%, transparent)` }
                   }
                   whileHover={newComment.trim() && !isSubmittingComment ? { scale: 1.1 } : {}}
                   whileTap={newComment.trim() && !isSubmittingComment ? { scale: 0.9 } : {}}
@@ -684,8 +684,8 @@ function PostDetailContent({ id }: { id: string }) {
               </div>
             ) : comments.length === 0 ? (
               <div className="p-8 text-center">
-                <MessageCircle className="w-12 h-12 mx-auto mb-3" style={{ color: `${AMBER}30` }} />
-                <p className="font-normal" style={{ color: `${CREAM}45`, fontFamily: "var(--font-body)" }}>
+                <MessageCircle className="w-12 h-12 mx-auto mb-3" style={{ color: `color-mix(in oklab, var(--hm-amber) 19%, var(--hm-lm-anchor))` }} />
+                <p className="font-normal" style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))`, fontFamily: "var(--font-body)" }}>
                   No comments yet. Be the first to comment!
                 </p>
               </div>
@@ -697,7 +697,7 @@ function PostDetailContent({ id }: { id: string }) {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.04 }}
                   className="p-4 md:p-5"
-                  style={index > 0 ? { borderTop: `1px solid ${CREAM}10` } : undefined}
+                  style={index > 0 ? { borderTop: `1px solid color-mix(in oklab, var(--hm-text) 6%, transparent)` } : undefined}
                 >
                   {renderComment(comment)}
                 </motion.div>

@@ -12,9 +12,9 @@ import Avatar from "./Avatar";
 import PostCard from "./PostCard";
 import { getFlairTheme } from "@/lib/flairTheme";
 
-const BG2 = "#111418";
-const AMBER = "#F59E0B";
-const CREAM = "#F7E7CE";
+const BG2 = "var(--hub-bg2)";
+const AMBER = "var(--hm-amber)";
+const CREAM = "var(--hm-text)";
 
 interface UserProfileModalProps {
   isOpen: boolean;
@@ -205,7 +205,7 @@ export default function UserProfileModal({
               exit={{ opacity: 0, scale: 0.96, y: 8 }}
               transition={{ type: "tween", duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
               className="w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col my-8 border shadow-2xl"
-              style={{ backgroundColor: BG2, borderColor: `${CREAM}12` }}
+              style={{ backgroundColor: BG2, borderColor: `color-mix(in oklab, var(--hm-text) 7%, transparent)` }}
               onClick={(e) => e.stopPropagation()}
             >
               {/* Cover + Close */}
@@ -232,7 +232,7 @@ export default function UserProfileModal({
                       alt={displayName}
                       size="xl"
                       flair={profileFlair}
-                      className="border-4 border-[#111418]"
+                      className="border-4 border-(--hub-bg2)"
                     />
                     <div className="flex-1 mb-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -249,7 +249,7 @@ export default function UserProfileModal({
                       {formattedUsername && (
                         <p
                           className="text-sm font-normal"
-                          style={{ color: `${CREAM}45`, fontFamily: "var(--font-body)" }}
+                          style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))`, fontFamily: "var(--font-body)" }}
                         >
                           {formattedUsername}
                         </p>
@@ -261,14 +261,14 @@ export default function UserProfileModal({
                   {bio && (
                     <p
                       className="mt-3 text-sm font-normal leading-relaxed"
-                      style={{ color: `${CREAM}70`, fontFamily: "var(--font-body)" }}
+                      style={{ color: `color-mix(in oklab, var(--hm-text) 44%, var(--hm-lm-anchor))`, fontFamily: "var(--font-body)" }}
                     >
                       {bio}
                     </p>
                   )}
 
                   {/* Meta */}
-                  <div className="flex items-center gap-4 mt-3 text-sm" style={{ color: `${CREAM}45` }}>
+                  <div className="flex items-center gap-4 mt-3 text-sm" style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))` }}>
                     <div className="flex items-center gap-1">
                       <MapPin className="w-4 h-4" />
                       <span>Global</span>
@@ -307,19 +307,19 @@ export default function UserProfileModal({
                   <div className="flex items-center gap-6 mt-4">
                     <div>
                       <span className="font-bold text-lg" style={{ color: CREAM }}>{posts.length}</span>
-                      <span className="text-sm ml-1" style={{ color: `${CREAM}45` }}>Posts</span>
+                      <span className="text-sm ml-1" style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))` }}>Posts</span>
                     </div>
                     <div>
                       <span className="font-bold text-lg" style={{ color: CREAM }}>
                         {followerCount ?? "-"}
                       </span>
-                      <span className="text-sm ml-1" style={{ color: `${CREAM}45` }}>Followers</span>
+                      <span className="text-sm ml-1" style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))` }}>Followers</span>
                     </div>
                     <div>
                       <span className="font-bold text-lg" style={{ color: CREAM }}>
                         {followingCount ?? "-"}
                       </span>
-                      <span className="text-sm ml-1" style={{ color: `${CREAM}45` }}>Following</span>
+                      <span className="text-sm ml-1" style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))` }}>Following</span>
                     </div>
                   </div>
 
@@ -331,7 +331,7 @@ export default function UserProfileModal({
                       className="mt-4 w-full flex items-center justify-center gap-2 px-6 py-3 font-extrabold uppercase tracking-tighter text-sm transition-all disabled:opacity-70 border"
                       style={
                         isFollowing
-                          ? { backgroundColor: "transparent", color: CREAM, borderColor: `${CREAM}20` }
+                          ? { backgroundColor: "transparent", color: CREAM, borderColor: `color-mix(in oklab, var(--hm-text) 13%, transparent)` }
                           : { backgroundColor: AMBER, color: BG2, borderColor: AMBER }
                       }
                       whileHover={{ scale: 1.02 }}
@@ -345,7 +345,7 @@ export default function UserProfileModal({
               </div>
 
               {/* Posts Section */}
-              <div className="flex-1 overflow-y-auto border-t p-6" style={{ borderColor: `${CREAM}10` }}>
+              <div className="flex-1 overflow-y-auto border-t p-6" style={{ borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)` }}>
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-6 h-px" style={{ backgroundColor: AMBER }} />
                   <h3
@@ -362,7 +362,7 @@ export default function UserProfileModal({
                   </div>
                 ) : posts.length === 0 ? (
                   <div className="text-center py-12">
-                    <p className="font-normal" style={{ color: `${CREAM}45`, fontFamily: "var(--font-body)" }}>
+                    <p className="font-normal" style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))`, fontFamily: "var(--font-body)" }}>
                       No posts yet
                     </p>
                   </div>

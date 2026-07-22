@@ -16,12 +16,12 @@ import { useAuthGate } from "@/hooks/useAuthGate";
 import type { AIAssistantResponse, AIMessage } from "@/types";
 
 // ── Palette ───────────────────────────────────────────────────────────
-const BG      = "#1C1C1C";
-const BG_SIDE = "#161616";
-const CREAM   = "#F0DFC0";
+const BG      = "var(--kitchen-bg)";
+const BG_SIDE = "var(--kitchen-bg2)";
+const CREAM   = "var(--hm-text)";
 const GOLD    = "#C9973A";
-const VIOLET  = "#F03E9E";   // bright magenta
-const FUCHSIA = "#C41E73";   // deep magenta
+const VIOLET  = "var(--hm-magenta)";   // bright magenta
+const FUCHSIA = "var(--hm-magenta-deep)";   // deep magenta
 const FX      = FUCHSIA;
 const FX2     = VIOLET;
 
@@ -83,7 +83,7 @@ function RecipeContent({ recipe }: { recipe: NonNullable<AIAssistantResponse["re
           {recipe.title}
         </h3>
         {recipe.description && (
-          <p className="mt-1 text-xs leading-relaxed" style={{ color: `${CREAM}90` }}>
+          <p className="mt-1 text-xs leading-relaxed" style={{ color: `color-mix(in oklab, var(--hm-text) 56%, var(--hm-lm-anchor))` }}>
             {recipe.description}
           </p>
         )}
@@ -102,12 +102,12 @@ function RecipeContent({ recipe }: { recipe: NonNullable<AIAssistantResponse["re
             </span>
           )}
           {totalTime > 0 && (
-            <span className="flex items-center gap-1 text-[9px] font-bold uppercase" style={{ color: `${CREAM}55`, letterSpacing: "0.12em" }}>
+            <span className="flex items-center gap-1 text-[9px] font-bold uppercase" style={{ color: `color-mix(in oklab, var(--hm-text) 33%, var(--hm-lm-anchor))`, letterSpacing: "0.12em" }}>
               <Clock className="w-2.5 h-2.5" /> {totalTime} min
             </span>
           )}
           {(recipe.servings ?? 0) > 0 && (
-            <span className="flex items-center gap-1 text-[9px] font-bold uppercase" style={{ color: `${CREAM}55`, letterSpacing: "0.12em" }}>
+            <span className="flex items-center gap-1 text-[9px] font-bold uppercase" style={{ color: `color-mix(in oklab, var(--hm-text) 33%, var(--hm-lm-anchor))`, letterSpacing: "0.12em" }}>
               <Users className="w-2.5 h-2.5" /> {recipe.servings} servings
             </span>
           )}
@@ -115,7 +115,7 @@ function RecipeContent({ recipe }: { recipe: NonNullable<AIAssistantResponse["re
       </div>
 
       {/* Ingredients */}
-      <div className="px-4 py-3" style={{ borderBottom: "1px solid rgba(247,224,192,0.06)" }}>
+      <div className="px-4 py-3" style={{ borderBottom: "1px solid color-mix(in oklab, var(--hm-text) 6%, transparent)" }}>
         <div className="flex items-center gap-2 mb-2.5">
           <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: VIOLET }}>Ingredients</span>
           <div className="flex-1 h-px" style={{ background: `linear-gradient(to right, rgba(240,62,158,0.3), transparent)` }} />
@@ -124,8 +124,8 @@ function RecipeContent({ recipe }: { recipe: NonNullable<AIAssistantResponse["re
           {recipe.ingredients.map((ing, i) => {
             const label = [ing.amount, ing.unit, ing.name].filter(Boolean).join(" ").trim() || ing.name;
             return (
-              <li key={i} className="flex items-start gap-2 text-sm" style={{ color: `${CREAM}CC` }}>
-                <span className="mt-1.5 w-1 h-1 shrink-0 rounded-full" style={{ backgroundColor: `${VIOLET}60` }} />
+              <li key={i} className="flex items-start gap-2 text-sm" style={{ color: `color-mix(in oklab, var(--hm-text) 80%, var(--hm-lm-anchor))` }}>
+                <span className="mt-1.5 w-1 h-1 shrink-0 rounded-full" style={{ backgroundColor: `color-mix(in oklab, var(--hm-magenta) 38%, transparent)` }} />
                 {label}
               </li>
             );
@@ -134,7 +134,7 @@ function RecipeContent({ recipe }: { recipe: NonNullable<AIAssistantResponse["re
       </div>
 
       {/* Instructions */}
-      <div className="px-4 py-3" style={{ borderBottom: "1px solid rgba(247,224,192,0.06)" }}>
+      <div className="px-4 py-3" style={{ borderBottom: "1px solid color-mix(in oklab, var(--hm-text) 6%, transparent)" }}>
         <div className="flex items-center gap-2 mb-2.5">
           <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: VIOLET }}>Instructions</span>
           <div className="flex-1 h-px" style={{ background: `linear-gradient(to right, rgba(240,62,158,0.3), transparent)` }} />
@@ -146,7 +146,7 @@ function RecipeContent({ recipe }: { recipe: NonNullable<AIAssistantResponse["re
                 style={{ background: "rgba(240,62,158,0.15)", color: VIOLET, border: "1px solid rgba(240,62,158,0.3)" }}>
                 {step.step || i + 1}
               </span>
-              <span className="text-sm leading-[1.7]" style={{ color: `${CREAM}CC` }}>{step.text}</span>
+              <span className="text-sm leading-[1.7]" style={{ color: `color-mix(in oklab, var(--hm-text) 80%, var(--hm-lm-anchor))` }}>{step.text}</span>
             </li>
           ))}
         </ol>
@@ -215,11 +215,11 @@ function SidebarContent({ convs, activeConv, onConvClick, onNewChat, onDelete, u
           <Image src="/logo/aqi.png" alt="AQI" width={32} height={32} className="object-contain rounded-full bg-white p-1.5" />
           <div>
             <span className="text-sm font-black uppercase" style={{ color: CREAM, letterSpacing: "0.22em" }}>AQI</span>
-            <div className="text-[8px] font-bold uppercase" style={{ color: `${CREAM}35`, letterSpacing: "0.2em" }}>by HalalMe</div>
+            <div className="text-[8px] font-bold uppercase" style={{ color: `color-mix(in oklab, var(--hm-text) 21%, var(--hm-lm-anchor))`, letterSpacing: "0.2em" }}>by HalalMe</div>
           </div>
         </div>
         {onClose && (
-          <button onClick={onClose} className="p-1 transition-opacity hover:opacity-70" style={{ color: `${CREAM}40` }}>
+          <button onClick={onClose} className="p-1 transition-opacity hover:opacity-70" style={{ color: `color-mix(in oklab, var(--hm-text) 25%, var(--hm-lm-anchor))` }}>
             <X className="w-4 h-4" strokeWidth={1.75} />
           </button>
         )}
@@ -252,8 +252,8 @@ function SidebarContent({ convs, activeConv, onConvClick, onNewChat, onDelete, u
           return (
             <div key={group} className="mb-4">
               <div className="px-2 py-1.5 flex items-center gap-2">
-                <div className="w-1 h-1" style={{ backgroundColor: `${VIOLET}50` }} />
-                <span className="text-[8px] font-black uppercase" style={{ color: `${CREAM}28`, letterSpacing: "0.28em" }}>
+                <div className="w-1 h-1" style={{ backgroundColor: `color-mix(in oklab, var(--hm-magenta) 31%, transparent)` }} />
+                <span className="text-[8px] font-black uppercase" style={{ color: `color-mix(in oklab, var(--hm-text) 16%, var(--hm-lm-anchor))`, letterSpacing: "0.28em" }}>
                   {group}
                 </span>
               </div>
@@ -267,7 +267,7 @@ function SidebarContent({ convs, activeConv, onConvClick, onNewChat, onDelete, u
                     style={{
                       background: active
                         ? `linear-gradient(90deg, rgba(240,62,158,0.12), transparent)`
-                        : hovered ? `rgba(247,224,192,0.04)` : "transparent",
+                        : hovered ? `color-mix(in oklab, var(--hm-text) 4%, transparent)` : "transparent",
                       borderLeft: `2px solid ${active ? VIOLET : "transparent"}`,
                     }}
                     onMouseEnter={() => setHoveredId(conv.id)}
@@ -278,9 +278,9 @@ function SidebarContent({ convs, activeConv, onConvClick, onNewChat, onDelete, u
                       className="flex-1 text-left px-2.5 py-2 flex items-center gap-2 min-w-0"
                     >
                       <MessageSquare className="w-3 h-3 shrink-0" strokeWidth={active ? 2 : 1.5}
-                        style={{ color: active ? VIOLET : `${CREAM}25` }} />
+                        style={{ color: active ? VIOLET : `color-mix(in oklab, var(--hm-text) 15%, transparent)` }} />
                       <span className="text-xs truncate" style={{
-                        color: active ? CREAM : `${CREAM}45`,
+                        color: active ? CREAM : `color-mix(in oklab, var(--hm-text) 27%, transparent)`,
                         fontWeight: active ? 700 : 400,
                       }}>
                         {conv.title}
@@ -290,9 +290,9 @@ function SidebarContent({ convs, activeConv, onConvClick, onNewChat, onDelete, u
                       <button
                         onClick={(e) => { e.stopPropagation(); onDelete(conv.id); }}
                         className="shrink-0 p-1.5 mr-1 transition-colors"
-                        style={{ color: `${CREAM}25` }}
+                        style={{ color: `color-mix(in oklab, var(--hm-text) 15%, var(--hm-lm-anchor))` }}
                         onMouseEnter={(e) => (e.currentTarget.style.color = "#f87171")}
-                        onMouseLeave={(e) => (e.currentTarget.style.color = `${CREAM}25`)}
+                        onMouseLeave={(e) => (e.currentTarget.style.color = `color-mix(in oklab, var(--hm-text) 15%, transparent)`)}
                       >
                         <Trash2 className="w-3 h-3" strokeWidth={1.75} />
                       </button>
@@ -305,8 +305,8 @@ function SidebarContent({ convs, activeConv, onConvClick, onNewChat, onDelete, u
         })}
         {convs.length === 0 && (
           <div className="px-4 mt-6 text-center">
-            <MessageSquare className="w-6 h-6 mx-auto mb-2" style={{ color: `${CREAM}12` }} strokeWidth={1} />
-            <p className="text-[9px] uppercase" style={{ color: `${CREAM}20`, letterSpacing: "0.14em" }}>
+            <MessageSquare className="w-6 h-6 mx-auto mb-2" style={{ color: `color-mix(in oklab, var(--hm-text) 7%, var(--hm-lm-anchor))` }} strokeWidth={1} />
+            <p className="text-[9px] uppercase" style={{ color: `color-mix(in oklab, var(--hm-text) 13%, var(--hm-lm-anchor))`, letterSpacing: "0.14em" }}>
               No conversations yet
             </p>
           </div>
@@ -327,12 +327,12 @@ function SidebarContent({ convs, activeConv, onConvClick, onNewChat, onDelete, u
           {userInitial ?? "?"}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-semibold truncate" style={{ color: `${CREAM}65` }}>
+          <p className="text-[10px] font-semibold truncate" style={{ color: `color-mix(in oklab, var(--hm-text) 40%, var(--hm-lm-anchor))` }}>
             {userName ?? "Guest"}
           </p>
           <div className="flex items-center gap-1 mt-0.5">
             <span className="w-1 h-1 rounded-full" style={{ backgroundColor: "#4ade80" }} />
-            <span className="text-[7px] font-black uppercase" style={{ color: `${CREAM}25`, letterSpacing: "0.2em" }}>
+            <span className="text-[7px] font-black uppercase" style={{ color: `color-mix(in oklab, var(--hm-text) 15%, var(--hm-lm-anchor))`, letterSpacing: "0.2em" }}>
               AQI v1.0
             </span>
           </div>
@@ -621,7 +621,7 @@ export default function AIAssistantPage() {
           className="flex items-center gap-3"
         >
           <Image src="/logo/aqi.png" alt="AQI" width={24} height={24} className="object-contain rounded-full bg-white p-1 opacity-50" />
-          <span className="text-[10px] font-black uppercase" style={{ color: `${CREAM}40`, letterSpacing: "0.3em" }}>
+          <span className="text-[10px] font-black uppercase" style={{ color: `color-mix(in oklab, var(--hm-text) 25%, var(--hm-lm-anchor))`, letterSpacing: "0.3em" }}>
             Loading
           </span>
         </motion.div>
@@ -669,13 +669,13 @@ export default function AIAssistantPage() {
         {/* Header */}
         <header className="shrink-0 flex items-center justify-between px-4 h-14"
           style={{
-            backgroundColor: `${BG}EE`,
+            backgroundColor: `color-mix(in oklab, var(--kitchen-bg) 93%, transparent)`,
             borderBottom: "1px solid rgba(240,62,158,0.1)",
             backdropFilter: "blur(12px)",
           }}>
           <div className="flex items-center gap-3">
             <button className="lg:hidden p-1.5 -ml-1.5 transition-opacity hover:opacity-70"
-              style={{ color: `${CREAM}40` }} onClick={() => setSidebarOpen(true)}>
+              style={{ color: `color-mix(in oklab, var(--hm-text) 25%, var(--hm-lm-anchor))` }} onClick={() => setSidebarOpen(true)}>
               <Menu className="w-5 h-5" strokeWidth={1.75} />
             </button>
             <div className="flex items-center gap-2.5">
@@ -705,7 +705,7 @@ export default function AIAssistantPage() {
                       style={{
                         backgroundColor: i < Math.round((requestsLeft / requestsLimit) * 10)
                           ? requestsLeft <= 5 ? "#f87171" : VIOLET
-                          : "rgba(247,224,192,0.08)",
+                          : "color-mix(in oklab, var(--hm-text) 8%, transparent)",
                       }} />
                   ))}
                 </div>
@@ -724,7 +724,7 @@ export default function AIAssistantPage() {
                     {requestsLeft} left
                   </motion.span>
                 ) : (
-                  <span className="text-[9px] font-bold" style={{ color: `${CREAM}30` }}>
+                  <span className="text-[9px] font-bold" style={{ color: `color-mix(in oklab, var(--hm-text) 19%, var(--hm-lm-anchor))` }}>
                     {requestsLeft}/{requestsLimit}
                   </span>
                 )}
@@ -734,7 +734,7 @@ export default function AIAssistantPage() {
               <motion.button
                 onClick={reset}
                 className="flex items-center gap-1.5 px-2.5 py-1.5 text-[10px] font-bold uppercase transition-all"
-                style={{ color: `${CREAM}35`, border: "1px solid rgba(247,224,192,0.08)", letterSpacing: "0.14em" }}
+                style={{ color: `color-mix(in oklab, var(--hm-text) 21%, var(--hm-lm-anchor))`, border: "1px solid color-mix(in oklab, var(--hm-text) 8%, transparent)", letterSpacing: "0.14em" }}
                 whileHover={{ color: CREAM, borderColor: `rgba(240,62,158,0.3)` } as never}
                 whileTap={{ scale: 0.95 }}
               >
@@ -791,11 +791,11 @@ export default function AIAssistantPage() {
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }}
                   className="text-center mb-10"
                 >
-                  <p className="text-sm" style={{ color: `${CREAM}40` }}>
+                  <p className="text-sm" style={{ color: `color-mix(in oklab, var(--hm-text) 25%, var(--hm-lm-anchor))` }}>
                     Halal recipes, ingredient ideas, cooking guidance - all in one place
                   </p>
                   {!user && (
-                    <p className="text-xs mt-3" style={{ color: `${CREAM}28` }}>
+                    <p className="text-xs mt-3" style={{ color: `color-mix(in oklab, var(--hm-text) 16%, var(--hm-lm-anchor))` }}>
                       <button
                         onClick={() => requireAuth(() => {}, "Sign up to chat with your personal halal cooking assistant")}
                         className="underline transition-opacity hover:opacity-80"
@@ -833,7 +833,7 @@ export default function AIAssistantPage() {
                         <div className="text-xs font-black uppercase tracking-tight leading-tight" style={{ color: CREAM }}>
                           {s.title}
                         </div>
-                        <div className="text-[10px] mt-1" style={{ color: `${CREAM}40` }}>{s.sub}</div>
+                        <div className="text-[10px] mt-1" style={{ color: `color-mix(in oklab, var(--hm-text) 25%, var(--hm-lm-anchor))` }}>{s.sub}</div>
                       </div>
                     </motion.button>
                   ))}
@@ -858,7 +858,7 @@ export default function AIAssistantPage() {
                           <Image src="/logo/aqi.png" alt="AQI" width={18} height={18} className="object-contain rounded-full bg-white p-1" />
                         )}
                         <span className="text-[9px] font-black uppercase"
-                          style={{ color: isUser ? `${CREAM}28` : `${VIOLET}90`, letterSpacing: "0.16em" }}>
+                          style={{ color: isUser ? `color-mix(in oklab, var(--hm-text) 16%, transparent)` : `color-mix(in oklab, var(--hm-magenta) 56%, transparent)`, letterSpacing: "0.16em" }}>
                           {isUser ? "You" : "AQI"}
                         </span>
                         {isUser && (
@@ -883,7 +883,7 @@ export default function AIAssistantPage() {
                             borderRadius: 3,
                             padding: "12px 16px",
                           } : {
-                            background: "rgba(38,38,38,0.9)",
+                            background: "var(--kitchen-bubble-bg)",
                             borderRadius: 3,
                             padding: "12px 16px",
                           }}
@@ -891,7 +891,7 @@ export default function AIAssistantPage() {
                           {!isUser && msg.responseType === "recipe" && msg.recipe ? (
                             <div>
                               {msg.content && (
-                                <div className="whitespace-pre-wrap text-sm leading-[1.8] mb-1" style={{ color: `${CREAM}CC` }}>
+                                <div className="whitespace-pre-wrap text-sm leading-[1.8] mb-1" style={{ color: `color-mix(in oklab, var(--hm-text) 80%, var(--hm-lm-anchor))` }}>
                                   {md(msg.content)}
                                 </div>
                               )}
@@ -899,12 +899,12 @@ export default function AIAssistantPage() {
                             </div>
                           ) : (
                             <div className="whitespace-pre-wrap text-sm leading-[1.8]"
-                              style={{ color: isUser ? CREAM : `${CREAM}CC` }}>
+                              style={{ color: isUser ? CREAM : `color-mix(in oklab, var(--hm-text) 80%, transparent)` }}>
                               {md(msg.content)}
                             </div>
                           )}
                           <div className="text-[8px] mt-2 font-semibold uppercase"
-                            style={{ color: `${CREAM}18`, letterSpacing: "0.14em" }}>
+                            style={{ color: `color-mix(in oklab, var(--hm-text) 9%, var(--hm-lm-anchor))`, letterSpacing: "0.14em" }}>
                             {fmt(msg.ts)}
                           </div>
                         </div>
@@ -950,11 +950,11 @@ export default function AIAssistantPage() {
                                 }}
                                 className="flex items-center gap-1 px-2 py-1 text-[9px] font-bold uppercase transition-all"
                                 style={{
-                                  color: copiedId === msg.id ? "#4ade80" : `${CREAM}28`,
-                                  border: `1px solid ${copiedId === msg.id ? "rgba(74,222,128,0.2)" : "rgba(247,224,192,0.08)"}`,
+                                  color: copiedId === msg.id ? "#4ade80" : `color-mix(in oklab, var(--hm-text) 16%, transparent)`,
+                                  border: `1px solid ${copiedId === msg.id ? "rgba(74,222,128,0.2)" : "color-mix(in oklab, var(--hm-text) 8%, transparent)"}`,
                                   letterSpacing: "0.12em",
                                 }}
-                                whileHover={{ color: CREAM, borderColor: "rgba(247,224,192,0.2)" } as never}
+                                whileHover={{ color: CREAM, borderColor: "color-mix(in oklab, var(--hm-text) 20%, transparent)" } as never}
                                 whileTap={{ scale: 0.97 }}
                               >
                                 {copiedId === msg.id
@@ -967,7 +967,7 @@ export default function AIAssistantPage() {
                                   onClick={() => handleSaveRecipe(msg)}
                                   className="flex items-center gap-1 px-2 py-1 text-[9px] font-bold uppercase transition-all"
                                   style={{
-                                    color: savedIds.has(msg.id) ? "#4ade80" : `${VIOLET}80`,
+                                    color: savedIds.has(msg.id) ? "#4ade80" : `color-mix(in oklab, var(--hm-magenta) 50%, transparent)`,
                                     border: `1px solid ${savedIds.has(msg.id) ? "rgba(74,222,128,0.2)" : "rgba(240,62,158,0.2)"}`,
                                     letterSpacing: "0.12em",
                                   }}
@@ -998,8 +998,8 @@ export default function AIAssistantPage() {
                                     disabled={isLoading}
                                     className="px-2 py-1 text-[9px] font-bold uppercase transition-all"
                                     style={{
-                                      color: `${CREAM}30`,
-                                      border: "1px solid rgba(247,224,192,0.07)",
+                                      color: `color-mix(in oklab, var(--hm-text) 19%, var(--hm-lm-anchor))`,
+                                      border: "1px solid color-mix(in oklab, var(--hm-text) 7%, transparent)",
                                       letterSpacing: "0.1em",
                                       opacity: isLoading ? 0.35 : 1,
                                     }}
@@ -1024,16 +1024,16 @@ export default function AIAssistantPage() {
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                   <div className="flex items-center gap-2 mb-2">
                     <Image src="/logo/aqi.png" alt="AQI" width={18} height={18} className="object-contain rounded-full bg-white p-1" />
-                    <span className="text-[9px] font-black uppercase" style={{ color: `${VIOLET}90`, letterSpacing: "0.18em" }}>AQI</span>
+                    <span className="text-[9px] font-black uppercase" style={{ color: `color-mix(in oklab, var(--hm-magenta) 56%, var(--hm-lm-anchor))`, letterSpacing: "0.18em" }}>AQI</span>
                   </div>
                   <div className="flex justify-start">
                     <div className="max-w-[88%]">
                       <div style={{
-                        background: "rgba(38,38,38,0.9)",
+                        background: "var(--kitchen-bubble-bg)",
                         borderRadius: 3,
                         padding: "12px 16px",
                       }}>
-                        <div className="whitespace-pre-wrap text-sm leading-[1.8]" style={{ color: `${CREAM}CC` }}>
+                        <div className="whitespace-pre-wrap text-sm leading-[1.8]" style={{ color: `color-mix(in oklab, var(--hm-text) 80%, var(--hm-lm-anchor))` }}>
                           {streamingContent
                             ? <>{md(streamingContent)}<span className="aqi-cursor">▊</span></>
                             : <span className="aqi-cursor">▊</span>}
@@ -1053,11 +1053,11 @@ export default function AIAssistantPage() {
                         <Image src="/logo/aqi.png" alt="AQI" width={18} height={18} className="object-contain rounded-full bg-white p-1" />
                         <Loader2 className="absolute inset-0 w-5 h-5 text-violet-400/40 animate-spin" strokeWidth={1.5} />
                       </div>
-                      <span className="text-[9px] font-black uppercase" style={{ color: `${VIOLET}70`, letterSpacing: "0.18em" }}>AQI</span>
+                      <span className="text-[9px] font-black uppercase" style={{ color: `color-mix(in oklab, var(--hm-magenta) 44%, var(--hm-lm-anchor))`, letterSpacing: "0.18em" }}>AQI</span>
                     </div>
                     <div className="inline-flex items-center gap-1.5 px-4 py-3"
                       style={{
-                        background: "rgba(38,38,38,0.9)",
+                        background: "var(--kitchen-bubble-bg)",
                         borderRadius: 3,
                       }}>
                       {[0, 1, 2].map((i) => (
@@ -1123,7 +1123,7 @@ export default function AIAssistantPage() {
                 className="absolute right-2.5 bottom-2.5 w-9 h-9 flex items-center justify-center transition-all"
                 style={input.trim() && !isLoading
                   ? { background: `linear-gradient(135deg, ${FUCHSIA}, ${VIOLET})`, color: "#fff" }
-                  : { background: "rgba(247,224,192,0.04)", color: `${CREAM}18` }
+                  : { background: "color-mix(in oklab, var(--hm-text) 4%, transparent)", color: `color-mix(in oklab, var(--hm-text) 9%, var(--hm-lm-anchor))` }
                 }
                 whileHover={input.trim() && !isLoading ? { scale: 1.08, boxShadow: "0 0 12px rgba(240,62,158,0.4)" } as never : {}}
                 whileTap={input.trim() && !isLoading ? { scale: 0.92 } as never : {}}
@@ -1133,10 +1133,10 @@ export default function AIAssistantPage() {
             </div>
 
             <div className="flex items-center justify-between mt-2 px-1">
-              <span className="hidden sm:inline text-[8px] font-semibold uppercase" style={{ color: `${CREAM}15`, letterSpacing: "0.12em" }}>
+              <span className="hidden sm:inline text-[8px] font-semibold uppercase" style={{ color: `color-mix(in oklab, var(--hm-text) 8%, var(--hm-lm-anchor))`, letterSpacing: "0.12em" }}>
                 Enter to send · Shift+Enter for new line
               </span>
-              <span className="flex items-center gap-1 text-[8px] font-semibold uppercase ml-auto" style={{ color: `${CREAM}15`, letterSpacing: "0.12em" }}>
+              <span className="flex items-center gap-1 text-[8px] font-semibold uppercase ml-auto" style={{ color: `color-mix(in oklab, var(--hm-text) 8%, var(--hm-lm-anchor))`, letterSpacing: "0.12em" }}>
                 <Sparkles className="w-2.5 h-2.5" />
                 Always verify halal
               </span>
@@ -1148,7 +1148,7 @@ export default function AIAssistantPage() {
       <style>{`
         .aqi-msg-enter { animation: aqi-fadein 0.18s ease-out both; }
         @keyframes aqi-fadein { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-        textarea::placeholder { color: rgba(240,223,192,0.2); }
+        textarea::placeholder { color: color-mix(in oklab, var(--hm-text) 20%, transparent); }
         textarea::-webkit-scrollbar { display: none; }
         nav::-webkit-scrollbar { display: none; }
 

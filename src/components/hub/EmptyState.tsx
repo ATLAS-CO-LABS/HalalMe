@@ -3,8 +3,8 @@
 import { motion } from "framer-motion";
 import { LucideIcon } from "lucide-react";
 
-const AMBER = "#F59E0B";
-const CREAM = "#F7E7CE";
+const AMBER = "var(--hm-amber)";
+const CREAM = "var(--hm-text)";
 
 interface EmptyStateProps {
   icon: LucideIcon;
@@ -28,8 +28,8 @@ export default function EmptyState({
       animate={{ opacity: 1, y: 0 }}
       className="flex flex-col items-center justify-center py-16 px-4"
     >
-      <div className="p-6 mb-6 border" style={{ backgroundColor: `${CREAM}08`, borderColor: `${AMBER}20` }}>
-        <Icon className="w-12 h-12" style={{ color: `${AMBER}80` }} />
+      <div className="p-6 mb-6 border" style={{ backgroundColor: `color-mix(in oklab, var(--hm-text) 3%, transparent)`, borderColor: `color-mix(in oklab, var(--hm-amber) 13%, transparent)` }}>
+        <Icon className="w-12 h-12" style={{ color: `color-mix(in oklab, var(--hm-amber) 50%, var(--hm-lm-anchor))` }} />
       </div>
       <h3
         className="text-2xl font-extrabold uppercase tracking-tighter mb-2 text-center"
@@ -39,7 +39,7 @@ export default function EmptyState({
       </h3>
       <p
         className="text-center mb-6 max-w-md font-normal"
-        style={{ color: `${CREAM}45`, fontFamily: "var(--font-body)" }}
+        style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))`, fontFamily: "var(--font-body)" }}
       >
         {description}
       </p>

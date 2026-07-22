@@ -50,7 +50,7 @@ export default function Avatar({
   const inner = (
     <div
       className={`relative ${ring ? "w-full h-full" : sizeClasses[size]} rounded-full overflow-hidden flex items-center justify-center shrink-0`}
-      style={{ background: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)" }}
+      style={{ background: "linear-gradient(135deg, var(--hm-amber) 0%, #D97706 100%)" }}
     >
       {src ? (
         <Image src={cldUrl(src, CLD_AVATAR) ?? src} alt={alt} fill sizes="(max-width: 768px) 64px, 64px" className="object-cover" />

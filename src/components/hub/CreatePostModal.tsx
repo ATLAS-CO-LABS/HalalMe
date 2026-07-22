@@ -9,10 +9,10 @@ import { withTimeout } from "@/lib/withTimeout";
 import { friendlyError } from "@/lib/friendlyError";
 import Avatar from "./Avatar";
 
-const BG = "#0B0D0F";
-const BG2 = "#111418";
-const AMBER = "#F59E0B";
-const CREAM = "#F7E7CE";
+const BG = "var(--hub-bg)";
+const BG2 = "var(--hub-bg2)";
+const AMBER = "var(--hm-amber)";
+const CREAM = "var(--hm-text)";
 
 interface CreatePostModalProps {
   isOpen: boolean;
@@ -129,10 +129,10 @@ export default function CreatePostModal({
               exit={{ opacity: 0, scale: 0.96, y: 8 }}
               transition={{ type: "tween", duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
               className="w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col border shadow-2xl"
-              style={{ backgroundColor: BG2, borderColor: `${CREAM}12` }}
+              style={{ backgroundColor: BG2, borderColor: `color-mix(in oklab, var(--hm-text) 7%, transparent)` }}
             >
               {/* Header */}
-              <div className="flex items-center justify-between p-4 md:p-5 border-b" style={{ borderColor: `${CREAM}10` }}>
+              <div className="flex items-center justify-between p-4 md:p-5 border-b" style={{ borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)` }}>
                 <h2
                   className="text-lg md:text-xl font-extrabold uppercase tracking-tight"
                   style={{ color: CREAM, fontFamily: "var(--font-headline)" }}
@@ -143,9 +143,9 @@ export default function CreatePostModal({
                   onClick={handleClose}
                   disabled={isSubmitting}
                   className="transition-colors disabled:opacity-50"
-                  style={{ color: `${CREAM}45` }}
+                  style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))` }}
                   onMouseEnter={(e) => (e.currentTarget.style.color = CREAM)}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = `${CREAM}45`)}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = `color-mix(in oklab, var(--hm-text) 27%, transparent)`)}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                 >
@@ -154,7 +154,7 @@ export default function CreatePostModal({
               </div>
 
               {/* User Info */}
-              <div className="p-4 md:p-5 flex items-center gap-3 border-b" style={{ borderColor: `${CREAM}10` }}>
+              <div className="p-4 md:p-5 flex items-center gap-3 border-b" style={{ borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)` }}>
                 <Avatar src={avatarUrl} alt={displayName} size="lg" />
                 <div>
                   <h3
@@ -166,7 +166,7 @@ export default function CreatePostModal({
                   {username && (
                     <p
                       className="text-sm font-normal"
-                      style={{ color: `${CREAM}45`, fontFamily: "var(--font-body)" }}
+                      style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))`, fontFamily: "var(--font-body)" }}
                     >
                       {username}
                     </p>
@@ -186,7 +186,7 @@ export default function CreatePostModal({
                       style={
                         active
                           ? { backgroundColor: AMBER, color: BG, borderColor: AMBER }
-                          : { backgroundColor: "transparent", color: `${CREAM}55`, borderColor: `${CREAM}15` }
+                          : { backgroundColor: "transparent", color: `color-mix(in oklab, var(--hm-text) 33%, var(--hm-lm-anchor))`, borderColor: `color-mix(in oklab, var(--hm-text) 8%, transparent)` }
                       }
                     >
                       <span>{pt.emoji}</span>
@@ -203,7 +203,7 @@ export default function CreatePostModal({
                   onChange={(e) => setContent(e.target.value)}
                   placeholder={PLACEHOLDERS[postType]}
                   className="w-full text-base resize-none focus:outline-none min-h-30 font-normal border p-3"
-                  style={{ backgroundColor: BG, borderColor: `${CREAM}12`, color: CREAM, caretColor: AMBER, fontFamily: "var(--font-body)" }}
+                  style={{ backgroundColor: BG, borderColor: `color-mix(in oklab, var(--hm-text) 7%, transparent)`, color: CREAM, caretColor: AMBER, fontFamily: "var(--font-body)" }}
                   autoFocus
                   disabled={isSubmitting}
                 />
@@ -213,7 +213,7 @@ export default function CreatePostModal({
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     className="relative mt-4 overflow-hidden border"
-                    style={{ borderColor: `${CREAM}12` }}
+                    style={{ borderColor: `color-mix(in oklab, var(--hm-text) 7%, transparent)` }}
                   >
                     <div className="relative w-full aspect-video">
                       <Image src={imagePreview} alt="Preview" fill className="object-cover" />
@@ -222,7 +222,7 @@ export default function CreatePostModal({
                           <span className="text-2xl font-extrabold" style={{ color: CREAM, fontFamily: "var(--font-headline)" }}>
                             {uploadProgress}%
                           </span>
-                          <div className="w-2/3 h-1.5 overflow-hidden" style={{ backgroundColor: `${CREAM}20` }}>
+                          <div className="w-2/3 h-1.5 overflow-hidden" style={{ backgroundColor: `color-mix(in oklab, var(--hm-text) 13%, transparent)` }}>
                             <div
                               className="h-full transition-all duration-150"
                               style={{ width: `${uploadProgress}%`, backgroundColor: AMBER }}
@@ -249,7 +249,7 @@ export default function CreatePostModal({
               </div>
 
               {/* Actions */}
-              <div className="p-4 md:p-5 border-t" style={{ borderColor: `${CREAM}10` }}>
+              <div className="p-4 md:p-5 border-t" style={{ borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)` }}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1">
                     <input
@@ -264,9 +264,9 @@ export default function CreatePostModal({
                       onClick={() => fileInputRef.current?.click()}
                       disabled={isSubmitting}
                       className="p-2 transition-colors disabled:opacity-50"
-                      style={{ color: `${CREAM}45` }}
+                      style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))` }}
                       onMouseEnter={(e) => !isSubmitting && (e.currentTarget.style.color = AMBER)}
-                      onMouseLeave={(e) => (e.currentTarget.style.color = `${CREAM}45`)}
+                      onMouseLeave={(e) => (e.currentTarget.style.color = `color-mix(in oklab, var(--hm-text) 27%, transparent)`)}
                       title="Attach image"
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
@@ -282,7 +282,7 @@ export default function CreatePostModal({
                     style={
                       content.trim() && !isSubmitting
                         ? { backgroundColor: AMBER, color: BG }
-                        : { backgroundColor: BG, color: `${CREAM}30`, cursor: "not-allowed" }
+                        : { backgroundColor: BG, color: `color-mix(in oklab, var(--hm-text) 19%, var(--hm-lm-anchor))`, cursor: "not-allowed" }
                     }
                     whileHover={content.trim() && !isSubmitting ? { scale: 1.05 } : {}}
                     whileTap={content.trim() && !isSubmitting ? { scale: 0.95 } : {}}

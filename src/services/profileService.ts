@@ -1,36 +1,21 @@
 import { supabase } from "./supabase";
 import type { Profile } from "@/types";
 
+const PUBLIC_PROFILE_COLUMNS =
+  "id, username, full_name, avatar_url, bio, role, is_verified, reward_points, lifetime_points, reward_tier, location, created_at, profile_flair";
+
 export const profileService = {
-  async getProfile(userId: string): Promise<Profile> {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .single();
-    if (error) throw new Error(error.message);
-    return data;
-  },
-
-  async getProfileByUsername(username: string): Promise<Profile> {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("username", username)
-      .single();
-    if (error) throw new Error(error.message);
-    return data;
-  },
-
   async updateProfile(
     userId: string,
     updates: Partial<Pick<Profile, "full_name" | "username" | "bio" | "location" | "phone" | "hyperzod_customer_id">>
-  ): Promise<Profile> {
+  ): Promise<Partial<Profile>> {
+    // Column grants exclude PII, so RETURNING must stick to the public column
+    // list - callers already have the values they just submitted locally.
     const { data, error } = await supabase
       .from("profiles")
       .update(updates)
       .eq("id", userId)
-      .select()
+      .select(PUBLIC_PROFILE_COLUMNS)
       .single();
     if (error) throw new Error(error.message);
     return data;
@@ -69,13 +54,15 @@ export const profileService = {
   },
 
   async isPhoneAvailable(phone: string, currentUserId?: string): Promise<boolean> {
-    const { data } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("phone", phone)
-      .maybeSingle();
-    if (!data) return true;
-    return currentUserId ? data.id === currentUserId : false;
+    // profiles.phone isn't in the public column grant, so this can't filter
+    // directly on it from the browser - the RPC checks existence server-side
+    // and only ever returns a boolean. See migration 067.
+    const { data, error } = await supabase.rpc("is_phone_taken", {
+      candidate_phone: phone,
+      exclude_user_id: currentUserId ?? null,
+    });
+    if (error) throw new Error(error.message);
+    return !data;
   },
 
   async getRewardTransactions(userId: string) {
