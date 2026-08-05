@@ -385,10 +385,36 @@ export const styles = {
     marginBottom: "8px",
   } as React.CSSProperties,
 
-  celebrateEmoji: {
-    fontSize: "40px",
+  // Success/checkmark badge — replaces emoji. A plain circle + glyph renders
+  // reliably everywhere (incl. Outlook's Word engine, which drops SVG and
+  // colour emoji but still shows text); same approach as `stepNumber` below.
+  iconBadge: {
+    display: "inline-block",
+    backgroundColor: colors.purple,
+    color: colors.white,
+    borderRadius: "28px",
+    width: "56px",
+    height: "56px",
+    lineHeight: "56px",
+    textAlign: "center",
+    fontSize: "26px",
+    fontWeight: 800,
     margin: "0 0 8px",
-    lineHeight: 1,
+  } as React.CSSProperties,
+
+  iconBadgeSmall: {
+    display: "inline-block",
+    backgroundColor: colors.purple,
+    color: colors.white,
+    borderRadius: "12px",
+    width: "24px",
+    height: "24px",
+    lineHeight: "24px",
+    textAlign: "center",
+    fontSize: "13px",
+    fontWeight: 800,
+    verticalAlign: "middle",
+    marginLeft: "10px",
   } as React.CSSProperties,
 
   h1Center: {

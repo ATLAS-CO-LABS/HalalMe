@@ -1179,6 +1179,7 @@ export type Database = {
         Row: {
           activated_at: string | null
           address: string | null
+          agreed_at: string | null
           assigned_rep: string | null
           assigned_rep_id: string | null
           business_email: string | null
@@ -1216,6 +1217,7 @@ export type Database = {
         Insert: {
           activated_at?: string | null
           address?: string | null
+          agreed_at?: string | null
           assigned_rep?: string | null
           assigned_rep_id?: string | null
           business_email?: string | null
@@ -1253,6 +1255,7 @@ export type Database = {
         Update: {
           activated_at?: string | null
           address?: string | null
+          agreed_at?: string | null
           assigned_rep?: string | null
           assigned_rep_id?: string | null
           business_email?: string | null

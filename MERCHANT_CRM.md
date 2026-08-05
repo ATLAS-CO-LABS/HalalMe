@@ -107,20 +107,42 @@ Hyperzod owns:          HalalMe owns:
 
 **What the merchant knows:**
 - Application received
-- Dashboard access will come separately
-- Agent will call within 24hrs
+- Agent will call within 24hrs to discuss commission
+- Restaurant dashboard access comes once terms are agreed
 - They are NOT live yet
 
 **Key rule:** Merchant created in Hyperzod = has a record, NOT access. Status 0 = invisible on HalalMe delivery.
 
 ---
 
-### Stage 2 — Hyperzod Invite (Batch Workflow)
+### Stage 2 — Agent Call & Commission Discussion
+
+**Trigger:** Agent contacts merchant (outside system, via phone)
+
+**Admin updates in CRM:**
+- Commission percentage agreed
+- Call notes added
+- Status moves: `pending → contacted → negotiating → agreed`
+- Follow-up tasks managed with deadlines
+
+**If no contact within 48hrs:**
+- Auto reminder sent to assigned sales rep
+- Merchant chase email triggered
+
+---
+
+### Stage 3 — Hyperzod Invite (Batch Workflow)
 
 **Trigger:** Admin opens HalalMe admin panel
 
+**Why invite comes after commission:** the merchant takes on a *second* dashboard
+(Hyperzod, for menu/orders) on top of the HalalMe onboarding dashboard. Sending
+that invite before terms are settled means two logins and a "you're not live yet"
+caveat with no deal behind it. Post-agreement it reads as "you're approved, here's
+your dashboard."
+
 **Admin workflow (semi-automated, done once or twice daily):**
-1. Admin sees all merchants with `status: pending`
+1. Admin sees all merchants with `status: agreed`
 2. Clicks **"Export for Hyperzod"**
 3. System generates Excel in Hyperzod bulk invite format (columns: Name, Email)
 4. Admin uploads Excel to Hyperzod admin panel
@@ -130,22 +152,6 @@ Hyperzod owns:          HalalMe owns:
 8. System sends **Invite Confirmation Email** (Email #2) to each merchant
 
 **Goal:** Convert a painful manual process into a 2-minute batch operation.
-
----
-
-### Stage 3 — Agent Call & Commission Discussion
-
-**Trigger:** Agent contacts merchant (outside system, via phone)
-
-**Admin updates in CRM:**
-- Commission percentage agreed
-- Call notes added
-- Status moves: `invited → contacted → negotiating → agreed`
-- Follow-up tasks managed with deadlines
-
-**If no contact within 48hrs:**
-- Auto reminder sent to assigned sales rep
-- Merchant chase email triggered
 
 ---
 
@@ -172,15 +178,15 @@ Hyperzod owns:          HalalMe owns:
 ## Merchant Pipeline Statuses
 
 ```
-pending       → Registered, not yet invited to Hyperzod dashboard
-  ↓
-invited       → Hyperzod invite sent, merchant setting up dashboard
+pending       → Registered, awaiting agent contact
   ↓
 contacted     → Agent has spoken to merchant
   ↓
 negotiating   → Commission discussion underway
   ↓
-agreed        → Commission agreed, readiness checklist being completed
+agreed        → Commission agreed, ready for dashboard invite
+  ↓
+invited       → Hyperzod invite sent, merchant setting up menu
   ↓
 live          → Merchant active on HalalMe platform
   
@@ -208,14 +214,13 @@ rejected      → Onboarding failed at any stage (commission rejected,
 
 ### Email #2 — Invite Sent Confirmation
 
-**Trigger:** Admin marks batch as "invited" in admin panel
+**Trigger:** Admin marks batch as "invited" in admin panel (merchants must be `agreed`)
 **Recipient:** Merchant email
 **Content:**
-- Your merchant dashboard invite has been sent
+- You're approved — commission agreed, here's your dashboard
 - Check your inbox (including spam) for the Hyperzod invite email
-- Use it to set up your login and start preparing your menu
-- Important: You are NOT yet live on HalalMe
-- Our agent will be in touch shortly to discuss next steps
+- Use it to set up your login and build your menu
+- Once your menu is complete, a final check switches you live
 
 ### Email #3 — Agreement Confirmed
 
@@ -319,7 +324,7 @@ Features:
 **Route:** `src/app/api/admin/merchants/export/route.ts`
 
 Logic:
-1. Admin selects merchants with `status: pending` (or manually selects)
+1. Admin selects merchants with `status: agreed` (or manually selects)
 2. Clicks "Export for Hyperzod"
 3. API generates Excel/CSV with columns: `Name`, `Email` in Hyperzod bulk invite format
 4. File downloads in browser
@@ -489,7 +494,7 @@ ALTER TABLE public.merchants
   }'::jsonb;
 
 -- Update status to be explicit (existing 'pending' default is fine)
--- Valid values: pending | invited | contacted | negotiating | agreed | live | rejected
+-- Valid values: pending | contacted | negotiating | agreed | invited | live | rejected
 -- Enforced at application layer, not DB constraint, for flexibility
 ```
 
@@ -542,7 +547,7 @@ Technology alone will not solve onboarding. Operational discipline is mandatory.
 | Standard | Requirement |
 |---|---|
 | First contact | Every merchant contacted within 24hrs of registration |
-| Invite batch | Every invite sent within 24hrs of registration |
+| Invite batch | Every invite sent within 24hrs of commission being agreed |
 | Onboarding review | Every merchant reviewed by agent before activation |
 | Status hygiene | Every merchant status updated same day as action taken |
 

@@ -33,8 +33,8 @@ export default function MerchantChaseEmail({
         <Text style={styles.step}>
           <span style={styles.stepNumber}>1</span>
           <span style={styles.stepText}>
-            Check your inbox (and <strong>spam folder</strong>) for the invite
-            email from <strong>Hyperzod</strong> - that&apos;s where you set up
+            Check your inbox (and <strong>spam folder</strong>) for your
+            HalalMe Delivery dashboard invite - that&apos;s where you set up
             your login.
           </span>
         </Text>

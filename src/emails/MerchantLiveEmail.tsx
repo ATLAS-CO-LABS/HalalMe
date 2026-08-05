@@ -6,7 +6,7 @@ interface MerchantLiveEmailProps {
   ownerName?: string;
 }
 
-const DASHBOARD_URL = "https://merchant.hyperzod.app";
+const DASHBOARD_URL = process.env.NEXT_PUBLIC_MERCHANT_DASHBOARD_URL || "https://merchant.hyperzod.app";
 
 export default function MerchantLiveEmail({
   restaurantName,
@@ -17,7 +17,7 @@ export default function MerchantLiveEmail({
   return (
     <EmailLayout preview="You're live on HalalMe - customers can now order from you">
       <Section style={styles.celebrate}>
-        <Text style={styles.celebrateEmoji}>🎉</Text>
+        <Text style={styles.iconBadge}>✓</Text>
         <Heading style={styles.h1Center}>You&apos;re Live on HalalMe!</Heading>
       </Section>
 
@@ -39,7 +39,7 @@ export default function MerchantLiveEmail({
           <span style={styles.stepNumber}>1</span>
           <span style={styles.stepText}>
             <strong>Keep your dashboard open.</strong> New orders come through
-            your Hyperzod merchant dashboard - make sure someone is watching it
+            your HalalMe Delivery dashboard - make sure someone is watching it
             during opening hours.
           </span>
         </Text>

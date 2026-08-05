@@ -45,6 +45,7 @@ interface Merchant {
   created_at: string;
   invited_at: string | null;
   contacted_at: string | null;
+  agreed_at: string | null;
   activated_at: string | null;
   hyperzod_merchant_id: string | null;
   hyperzod_sync_failed: boolean;
@@ -80,10 +81,10 @@ function ReviewBadge({ status }: { status: string | null }) {
 const STATUSES = [
   { key: "all",         label: "All" },
   { key: "pending",     label: "Pending" },
-  { key: "invited",     label: "Invited" },
   { key: "contacted",   label: "Contacted" },
   { key: "negotiating", label: "Negotiating" },
   { key: "agreed",      label: "Agreed" },
+  { key: "invited",     label: "Invited" },
   { key: "live",        label: "Live" },
   { key: "rejected",    label: "Rejected" },
 ];
@@ -98,7 +99,7 @@ const STATUS_CONFIG: Record<string, { dot: string; badge: string; hex: string; l
   rejected:    { dot: "bg-red-500",    badge: "bg-red-50 text-red-700",       hex: "#ef4444", label: "Rejected" },
 };
 
-const PIPELINE_ORDER = ["pending", "invited", "contacted", "negotiating", "agreed", "live", "rejected"];
+const PIPELINE_ORDER = ["pending", "contacted", "negotiating", "agreed", "invited", "live", "rejected"];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -386,8 +387,9 @@ export default function MerchantPipelinePage() {
   };
   const displayed = (attentionOnly || reviewOnly) ? merchants.filter(matchesSearch) : merchants;
 
-  // Selection helpers
-  const selectedPendingCount = displayed.filter((m) => selectedIds.has(m.id) && m.status === "pending").length;
+  // Selection helpers — invites go out once commission is agreed, so only
+  // "agreed" merchants are eligible for the bulk invite action.
+  const selectedAgreedCount = displayed.filter((m) => selectedIds.has(m.id) && m.status === "agreed").length;
 
   function toggleSelect(id: string) {
     setSelectedIds((prev) => {
@@ -616,11 +618,11 @@ export default function MerchantPipelinePage() {
                       className="flex items-center gap-1.5 px-3 py-2 bg-white/10 text-white rounded-none text-sm font-semibold hover:bg-white/20 transition-colors disabled:opacity-50">
                       <Ban size={14} /> Reject
                     </button>
-                    <button onClick={() => runBulk("invite")} disabled={!!bulkBusy || selectedPendingCount === 0}
-                      title={selectedPendingCount === 0 ? "No pending merchants selected" : ""}
+                    <button onClick={() => runBulk("invite")} disabled={!!bulkBusy || selectedAgreedCount === 0}
+                      title={selectedAgreedCount === 0 ? "No agreed merchants selected" : ""}
                       className="flex items-center gap-1.5 px-3 py-2 bg-[#F7E7CE] text-[#102C26] rounded-none text-sm font-semibold hover:bg-white transition-colors disabled:opacity-40">
                       <Mail size={14} />
-                      {bulkBusy === "invite" ? "Marking…" : `Mark Invited${selectedPendingCount ? ` (${selectedPendingCount})` : ""}`}
+                      {bulkBusy === "invite" ? "Marking…" : `Mark Invited${selectedAgreedCount ? ` (${selectedAgreedCount})` : ""}`}
                     </button>
                   </div>
                 </div>

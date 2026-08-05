@@ -2,15 +2,19 @@
 // The merchant never sees ops words ("contacted", "negotiating"). Each stage also
 // carries a one-line "what to do next" so the tracker is actionable, not passive.
 //
-// Internal statuses (DB): pending | invited | contacted | negotiating | agreed | live | rejected
-// Visible journey:        Registered → Verification → Invited → Negotiation → Agreed → Live
+// Internal statuses (DB): pending | contacted | negotiating | agreed | invited | live | rejected
+// Visible journey:        Registered → Verification → Commission → Agreed → Invited → Live
+//
+// Invite (Hyperzod dashboard access) sits AFTER Agreed, not before. Merchants only
+// take on a second dashboard once commission is settled, so it reads as "you're
+// approved, here's your dashboard" rather than access with a "not live yet" caveat.
 
 export type MerchantStageKey =
   | "registered"
   | "verification"
-  | "invited"
   | "commission" // "negotiation" is a bit opaque for merchants, so we use "commission" here to indicate what we're actually doing in this stage.
   | "agreed"
+  | "invited"
   | "live";
 
 export interface MerchantStage {
@@ -31,9 +35,9 @@ export interface MerchantJourney {
 const JOURNEY: { key: MerchantStageKey; label: string }[] = [
   { key: "registered", label: "Registered" },
   { key: "verification", label: "Verification" },
-  { key: "invited", label: "Invited" },
   { key: "commission", label: "Commission" },
   { key: "agreed", label: "Agreed" },
+  { key: "invited", label: "Invited" },
   { key: "live", label: "Live" },
 ];
 
@@ -42,15 +46,15 @@ function currentIndexFor(status: string): number {
   switch (status) {
     case "pending":
       return 1; // sitting in Verification
-    case "invited":
-      return 2;
     case "contacted":
-      return 3;
+      return 2;
     case "negotiating":
-      return 3;
+      return 2;
     case "commission":
-      return 3;
+      return 2;
     case "agreed":
+      return 3;
+    case "invited":
       return 4;
     case "live":
       return 5;
@@ -63,14 +67,14 @@ function ctaFor(index: number, docsApproved: boolean): string {
   switch (index) {
     case 1:
       return docsApproved
-        ? "Your documents are verified - we'll send your dashboard invite shortly."
+        ? "Your documents are verified - our team will be in touch about commission shortly."
         : "Upload your verification documents below to continue onboarding.";
     case 2:
-      return "Check your email for the Hyperzod dashboard invite (don't forget your spam folder).";
-    case 3:
       return "Our team is in touch about commission - we'll be in contact shortly.";
+    case 3:
+      return "Commission agreed. We'll send your dashboard invite shortly.";
     case 4:
-      return "Final checks are underway. You'll be live on HalalMe very soon.";
+      return "Check your email for the Hyperzod dashboard invite (don't forget your spam folder), then start building your menu.";
     case 5:
       return "You're live! Manage your orders from your Hyperzod dashboard.";
     default:

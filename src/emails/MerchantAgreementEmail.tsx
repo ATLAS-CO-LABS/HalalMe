@@ -33,32 +33,30 @@ export default function MerchantAgreementEmail({
         <Text style={styles.step}>
           <span style={styles.stepNumber}>1</span>
           <span style={styles.stepText}>
-            <strong>Final onboarding review.</strong> Our team is verifying your
-            menu, details, and setup to make sure everything is ready for
-            customers.
+            <strong>Your dashboard invite.</strong> We&apos;ll send your
+            restaurant dashboard invite shortly - that&apos;s where you&apos;ll
+            build your menu, prices, and opening hours.
           </span>
         </Text>
         <Text style={styles.step}>
           <span style={styles.stepNumber}>2</span>
           <span style={styles.stepText}>
-            <strong>Going live.</strong> Once the review is complete, we&apos;ll
-            activate your restaurant on HalalMe and let you know the moment
-            you&apos;re live.
+            <strong>Going live.</strong> Once your menu is set up and our team
+            has done a final check, we&apos;ll activate your restaurant and let
+            you know the moment you&apos;re live.
           </span>
         </Text>
       </Section>
 
       <Section style={styles.notice}>
         <Text style={styles.noticeText}>
-          <strong>Typical timeline:</strong> most merchants are reviewed and live
-          within a few working days, provided your menu and dashboard setup are
-          complete.
+          <strong>Typical timeline:</strong> most merchants are live within a few
+          working days of setting up their menu.
         </Text>
       </Section>
 
       <Text style={styles.paragraph}>
-        In the meantime, make sure your menu and opening hours are finalised in
-        your Hyperzod dashboard so there are no delays.
+        Keep an eye on your inbox - your dashboard invite is on its way.
       </Text>
 
       <Text style={styles.paragraph}>

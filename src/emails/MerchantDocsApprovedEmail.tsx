@@ -1,4 +1,4 @@
-import { Button, Heading, Text } from "@react-email/components";
+import { Button, Heading, Section, Text } from "@react-email/components";
 import { EmailLayout, styles, SITE_URL, SUPPORT_EMAIL } from "./theme";
 
 interface MerchantDocsApprovedEmailProps {
@@ -16,7 +16,10 @@ export default function MerchantDocsApprovedEmail({
 
   return (
     <EmailLayout preview={`Your documents are verified - ${restaurantName}`}>
-      <Heading style={styles.h1}>Documents Verified ✓</Heading>
+      <Section style={styles.celebrate}>
+        <Text style={styles.iconBadge}>✓</Text>
+        <Heading style={styles.h1Center}>Documents Verified</Heading>
+      </Section>
 
       <Text style={styles.paragraph}>{greeting}</Text>
       <Text style={styles.paragraph}>

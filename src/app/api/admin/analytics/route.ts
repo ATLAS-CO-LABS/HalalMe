@@ -139,15 +139,15 @@ export async function GET(req: NextRequest) {
         const contacted = rows.filter((r) => r.contacted_at).length;
         const live = rows.filter((r) => r.activated_at).length;
 
-        const STAGES = ["pending", "invited", "contacted", "negotiating", "agreed", "live", "rejected"];
+        const STAGES = ["pending", "contacted", "negotiating", "agreed", "invited", "live", "rejected"];
         const byStatus = STAGES.map((s) => ({ label: s, value: rows.filter((r) => r.status === s).length }))
           .filter((s) => s.value > 0);
 
         return NextResponse.json({
           funnel: [
             { label: "All merchants", value: total },
-            { label: "Invited", value: invited },
             { label: "Contacted", value: contacted },
+            { label: "Invited", value: invited },
             { label: "Live", value: live },
           ],
           byStatus,

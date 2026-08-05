@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
   let query = serviceClient
     .from("merchants")
     .select(
-      "id, name, owner_name, email, phone, city, post_code, status, assigned_rep, assigned_rep_id, commission_percentage, created_at, invited_at, contacted_at, activated_at, hyperzod_merchant_id, hyperzod_sync_failed",
+      "id, name, owner_name, email, phone, city, post_code, status, assigned_rep, assigned_rep_id, commission_percentage, created_at, invited_at, contacted_at, agreed_at, activated_at, hyperzod_merchant_id, hyperzod_sync_failed",
       { count: "exact" },
     )
     .order("created_at", { ascending: false });

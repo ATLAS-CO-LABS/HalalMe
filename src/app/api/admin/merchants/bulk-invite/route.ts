@@ -20,12 +20,14 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "No valid IDs provided" }, { status: 400 });
   }
 
-  // ── Update merchants (only those currently pending) ────────────────────────
+  // ── Update merchants (only those who have agreed commission) ───────────────
+  // Invite comes AFTER the commission is agreed, so the Hyperzod dashboard only
+  // lands once the deal is settled.
   const { data: updated, error: updateError } = await serviceClient
     .from("merchants")
     .update({ status: "invited", invited_at: new Date().toISOString() })
     .in("id", ids)
-    .eq("status", "pending")
+    .eq("status", "agreed")
     .select("id, name, owner_name, email");
 
   if (updateError) {

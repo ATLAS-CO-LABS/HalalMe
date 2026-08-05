@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
 import { getFollowUp } from "@/lib/followUps";
 
-const PIPELINE_ORDER = ["pending", "invited", "contacted", "negotiating", "agreed", "live", "rejected"] as const;
+const PIPELINE_ORDER = ["pending", "contacted", "negotiating", "agreed", "invited", "live", "rejected"] as const;
 
 // GET /api/admin/merchants/stats?mine=1
 // Aggregates for the pipeline rail (donut, top cities, recent activity) and the
@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
 
   let query = serviceClient
     .from("merchants")
-    .select("id, name, status, city, created_at, invited_at, contacted_at")
+    .select("id, name, status, city, created_at, invited_at, contacted_at, agreed_at")
     .order("created_at", { ascending: false });
   if (scopeToSelf) query = query.eq("assigned_rep_id", gate.userId);
 
@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
 
   // Needs-attention set (shared follow-up brain).
   const attentionIds = rows
-    .filter((m) => getFollowUp({ status: m.status, created_at: m.created_at, invited_at: m.invited_at, contacted_at: m.contacted_at }) !== null)
+    .filter((m) => getFollowUp({ status: m.status, created_at: m.created_at, invited_at: m.invited_at, contacted_at: m.contacted_at, agreed_at: m.agreed_at }) !== null)
     .map((m) => m.id);
 
   const weekAgo = Date.now() - 7 * 86_400_000;

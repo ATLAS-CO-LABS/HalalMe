@@ -77,6 +77,7 @@ interface Merchant {
   created_at: string;
   invited_at: string | null;
   contacted_at: string | null;
+  agreed_at: string | null;
   activated_at: string | null;
 }
 
@@ -98,14 +99,14 @@ const STAGES: {
   key: string;
   label: string;
   desc: string;
-  tsField: "created_at" | "invited_at" | "contacted_at" | null;
+  tsField: "created_at" | "invited_at" | "contacted_at" | "agreed_at" | null;
   action: string;
 }[] = [
   { key: "pending",     label: "Registered",  desc: "Application received",                tsField: "created_at",   action: "" },
-  { key: "invited",     label: "Invited",     desc: "Dashboard invite sent to merchant",   tsField: "invited_at",   action: "Mark as Invited" },
   { key: "contacted",   label: "Contacted",   desc: "Agent has spoken to the merchant",    tsField: "contacted_at", action: "Mark as Contacted" },
   { key: "negotiating", label: "Negotiating", desc: "Commission discussion underway",      tsField: null,           action: "Start Negotiating" },
-  { key: "agreed",      label: "Agreed",      desc: "Commission agreed — ready to verify", tsField: null,           action: "Mark as Agreed" },
+  { key: "agreed",      label: "Agreed",      desc: "Commission agreed — ready to invite", tsField: "agreed_at",    action: "Mark as Agreed" },
+  { key: "invited",     label: "Invited",     desc: "Dashboard invite sent to merchant",   tsField: "invited_at",   action: "Mark as Invited" },
 ];
 
 const STATUS_CONFIG: Record<string, { label: string; dot: string; badge: string }> = {

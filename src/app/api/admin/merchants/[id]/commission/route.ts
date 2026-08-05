@@ -78,7 +78,7 @@ export async function POST(
 
   const { data: merchant } = await service
     .from("merchants")
-    .select("id, status, name, email, owner_name, readiness_checklist")
+    .select("id, status, name, email, owner_name, readiness_checklist, agreed_at")
     .eq("id", id)
     .single();
   if (!merchant) return NextResponse.json({ error: "Merchant not found" }, { status: 404 });
@@ -115,6 +115,7 @@ export async function POST(
         .update({
           status: "agreed",
           commission_percentage: rate,
+          ...(merchant.agreed_at ? {} : { agreed_at: now }),
           readiness_checklist: {
             ...DEFAULT_CHECKLIST,
             ...(merchant.readiness_checklist ?? {}),

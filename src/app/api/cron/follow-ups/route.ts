@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
 
   const { data: merchants, error } = await serviceClient
     .from("merchants")
-    .select("id, name, owner_name, email, status, assigned_rep, created_at, invited_at, contacted_at, last_followup_at, next_followup_on, followup_count");
+    .select("id, name, owner_name, email, status, assigned_rep, created_at, invited_at, contacted_at, agreed_at, last_followup_at, next_followup_on, followup_count");
 
   if (error) {
     console.error("[cron/follow-ups] fetch error", error);

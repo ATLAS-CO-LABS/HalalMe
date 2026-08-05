@@ -14,13 +14,14 @@ export default function MerchantInviteSentEmail({
 
   return (
     <EmailLayout preview="Your HalalMe merchant dashboard invite has been sent">
-      <Heading style={styles.h1}>Your Dashboard Invite Has Been Sent</Heading>
+      <Heading style={styles.h1}>You&apos;re Approved - Here&apos;s Your Dashboard</Heading>
 
       <Text style={styles.paragraph}>{greeting}</Text>
       <Text style={styles.paragraph}>
-        Great news - we&apos;ve sent your merchant dashboard invite for{" "}
-        <strong>{restaurantName}</strong>. You should receive a separate email
-        from <strong>Hyperzod</strong> shortly.
+        Your commission is agreed and <strong>{restaurantName}</strong> is
+        approved to join HalalMe. The last step is setting up your menu, and
+        we&apos;ve just sent your dashboard invite as a separate email - it
+        should land shortly.
       </Text>
 
       <Hr style={styles.divider} />
@@ -33,7 +34,7 @@ export default function MerchantInviteSentEmail({
         <Text style={styles.step}>
           <span style={styles.stepNumber}>1</span>
           <span style={styles.stepText}>
-            <strong>Check your inbox for an email from Hyperzod.</strong> This is
+            <strong>Check your inbox for your dashboard invite.</strong> This is
             a separate email - look for it in your inbox and your spam / junk
             folder.
           </span>
@@ -41,22 +42,22 @@ export default function MerchantInviteSentEmail({
         <Text style={styles.step}>
           <span style={styles.stepNumber}>2</span>
           <span style={styles.stepText}>
-            <strong>Click the invite link</strong> in the Hyperzod email to set
+            <strong>Click the invite link</strong> in that email to set
             up your login credentials and access your merchant dashboard.
           </span>
         </Text>
         <Text style={styles.step}>
           <span style={styles.stepNumber}>3</span>
           <span style={styles.stepText}>
-            <strong>Start preparing your menu</strong> - add your categories,
-            dishes, prices, and opening hours inside the Hyperzod dashboard.
+            <strong>Build your menu</strong> - add your categories, dishes,
+            prices, and opening hours inside your HalalMe Delivery dashboard.
           </span>
         </Text>
         <Text style={styles.step}>
           <span style={styles.stepNumber}>4</span>
           <span style={styles.stepText}>
-            <strong>Our agent will be in touch shortly</strong> to walk you
-            through the next steps and discuss your commission arrangement.
+            <strong>Tell us when you&apos;re ready</strong> - once your menu is
+            complete, our team does a final check and switches you live.
           </span>
         </Text>
       </Section>
@@ -65,15 +66,15 @@ export default function MerchantInviteSentEmail({
 
       <Section style={styles.notice}>
         <Text style={styles.noticeText}>
-          <strong>Important:</strong> Your restaurant is <em>not yet live</em> on
-          HalalMe. You will only go live once our team has reviewed your setup
-          and given final approval.
+          <strong>One more step:</strong> your restaurant goes live on HalalMe
+          once your menu is set up and our team has done a final check. Finish
+          your menu and you&apos;re ready to take orders.
         </Text>
       </Section>
 
       <Section style={styles.infoNotice}>
         <Text style={styles.noticeText}>
-          <strong>Can&apos;t find the Hyperzod email?</strong> Check your spam or
+          <strong>Can&apos;t find the invite email?</strong> Check your spam or
           junk folder - it may have been filtered automatically. If you still
           can&apos;t find it, reply to this email and we will resend it.
         </Text>

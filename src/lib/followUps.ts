@@ -6,6 +6,7 @@ export interface FollowUpInput {
   created_at: string;
   invited_at: string | null;
   contacted_at: string | null;
+  agreed_at?: string | null;
   next_followup_on?: string | null;
 }
 
@@ -30,7 +31,8 @@ function isPastDate(iso: string): boolean {
 
 // Thresholds (days)
 export const THRESHOLDS = {
-  pending: 2, // registered, not invited within 48h
+  pending: 2, // registered, no agent contact within 48h
+  agreed: 2, // commission agreed, invite batch not sent within 48h
   invited: 3, // invited, no movement within 72h
   contacted: 5, // spoken to, stalled for 5 days
   negotiating: 5, // negotiation dragging for 5 days
@@ -62,8 +64,24 @@ export function getFollowUp(m: FollowUpInput): FollowUp | null {
     if (d >= THRESHOLDS.pending) {
       return {
         key: "pending",
-        label: "Not yet invited",
-        action: "Invite this merchant on Hyperzod, then mark as invited",
+        label: "Not yet contacted",
+        action: "Call this merchant to start the commission conversation",
+        severity: d >= 5 ? "urgent" : "warn",
+        days: d,
+      };
+    }
+  }
+
+  // Commission is settled but the Hyperzod invite batch hasn't gone out. This is
+  // a manual step, so it's the easiest one to forget — and the merchant is left
+  // waiting with a signed rate and no dashboard.
+  if (m.status === "agreed" && m.agreed_at) {
+    const d = daysSince(m.agreed_at);
+    if (d >= THRESHOLDS.agreed) {
+      return {
+        key: "agreed",
+        label: "Invite not sent",
+        action: "Export this merchant to Hyperzod, then mark as invited",
         severity: d >= 5 ? "urgent" : "warn",
         days: d,
       };

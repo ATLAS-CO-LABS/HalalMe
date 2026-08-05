@@ -59,7 +59,7 @@ export async function GET() {
       if (!can("merchants")) return;
       const { data: merchants } = await db
         .from("merchants")
-        .select("id, name, status, created_at, invited_at, contacted_at, next_followup_on, updated_at");
+        .select("id, name, status, created_at, invited_at, contacted_at, agreed_at, next_followup_on, updated_at");
       const rows = merchants ?? [];
       let attn = 0;
       for (const m of rows) {
@@ -68,6 +68,7 @@ export async function GET() {
           created_at: m.created_at,
           invited_at: m.invited_at,
           contacted_at: m.contacted_at,
+          agreed_at: m.agreed_at,
           next_followup_on: m.next_followup_on,
         });
         if (fu) {

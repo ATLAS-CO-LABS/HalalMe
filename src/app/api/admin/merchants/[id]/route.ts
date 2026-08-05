@@ -15,8 +15,8 @@ async function getAdminServiceClient(level: AccessLevel) {
   return { error: null, status: 200, serviceClient: gate.serviceClient, gate };
 }
 
-// Internal statuses (DB): pending | invited | contacted | negotiating | agreed | live | rejected
-const VALID_STATUSES = new Set(["pending", "invited", "contacted", "negotiating", "agreed", "live", "rejected"]);
+// Internal statuses (DB): pending | contacted | negotiating | agreed | invited | live | rejected
+const VALID_STATUSES = new Set(["pending", "contacted", "negotiating", "agreed", "invited", "live", "rejected"]);
 
 export async function GET(
   _req: NextRequest,
@@ -63,7 +63,7 @@ export async function PATCH(
   // Fetch current record so we can append notes and conditionally set timestamps
   const { data: current } = await serviceClient
     .from("merchants")
-    .select("status, notes, invited_at, contacted_at, activated_at, name, owner_name, email")
+    .select("status, notes, invited_at, contacted_at, agreed_at, activated_at, name, owner_name, email")
     .eq("id", id)
     .single();
 
@@ -73,7 +73,7 @@ export async function PATCH(
 
   // Only email on FORWARD progress through the pipeline — never when reverting
   // a merchant backwards (e.g. live → … → pending shouldn't re-send invites).
-  const STAGE_ORDER = ["pending", "invited", "contacted", "negotiating", "agreed", "live"];
+  const STAGE_ORDER = ["pending", "contacted", "negotiating", "agreed", "invited", "live"];
   const oldIdx = STAGE_ORDER.indexOf(current.status);
   const newIdx = body.status ? STAGE_ORDER.indexOf(body.status) : -1;
   const movingForward = oldIdx !== -1 && newIdx > oldIdx;
@@ -92,6 +92,9 @@ export async function PATCH(
     }
     if (body.status === "contacted" && !current.contacted_at) {
       updates.contacted_at = new Date().toISOString();
+    }
+    if (body.status === "agreed" && !current.agreed_at) {
+      updates.agreed_at = new Date().toISOString();
     }
     if (body.status === "live" && !current.activated_at) {
       updates.activated_at = new Date().toISOString();
