@@ -366,7 +366,12 @@ export async function DELETE(
   const { error } = await serviceClient.auth.admin.deleteUser(id);
   if (error) {
     console.error("[api/admin/users/[id]] delete error", error);
-    return NextResponse.json({ error: "Failed to delete user" }, { status: 500 });
+    // Surface the underlying reason. GoTrue collapses cascade failures into a
+    // flat "Database error deleting user", which is impossible to act on.
+    return NextResponse.json(
+      { error: `Failed to delete user: ${error.message}` },
+      { status: 500 },
+    );
   }
 
   logAdminAction(gate, {
