@@ -167,33 +167,56 @@ export default function ApplicationsTab() {
           <EmptyState icon={Inbox} title="No applications found" hint="Charity applications submitted by users will appear here for review." />
         ) : (
           <>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-[#102C26]/12 bg-gray-50/60">
-                  <th className="pl-4 lg:pl-5 px-2 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600">Charity</th>
-                  <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600 hidden md:table-cell">Reg. No.</th>
-                  <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600">Status</th>
-                  <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600 hidden lg:table-cell">Ext. Check</th>
-                  <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600 hidden lg:table-cell">Submitted</th>
-                  <th className="px-4 lg:px-5 py-3 w-10" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#102C26]/8">
-                {rows.map((r) => (
-                  <tr key={r.id} onClick={() => openDetail(r.id)} className="group cursor-pointer hover:bg-[#102C26]/2 transition-colors">
-                    <td className="pl-4 lg:pl-5 px-2 py-3.5">
-                      <p className="font-semibold text-gray-900 truncate max-w-56 group-hover:text-[#102C26]">{r.display_name}</p>
+            {/* Mobile cards */}
+            <div className="md:hidden divide-y divide-[#102C26]/8">
+              {rows.map((r) => (
+                <button key={r.id} onClick={() => openDetail(r.id)} className="w-full text-left px-4 py-3.5 hover:bg-[#102C26]/2 transition-colors">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-gray-900 truncate">{r.display_name}</p>
                       <p className="text-xs text-gray-600 truncate capitalize">{r.category} · {r.country}</p>
-                    </td>
-                    <td className="px-4 py-3.5 hidden md:table-cell text-gray-700 tabular-nums">{r.registration_number}</td>
-                    <td className="px-4 py-3.5"><Badge label={r.status.replace("_", " ")} tone={STATUS_TONE[r.status] ?? "gray"} /></td>
-                    <td className="px-4 py-3.5 hidden lg:table-cell"><Badge label={r.external_check_status.replace("_", " ")} tone={CHECK_TONE[r.external_check_status] ?? "gray"} /></td>
-                    <td className="px-4 py-3.5 hidden lg:table-cell text-gray-600 whitespace-nowrap">{fmtDate(r.created_at)}</td>
-                    <td className="px-4 lg:px-5 py-3.5 text-right"><ChevronRight size={15} className="text-gray-400 inline" /></td>
+                    </div>
+                    <ChevronRight size={15} className="text-gray-400 shrink-0 mt-0.5" />
+                  </div>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Badge label={r.status.replace("_", " ")} tone={STATUS_TONE[r.status] ?? "gray"} />
+                    <Badge label={r.external_check_status.replace("_", " ")} tone={CHECK_TONE[r.external_check_status] ?? "gray"} />
+                    <span className="text-xs text-gray-500 ml-auto">{fmtDate(r.created_at)}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-[#102C26]/12 bg-gray-50/60">
+                    <th className="pl-4 lg:pl-5 px-2 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600">Charity</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600">Reg. No.</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600">Status</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600 hidden lg:table-cell">Ext. Check</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600 hidden lg:table-cell">Submitted</th>
+                    <th className="px-4 lg:px-5 py-3 w-10" />
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-[#102C26]/8">
+                  {rows.map((r) => (
+                    <tr key={r.id} onClick={() => openDetail(r.id)} className="group cursor-pointer hover:bg-[#102C26]/2 transition-colors">
+                      <td className="pl-4 lg:pl-5 px-2 py-3.5">
+                        <p className="font-semibold text-gray-900 truncate max-w-56 group-hover:text-[#102C26]">{r.display_name}</p>
+                        <p className="text-xs text-gray-600 truncate capitalize">{r.category} · {r.country}</p>
+                      </td>
+                      <td className="px-4 py-3.5 text-gray-700 tabular-nums">{r.registration_number}</td>
+                      <td className="px-4 py-3.5"><Badge label={r.status.replace("_", " ")} tone={STATUS_TONE[r.status] ?? "gray"} /></td>
+                      <td className="px-4 py-3.5 hidden lg:table-cell"><Badge label={r.external_check_status.replace("_", " ")} tone={CHECK_TONE[r.external_check_status] ?? "gray"} /></td>
+                      <td className="px-4 py-3.5 hidden lg:table-cell text-gray-600 whitespace-nowrap">{fmtDate(r.created_at)}</td>
+                      <td className="px-4 lg:px-5 py-3.5 text-right"><ChevronRight size={15} className="text-gray-400 inline" /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
             <Pagination page={page} pageSize={pageSize} total={total} noun="application" onPrev={() => setPage((p) => Math.max(0, p - 1))} onNext={() => setPage((p) => p + 1)} onPageSize={(s) => { setPageSize(s); setPage(0); }} onJump={(p) => setPage(p)} />
           </>
         )}

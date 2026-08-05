@@ -342,7 +342,7 @@ export default function CharitiesTab() {
                 </div>
 
                 <div className="px-6 py-5 space-y-4">
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <NumberInput label="Goal (£)" value={edit.goal_amount} onChange={(v) => setEdit({ ...edit, goal_amount: v })} disabled={!canManage} />
                     <NumberInput label="Min donation (£)" value={edit.minimum_donation} onChange={(v) => setEdit({ ...edit, minimum_donation: v })} disabled={!canManage} />
                     <NumberInput label="Platform fee (%)" value={edit.platform_fee_pct} onChange={(v) => setEdit({ ...edit, platform_fee_pct: v })} disabled={!canManage} />
@@ -354,7 +354,7 @@ export default function CharitiesTab() {
                   {/* Identity & contact */}
                   <div className="border-t border-[#102C26]/10 pt-4 space-y-3">
                     <Label>Identity &amp; contact</Label>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <TextInput label="Legal name" value={edit.legal_name ?? ""} onChange={(v) => setEdit({ ...edit, legal_name: v })} disabled={!canManage} />
                       <TextInput label="Registration no." value={edit.registration_number ?? ""} onChange={(v) => setEdit({ ...edit, registration_number: v })} disabled={!canManage} />
                       <TextInput label="Country" value={edit.country ?? ""} onChange={(v) => setEdit({ ...edit, country: v })} disabled={!canManage} />
@@ -486,7 +486,7 @@ function AddCharityModal({ onClose, onCreated, onError }: { onClose: () => void;
         <div className="px-6 py-5 space-y-4">
           <TextInput label="Name *" value={form.name} onChange={(v) => setForm({ ...form, name: v })} />
           <TextArea label="Short description *" value={form.description} onChange={(v) => setForm({ ...form, description: v })} rows={2} />
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <TextInput label="Category *" value={form.category} onChange={(v) => setForm({ ...form, category: v })} />
             <NumberInput label="Goal (£) *" value={Number(form.goal_amount)} onChange={(v) => setForm({ ...form, goal_amount: String(v) })} />
             <TextInput label="Legal name" value={form.legal_name} onChange={(v) => setForm({ ...form, legal_name: v })} />

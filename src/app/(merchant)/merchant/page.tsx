@@ -40,9 +40,9 @@ import {
   PartyPopper,
 } from "lucide-react";
 
-// Merchants only get a Hyperzod account once they're invited, so the link is
-// pointless (and confusing) before that stage.
-const HYPERZOD_VISIBLE_STAGES = new Set<MerchantStageKey>(["invited", "commission", "agreed", "live"]);
+// Merchants only get a restaurant dashboard account once they're invited (which
+// now happens after commission is agreed), so the link is pointless before that.
+const DASHBOARD_VISIBLE_STAGES = new Set<MerchantStageKey>(["invited", "live"]);
 
 export default function MerchantDashboardPage() {
   const { logout } = useAuth();
@@ -191,8 +191,8 @@ export default function MerchantDashboardPage() {
             )}
             {currentStage === "live" && <LiveSection />}
 
-            {/* ── Hyperzod dashboard link (once invited — nothing to see there before) ── */}
-            {currentStage && HYPERZOD_VISIBLE_STAGES.has(currentStage) && <HyperzodLinkCard />}
+            {/* ── Restaurant dashboard link (once invited, nothing to see there before) ── */}
+            {currentStage && DASHBOARD_VISIBLE_STAGES.has(currentStage) && <RestaurantDashboardLinkCard />}
 
             {/* ── Restaurant info ── */}
             <RestaurantInfo merchant={merchant} onSaved={setMerchant} />
@@ -340,6 +340,10 @@ function DocumentsSection({
   onChange: () => void | Promise<void>;
 }) {
   const [uploadingKey, setUploadingKey] = useState<string | null>(null);
+  // Briefly flags the row that just finished uploading so the badge-swap has an
+  // unmistakable "that worked" moment, instead of quietly landing on the same
+  // muted badge "under review" already uses.
+  const [justUploadedKey, setJustUploadedKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [expiry, setExpiry] = useState<Record<string, string>>({});
   const inputs = useRef<Record<string, HTMLInputElement | null>>({});
@@ -360,6 +364,8 @@ function DocumentsSection({
     try {
       await merchantService.uploadDocument(file, docType, expiry[docType]);
       await onChange();
+      setJustUploadedKey(docType);
+      setTimeout(() => setJustUploadedKey((k) => (k === docType ? null : k)), 2500);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Upload failed.");
     } finally {
@@ -439,7 +445,7 @@ function DocumentsSection({
             <div className="flex items-start gap-2.5">
               <Mail className="w-3.5 h-3.5 text-emerald-400/70 shrink-0 mt-0.5" />
               <p className="text-xs text-emerald-400/70 leading-relaxed">
-                Keep an eye on your email (check spam/junk too) — we&apos;ll message you
+                Keep an eye on your email (check spam/junk too). We&apos;ll message you
                 the moment a document is approved, or if we need something fixed or
                 replaced.
               </p>
@@ -447,8 +453,8 @@ function DocumentsSection({
             <div className="flex items-start gap-2.5">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400/70 shrink-0 mt-0.5" />
               <p className="text-xs text-emerald-400/70 leading-relaxed">
-                Once every required document is approved, we&apos;ll send your Hyperzod
-                dashboard invite so you can go live.
+                Once every required document is approved and commission is agreed,
+                we&apos;ll send your restaurant dashboard invite so you can go live.
               </p>
             </div>
           </div>
@@ -459,12 +465,23 @@ function DocumentsSection({
         {VERIFICATION_DOC_TYPES.map((doc) => {
           const existing = byType(doc.key);
           const isUploading = uploadingKey === doc.key;
+          const justUploaded = justUploadedKey === doc.key;
           // Can replace until it's approved — so a wrong file can be swapped
           // while it's still uploaded / under review, not just after a rejection.
           const canReplace = !existing || existing.status !== "approved";
 
           return (
-            <div key={doc.key} className="bg-[#102C26] border border-[#F7E7CE]/8 px-4 py-3">
+            <div
+              key={doc.key}
+              className={`bg-[#102C26] border px-4 py-3 transition-colors duration-700 ${
+                justUploaded ? "border-emerald-500/50" : "border-[#F7E7CE]/8"
+              }`}
+            >
+              {justUploaded && (
+                <div className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-400 mb-2 animate-in fade-in slide-in-from-top-1 duration-300">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Uploaded, now under review
+                </div>
+              )}
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
@@ -478,7 +495,7 @@ function DocumentsSection({
                     <p className="text-[11px] text-[#F7E7CE]/45 mt-1 truncate">{existing.file_name}</p>
                   )}
                 </div>
-                {existing && <DocStatusBadge status={existing.status} />}
+                {existing && !justUploaded && <DocStatusBadge status={existing.status} />}
               </div>
 
               {/* rejection reason */}
@@ -544,9 +561,9 @@ function DocumentsSection({
   );
 }
 
-// ── Hyperzod link ────────────────────────────────────────────────────────────
+// ── Restaurant dashboard link ──────────────────────────────────────────────────
 
-function HyperzodLinkCard() {
+function RestaurantDashboardLinkCard() {
   return (
     <section className="bg-[#0A1C19] border border-[#F7E7CE]/8 p-5 sm:p-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -555,9 +572,9 @@ function HyperzodLinkCard() {
             <Store className="w-5 h-5 text-[#F59E0B]" />
           </div>
           <div>
-            <h2 className="text-sm font-bold uppercase tracking-wide text-[#F7E7CE]">Hyperzod dashboard</h2>
+            <h2 className="text-sm font-bold uppercase tracking-wide text-[#F7E7CE]">Restaurant dashboard</h2>
             <p className="text-xs text-[#F7E7CE]/40 mt-0.5">
-              Manage your menu, orders and opening hours from your Hyperzod account.
+              Manage your menu, orders and opening hours from your restaurant account.
             </p>
           </div>
         </div>
@@ -567,7 +584,7 @@ function HyperzodLinkCard() {
           rel="noopener noreferrer"
           className="w-full sm:w-auto shrink-0 h-10 px-5 border border-[#F7E7CE]/15 text-xs font-bold text-[#F7E7CE]/60 uppercase tracking-wide hover:border-[#F7E7CE]/30 hover:text-[#F7E7CE]/85 transition-colors flex items-center justify-center gap-1.5"
         >
-          Open Hyperzod <ExternalLink className="w-3.5 h-3.5" />
+          Open Dashboard <ExternalLink className="w-3.5 h-3.5" />
         </a>
       </div>
     </section>
@@ -584,9 +601,10 @@ function InvitedSection() {
         <h2 className="text-sm font-bold uppercase tracking-wide text-[#F7E7CE]">You&apos;re invited</h2>
       </div>
       <p className="text-sm text-[#F7E7CE]/55 leading-relaxed">
-        Check your email for your Hyperzod dashboard invite (don&apos;t forget your spam
-        folder). Once you&apos;ve accepted, our team will be in touch to agree your
-        commission, and you&apos;ll do that right here.
+        Your commission is agreed and your restaurant dashboard invite is on its way.
+        Check your email (don&apos;t forget your spam folder), accept the invite, and
+        build your menu, prices and opening hours. Once that&apos;s done, tell us and
+        our team will do a final check before switching you live.
       </p>
     </section>
   );
@@ -597,11 +615,11 @@ function LiveSection() {
     <section className="bg-[#0A1C19] border border-emerald-500/20 p-5 sm:p-6">
       <div className="flex items-center gap-2.5 mb-3">
         <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-        <h2 className="text-sm font-bold uppercase tracking-wide text-[#F7E7CE]">You&apos;re live 🎉</h2>
+        <h2 className="text-sm font-bold uppercase tracking-wide text-[#F7E7CE]">You&apos;re live</h2>
       </div>
       <p className="text-sm text-[#F7E7CE]/55 leading-relaxed">
         Your store is live on HalalMe. Manage your orders, menu and opening hours from
-        your Hyperzod dashboard. Welcome aboard!
+        your restaurant dashboard. Welcome aboard!
       </p>
     </section>
   );

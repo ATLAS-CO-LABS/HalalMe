@@ -254,24 +254,26 @@ const inputCls =
 function Skeleton() {
   return (
     <div className="animate-pulse">
-      <div className="bg-white border-b border-[#102C26]/12 px-8 py-5 flex items-center justify-between">
-        <div className="space-y-2">
+      <div className="bg-white border-b border-[#102C26]/12 px-4 sm:px-8 py-3 sm:py-4 flex items-center justify-between gap-4">
+        <div className="space-y-2 min-w-0">
           <div className="h-3 bg-gray-200 rounded w-28" />
-          <div className="h-6 bg-gray-200 rounded w-56" />
+          <div className="h-6 bg-gray-200 rounded w-40 sm:w-56" />
         </div>
-        <div className="h-9 bg-gray-200 rounded-none w-32" />
+        <div className="h-9 bg-gray-200 rounded-none w-24 sm:w-32 shrink-0" />
       </div>
-      <div className="grid grid-cols-4 gap-4 px-8 py-5 bg-gray-50 border-b border-[#102C26]/12">
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="bg-white rounded-none border border-[#102C26]/12 h-20" />
-        ))}
+      <div className="bg-white border-b border-[#102C26]/12 px-4 sm:px-8 py-3 sm:py-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="bg-white rounded-none border border-[#102C26]/12 h-20" />
+          ))}
+        </div>
       </div>
-      <div className="p-8 grid grid-cols-5 gap-6">
-        <div className="col-span-3 space-y-5">
+      <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 grid grid-cols-1 lg:grid-cols-5 gap-5 sm:gap-6">
+        <div className="lg:col-span-3 space-y-5">
           <div className="h-64 bg-gray-100 rounded-none" />
           <div className="h-48 bg-gray-100 rounded-none" />
         </div>
-        <div className="col-span-2 space-y-5">
+        <div className="lg:col-span-2 space-y-5">
           <div className="h-52 bg-gray-100 rounded-none" />
           <div className="h-48 bg-gray-100 rounded-none" />
         </div>
@@ -1514,7 +1516,7 @@ export default function MerchantDetailPage() {
                 <input className={inputCls} value={editForm.owner_name}
                   onChange={(e) => setEditForm((f) => ({ ...f, owner_name: e.target.value }))} />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <FieldLabel>Email *</FieldLabel>
                   <input type="email" className={inputCls} value={editForm.email}
@@ -1531,7 +1533,7 @@ export default function MerchantDetailPage() {
                 <input className={inputCls} value={editForm.address}
                   onChange={(e) => setEditForm((f) => ({ ...f, address: e.target.value }))} />
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <FieldLabel>City</FieldLabel>
                   <input className={inputCls} value={editForm.city}
@@ -1548,7 +1550,7 @@ export default function MerchantDetailPage() {
                     onChange={(e) => setEditForm((f) => ({ ...f, country: e.target.value }))} />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <FieldLabel>Website</FieldLabel>
                   <input className={inputCls} value={editForm.website}

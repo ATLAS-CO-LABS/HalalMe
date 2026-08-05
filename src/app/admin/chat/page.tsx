@@ -149,7 +149,7 @@ export default function AdminChatPage() {
 
       {/* Stat cards */}
       <div className="px-4 sm:px-8 pt-5">
-        <div className="grid grid-cols-3 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           <StatCard label="Open" value={stats?.open ?? "—"} sub="Awaiting reply" icon={Inbox} tone="amber" />
           <StatCard label="Pending" value={stats?.pending ?? "—"} sub="Awaiting requester" icon={MessageCircle} tone="blue" />
           <StatCard label="Unassigned" value={stats?.unassigned ?? "—"} sub="Open / pending, no owner" icon={UserCheck} tone="red" />

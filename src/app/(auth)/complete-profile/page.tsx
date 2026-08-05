@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { profileService } from "@/services/profileService";
 import { CheckCircle2, XCircle, Loader2, Camera, ArrowRight, Phone } from "lucide-react";
 import { COUNTRY_CODES, flagEmoji } from "@/data/countryCodes";
+import { withTimeout } from "@/lib/withTimeout";
 
 function validateUsername(value: string): string | null {
   if (value.length < 3) return "At least 3 characters";
@@ -110,8 +111,22 @@ export default function CompleteProfilePage() {
       }
       await profileService.updateProfile(user.id, { username, phone });
       await refreshUser();
-      // Fire-and-forget: provision Hyperzod account in background
-      fetch("/api/hyperzod/provision-customer", { method: "POST" }).catch(() => {});
+
+      // Link their delivery account. Awaited rather than fire-and-forget: this
+      // is the only moment we do it, and a dropped call left users permanently
+      // unlinked with nothing recording that it failed. The route is idempotent
+      // and self-repairing, so a later retry is always safe.
+      try {
+        await withTimeout(
+          fetch("/api/hyperzod/provision-customer", { method: "POST" }),
+          8000,
+        );
+      } catch (linkErr) {
+        // Never block onboarding on Hyperzod being slow or down — they can
+        // still use HalalMe, and the link gets picked up on a later attempt.
+        console.warn("Delivery account link failed, will retry later.", linkErr);
+      }
+
       router.push("/dashboard?delivery=ready");
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Something went wrong. Try again.");

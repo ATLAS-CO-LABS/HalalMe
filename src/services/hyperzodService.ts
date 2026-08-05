@@ -1,9 +1,17 @@
 // Server-side only — never import this in client components
 
+import { COUNTRY_CODES } from "@/data/countryCodes";
 
 const HYPERZOD_BASE_URL = "https://api.hyperzod.app/admin/v1";
 const HYPERZOD_TENANT_ID = process.env.HYPERZOD_TENANT_ID ?? "";
 const HYPERZOD_API_KEY = process.env.HYPERZOD_API_KEY ?? "";
+
+const HYPERZOD_HEADERS = {
+  "Content-Type": "application/json",
+  "accept": "application/json",
+  "x-api-key": HYPERZOD_API_KEY,
+  "x-tenant": HYPERZOD_TENANT_ID,
+};
 
 export interface HyperzodCustomerResult {
   id: string | null;
@@ -17,10 +25,12 @@ export async function createHyperzodCustomer(params: {
 }): Promise<HyperzodCustomerResult | null> {
   if (!HYPERZOD_API_KEY || !HYPERZOD_TENANT_ID) return null;
 
-  const [country_code, rawMobile] = params.phone.split(":");
-  if (!country_code || !rawMobile) return null;
-  // Strip leading zeros — Hyperzod expects national number without prefix (e.g. 7911123456 not 07911123456)
-  const mobile = rawMobile.replace(/^0+/, "");
+  const [country_code] = params.phone.split(":");
+  if (!country_code) return null;
+  // Hyperzod expects the national number without the dialling prefix
+  // (7911123456, not 07911123456 or +447911123456).
+  const mobile = toNationalDigits(params.phone);
+  if (!mobile) return null;
 
   const nameParts = params.full_name.trim().split(" ");
   const first_name = nameParts[0] ?? "";
@@ -55,6 +65,169 @@ export async function createHyperzodCustomer(params: {
     console.error("[hyperzod] createCustomer error", err);
     return null;
   }
+}
+
+// ---------------------------------------------------------------------------
+// Customer lookup
+//
+// Hyperzod has no search/filter and no get-by-id for customers: /auth/user/all
+// is the only read endpoint (confirmed against their docs + live API). Two
+// undocumented behaviours make a lookup practical anyway:
+//   • `per_page` is honoured up to 1000, so the whole book is a handful of
+//     requests rather than the 550+ the default page size of 10 implies.
+//   • Results come back newest-first, so a just-created customer is on page 1.
+//
+// Numbers are stored E.164 with the prefix ("+447911123456") even though
+// /auth/user/add takes the national part and country_code separately, so we
+// rebuild the full number from our "GB:07911123456" before comparing.
+// ---------------------------------------------------------------------------
+
+const HYPERZOD_PAGE_SIZE = 1000;
+const HYPERZOD_MAX_PAGES = 20; // safety ceiling; ~20k customers
+
+/** Digits only, so "+44 7911-123456" and "+447911123456" compare equal. */
+function digitsOnly(value: unknown): string {
+  return String(value ?? "").replace(/\D/g, "");
+}
+
+/**
+ * Convert our stored phone into E.164 digits ("447911123456").
+ *
+ * Two formats exist in profiles.phone and both have to work:
+ *   • "GB:7911123456"    — written by /complete-profile (national)
+ *   • "GB:+447911123456" — written by the Hyperzod signup webhook, which
+ *                          receives the number already internationalised
+ * Returns null when the country is unknown or the number is empty.
+ */
+export function toE164Digits(storedPhone: string): string | null {
+  const [iso, rawMobile] = storedPhone.split(":");
+  if (!iso || !rawMobile) return null;
+
+  const dial = COUNTRY_CODES.find((c) => c.code === iso.toUpperCase())?.dial;
+  if (!dial) return null;
+
+  // Already international — trust it rather than prefixing a second time.
+  const raw = rawMobile.trim();
+  if (raw.startsWith("+")) return digitsOnly(raw) || null;
+
+  // National numbers carry a trunk zero ("07911...") that is dropped abroad.
+  const national = digitsOnly(raw).replace(/^0+/, "");
+  if (!national) return null;
+
+  return `${digitsOnly(dial)}${national}`;
+}
+
+/**
+ * The national part only ("7911123456"), which is what /auth/user/add expects
+ * alongside a separate country_code. Accepts either stored format.
+ */
+export function toNationalDigits(storedPhone: string): string | null {
+  const [iso] = storedPhone.split(":");
+  const e164 = toE164Digits(storedPhone);
+  if (!iso || !e164) return null;
+
+  const dialDigits = digitsOnly(
+    COUNTRY_CODES.find((c) => c.code === iso.toUpperCase())?.dial
+  );
+  return dialDigits && e164.startsWith(dialDigits)
+    ? e164.slice(dialDigits.length)
+    : e164;
+}
+
+export interface HyperzodCustomer {
+  id: string;
+  mobile: string;
+  email: string;
+  full_name: string;
+  deleted_at: string | null;
+  raw: Record<string, unknown>;
+}
+
+function toCustomer(row: Record<string, unknown>): HyperzodCustomer {
+  return {
+    id: String(row.id ?? ""),
+    mobile: String(row.mobile ?? ""),
+    email: String(row.email ?? ""),
+    full_name: String(row.full_name ?? ""),
+    deleted_at: (row.deleted_at as string | null) ?? null,
+    raw: row,
+  };
+}
+
+/**
+ * Page through the customer list, newest first, returning the first row the
+ * predicate accepts. Returns null if nothing matches or the API errors.
+ */
+async function scanHyperzodCustomers(
+  match: (row: Record<string, unknown>) => boolean,
+  maxPages: number = HYPERZOD_MAX_PAGES
+): Promise<HyperzodCustomer | null> {
+  if (!HYPERZOD_API_KEY || !HYPERZOD_TENANT_ID) return null;
+
+  try {
+    for (let page = 1; page <= maxPages; page++) {
+      const res = await fetch(
+        `${HYPERZOD_BASE_URL}/auth/user/all?per_page=${HYPERZOD_PAGE_SIZE}&page=${page}`,
+        { method: "GET", headers: HYPERZOD_HEADERS }
+      );
+
+      if (!res.ok) {
+        console.error("[hyperzod] customer list failed", res.status, "page", page);
+        return null;
+      }
+
+      const json = (await res.json()) as Record<string, unknown>;
+      const pageData = (json.data ?? {}) as Record<string, unknown>;
+      const rows = (pageData.data ?? []) as Record<string, unknown>[];
+
+      const hit = rows.find(match);
+      if (hit) return toCustomer(hit);
+
+      const lastPage = Number(pageData.last_page ?? page);
+      if (page >= lastPage || rows.length === 0) break;
+    }
+    return null;
+  } catch (err) {
+    console.error("[hyperzod] customer list error", err);
+    return null;
+  }
+}
+
+/**
+ * Find a live (non-deleted) customer by mobile number.
+ * `storedPhone` is our own "GB:07911123456" format.
+ *
+ * `maxPages` bounds the scan. Most people signing up on HalalMe have never
+ * ordered, so "not found" is the common outcome — and an unbounded scan would
+ * make the slowest path the usual one. Interactive callers pass a small number
+ * to check only recent customers; the exhaustive scan is worth paying for once
+ * a create has actually failed.
+ */
+export async function findHyperzodCustomerByMobile(
+  storedPhone: string,
+  maxPages: number = HYPERZOD_MAX_PAGES
+): Promise<HyperzodCustomer | null> {
+  const target = toE164Digits(storedPhone);
+  if (!target) return null;
+
+  return scanHyperzodCustomers(
+    (row) => digitsOnly(row.mobile) === target && !row.deleted_at,
+    maxPages
+  );
+}
+
+/** Pages checked on the interactive signup path (newest ~1000 customers). */
+export const HYPERZOD_QUICK_SCAN_PAGES = 1;
+
+/**
+ * Look a customer up by id, including soft-deleted ones — callers need to be
+ * able to tell "gone" apart from "never existed" when repairing a stale link.
+ */
+export async function findHyperzodCustomerById(
+  customerId: string
+): Promise<HyperzodCustomer | null> {
+  if (!customerId) return null;
+  return scanHyperzodCustomers((row) => String(row.id ?? "") === customerId);
 }
 
 export interface HyperzodMerchantResult {
@@ -132,13 +305,6 @@ export async function createHyperzodMerchant(params: {
     return null;
   }
 }
-
-const HYPERZOD_HEADERS = {
-  "Content-Type": "application/json",
-  "accept": "application/json",
-  "x-api-key": HYPERZOD_API_KEY,
-  "x-tenant": HYPERZOD_TENANT_ID,
-};
 
 /**
  * Find a single merchant's full object by paging through the list endpoint.

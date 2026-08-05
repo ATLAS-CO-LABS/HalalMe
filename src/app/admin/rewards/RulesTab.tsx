@@ -93,71 +93,145 @@ export default function RulesTab() {
         ) : loading ? <TableSkeleton /> : rules.length === 0 ? (
           <EmptyState icon={Coins} title="No reward rules" hint="Reward rules define point awards for donations, reviews and more." />
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-[#102C26]/12 bg-gray-50/60">
-                <th className="pl-4 lg:pl-5 px-2 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600">Action</th>
-                <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600">Points</th>
-                <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600 hidden md:table-cell">Per day</th>
-                <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600 hidden md:table-cell">Lifetime</th>
-                <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600">Active</th>
-                <th className="px-4 lg:px-5 py-3 w-24" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#102C26]/8">
+          <>
+            {/* Mobile cards */}
+            <div className="md:hidden divide-y divide-[#102C26]/8">
               {rules.map((r) => {
                 const editing = editId === r.id && draft;
                 return (
-                  <tr key={r.id} className={editing ? "bg-[#102C26]/3" : "hover:bg-[#102C26]/2 transition-colors"}>
-                    <td className="pl-4 lg:pl-5 px-2 py-3">
-                      <p className="font-semibold text-gray-900">{r.label}</p>
-                      <p className="text-xs text-gray-500 font-mono">{r.action}</p>
-                    </td>
-                    {editing ? (
-                      <>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-1.5">
-                            <input type="number" value={draft!.points_per_unit} onChange={(e) => setDraft({ ...draft!, points_per_unit: parseFloat(e.target.value) })}
-                              className="w-20 px-2 py-1.5 text-sm border border-gray-200 bg-white rounded-none focus:outline-none focus:ring-2 focus:ring-[#102C26]/15 tabular-nums" />
-                            <div className="w-28"><ThemedSelect value={draft!.unit} onChange={(v) => setDraft({ ...draft!, unit: v })} options={[{ value: "fixed", label: "fixed" }, { value: "per_gbp", label: "per £" }]} /></div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 hidden md:table-cell">
-                          <input type="number" value={draft!.max_per_day ?? ""} placeholder="∞" onChange={(e) => setDraft({ ...draft!, max_per_day: e.target.value === "" ? null : parseInt(e.target.value, 10) })}
-                            className="w-20 px-2 py-1.5 text-sm border border-gray-200 bg-white rounded-none focus:outline-none focus:ring-2 focus:ring-[#102C26]/15 tabular-nums" />
-                        </td>
-                        <td className="px-4 py-3 hidden md:table-cell">
-                          <input type="number" value={draft!.max_lifetime ?? ""} placeholder="∞" onChange={(e) => setDraft({ ...draft!, max_lifetime: e.target.value === "" ? null : parseInt(e.target.value, 10) })}
-                            className="w-20 px-2 py-1.5 text-sm border border-gray-200 bg-white rounded-none focus:outline-none focus:ring-2 focus:ring-[#102C26]/15 tabular-nums" />
-                        </td>
-                        <td className="px-4 py-3">
-                          <input type="checkbox" checked={draft!.is_active} onChange={(e) => setDraft({ ...draft!, is_active: e.target.checked })} className="w-4 h-4 rounded border-gray-300 accent-[#102C26]" />
-                        </td>
-                        <td className="px-4 lg:px-5 py-3 text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <button onClick={save} disabled={busy} title="Save" className="inline-flex items-center justify-center w-8 h-8 rounded-none text-white bg-[#102C26] hover:bg-[#102C26]/90 disabled:opacity-50">{busy ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}</button>
-                            <button onClick={cancelEdit} disabled={busy} title="Cancel" className="inline-flex items-center justify-center w-8 h-8 rounded-none text-gray-500 hover:bg-gray-100"><X size={14} /></button>
-                          </div>
-                        </td>
-                      </>
-                    ) : (
-                      <>
-                        <td className="px-4 py-3 tabular-nums text-gray-900 font-medium">{r.points_per_unit} <span className="text-xs text-gray-500 font-normal">{r.unit === "per_gbp" ? "/ £" : "fixed"}</span></td>
-                        <td className="px-4 py-3 hidden md:table-cell text-gray-600 tabular-nums">{r.max_per_day ?? "∞"}</td>
-                        <td className="px-4 py-3 hidden md:table-cell text-gray-600 tabular-nums">{r.max_lifetime ?? "∞"}</td>
-                        <td className="px-4 py-3"><Badge label={r.is_active ? "Active" : "Off"} tone={r.is_active ? "green" : "gray"} /></td>
-                        <td className="px-4 lg:px-5 py-3 text-right">
+                  <div key={r.id} className={`px-4 py-3.5 ${editing ? "bg-[#102C26]/3" : ""}`}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-gray-900">{r.label}</p>
+                        <p className="text-xs text-gray-500 font-mono truncate">{r.action}</p>
+                      </div>
+                      {!editing && (
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Badge label={r.is_active ? "Active" : "Off"} tone={r.is_active ? "green" : "gray"} />
                           {canManage && (
-                            <button onClick={() => startEdit(r)} title="Edit" className="inline-flex items-center justify-center w-8 h-8 rounded-none text-gray-500 hover:bg-[#102C26] hover:text-white transition-all"><Pencil size={14} /></button>
+                            <button onClick={() => startEdit(r)} title="Edit" className="inline-flex items-center justify-center w-8 h-8 rounded-none text-gray-500 hover:bg-[#102C26] hover:text-white transition-all shrink-0"><Pencil size={14} /></button>
                           )}
-                        </td>
-                      </>
+                        </div>
+                      )}
+                    </div>
+
+                    {editing ? (
+                      <div className="mt-3 space-y-3">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-1">Points</label>
+                            <input type="number" value={draft!.points_per_unit} onChange={(e) => setDraft({ ...draft!, points_per_unit: parseFloat(e.target.value) })}
+                              className="w-full px-2 py-1.5 text-sm border border-gray-200 bg-white rounded-none focus:outline-none focus:ring-2 focus:ring-[#102C26]/15 tabular-nums" />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-1">Unit</label>
+                            <ThemedSelect value={draft!.unit} onChange={(v) => setDraft({ ...draft!, unit: v })} options={[{ value: "fixed", label: "fixed" }, { value: "per_gbp", label: "per £" }]} />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-1">Max / day</label>
+                            <input type="number" value={draft!.max_per_day ?? ""} placeholder="∞" onChange={(e) => setDraft({ ...draft!, max_per_day: e.target.value === "" ? null : parseInt(e.target.value, 10) })}
+                              className="w-full px-2 py-1.5 text-sm border border-gray-200 bg-white rounded-none focus:outline-none focus:ring-2 focus:ring-[#102C26]/15 tabular-nums" />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-1">Max lifetime</label>
+                            <input type="number" value={draft!.max_lifetime ?? ""} placeholder="∞" onChange={(e) => setDraft({ ...draft!, max_lifetime: e.target.value === "" ? null : parseInt(e.target.value, 10) })}
+                              className="w-full px-2 py-1.5 text-sm border border-gray-200 bg-white rounded-none focus:outline-none focus:ring-2 focus:ring-[#102C26]/15 tabular-nums" />
+                          </div>
+                        </div>
+                        <label className="flex items-center gap-2 text-sm text-gray-700">
+                          <input type="checkbox" checked={draft!.is_active} onChange={(e) => setDraft({ ...draft!, is_active: e.target.checked })} className="w-4 h-4 rounded border-gray-300 accent-[#102C26]" />
+                          Active
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <button onClick={save} disabled={busy} className="flex-1 flex items-center justify-center gap-1.5 h-9 text-sm font-semibold rounded-none text-white bg-[#102C26] hover:bg-[#102C26]/90 disabled:opacity-50">
+                            {busy ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} Save
+                          </button>
+                          <button onClick={cancelEdit} disabled={busy} className="flex-1 flex items-center justify-center gap-1.5 h-9 text-sm font-semibold rounded-none text-gray-600 bg-gray-100 hover:bg-gray-200 disabled:opacity-50">
+                            <X size={14} /> Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-4 mt-2 text-xs text-gray-600">
+                        <span className="tabular-nums text-gray-900 font-medium">{r.points_per_unit} <span className="text-gray-500 font-normal">{r.unit === "per_gbp" ? "/ £" : "fixed"}</span></span>
+                        <span>Day: <span className="tabular-nums">{r.max_per_day ?? "∞"}</span></span>
+                        <span>Lifetime: <span className="tabular-nums">{r.max_lifetime ?? "∞"}</span></span>
+                      </div>
                     )}
-                  </tr>
+                  </div>
                 );
               })}
-            </tbody>
-          </table>
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-[#102C26]/12 bg-gray-50/60">
+                    <th className="pl-4 lg:pl-5 px-2 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600">Action</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600">Points</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600">Per day</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600">Lifetime</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600">Active</th>
+                    <th className="px-4 lg:px-5 py-3 w-24" />
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#102C26]/8">
+                  {rules.map((r) => {
+                    const editing = editId === r.id && draft;
+                    return (
+                      <tr key={r.id} className={editing ? "bg-[#102C26]/3" : "hover:bg-[#102C26]/2 transition-colors"}>
+                        <td className="pl-4 lg:pl-5 px-2 py-3">
+                          <p className="font-semibold text-gray-900">{r.label}</p>
+                          <p className="text-xs text-gray-500 font-mono">{r.action}</p>
+                        </td>
+                        {editing ? (
+                          <>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-1.5">
+                                <input type="number" value={draft!.points_per_unit} onChange={(e) => setDraft({ ...draft!, points_per_unit: parseFloat(e.target.value) })}
+                                  className="w-20 px-2 py-1.5 text-sm border border-gray-200 bg-white rounded-none focus:outline-none focus:ring-2 focus:ring-[#102C26]/15 tabular-nums" />
+                                <div className="w-28"><ThemedSelect value={draft!.unit} onChange={(v) => setDraft({ ...draft!, unit: v })} options={[{ value: "fixed", label: "fixed" }, { value: "per_gbp", label: "per £" }]} /></div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <input type="number" value={draft!.max_per_day ?? ""} placeholder="∞" onChange={(e) => setDraft({ ...draft!, max_per_day: e.target.value === "" ? null : parseInt(e.target.value, 10) })}
+                                className="w-20 px-2 py-1.5 text-sm border border-gray-200 bg-white rounded-none focus:outline-none focus:ring-2 focus:ring-[#102C26]/15 tabular-nums" />
+                            </td>
+                            <td className="px-4 py-3">
+                              <input type="number" value={draft!.max_lifetime ?? ""} placeholder="∞" onChange={(e) => setDraft({ ...draft!, max_lifetime: e.target.value === "" ? null : parseInt(e.target.value, 10) })}
+                                className="w-20 px-2 py-1.5 text-sm border border-gray-200 bg-white rounded-none focus:outline-none focus:ring-2 focus:ring-[#102C26]/15 tabular-nums" />
+                            </td>
+                            <td className="px-4 py-3">
+                              <input type="checkbox" checked={draft!.is_active} onChange={(e) => setDraft({ ...draft!, is_active: e.target.checked })} className="w-4 h-4 rounded border-gray-300 accent-[#102C26]" />
+                            </td>
+                            <td className="px-4 lg:px-5 py-3 text-right">
+                              <div className="flex items-center justify-end gap-1">
+                                <button onClick={save} disabled={busy} title="Save" className="inline-flex items-center justify-center w-8 h-8 rounded-none text-white bg-[#102C26] hover:bg-[#102C26]/90 disabled:opacity-50">{busy ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}</button>
+                                <button onClick={cancelEdit} disabled={busy} title="Cancel" className="inline-flex items-center justify-center w-8 h-8 rounded-none text-gray-500 hover:bg-gray-100"><X size={14} /></button>
+                              </div>
+                            </td>
+                          </>
+                        ) : (
+                          <>
+                            <td className="px-4 py-3 tabular-nums text-gray-900 font-medium">{r.points_per_unit} <span className="text-xs text-gray-500 font-normal">{r.unit === "per_gbp" ? "/ £" : "fixed"}</span></td>
+                            <td className="px-4 py-3 text-gray-600 tabular-nums">{r.max_per_day ?? "∞"}</td>
+                            <td className="px-4 py-3 text-gray-600 tabular-nums">{r.max_lifetime ?? "∞"}</td>
+                            <td className="px-4 py-3"><Badge label={r.is_active ? "Active" : "Off"} tone={r.is_active ? "green" : "gray"} /></td>
+                            <td className="px-4 lg:px-5 py-3 text-right">
+                              {canManage && (
+                                <button onClick={() => startEdit(r)} title="Edit" className="inline-flex items-center justify-center w-8 h-8 rounded-none text-gray-500 hover:bg-[#102C26] hover:text-white transition-all"><Pencil size={14} /></button>
+                              )}
+                            </td>
+                          </>
+                        )}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
         {!loading && rules.length > 0 && (
           <div className="px-5 py-3 border-t border-[#102C26]/8">

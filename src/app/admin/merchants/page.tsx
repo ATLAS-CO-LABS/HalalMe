@@ -544,28 +544,33 @@ export default function MerchantPipelinePage() {
 
           {/* Filters */}
           <div className="bg-white rounded-none border border-[#102C26]/12 overflow-hidden">
-            <div className="px-4 sm:px-5 pt-3 pb-3 border-b border-[#102C26]/8">
-              <div className="flex items-center gap-0.5 overflow-x-auto pb-0.5 scrollbar-none">
+            <div className="px-4 sm:px-5 pt-3.5 pb-3 border-b border-[#102C26]/8">
+              <div className="flex flex-wrap items-center gap-1.5">
                 {STATUSES.map(({ key, label }) => {
                   const active = statusFilter === key;
                   return (
                     <button key={key} onClick={() => { setStatusFilter(key); setAttentionOnly(false); setReviewOnly(false); }}
-                      className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-none text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
+                      className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-none text-xs sm:text-sm font-medium whitespace-nowrap transition-colors ${
                         active ? "bg-[#102C26] text-[#F7E7CE]" : "text-gray-500 hover:text-[#102C26] hover:bg-[#102C26]/8"
                       }`}>
                       {label}
-                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${active ? "bg-white/20 text-white" : "bg-gray-100 text-gray-500"}`}>
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none tabular-nums ${active ? "bg-white/20 text-white" : "bg-gray-100 text-gray-500"}`}>
                         {getCount(key)}
                       </span>
                     </button>
                   );
                 })}
 
+                {/* Divider before the scope/cross-cutting filters */}
+                {(canManage || reviewPendingCount > 0) && (
+                  <div className="w-px self-stretch bg-[#102C26]/10 mx-1 hidden sm:block" />
+                )}
+
                 {/* My Merchants (server-side scope to assigned_rep_id = me) */}
                 {canManage && (
                   <button
                     onClick={() => { setMineOnly((v) => !v); setAttentionOnly(false); setReviewOnly(false); }}
-                    className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-none text-xs sm:text-sm font-medium whitespace-nowrap transition-all ml-1 ${
+                    className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-none text-xs sm:text-sm font-medium whitespace-nowrap transition-colors ${
                       mineOnly ? "bg-[#102C26] text-[#F7E7CE]" : "text-gray-500 hover:text-[#102C26] hover:bg-[#102C26]/8"
                     }`}
                   >
@@ -577,12 +582,12 @@ export default function MerchantPipelinePage() {
                 {reviewPendingCount > 0 && (
                   <button
                     onClick={() => { setReviewOnly((v) => !v); setAttentionOnly(false); }}
-                    className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-none text-xs sm:text-sm font-medium whitespace-nowrap transition-all ml-1 ${
+                    className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-none text-xs sm:text-sm font-medium whitespace-nowrap transition-colors ${
                       reviewOnly ? "bg-orange-600 text-white" : "text-orange-700 hover:bg-orange-50"
                     }`}
                   >
                     Commission reviews
-                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none ${reviewOnly ? "bg-white/20 text-white" : "bg-orange-100 text-orange-700"}`}>
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none tabular-nums ${reviewOnly ? "bg-white/20 text-white" : "bg-orange-100 text-orange-700"}`}>
                       {reviewPendingCount}
                     </span>
                   </button>

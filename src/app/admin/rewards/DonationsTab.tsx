@@ -132,45 +132,76 @@ export default function DonationsTab() {
           <EmptyState icon={Receipt} title="No donations found" hint="Donations made through the platform will appear here." />
         ) : (
           <>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-[#102C26]/12 bg-gray-50/60">
-                  <th className="pl-4 lg:pl-5 px-2 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600">Donor</th>
-                  <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600 hidden md:table-cell">Charity</th>
-                  <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600">Amount</th>
-                  <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600 hidden md:table-cell">To charity</th>
-                  <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600 hidden lg:table-cell">Platform fee</th>
-                  <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600 hidden xl:table-cell">Stripe fee</th>
-                  <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600">Status</th>
-                  <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600 hidden lg:table-cell">Points</th>
-                  <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600 hidden xl:table-cell">Date</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#102C26]/8">
-                {rows.map((d) => {
-                  const u = one(d.user); const c = one(d.charity);
-                  return (
-                    <tr key={d.id} className="hover:bg-[#102C26]/2 transition-colors">
-                      <td className="pl-4 lg:pl-5 px-2 py-3.5">
+            {/* Mobile cards */}
+            <div className="md:hidden divide-y divide-[#102C26]/8">
+              {rows.map((d) => {
+                const u = one(d.user); const c = one(d.charity);
+                return (
+                  <div key={d.id} className="px-4 py-3.5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <p className="font-semibold text-gray-900 truncate max-w-44">{d.is_anonymous ? "Anonymous" : (u?.full_name ?? "—")}</p>
+                          <p className="font-semibold text-gray-900 truncate">{d.is_anonymous ? "Anonymous" : (u?.full_name ?? "—")}</p>
                           {d.risk_score >= 70 && <span title={`Risk ${d.risk_score}`}><ShieldAlert size={13} className="text-red-500 shrink-0" /></span>}
                         </div>
                         <p className="text-xs text-gray-600 truncate">{d.is_anonymous ? "" : (u?.email ?? "")}</p>
-                      </td>
-                      <td className="px-4 py-3.5 hidden md:table-cell text-gray-700 truncate max-w-44">{c?.name ?? "—"}</td>
-                      <td className="px-4 py-3.5 text-right font-semibold text-gray-900 tabular-nums">{fmtMoney(d.amount, d.currency)}</td>
-                      <td className="px-4 py-3.5 text-right tabular-nums text-gray-700 hidden md:table-cell">{d.net_amount != null ? fmtMoney(d.net_amount, d.currency) : "—"}</td>
-                      <td className="px-4 py-3.5 text-right tabular-nums text-gray-600 hidden lg:table-cell">{d.platform_fee_amount != null ? fmtMoney(d.platform_fee_amount, d.currency) : "—"}</td>
-                      <td className="px-4 py-3.5 text-right tabular-nums text-gray-500 hidden xl:table-cell">{d.stripe_fee_amount != null ? fmtMoney(d.stripe_fee_amount, d.currency) : "—"}</td>
-                      <td className="px-4 py-3.5"><Badge label={d.status} tone={STATUS_TONE[d.status] ?? "gray"} /></td>
-                      <td className="px-4 py-3.5 text-right hidden lg:table-cell tabular-nums text-gray-600">{d.points_earned > 0 ? `+${d.points_earned}` : "—"}</td>
-                      <td className="px-4 py-3.5 hidden xl:table-cell text-gray-600 whitespace-nowrap">{fmtDateTime(d.created_at)}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="font-semibold text-gray-900 tabular-nums">{fmtMoney(d.amount, d.currency)}</p>
+                        <div className="mt-1"><Badge label={d.status} tone={STATUS_TONE[d.status] ?? "gray"} /></div>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between gap-3 mt-2 text-xs text-gray-500">
+                      <span className="truncate">{c?.name ?? "—"}</span>
+                      <span className="shrink-0">{fmtDateTime(d.created_at)}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-[#102C26]/12 bg-gray-50/60">
+                    <th className="pl-4 lg:pl-5 px-2 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600">Donor</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600">Charity</th>
+                    <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600">Amount</th>
+                    <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600">To charity</th>
+                    <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600 hidden lg:table-cell">Platform fee</th>
+                    <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600 hidden xl:table-cell">Stripe fee</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600">Status</th>
+                    <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600 hidden lg:table-cell">Points</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-gray-600 hidden xl:table-cell">Date</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#102C26]/8">
+                  {rows.map((d) => {
+                    const u = one(d.user); const c = one(d.charity);
+                    return (
+                      <tr key={d.id} className="hover:bg-[#102C26]/2 transition-colors">
+                        <td className="pl-4 lg:pl-5 px-2 py-3.5">
+                          <div className="flex items-center gap-1.5">
+                            <p className="font-semibold text-gray-900 truncate max-w-44">{d.is_anonymous ? "Anonymous" : (u?.full_name ?? "—")}</p>
+                            {d.risk_score >= 70 && <span title={`Risk ${d.risk_score}`}><ShieldAlert size={13} className="text-red-500 shrink-0" /></span>}
+                          </div>
+                          <p className="text-xs text-gray-600 truncate">{d.is_anonymous ? "" : (u?.email ?? "")}</p>
+                        </td>
+                        <td className="px-4 py-3.5 text-gray-700 truncate max-w-44">{c?.name ?? "—"}</td>
+                        <td className="px-4 py-3.5 text-right font-semibold text-gray-900 tabular-nums">{fmtMoney(d.amount, d.currency)}</td>
+                        <td className="px-4 py-3.5 text-right tabular-nums text-gray-700">{d.net_amount != null ? fmtMoney(d.net_amount, d.currency) : "—"}</td>
+                        <td className="px-4 py-3.5 text-right tabular-nums text-gray-600 hidden lg:table-cell">{d.platform_fee_amount != null ? fmtMoney(d.platform_fee_amount, d.currency) : "—"}</td>
+                        <td className="px-4 py-3.5 text-right tabular-nums text-gray-500 hidden xl:table-cell">{d.stripe_fee_amount != null ? fmtMoney(d.stripe_fee_amount, d.currency) : "—"}</td>
+                        <td className="px-4 py-3.5"><Badge label={d.status} tone={STATUS_TONE[d.status] ?? "gray"} /></td>
+                        <td className="px-4 py-3.5 text-right hidden lg:table-cell tabular-nums text-gray-600">{d.points_earned > 0 ? `+${d.points_earned}` : "—"}</td>
+                        <td className="px-4 py-3.5 hidden xl:table-cell text-gray-600 whitespace-nowrap">{fmtDateTime(d.created_at)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
             <Pagination page={page} pageSize={pageSize} total={total} noun="donation" onPrev={() => setPage((p) => Math.max(0, p - 1))} onNext={() => setPage((p) => p + 1)} onPageSize={(s) => { setPageSize(s); setPage(0); }} onJump={(p) => setPage(p)} />
           </>
         )}

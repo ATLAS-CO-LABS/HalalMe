@@ -111,11 +111,13 @@ function Sidebar({
       return (
         <div
           key={label}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-none cursor-not-allowed select-none"
+          className="flex items-center justify-center md:group-hover:justify-start gap-3 px-3 py-2.5 rounded-none cursor-not-allowed select-none"
         >
           <Icon size={15} className="text-white/20 shrink-0" />
-          <span className="text-sm text-white/25 flex-1 font-medium">{label}</span>
-          <span className="text-[9px] font-bold tracking-wide uppercase bg-white/6 text-white/20 px-2 py-0.5 rounded-full">
+          <span className="text-sm text-white/25 flex-1 font-medium overflow-hidden whitespace-nowrap transition-all duration-200 md:max-w-0 md:opacity-0 md:group-hover:max-w-36 md:group-hover:opacity-100">
+            {label}
+          </span>
+          <span className="inline-block md:hidden md:group-hover:inline-block shrink-0 text-[9px] font-bold tracking-wide uppercase bg-white/6 text-white/20 px-2 py-0.5 rounded-full">
             Soon
           </span>
         </div>
@@ -126,41 +128,43 @@ function Sidebar({
         key={label}
         href={href}
         onClick={onClose}
-        className={`relative flex items-center gap-3 px-3 py-2.5 rounded-none text-sm font-medium transition-all duration-150 ${
+        className={`relative flex items-center justify-center md:group-hover:justify-start gap-3 px-3 py-2.5 rounded-none text-sm font-medium transition-all duration-150 ${
           active
             ? "bg-[#F7E7CE]/12 text-[#F7E7CE] border border-[#F7E7CE]/12"
             : "text-white/55 hover:bg-white/[0.07] hover:text-white border border-transparent"
         }`}
       >
         {active && (
-          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-full bg-[#F59E0B]" />
+          <span className="absolute -left-3 top-1/2 -translate-y-1/2 w-1 h-5 rounded-full bg-[#F59E0B]" />
         )}
         <Icon size={15} className={`shrink-0 ${active ? "text-[#F7E7CE]" : ""}`} />
-        {label}
+        <span className="overflow-hidden whitespace-nowrap transition-all duration-200 md:max-w-0 md:opacity-0 md:group-hover:max-w-36 md:group-hover:opacity-100">
+          {label}
+        </span>
         {badge > 0 ? (
-          <span className="ml-auto min-w-4.5 h-4.5 px-1 flex items-center justify-center rounded-full bg-[#F59E0B] text-white text-[10px] font-bold leading-none shrink-0">
+          <span className="ml-auto min-w-4.5 h-4.5 px-1 flex md:hidden md:group-hover:flex items-center justify-center rounded-full bg-[#F59E0B] text-white text-[10px] font-bold leading-none shrink-0">
             {badge > 99 ? "99+" : badge}
           </span>
         ) : active ? (
-          <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#F59E0B] shrink-0" />
+          <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#F59E0B] shrink-0 hidden md:group-hover:inline-block" />
         ) : null}
       </Link>
     );
   }
 
   return (
-    <aside className="w-64 md:w-56 bg-[#0e2420] flex flex-col h-full relative">
+    <aside className="group w-64 md:w-16 md:hover:w-64 bg-[#0e2420] flex flex-col h-full relative overflow-hidden transition-[width] duration-200 ease-in-out">
       {/* Subtle texture */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(247,231,206,0.04),transparent_60%)] pointer-events-none" />
 
       {/* Brand */}
-      <div className="relative px-5 pt-5 pb-4 border-b border-white/8 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2.5">
+      <div className="relative px-4 pt-5 pb-4 border-b border-white/8 flex items-center justify-between md:justify-center md:group-hover:justify-start">
+        <Link href="/" className="flex items-center gap-2.5 min-w-0">
           <span className="relative inline-flex w-8 h-8 shrink-0">
             <span className="absolute inset-0 bg-white/90 rounded-full" />
             <Image src="/logo/logo.png" alt="HalalMe" width={32} height={32} className="object-contain relative z-10 p-0.5" />
           </span>
-          <div>
+          <div className="overflow-hidden whitespace-nowrap transition-all duration-200 md:max-w-0 md:opacity-0 md:group-hover:max-w-40 md:group-hover:opacity-100">
             <p
               className="text-[#F7E7CE] font-black text-lg leading-tight tracking-tight"
               style={{ fontFamily: "var(--font-logo)" }}
@@ -183,20 +187,20 @@ function Sidebar({
       </div>
 
       {/* Nav */}
-      <nav className="relative flex-1 px-3 py-3 overflow-y-auto">
+      <nav className="relative flex-1 px-3 py-3 overflow-y-auto scrollbar-hide">
         {/* Global search trigger (⌘K) */}
         <button
           onClick={() => { onClose?.(); window.dispatchEvent(new Event("admin:search")); }}
-          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-none text-sm text-white/45 bg-white/[0.04] border border-white/8 hover:bg-white/[0.08] hover:text-white/70 transition-colors mb-2"
+          className="w-full flex items-center justify-center md:group-hover:justify-start gap-2.5 px-3 py-2.5 rounded-none text-sm text-white/45 bg-white/[0.04] border border-white/8 hover:bg-white/[0.08] hover:text-white/70 transition-colors mb-2"
         >
           <Search size={14} className="shrink-0" />
-          <span className="flex-1 text-left">Search…</span>
-          <kbd className="text-[9px] font-bold tracking-wide bg-white/8 text-white/40 px-1.5 py-0.5 rounded">⌘K</kbd>
+          <span className="flex md:hidden md:group-hover:flex flex-1 text-left">Search…</span>
+          <kbd className="inline-block md:hidden md:group-hover:inline-block shrink-0 text-[9px] font-bold tracking-wide bg-white/8 text-white/40 px-1.5 py-0.5 rounded">⌘K</kbd>
         </button>
         {visibleGroups.map((group, gi) => (
           <div key={group.heading ?? `grp-${gi}`} className={gi > 0 ? "mt-4" : "mt-1"}>
             {group.heading && (
-              <p className="text-[9px] font-bold text-white/20 tracking-[0.15em] uppercase px-3 mb-2">
+              <p className="text-[9px] font-bold text-white/20 tracking-[0.15em] uppercase px-3 overflow-hidden whitespace-nowrap transition-all duration-200 md:max-h-0 md:opacity-0 md:mb-0 md:group-hover:max-h-5 md:group-hover:opacity-100 md:group-hover:mb-2">
                 {group.heading}
               </p>
             )}
@@ -214,7 +218,7 @@ function Sidebar({
           <div className="w-7 h-7 rounded-full bg-[#F7E7CE]/15 border border-[#F7E7CE]/20 flex items-center justify-center shrink-0">
             <span className="text-[#F7E7CE] text-xs font-bold leading-none">{initials}</span>
           </div>
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 overflow-hidden whitespace-nowrap transition-all duration-200 md:max-w-0 md:opacity-0 md:group-hover:max-w-40 md:group-hover:opacity-100">
             <p className="text-white/70 text-xs font-medium truncate">
               {user.full_name ?? "Admin"}
             </p>
@@ -226,10 +230,12 @@ function Sidebar({
         <Link
           href="/"
           onClick={onClose}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-none text-white/35 hover:text-white/70 hover:bg-white/6 text-sm transition-all group"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-none text-white/35 hover:text-white/70 hover:bg-white/6 text-sm transition-all"
         >
           <ExternalLink size={14} className="shrink-0" />
-          <span className="font-medium">Back to HalalMe</span>
+          <span className="font-medium overflow-hidden whitespace-nowrap transition-all duration-200 md:max-w-0 md:opacity-0 md:group-hover:max-w-40 md:group-hover:opacity-100">
+            Back to HalalMe
+          </span>
         </Link>
       </div>
     </aside>
@@ -312,8 +318,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         />
       </div>
 
-      {/* ── Content column — offset to clear the fixed sidebar on desktop ── */}
-      <div className="md:pl-56 min-h-dvh flex flex-col">
+      {/* ── Content column — offset to clear the collapsed rail; the sidebar
+          overlays content (it's `fixed`) rather than pushing it when it
+          expands on hover, so this stays pinned to the collapsed width ── */}
+      <div className="md:pl-16 min-h-dvh flex flex-col">
 
         {/* Mobile top bar — sticky so nav stays reachable while scrolling */}
         <div className="md:hidden sticky top-0 z-30 bg-[#0e2420] border-b border-white/8 px-4 h-14 flex items-center justify-between">
