@@ -28,9 +28,10 @@ export default function MerchantDocsApprovedEmail({
         That&apos;s a big step done.
       </Text>
       <Text style={styles.paragraph}>
-        Our team will now send your dashboard invite and continue your
-        onboarding. We&apos;ll keep you updated at each stage - you can track
-        your progress any time from your dashboard.
+        Next, our team will be in touch to agree your commission rate. Once
+        that&apos;s settled, we&apos;ll send you your restaurant dashboard so you
+        can set up your menu. You can track your progress any time from your
+        onboarding dashboard.
       </Text>
 
       <div style={styles.buttonWrap}>

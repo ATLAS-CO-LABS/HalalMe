@@ -33,9 +33,9 @@ export default function MerchantAgreementEmail({
         <Text style={styles.step}>
           <span style={styles.stepNumber}>1</span>
           <span style={styles.stepText}>
-            <strong>Your dashboard invite.</strong> We&apos;ll send your
-            restaurant dashboard invite shortly - that&apos;s where you&apos;ll
-            build your menu, prices, and opening hours.
+            <strong>Restaurant dashboard.</strong> Our team sets up your
+            restaurant dashboard, where you&apos;ll build your menu, prices,
+            and opening hours.
           </span>
         </Text>
         <Text style={styles.step}>
@@ -54,10 +54,6 @@ export default function MerchantAgreementEmail({
           working days of setting up their menu.
         </Text>
       </Section>
-
-      <Text style={styles.paragraph}>
-        Keep an eye on your inbox - your dashboard invite is on its way.
-      </Text>
 
       <Text style={styles.paragraph}>
         Any questions? Reply to this email or contact us at{" "}
