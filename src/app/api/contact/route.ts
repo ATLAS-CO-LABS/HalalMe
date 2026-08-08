@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient, createServiceClient } from "@/lib/supabase-server";
-import { sendSupportNotifyEmail } from "@/services/emailService";
+import { sendSupportNotifyEmail, sendSupportConfirmationEmail } from "@/services/emailService";
 import { createRateLimiter, getClientIp, rateLimitResponse } from "@/lib/rateLimit";
 import * as Sentry from "@sentry/nextjs";
 
@@ -32,11 +32,19 @@ export async function POST(req: NextRequest) {
     email?: string;
     subject?: string;
     message?: string;
+    company?: string; // honeypot — real users never see or fill this field
   };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid body" }, { status: 400 });
+  }
+
+  // Honeypot: bots fill every field they find, humans never see this one
+  // (it's visually hidden and unreachable by tab). Pretend success so the
+  // bot doesn't learn to look for a different tell.
+  if (body.company?.trim()) {
+    return NextResponse.json({ ok: true });
   }
 
   const fullName = body.fullName?.trim();
@@ -102,6 +110,18 @@ export async function POST(req: NextRequest) {
     isNew: true,
   }).catch((err) => {
     console.error("[api/contact] notify failed", err);
+    Sentry.captureException(err);
+  });
+
+  // Confirm receipt to the submitter, same trusted-address rule as above.
+  sendSupportConfirmationEmail({
+    to: user?.email ?? email,
+    recipientName: fullName,
+    subject,
+    messagePreview: message,
+    conversationId: conversation.id,
+  }).catch((err) => {
+    console.error("[api/contact] confirmation failed", err);
     Sentry.captureException(err);
   });
 

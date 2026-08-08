@@ -52,7 +52,25 @@ export default function BlogPostPage() {
 
   const relatedPosts = getRelatedPosts(slug, post.category);
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: post.excerpt,
+    image: [post.image],
+    datePublished: post.date,
+    author: { "@type": "Person", name: post.author.name },
+    url: `https://halalme.co.uk/blog/${post.slug}`,
+  };
+
   return (
+    <>
+    <script
+      type="application/ld+json"
+      // JSON.stringify of a controlled schema.org object built from our own
+      // static blog data, not user input — safe to inject directly.
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
     <div className="min-h-screen bg-[#102C26]">
       {/* Hero Image */}
       <section className="relative h-[50vh] md:h-[60vh] overflow-hidden">
@@ -188,6 +206,7 @@ export default function BlogPostPage() {
         <RelatedPostsSection posts={relatedPosts} />
       )}
     </div>
+    </>
   );
 }
 

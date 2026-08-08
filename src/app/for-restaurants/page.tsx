@@ -110,23 +110,29 @@ function RestaurantSlideshow() {
       </AnimatePresence>
 
       <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10">
-        {RESTAURANT_IMAGES.map((_, i) => (
+        {RESTAURANT_IMAGES.map((img, i) => (
           <button
             key={i}
             onClick={() => setCurrent(i)}
-            className="relative overflow-hidden rounded-full transition-all duration-300"
-            style={{
-              width: i === current ? 28 : 8,
-              height: 8,
-              backgroundColor: i === current ? PURPLE : `${CREAM}35`,
-            }}
+            aria-label={`Show ${img.alt}`}
+            aria-current={i === current}
+            className="flex items-center justify-center p-3"
           >
-            {i === current && (
-              <motion.div
-                className="absolute inset-y-0 left-0 rounded-full"
-                style={{ backgroundColor: CREAM, width: `${progress}%` }}
-              />
-            )}
+            <span
+              className="relative overflow-hidden rounded-full transition-all duration-300 block"
+              style={{
+                width: i === current ? 28 : 8,
+                height: 8,
+                backgroundColor: i === current ? PURPLE : `${CREAM}35`,
+              }}
+            >
+              {i === current && (
+                <motion.span
+                  className="absolute inset-y-0 left-0 rounded-full block"
+                  style={{ backgroundColor: CREAM, width: `${progress}%` }}
+                />
+              )}
+            </span>
           </button>
         ))}
       </div>
@@ -703,7 +709,7 @@ function ComparisonSection() {
             <tr style={{ borderBottom: `1px solid ${CREAM}20` }}>
               <th
                 className="text-left py-4 px-4 text-xs font-bold uppercase tracking-widest"
-                style={{ color: `${CREAM}50`, width: "36%" }}
+                style={{ color: `${CREAM}99`, width: "36%" }}
               >
                 Feature
               </th>
@@ -725,7 +731,7 @@ function ComparisonSection() {
               <th className="py-4 px-4 text-center">
                 <span
                   className="text-xs font-bold uppercase tracking-widest"
-                  style={{ color: `${CREAM}40` }}
+                  style={{ color: `${CREAM}99` }}
                 >
                   Uber Eats
                 </span>
@@ -733,7 +739,7 @@ function ComparisonSection() {
               <th className="py-4 px-4 text-center">
                 <span
                   className="text-xs font-bold uppercase tracking-widest"
-                  style={{ color: `${CREAM}40` }}
+                  style={{ color: `${CREAM}99` }}
                 >
                   Deliveroo
                 </span>
@@ -745,7 +751,7 @@ function ComparisonSection() {
               <tr key={i} style={{ borderBottom: `1px solid ${CREAM}10` }}>
                 <td
                   className="py-4 px-4 text-sm font-semibold"
-                  style={{ color: `${CREAM}70` }}
+                  style={{ color: `${CREAM}B8` }}
                 >
                   {row.feature}
                 </td>
@@ -762,13 +768,13 @@ function ComparisonSection() {
                 </td>
                 <td
                   className="py-4 px-4 text-center"
-                  style={{ color: `${CREAM}60` }}
+                  style={{ color: `${CREAM}B8` }}
                 >
                   {renderCell(row.uberEats)}
                 </td>
                 <td
                   className="py-4 px-4 text-center"
-                  style={{ color: `${CREAM}60` }}
+                  style={{ color: `${CREAM}B8` }}
                 >
                   {renderCell(row.deliveroo)}
                 </td>
@@ -776,8 +782,8 @@ function ComparisonSection() {
             ))}
           </tbody>
         </table>
-        <p className="mt-4 text-xs" style={{ color: `${CREAM}30` }}>
-          * Commission % to be confirmed before publishing.
+        <p className="mt-4 text-xs" style={{ color: `${CREAM}90` }}>
+          * Commission ranges shown are estimated typical rates for UK food delivery marketplaces and can vary by merchant, region and order volume.
         </p>
       </motion.div>
     </section>
@@ -874,15 +880,23 @@ function TestimonialsSection() {
               </p>
             </div>
             <div className="pt-5" style={{ borderTop: `1px solid ${CREAM}12` }}>
-              <p
-                className="font-extrabold uppercase tracking-tight text-sm"
-                style={{ color: CREAM }}
-              >
-                {q.name}
-              </p>
+              <div className="flex items-center gap-2">
+                <p
+                  className="font-extrabold uppercase tracking-tight text-sm"
+                  style={{ color: CREAM }}
+                >
+                  {q.name}
+                </p>
+                <span
+                  className="text-[9px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded-sm"
+                  style={{ color: PURPLE, backgroundColor: `${PURPLE}1A` }}
+                >
+                  Merchant review
+                </span>
+              </div>
               <p
                 className="text-xs uppercase tracking-widest mt-1"
-                style={{ color: `${CREAM}50` }}
+                style={{ color: `${CREAM}99` }}
               >
                 {q.restaurant}, {q.city}
               </p>
@@ -1106,7 +1120,7 @@ function FAQSection() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.22 }}
                   className="pb-5 pr-8 text-base leading-relaxed"
-                  style={{ color: `${CREAM}70` }}
+                  style={{ color: `${CREAM}B8` }}
                 >
                   {faq.a}
                 </motion.div>

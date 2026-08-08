@@ -170,13 +170,13 @@ export default function TravelTipsPage() {
             <p className="text-gray-400 mb-6">
               Share your experiences and help fellow Muslim travelers explore the world with confidence.
             </p>
-            <Link href="/hub">
+            <Link href="/social">
               <motion.button
                 className="bg-gradient-to-r from-sky-600 to-cyan-600 text-white px-8 py-3 rounded-full font-semibold"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                Share on HalalMe Hub
+                Share on HalalMe Social
               </motion.button>
             </Link>
           </motion.div>

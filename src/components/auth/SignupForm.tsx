@@ -8,6 +8,7 @@ import { isRateLimitError } from "@/services/authService";
 import { startCooldown } from "@/lib/otpCooldown";
 import { minDelay } from "@/lib/minDelay";
 import { Eye, EyeOff, Check, X, ArrowRight } from "lucide-react";
+import { track } from "@vercel/analytics";
 
 const inputClass =
   "w-full h-12 px-4 bg-[#102C26] border border-[#F7E7CE]/12 text-[#F7E7CE] placeholder:text-[#F7E7CE]/20 focus:outline-none focus:border-[#F7E7CE]/40 transition-colors text-sm disabled:opacity-50";
@@ -54,6 +55,7 @@ export default function SignupForm() {
     const normalizedEmail = email.toLowerCase().trim();
     try {
       const { requiresVerification } = await minDelay(signup(name, normalizedEmail, password));
+      track("Create Free Account");
       if (requiresVerification) {
         startCooldown(normalizedEmail, "signup");
         const otpUrl = `/verify-otp?email=${encodeURIComponent(normalizedEmail)}&type=signup${redirect ? `&redirect=${encodeURIComponent(redirect)}` : ""}`;
@@ -78,7 +80,7 @@ export default function SignupForm() {
       <div>
         <label htmlFor="name" className={labelClass}>Full Name</label>
         <input
-          id="name" type="text" placeholder="Your full name"
+          id="name" name="name" type="text" autoComplete="name" placeholder="Your full name"
           value={name} onChange={(e) => setName(e.target.value)}
           required disabled={isLoading} className={inputClass}
         />
@@ -88,7 +90,7 @@ export default function SignupForm() {
       <div>
         <label htmlFor="email" className={labelClass}>Email</label>
         <input
-          id="email" type="email" placeholder="you@example.com"
+          id="email" name="email" type="email" autoComplete="email" placeholder="you@example.com"
           value={email} onChange={(e) => setEmail(e.target.value)}
           required disabled={isLoading} className={inputClass}
         />
@@ -100,7 +102,9 @@ export default function SignupForm() {
         <div className="relative">
           <input
             id="password"
+            name="password"
             type={showPassword ? "text" : "password"}
+            autoComplete="new-password"
             placeholder="Create a strong password"
             value={password} onChange={(e) => setPassword(e.target.value)}
             required disabled={isLoading}
@@ -136,7 +140,7 @@ export default function SignupForm() {
       <div>
         <label htmlFor="confirmPassword" className={labelClass}>Confirm Password</label>
         <input
-          id="confirmPassword" type="password" placeholder="Confirm your password"
+          id="confirmPassword" name="confirmPassword" type="password" autoComplete="new-password" placeholder="Confirm your password"
           value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
           required disabled={isLoading}
           className={`${inputClass} ${

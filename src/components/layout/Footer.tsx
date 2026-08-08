@@ -8,7 +8,7 @@ import { ArrowUp, ArrowUpRight } from "lucide-react";
 const services = [
   { label: "Delivery", href: "/delivery", accent: "#B96AF0" },
   { label: "Kitchen", href: "/kitchen", accent: "#F03E9E" },
-  { label: "Social", href: "/hub", accent: "#F59E0B" },
+  { label: "Social", href: "/social", accent: "#F59E0B" },
   { label: "Charity", href: "/charity", accent: "#14B8A6" },
   { label: "Rewards", href: "/rewards", accent: "#FB7185" },
 ];
@@ -44,12 +44,17 @@ function FooterWordmark() {
   const letters = "HalalMe".split("");
 
   return (
-    <div aria-hidden="true" className="overflow-hidden select-none pointer-events-auto">
+    <div
+      aria-hidden="true"
+      className="overflow-hidden select-none pointer-events-auto"
+    >
       <motion.div
         initial={reduce ? undefined : "hidden"}
         whileInView={reduce ? undefined : "show"}
         viewport={{ once: true, amount: 0.4 }}
-        variants={{ show: { transition: { staggerChildren: 0.05, delayChildren: 0.1 } } }}
+        variants={{
+          show: { transition: { staggerChildren: 0.05, delayChildren: 0.1 } },
+        }}
         className="flex justify-center items-end pb-3 md:pb-5 whitespace-nowrap"
         style={{ fontFamily: "var(--font-logo)", letterSpacing: "-0.045em" }}
       >
@@ -58,7 +63,10 @@ function FooterWordmark() {
             key={i}
             variants={{
               hidden: { y: "110%" },
-              show: { y: 0, transition: { duration: 0.9, ease: [0.22, 1, 0.36, 1] } },
+              show: {
+                y: 0,
+                transition: { duration: 0.9, ease: [0.22, 1, 0.36, 1] },
+              },
             }}
             whileHover={{ y: "-6%", color: "rgba(245,158,11,0.45)" }}
             transition={{ type: "spring", stiffness: 260, damping: 20 }}
@@ -86,7 +94,8 @@ export default function Footer() {
         aria-hidden="true"
         className="pointer-events-none absolute bottom-0 left-1/2 -translate-x-1/2 w-[120vw] h-[40vh]"
         style={{
-          background: "radial-gradient(ellipse at bottom, rgba(245,158,11,0.05) 0%, transparent 60%)",
+          background:
+            "radial-gradient(ellipse at bottom, rgba(245,158,11,0.05) 0%, transparent 60%)",
         }}
       />
 
@@ -100,7 +109,10 @@ export default function Footer() {
           className="grid gap-10 lg:grid-cols-12"
         >
           {/* Brand Column */}
-          <motion.div variants={colVariants} className="lg:col-span-6 flex flex-col gap-5">
+          <motion.div
+            variants={colVariants}
+            className="lg:col-span-6 flex flex-col gap-5"
+          >
             <Link href="/" className="inline-flex items-center gap-3 w-fit">
               <span
                 style={{
@@ -136,7 +148,7 @@ export default function Footer() {
             </Link>
             <p className="text-[#F7E7CE]/45 text-sm leading-relaxed max-w-xs">
               The complete Halal ecosystem - food, community, giving, and more.
-              Built for Muslims, trusted worldwide.
+              Built around halal values. Open to everyone.
             </p>
             {/* Trust badge */}
             <div className="inline-flex items-center gap-2 bg-[#F7E7CE]/6 border border-[#F7E7CE]/12 px-4 py-2 w-fit">
@@ -218,7 +230,9 @@ export default function Footer() {
                   <Link
                     href={s.href}
                     className="group flex items-center gap-3 py-1.5 text-sm text-[#F7E7CE]/50 transition-colors duration-200"
-                    onMouseEnter={(e) => (e.currentTarget.style.color = s.accent)}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.color = s.accent)
+                    }
                     onMouseLeave={(e) => (e.currentTarget.style.color = "")}
                   >
                     <span
@@ -259,27 +273,36 @@ export default function Footer() {
               ))}
             </ul>
           </motion.div>
-
         </motion.div>
 
         {/* ── Disclaimer ───────────────────────────────────────── */}
         <div className="mt-12 pt-8 border-t border-[#F7E7CE]/8">
           <p className="text-[#F7E7CE]/20 text-[11px] leading-[1.8] max-w-5xl">
-            HalalMe verifies halal certification for all listed merchants at onboarding but cannot guarantee the halal status of every individual item at all times. Report concerns to{" "}
+            HalalMe verifies halal certification for all listed merchants at
+            onboarding but cannot guarantee the halal status of every individual
+            item at all times. Report concerns to{" "}
             <a
               href="mailto:Support@HalalMe.co.uk"
               className="underline underline-offset-2 decoration-[#F7E7CE]/20 hover:text-[#F7E7CE]/45 hover:decoration-[#F59E0B]/50 transition-colors"
             >
               Support@HalalMe.co.uk
             </a>
-            . Merchants and delivery partners operate independently. HalalMe is a marketplace and is not liable for third-party fulfilment or merchant conduct. Charitable donations are processed by verified charity partners. We process personal data under UK GDPR and the Data Protection Act 2018. Services are provided on an &ldquo;as is&rdquo; basis. By using HalalMe you agree to our Terms of Service and Privacy Policy. HalalMe is operated by Halal Delivery LTD (Company No. 13450710), registered in England and Wales. Last updated 13/05/2026.
+            . Merchants and delivery partners operate independently. HalalMe is
+            a marketplace and is not liable for third-party fulfilment or
+            merchant conduct. Charitable donations are processed by verified
+            charity partners. We process personal data under UK GDPR and the
+            Data Protection Act 2018. Services are provided on an &ldquo;as
+            is&rdquo; basis. By using HalalMe you agree to our Terms of Service
+            and Privacy Policy. HalalMe is operated by Halal Delivery LTD
+            (Company No. 13450710), registered in England and Wales. Last
+            updated 13/05/2026.
           </p>
         </div>
 
         {/* ── Bottom Bar ────────────────────────────────────────── */}
         <div className="mt-6 pt-6 border-t border-[#F7E7CE]/8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-[#F7E7CE]/25 text-xs">
-            © {currentYear} HalalMe Delivery LTD. All Rights Reserved.
+            © {currentYear} Halal Delivery LTD. All Rights Reserved.
           </p>
           <div className="flex items-center gap-5 flex-wrap justify-center">
             {legalLinks.map((link) => (

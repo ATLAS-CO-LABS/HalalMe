@@ -28,7 +28,7 @@ const MODULE_FILTERS = [
   { key: "users", label: "Users" },
   { key: "merchants", label: "Merchants" },
   { key: "kitchen", label: "Kitchen" },
-  { key: "hub", label: "Hub" },
+  { key: "hub", label: "Social" },
   { key: "rewards", label: "Rewards" },
 ];
 

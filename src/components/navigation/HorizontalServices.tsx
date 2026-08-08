@@ -396,7 +396,7 @@ function SocialPreview({ accent }: { accent: string }) {
   const liked = phase >= 1;
 
   return (
-    <PreviewShell accent={accent} title="Hub Feed" sub="Trending now">
+    <PreviewShell accent={accent} title="Social Feed" sub="Trending now">
       <div className="flex items-center gap-2.5 mb-2.5">
         <div
           className="w-7 h-7 flex items-center justify-center text-[10px] font-black shrink-0"
@@ -603,7 +603,7 @@ function RewardsPreview({ accent }: { accent: string }) {
             >
               <TrendingUp className="w-3 h-3" style={{ color: accent }} />
               <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: CREAM }}>
-                +20 pts · Posted in Hub
+                +20 pts · Posted on Social
               </span>
             </motion.div>
           )}
@@ -640,7 +640,7 @@ const SERVICES = [
     desc: "Order from the best halal restaurants near you, delivered in minutes.",
     features: ["Certified halal restaurants only", "Live order & rider tracking", "Delivery in minutes, not hours"],
     link: "/delivery",
-    image: "/images/services/halal01.jpg",
+    image: "/images/services/halal01.webp",
     accent: "#B96AF0",
     logoColor: "#5E188F",
     Preview: DeliveryPreview,
@@ -652,7 +652,7 @@ const SERVICES = [
     desc: "Discover thousands of halal recipes and get AI-generated meal plans tailored to you.",
     features: ["Browse 5K+ community recipes", "Upload & share your own dishes", "AQI - your AI cooking assistant"],
     link: "/kitchen",
-    image: "/images/services/halal02.png",
+    image: "/images/services/halal02.webp",
     accent: "#F03E9E",
     Preview: KitchenPreview,
   },
@@ -662,8 +662,8 @@ const SERVICES = [
     tagline: "The halal social network",
     desc: "Connect with the global Muslim community. Share recipes, reviews, and halal finds.",
     features: ["Share photos, recipes & finds", "Follow cooks you love", "Boost your best posts"],
-    link: "/hub",
-    image: "/images/services/halal03.png",
+    link: "/social",
+    image: "/images/services/halal03.webp",
     accent: "#F59E0B",
     Preview: SocialPreview,
   },
@@ -674,7 +674,7 @@ const SERVICES = [
     desc: "Donate to verified Islamic charities and see the real-world impact of every contribution.",
     features: ["Charity Commission verified", "Payments go direct to charity", "Receipts for zakat & Gift Aid"],
     link: "/charity",
-    image: "/images/page sections/rewards6.png",
+    image: "/images/page sections/rewards6.webp",
     accent: "#14B8A6",
     Preview: CharityPreview,
   },
@@ -683,9 +683,9 @@ const SERVICES = [
     name: "Rewards",
     tagline: "Earn points, redeem perks",
     desc: "Every recipe, post, and donation earns points you can redeem across HalalMe.",
-    features: ["Earn from every service", "Bronze to Diamond tiers", "Boosts, flair & AI power-ups"],
+    features: ["Earn from every service", "Bronze to Platinum tiers", "Boosts, flair & AI power-ups"],
     link: "/rewards",
-    image: "/images/services/rewards.png",
+    image: "/images/services/rewards.webp",
     accent: "#FB7185",
     Preview: RewardsPreview,
   },

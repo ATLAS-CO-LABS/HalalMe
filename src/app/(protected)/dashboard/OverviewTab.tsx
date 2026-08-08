@@ -42,7 +42,7 @@ const services = [
     description:
       "Connect with the global Muslim community. Share recipes, reviews, and halal finds.",
     accent: "#F59E0B",
-    href: "/hub",
+    href: "/social",
     external: false,
     tag: "Beta",
   },
@@ -58,7 +58,7 @@ const services = [
   {
     name: "Rewards",
     description:
-      "Earn points from Kitchen, Hub, and Charity activity. Redeem for boosts, flair, and AI perks.",
+      "Earn points from Kitchen, Social, and Charity activity. Redeem for boosts, flair, and AI perks.",
     accent: "#FB7185",
     href: "/rewards",
     external: false,
@@ -233,10 +233,10 @@ export default function OverviewTab({ isMerchant }: { isMerchant: boolean }) {
             sub:
               stats.savedPosts > 0
                 ? "Posts bookmarked"
-                : "Bookmark posts from the hub",
+                : "Bookmark posts from Social",
             icon: Bookmark,
             num: "04",
-            href: "/hub/feed?tab=bookmarks",
+            href: "/social/feed?tab=bookmarks",
           },
         ].map((stat, i) => (
           <Link

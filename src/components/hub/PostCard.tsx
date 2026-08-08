@@ -81,7 +81,7 @@ export default function PostCard({
   const [copied, setCopied] = useState(false);
 
   const handleShare = async () => {
-    const url = `${window.location.origin}/hub/post/${post.id}`;
+    const url = `${window.location.origin}/social/post/${post.id}`;
     const shareData = { title: post.profiles?.username ?? "HalalMe", text: post.content?.slice(0, 100), url };
     try {
       if (navigator.share && navigator.canShare?.(shareData)) {
@@ -322,7 +322,7 @@ export default function PostCard({
           />
         </div>
       ) : firstImage ? (
-        <Link href={`/hub/post/${post.id}`}>
+        <Link href={`/social/post/${post.id}`}>
           <div className="relative w-full flex items-center justify-center cursor-pointer overflow-hidden group" style={{ backgroundColor: BG }}>
             <Image
               src={firstImage}
@@ -348,7 +348,7 @@ export default function PostCard({
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-5">
             <motion.button
-              onClick={() => onLike(post.id, !!post.is_liked)}
+              onClick={() => requireAuth(() => onLike(post.id, !!post.is_liked), "Sign in to like posts")}
               className="flex items-center gap-2 transition-colors"
               style={{ color: post.is_liked ? "#EF4444" : `color-mix(in oklab, var(--hm-text) 27%, transparent)` }}
               whileHover={{ scale: 1.1 }}
@@ -358,7 +358,7 @@ export default function PostCard({
               <span className="text-sm font-semibold">{post.like_count}</span>
             </motion.button>
 
-            <Link href={`/hub/post/${post.id}`}>
+            <Link href={`/social/post/${post.id}`}>
               <motion.button
                 className="flex items-center gap-2 transition-colors"
                 style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))` }}
@@ -376,7 +376,7 @@ export default function PostCard({
           <div className="flex items-center gap-3">
             {onBookmark && (
               <motion.button
-                onClick={() => onBookmark(post.id, !!post.is_bookmarked)}
+                onClick={() => requireAuth(() => onBookmark(post.id, !!post.is_bookmarked), "Sign in to bookmark posts")}
                 className="transition-colors"
                 style={{ color: post.is_bookmarked ? AMBER : `color-mix(in oklab, var(--hm-text) 27%, transparent)` }}
                 title={post.is_bookmarked ? "Remove bookmark" : "Bookmark"}
@@ -401,7 +401,7 @@ export default function PostCard({
 
         {/* Comment preview link */}
         {post.comment_count > 0 && (
-          <Link href={`/hub/post/${post.id}`}>
+          <Link href={`/social/post/${post.id}`}>
             <motion.div
               className="text-sm cursor-pointer font-normal transition-colors"
               style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))`, fontFamily: "var(--font-body)" }}

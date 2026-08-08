@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Terms of Service | HalalMe",
+  title: "Terms of Service",
   description: "The terms governing your use of HalalMe's delivery, kitchen, community, charity and rewards services.",
+  alternates: { canonical: "/terms" },
   openGraph: {
     title: "Terms of Service | HalalMe",
     description: "The terms governing your use of HalalMe's delivery, kitchen, community, charity and rewards services.",

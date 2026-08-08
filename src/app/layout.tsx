@@ -12,14 +12,14 @@ import { CartProvider } from "@/context/CartContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
-// Runs before hydration so a themed route (/hub, /kitchen) with a stored
+// Runs before hydration so a themed route (/social, /kitchen) with a stored
 // "light" preference never flashes dark first. Every other route is left
 // untouched (no attribute → CSS default → dark), matching the platform's
 // baseline hardcoded colors.
 const THEME_INIT_SCRIPT = `
 (function () {
   try {
-    var themed = ["/hub", "/kitchen"].some(function (p) {
+    var themed = ["/social", "/kitchen"].some(function (p) {
       return window.location.pathname.startsWith(p);
     });
     var stored = window.localStorage.getItem("hm-theme");
@@ -40,14 +40,14 @@ const geistMono = Geist_Mono({
 });
 
 const BASE_URL = "https://halalme.co.uk";
-const DEFAULT_OG_IMAGE = `${BASE_URL}/images/hero/halal5.jpg`;
+const DEFAULT_OG_IMAGE = `${BASE_URL}/images/og-share.jpg`;
 
 export const metadata: Metadata = {
   title: {
-    default: "HalalMe",
+    default: "HalalMe — Halal Food Delivery, Recipes and Giving in the UK",
     template: "%s | HalalMe",
   },
-  description: "Four halal services. One account. Order food, discover recipes, connect with the community and earn charity rewards.",
+  description: "Five halal services, one account. Order food, discover recipes, connect on Social, give through Charity and earn Rewards.",
   metadataBase: new URL(BASE_URL),
   alternates: {
     canonical: "/",
@@ -69,6 +69,24 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
+// sameAs deliberately omitted — the footer's social icons are still
+// href="#" placeholders (not this item's scope to fix), and a fabricated
+// profile URL is worse for a search engine to trust than no sameAs at all.
+const ORG_JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "HalalMe",
+  url: BASE_URL,
+  logo: `${BASE_URL}/logo/logo.png`,
+};
+
+const WEBSITE_JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "HalalMe",
+  url: BASE_URL,
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -77,6 +95,14 @@ export default function RootLayout({
   return (
     <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(ORG_JSON_LD) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(WEBSITE_JSON_LD) }}
+        />
         <Script
           id="hm-theme-init"
           strategy="beforeInteractive"

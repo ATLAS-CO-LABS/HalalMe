@@ -13,7 +13,7 @@ import { ArrowUpRight, LayoutDashboard, LogOut, UserRound } from 'lucide-react';
 const serviceLinks = [
   { href: '/delivery', label: 'Delivery', desc: 'Halal food to your door',   num: '01', accent: '#B96AF0' },
   { href: '/kitchen',  label: 'Kitchen',  desc: 'Recipes & AI assistant',    num: '02', accent: '#F03E9E' },
-  { href: '/hub',      label: 'Social',   desc: 'Community & sharing',       num: '03', accent: '#F59E0B' },
+  { href: '/social',   label: 'Social',   desc: 'Community & sharing',       num: '03', accent: '#F59E0B' },
   { href: '/charity',  label: 'Charity',  desc: 'Give back, verified',       num: '04', accent: '#14B8A6' },
   { href: '/rewards',  label: 'Rewards',  desc: 'Earn points, redeem perks', num: '05', accent: '#FB7185' },
 ];
@@ -280,7 +280,10 @@ export default function Header() {
                     className="block h-0.5 w-full bg-current origin-center"
                   />
                 </span>
-                <span className="hidden sm:block text-[11px] font-bold uppercase tracking-[0.2em] w-9 text-left">
+                <span
+                  className="hidden sm:block text-[11px] font-bold uppercase tracking-[0.2em] leading-none w-9 text-left"
+                  style={{ fontFamily: 'var(--font-headline)' }}
+                >
                   {menuOpen ? 'Close' : 'Menu'}
                 </span>
               </button>

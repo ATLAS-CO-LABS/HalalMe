@@ -75,7 +75,7 @@ function DocumentBody() {
       <div className="max-w-3xl mx-auto">
         <p className="text-sm md:text-base leading-relaxed mb-16" style={{ color: `${CREAM}70` }}>
           These Terms of Service ("Terms") govern your access to and use of HalalMe, including our
-          website, mobile experience, and all related services: Delivery, Kitchen (AI recipes), Hub
+          website, mobile experience, and all related services: Delivery, Kitchen (AI recipes), Social
           (community), Charity donations, and Rewards. By creating an account or using any part of
           HalalMe, you agree to these Terms and to our{" "}
           <a href="/privacy" className="underline" style={{ color: GOLD }}>Privacy Policy</a>. If you do
@@ -141,9 +141,9 @@ function DocumentBody() {
           </p>
         </Section>
 
-        <Section title="6. Hub and community content">
+        <Section title="6. Social and community content">
           <p>
-            When you post, comment, or otherwise share content on HalalMe Hub, you keep ownership of
+            When you post, comment, or otherwise share content on HalalMe Social, you keep ownership of
             it, but you grant HalalMe a non-exclusive, worldwide, royalty-free licence to host,
             display, and distribute it as part of operating the platform.
           </p>

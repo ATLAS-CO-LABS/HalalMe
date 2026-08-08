@@ -38,7 +38,7 @@ const MODULES = ["merchants", "users", "kitchen", "hub", "rewards", "analytics"]
 type Module = (typeof MODULES)[number];
 
 const MODULE_LABELS: Record<Module, string> = {
-  merchants: "Merchant CRM", users: "User Management", kitchen: "Kitchen", hub: "Hub", rewards: "Rewards", analytics: "Analytics",
+  merchants: "Merchant CRM", users: "User Management", kitchen: "Kitchen", hub: "Social", rewards: "Rewards", analytics: "Analytics",
 };
 
 interface UserDetail {
@@ -344,7 +344,7 @@ export default function UserDetailPage() {
           <h2 className={`${display.className} text-[13px] font-extrabold uppercase tracking-wide text-[#102C26] mb-4`}>Activity</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <Chip icon={Heart} label="Donated" value={`£${activity.donations.total.toLocaleString()}`} sub={`${activity.donations.count} completed`} spark={activity.donations.spark} sparkColor="#F59E0B" />
-            <Chip icon={FileText} label="Posts" value={activity.posts.count} sub="Hub" spark={activity.posts.spark} />
+            <Chip icon={FileText} label="Posts" value={activity.posts.count} sub="Social" spark={activity.posts.spark} />
             <Chip icon={ChefHat} label="Recipes" value={activity.recipes.count} sub="Kitchen" spark={activity.recipes.spark} />
             <Chip icon={LifeBuoy} label="Tickets" value={activity.support.count} sub={`${activity.support.open} open`} spark={activity.support.spark} sparkColor="#F59E0B" />
           </div>

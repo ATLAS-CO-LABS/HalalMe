@@ -29,7 +29,7 @@ const SECTIONS = [
   { key: "users", label: "Users", icon: Users },
   { key: "rewards", label: "Rewards", icon: Gift },
   { key: "kitchen", label: "Kitchen", icon: ChefHat },
-  { key: "hub", label: "Hub", icon: MessageSquare },
+  { key: "hub", label: "Social", icon: MessageSquare },
 ];
 const RANGES = [
   { key: "30d", label: "30 days" },

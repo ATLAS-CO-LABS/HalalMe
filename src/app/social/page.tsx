@@ -261,7 +261,7 @@ export default function HubLandingPage() {
             visible and legible in both, instead of washing out under a light-mode tint. */}
         <div className="absolute inset-0 z-0">
           <Image
-            src="/images/services/halal03.png"
+            src="/images/services/halal03.webp"
             alt="Halal food community"
             fill
             className="object-cover object-center opacity-100"
@@ -388,7 +388,7 @@ export default function HubLandingPage() {
               )}
 
               <motion.button
-                onClick={() => router.push("/hub/feed")}
+                onClick={() => router.push("/social/feed")}
                 whileHover={{
                   scale: 1.03,
                   backgroundColor: "rgba(255,255,255,0.06)",
@@ -658,7 +658,7 @@ export default function HubLandingPage() {
               </motion.div>
 
               <motion.button
-                onClick={() => router.push("/hub/feed")}
+                onClick={() => router.push("/social/feed")}
                 initial={{ opacity: 0, y: 12 }}
                 animate={feedInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ delay: 0.55 }}
@@ -823,12 +823,18 @@ export default function HubLandingPage() {
                   <button
                     key={i}
                     onClick={() => setActiveCard(i)}
-                    className="w-1.5 h-1.5 rounded-full transition-all duration-300"
-                    style={{
-                      backgroundColor:
-                        i === activeCard ? AMBER : "color-mix(in oklab, var(--hub-fg) 20%, transparent)",
-                    }}
-                  />
+                    aria-label={`Show post ${i + 1} of ${MOCK_POSTS.length}`}
+                    aria-current={i === activeCard}
+                    className="flex items-center justify-center p-3"
+                  >
+                    <span
+                      className="w-1.5 h-1.5 rounded-full transition-all duration-300 block"
+                      style={{
+                        backgroundColor:
+                          i === activeCard ? AMBER : "color-mix(in oklab, var(--hub-fg) 20%, transparent)",
+                      }}
+                    />
+                  </button>
                 ))}
               </div>
             </motion.div>
@@ -988,7 +994,7 @@ export default function HubLandingPage() {
               </button>
             )}
             <button
-              onClick={() => router.push("/hub/feed")}
+              onClick={() => router.push("/social/feed")}
               className="flex items-center gap-3 px-8 py-4 border-2 border-[#0B0D0F]/30 text-[#0B0D0F] font-extrabold uppercase tracking-tighter text-base hover:bg-[#0B0D0F]/08 transition-colors"
             >
               Browse the Feed

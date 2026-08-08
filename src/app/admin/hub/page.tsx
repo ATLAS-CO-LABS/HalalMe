@@ -71,7 +71,7 @@ export default function HubPage() {
               <div className="w-5 h-px bg-[#F59E0B]" />
               <span className="text-[#F59E0B] text-[9px] font-bold uppercase tracking-[0.3em]">Content Moderation</span>
             </div>
-            <h1 className={`${display.className} text-xl sm:text-2xl font-extrabold uppercase tracking-tighter text-[#102C26] leading-none`}>Hub</h1>
+            <h1 className={`${display.className} text-xl sm:text-2xl font-extrabold uppercase tracking-tighter text-[#102C26] leading-none`}>Social</h1>
             <p className="text-xs sm:text-sm text-gray-600 mt-1">Moderate the community feed — posts and comments</p>
           </div>
           <button onClick={() => setReloadKey((k) => k + 1)} title="Refresh"

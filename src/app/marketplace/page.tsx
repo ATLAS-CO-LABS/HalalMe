@@ -915,10 +915,10 @@ function FinalCTA() {
             &larr; Charity
           </Link>
           <Link
-            href="/hub"
+            href="/social"
             className="text-gray-500 hover:text-indigo-400 transition-colors text-sm font-semibold"
           >
-            Hub &rarr;
+            Social &rarr;
           </Link>
         </motion.div>
       </div>

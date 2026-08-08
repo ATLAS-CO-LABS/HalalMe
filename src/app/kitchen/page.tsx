@@ -93,7 +93,7 @@ export default function KitchenLandingPage() {
             visible and legible in both, instead of washing out under a light-mode tint. */}
         <div className="absolute inset-0 z-0">
           <Image
-            src="/images/services/halal02.png"
+            src="/images/services/halal02.webp"
             alt="Halal cooking"
             fill
             className="object-cover opacity-100 scale-105"
@@ -1129,11 +1129,11 @@ export default function KitchenLandingPage() {
       >
         <div className="max-w-[95vw] mx-auto flex justify-between items-center">
           <Link
-            href="/hub"
+            href="/social"
             className="text-xs font-bold uppercase tracking-[0.2em] transition-colors hover:text-fuchsia-400"
             style={{ color: `color-mix(in oklab, var(--hm-text) 38%, var(--hm-lm-anchor))` }}
           >
-            ← Hub
+            ← Social
           </Link>
           <Link
             href="/charity"

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { authService } from "@/services/authService";
 import { startCooldown } from "@/lib/otpCooldown";
+import { track } from "@vercel/analytics";
 import {
   Store,
   MapPin,
@@ -216,6 +217,8 @@ export default function MerchantSignupPage() {
         }
         return;
       }
+
+      track("Restaurant Partner Form Submit");
 
       // Already signed in (existing user becoming a merchant) → straight to dashboard.
       if (!json.requiresLogin) {

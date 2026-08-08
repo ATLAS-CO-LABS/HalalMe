@@ -223,8 +223,8 @@ export default function AQISection() {
               className="text-sm md:text-base leading-relaxed mb-8 max-w-sm"
               style={{ color: `color-mix(in oklab, var(--hm-text) 33%, var(--hm-lm-anchor))` }}
             >
-              Cook smarter with AI-powered recipes, guidance, and substitutions
-              - halal every time.
+              AQI helps adapt recipes using the information available to it.
+              Always check ingredients, allergens and dietary requirements before cooking.
             </motion.p>
 
             {/* Feature pills with stagger */}
@@ -241,7 +241,7 @@ export default function AQISection() {
               {[
                 "Recipe ideas from your fridge",
                 "Step-by-step cooking guidance",
-                "Full Halal ingredient database",
+                "AI-assisted halal ingredient checks",
               ].map((text, i) => (
                 <motion.div
                   key={i}
@@ -499,6 +499,7 @@ export default function AQISection() {
                 />
                 <motion.button
                   onClick={handleSubmit}
+                  aria-label="Send question to AQI"
                   className="w-6 h-6 flex items-center justify-center shrink-0"
                   style={{ background: `linear-gradient(135deg, ${DEEP}, ${MAGENTA})` }}
                   whileHover={{ scale: 1.08 }}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -29,7 +29,7 @@ import { hubService, type FeedMode } from "@/services/hubService";
 import { withTimeout, TimeoutError } from "@/lib/withTimeout";
 import { useResumeKey } from "@/context/AppResumeContext";
 import { useAuth } from "@/hooks/useAuth";
-import AuthGuard from "@/components/auth/AuthGuard";
+import { useAuthGate } from "@/hooks/useAuthGate";
 import Avatar from "@/components/hub/Avatar";
 import PostCard from "@/components/hub/PostCard";
 import CreatePostModal from "@/components/hub/CreatePostModal";
@@ -47,13 +47,28 @@ const CREAM = "var(--hm-text)";
 type TabType = FeedMode | "bookmarks";
 
 // ---------------------------------------------------------------------------
+// useSearchParams() requires a Suspense boundary — without it Next.js can't
+// statically prerender the route (it needs a fallback for the case where no
+// search params are available yet). This was previously masked by AuthGuard
+// bailing the whole tree out of static generation; removing it to make the
+// feed public surfaced the missing boundary, so page.tsx now only owns the
+// Suspense wrapper and the actual content lives in HubFeedPageInner.
+export default function HubFeedPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen pt-16" style={{ backgroundColor: BG }} />}>
+      <HubFeedPageInner />
+    </Suspense>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Wrapper - owns the resetKey that forces a full remount of HubFeedContent
 // on every tab-resume reconnect.  Keying a React component (not Next.js
 // routing children) guarantees React discards all state and refs cleanly.
 // isResumeTrigger tells the content component whether this mount was caused
 // by a resume reconnect (resetKey > 0) or normal page navigation.
 // ---------------------------------------------------------------------------
-export default function HubFeedPage() {
+function HubFeedPageInner() {
   const resumeKey = useResumeKey();
   const searchParams = useSearchParams();
   const [resetKey, setResetKey] = useState(0);
@@ -65,14 +80,13 @@ export default function HubFeedPage() {
   }, [resumeKey]);
 
   return (
-    <AuthGuard>
-      <HubFeedContent key={resetKey} isResumeTrigger={resetKey > 0} initialTab={initialTab} />
-    </AuthGuard>
+    <HubFeedContent key={resetKey} isResumeTrigger={resetKey > 0} initialTab={initialTab} />
   );
 }
 
 function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { isResumeTrigger?: boolean; initialTab?: TabType }) {
   const { user } = useAuth();
+  const { requireAuth } = useAuthGate();
   const resumeKey = useResumeKey();
 
   // Feed state
@@ -174,9 +188,16 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
       }, 15_000);
 
       // Single-attempt factory - called up to twice (first attempt + one retry).
+      // Bookmarks needs a signed-in user (getBookmarks takes a required userId) —
+      // the Saved tab click is gated with requireAuth, but this guards every
+      // other entry path too (a ?tab=bookmarks URL, the resume-reconnect
+      // re-fetch, a stale initialTab) so a logged-out visitor can never reach
+      // the non-null assertion this used to have here.
       const attempt = () => withTimeout(
         tab === "bookmarks"
-          ? hubService.getBookmarks(user!.id, pageNum, 20, signal)
+          ? (user?.id
+              ? hubService.getBookmarks(user.id, pageNum, 20, signal)
+              : Promise.resolve({ data: [], count: 0, page: pageNum, pageSize: 20, hasMore: false }))
           : hubService.getFeed(user?.id, pageNum, 20, tab, signal, typeFilterRef.current !== "all" ? typeFilterRef.current : undefined),
         10_000,
       );
@@ -510,6 +531,26 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
     }
   };
 
+  // Following/Saved need an account (you can't follow people or save posts
+  // without one) — prompt sign-in instead of switching to a tab that can
+  // only ever be empty for a logged-out visitor.
+  const AUTH_ONLY_TABS: TabType[] = ["following", "bookmarks"];
+  const switchTab = (tabId: TabType) => {
+    const doSwitch = () => {
+      setActiveTab(tabId);
+      loadFeed(tabId, 1, false);
+      setTypeFilter("all");
+      typeFilterRef.current = "all";
+      setSearchQuery("");
+      setSearchResults([]);
+    };
+    if (AUTH_ONLY_TABS.includes(tabId)) {
+      requireAuth(doSwitch, tabId === "bookmarks" ? "Sign in to see your saved posts" : "Sign in to see posts from people you follow");
+    } else {
+      doSwitch();
+    }
+  };
+
   // ---------------------------------------------------------------------------
   // Derived state
   // ---------------------------------------------------------------------------
@@ -531,7 +572,7 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {/* Desktop back */}
-              <Link href="/hub" className="hidden md:block">
+              <Link href="/social" className="hidden md:block">
                 <motion.button
                   className="transition-colors"
                   style={{ color: `color-mix(in oklab, var(--hm-text) 31%, var(--hm-lm-anchor))` }}
@@ -568,7 +609,7 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
 
               {/* Create post */}
               <motion.button
-                onClick={() => setIsCreatePostOpen(true)}
+                onClick={() => requireAuth(() => setIsCreatePostOpen(true), "Sign in to post")}
                 className="flex items-center gap-1.5 px-3 md:px-4 py-2 font-extrabold uppercase tracking-tighter text-sm"
                 style={{ backgroundColor: AMBER, color: BG }}
                 whileHover={{ scale: 1.05 }}
@@ -591,7 +632,7 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
                 style={{ borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)` }}
               >
                 <div className="py-3 space-y-1">
-                  <Link href="/hub" onClick={() => setMobileMenuOpen(false)}>
+                  <Link href="/social" onClick={() => setMobileMenuOpen(false)}>
                     <div
                       className="flex items-center gap-3 px-3 py-2.5 transition-colors"
                       style={{ color: CREAM }}
@@ -627,7 +668,7 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
             return (
               <motion.button
                 key={tab.id}
-                onClick={() => { setActiveTab(tab.id); loadFeed(tab.id, 1, false); setTypeFilter("all"); typeFilterRef.current = "all"; setSearchQuery(""); setSearchResults([]); }}
+                onClick={() => switchTab(tab.id)}
                 className="relative flex items-center gap-1.5 px-3 md:px-4 py-2.5 font-extrabold uppercase tracking-widest transition-colors whitespace-nowrap text-xs"
                 style={{ color: active ? AMBER : `color-mix(in oklab, var(--hm-text) 25%, transparent)` }}
                 whileTap={{ scale: 0.97 }}

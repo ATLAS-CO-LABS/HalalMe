@@ -9,15 +9,20 @@ const STATIC_ROUTES: { path: string; priority: number; changeFrequency: ChangeFr
   { path: "", priority: 1, changeFrequency: "daily" },
   { path: "/kitchen", priority: 0.9, changeFrequency: "daily" },
   { path: "/kitchen/recipes", priority: 0.9, changeFrequency: "daily" },
-  { path: "/hub", priority: 0.9, changeFrequency: "hourly" },
+  { path: "/social", priority: 0.9, changeFrequency: "hourly" },
   { path: "/delivery", priority: 0.8, changeFrequency: "weekly" },
   { path: "/charity", priority: 0.8, changeFrequency: "weekly" },
+  { path: "/charity/causes", priority: 0.7, changeFrequency: "daily" },
   { path: "/rewards", priority: 0.8, changeFrequency: "weekly" },
   { path: "/blog", priority: 0.7, changeFrequency: "daily" },
   { path: "/for-restaurants", priority: 0.6, changeFrequency: "monthly" },
   { path: "/about", priority: 0.5, changeFrequency: "monthly" },
   { path: "/contact", priority: 0.4, changeFrequency: "monthly" },
   { path: "/help", priority: 0.4, changeFrequency: "monthly" },
+  { path: "/careers", priority: 0.3, changeFrequency: "monthly" },
+  { path: "/terms", priority: 0.2, changeFrequency: "yearly" },
+  { path: "/privacy", priority: 0.2, changeFrequency: "yearly" },
+  { path: "/cookies", priority: 0.2, changeFrequency: "yearly" },
 ];
 
 // Recipes/posts/blog are user- and admin-generated, so pull the current
@@ -54,7 +59,7 @@ async function getHubPostEntries(): Promise<MetadataRoute.Sitemap> {
   if (error || !data) return [];
 
   return data.map((post) => ({
-    url: `${BASE_URL}/hub/post/${post.id}`,
+    url: `${BASE_URL}/social/post/${post.id}`,
     lastModified: post.updated_at,
     changeFrequency: "weekly",
     priority: 0.5,
@@ -80,9 +85,12 @@ async function getBlogEntries(): Promise<MetadataRoute.Sitemap> {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // No lastModified here — these are static routes with no tracked
+  // content-change date, and `new Date()` would falsely claim every page
+  // changed at the moment the sitemap was requested. changeFrequency alone
+  // is enough of a hint for crawlers.
   const staticEntries: MetadataRoute.Sitemap = STATIC_ROUTES.map((route) => ({
     url: `${BASE_URL}${route.path}`,
-    lastModified: new Date(),
     changeFrequency: route.changeFrequency,
     priority: route.priority,
   }));

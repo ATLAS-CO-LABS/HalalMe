@@ -42,8 +42,8 @@ function notificationText(n: Notification): string {
 }
 
 function notificationHref(n: Notification): string {
-  if (n.post_id) return `/hub/post/${n.post_id}`;
-  return "/hub/feed";
+  if (n.post_id) return `/social/post/${n.post_id}`;
+  return "/social/feed";
 }
 
 export default function NotificationPanel({ userId }: NotificationPanelProps) {

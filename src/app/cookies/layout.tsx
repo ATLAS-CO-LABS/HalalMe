@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Cookie Policy | HalalMe",
+  title: "Cookie Policy",
   description: "How HalalMe uses cookies and similar technologies.",
+  alternates: { canonical: "/cookies" },
   openGraph: {
     title: "Cookie Policy | HalalMe",
     description: "How HalalMe uses cookies and similar technologies.",

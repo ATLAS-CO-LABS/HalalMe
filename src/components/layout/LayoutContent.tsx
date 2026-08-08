@@ -20,7 +20,7 @@ const hideFooterPaths = [
   "/dashboard",
   "/profile",
   "/messages",
-  "/hub",
+  "/social",
   "/select-role",
   "/help",
   "/contact",
@@ -66,8 +66,14 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
         <AuthGateProvider>
           <RouteProgressBar />
           <ScrollToTop />
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-300 focus:px-4 focus:py-2.5 focus:bg-[#F7E7CE] focus:text-[#102C26] focus:font-extrabold focus:uppercase focus:tracking-tighter focus:text-sm"
+          >
+            Skip to content
+          </a>
           {!shouldHideHeader && <Header />}
-          <main>{children}</main>
+          <main id="main-content">{children}</main>
           {!shouldHideFooter && <Footer />}
         </AuthGateProvider>
       </RewardsRealtimeProvider>

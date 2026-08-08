@@ -52,7 +52,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      await minDelay(authService.login(email, password));
+      // 150ms, not 400 — this only ever pads a sign-in that resolved faster
+      // than that (the real network round-trip already dwarfs it otherwise),
+      // and the modal/page both show their own spinner the instant loading
+      // starts, so the longer anti-flash window wasn't buying anything here.
+      await minDelay(authService.login(email, password), 150);
       const profile = await authService.refreshUser();
       setUser(profile);
     } finally {

@@ -15,7 +15,7 @@ const MODULE_LABELS: Record<Module, string> = {
   merchants: "Merchant CRM",
   users: "User Management",
   kitchen: "Kitchen",
-  hub: "Hub",
+  hub: "Social",
   rewards: "Rewards & Charity",
   analytics: "Analytics",
   support: "Support",

@@ -16,7 +16,10 @@ export async function generateMetadata({
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  const fallback: Metadata = { title: "Recipe · HalalMe" };
+  const fallback: Metadata = {
+    title: "Recipe · HalalMe",
+    alternates: { canonical: `/kitchen/recipes/${id}` },
+  };
   if (!base || !key) return fallback;
 
   try {
@@ -45,6 +48,7 @@ export async function generateMetadata({
     return {
       title,
       description,
+      alternates: { canonical: `/kitchen/recipes/${id}` },
       openGraph: {
         title,
         description,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
@@ -26,8 +26,8 @@ import { hubService } from "@/services/hubService";
 import ReportModal from "@/components/common/ReportModal";
 import { withTimeout, TimeoutError } from "@/lib/withTimeout";
 import { useAuth } from "@/hooks/useAuth";
+import { useAuthGate } from "@/hooks/useAuthGate";
 import { useResumeKey } from "@/context/AppResumeContext";
-import AuthGuard from "@/components/auth/AuthGuard";
 import { formatRelativeTime } from "@/lib/relativeTime";
 import Avatar from "@/components/hub/Avatar";
 
@@ -36,29 +36,33 @@ const BG2 = "var(--hub-bg2)";
 const AMBER = "var(--hm-amber)";
 const CREAM = "var(--hm-text)";
 
-export default function PostDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = use(params);
-  return (
-    <AuthGuard>
-      <PostDetailContent id={id} />
-    </AuthGuard>
-  );
+interface PostDetailClientProps {
+  id: string;
+  initialPost: Post | null;
+  initialComments: Comment[];
 }
 
-function PostDetailContent({ id }: { id: string }) {
+// Publicly viewable (post/comment reads are public at the RLS level) —
+// liking, commenting, deleting and reporting still require auth, gated
+// individually below via useAuthGate rather than a page-level redirect.
+export default function PostDetailClient({ id, initialPost, initialComments }: PostDetailClientProps) {
   const router = useRouter();
   const { user } = useAuth();
+  const { requireAuth } = useAuthGate();
   const resumeKey = useResumeKey();
 
-  const [post, setPost] = useState<Post | null>(null);
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isCommentsLoading, setIsCommentsLoading] = useState(true);
+  const [post, setPost] = useState<Post | null>(initialPost);
+  const [comments, setComments] = useState<Comment[]>(initialComments);
+  const [isLoading, setIsLoading] = useState(!initialPost);
+  // Not `initialComments.length === 0` — a post can genuinely have zero
+  // comments, which must not look like a loading state.
+  const [isCommentsLoading, setIsCommentsLoading] = useState(!initialPost);
   const [error, setError] = useState<string | null>(null);
+  // First effect run reuses the server-fetched post/comments instead of
+  // showing a loading spinner — it still silently re-fetches in the
+  // background once `user` resolves, to pick up personalised like/bookmark
+  // status that the anonymous server fetch couldn't know.
+  const seededRef = useRef(!!initialPost);
 
   // Monotonically-incrementing request counter - same pattern as the feed page.
   // Must live outside the effect so successive effect runs share the same ref.
@@ -83,8 +87,11 @@ function PostDetailContent({ id }: { id: string }) {
     // requestIdRef.current at the time it tries to write state is allowed to.
     const requestId = ++requestIdRef.current;
 
+    const isSeededFirstRun = seededRef.current;
+    seededRef.current = false;
+
     const loadPost = async () => {
-      setIsLoading(true);
+      if (!isSeededFirstRun) setIsLoading(true);
       const attempt = () => withTimeout(hubService.getPostById(id, user?.id, signal), 10_000);
       try {
         let data;
@@ -107,7 +114,7 @@ function PostDetailContent({ id }: { id: string }) {
     };
 
     const loadComments = async () => {
-      setIsCommentsLoading(true);
+      if (!isSeededFirstRun) setIsCommentsLoading(true);
       const attempt = () => withTimeout(hubService.getComments(id, user?.id, signal), 10_000);
       try {
         let data;
@@ -139,7 +146,6 @@ function PostDetailContent({ id }: { id: string }) {
   // dropped while the tab was hidden and starts fresh fetches on a live
   // connection.  user?.id (not user) avoids re-running on token refreshes
   // that produce a new Profile object with the same id.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, user?.id, resumeKey]);
 
   // Increment view count once per mount - separate effect so it never re-fires
@@ -258,7 +264,7 @@ function PostDetailContent({ id }: { id: string }) {
   // Share
   // ---------------------------------------------------------------------------
   const handleShare = async () => {
-    const url = `${window.location.origin}/hub/post/${id}`;
+    const url = `${window.location.origin}/social/post/${id}`;
     try {
       await navigator.clipboard.writeText(url);
     } catch {
@@ -321,7 +327,10 @@ function PostDetailContent({ id }: { id: string }) {
           </p>
           <div className="flex items-center gap-4">
             <motion.button
-              onClick={() => handleLikeComment(comment.id, comment.parent_id, !!comment.is_liked)}
+              onClick={() => requireAuth(
+                () => handleLikeComment(comment.id, comment.parent_id, !!comment.is_liked),
+                "Sign in to like comments",
+              )}
               className="flex items-center gap-1 text-xs transition-colors"
               style={{ color: comment.is_liked ? "#EF4444" : `color-mix(in oklab, var(--hm-text) 21%, transparent)` }}
               whileHover={{ scale: 1.05 }}
@@ -406,7 +415,7 @@ function PostDetailContent({ id }: { id: string }) {
           <h2 className="text-2xl font-extrabold uppercase tracking-tighter" style={{ color: CREAM, fontFamily: "var(--font-headline)" }}>
             Post not found
           </h2>
-          <Link href="/hub/feed">
+          <Link href="/social/feed">
             <motion.button
               className="text-xs font-bold uppercase tracking-[0.2em] transition-colors"
               style={{ color: AMBER }}
@@ -571,7 +580,7 @@ function PostDetailContent({ id }: { id: string }) {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-6">
                 <motion.button
-                  onClick={handleLikePost}
+                  onClick={() => requireAuth(handleLikePost, "Sign in to like this post")}
                   className="flex items-center gap-2 transition-colors"
                   style={{ color: post.is_liked ? "#EF4444" : `color-mix(in oklab, var(--hm-text) 27%, transparent)` }}
                   whileHover={{ scale: 1.1 }}
@@ -647,7 +656,7 @@ function PostDetailContent({ id }: { id: string }) {
                   type="text"
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleAddComment()}
+                  onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && requireAuth(handleAddComment, "Sign in to comment")}
                   placeholder={replyingTo ? `Reply to @${replyingTo.username}...` : "Write a comment..."}
                   className="flex-1 text-base px-4 py-2.5 border focus:outline-none font-normal transition-colors"
                   style={{ backgroundColor: BG, borderColor: `color-mix(in oklab, var(--hm-text) 8%, transparent)`, color: CREAM, caretColor: AMBER }}
@@ -656,7 +665,7 @@ function PostDetailContent({ id }: { id: string }) {
                   disabled={isSubmittingComment}
                 />
                 <motion.button
-                  onClick={handleAddComment}
+                  onClick={() => requireAuth(handleAddComment, "Sign in to comment")}
                   disabled={!newComment.trim() || isSubmittingComment}
                   className="p-2.5 shrink-0"
                   style={

@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | HalalMe",
+  title: "Privacy Policy",
   description: "How HalalMe collects, uses, and protects your personal data under UK GDPR and the Data Protection Act 2018.",
+  alternates: { canonical: "/privacy" },
   openGraph: {
     title: "Privacy Policy | HalalMe",
     description: "How HalalMe collects, uses, and protects your personal data under UK GDPR and the Data Protection Act 2018.",

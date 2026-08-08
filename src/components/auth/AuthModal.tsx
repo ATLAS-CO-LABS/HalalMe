@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Eye, EyeOff, ChefHat, ArrowRight, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import type { AuthGateModalProps } from "@/hooks/useAuthGate";
+import { track } from "@vercel/analytics";
 
 // ── Palette (matches platform teal theme) ─────────────────────────
 const BG     = "#0A1C19";
@@ -15,7 +16,9 @@ const BORDER = `${CREAM}12`;
 // ── Tiny field component ───────────────────────────────────────────
 function Field({
   label,
+  name,
   type = "text",
+  autoComplete,
   value,
   onChange,
   placeholder,
@@ -23,7 +26,9 @@ function Field({
   right,
 }: {
   label: string;
+  name: string;
   type?: string;
+  autoComplete?: string;
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
@@ -33,6 +38,7 @@ function Field({
   return (
     <div>
       <label
+        htmlFor={name}
         className="block text-[10px] font-bold uppercase mb-1.5"
         style={{ color: `${CREAM}59`, letterSpacing: "0.22em" }}
       >
@@ -40,7 +46,10 @@ function Field({
       </label>
       <div className="relative">
         <input
+          id={name}
+          name={name}
           type={type}
+          autoComplete={autoComplete}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
@@ -88,11 +97,13 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <Field label="Email" type="email" value={email} onChange={setEmail}
+      <Field label="Email" name="email" type="email" autoComplete="email" value={email} onChange={setEmail}
         placeholder="you@example.com" disabled={loading} />
       <Field
         label="Password"
+        name="password"
         type={showPw ? "text" : "password"}
+        autoComplete="current-password"
         value={password}
         onChange={setPassword}
         placeholder="Enter your password"
@@ -162,6 +173,7 @@ function SignupForm({ onSuccess }: { onSuccess: () => void }) {
     setLoading(true);
     try {
       const { requiresVerification } = await signup(name, email, password);
+      track("Create Free Account");
       if (requiresVerification) {
         setVerifyNeeded(true);
       } else {
@@ -192,14 +204,16 @@ function SignupForm({ onSuccess }: { onSuccess: () => void }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <Field label="Full name" value={name} onChange={setName}
+      <Field label="Full name" name="name" autoComplete="name" value={name} onChange={setName}
         placeholder="Your name" disabled={loading} />
-      <Field label="Email" type="email" value={email} onChange={setEmail}
+      <Field label="Email" name="email" type="email" autoComplete="email" value={email} onChange={setEmail}
         placeholder="you@example.com" disabled={loading} />
       <div>
         <Field
           label="Password"
+          name="password"
           type={showPw ? "text" : "password"}
+          autoComplete="new-password"
           value={password}
           onChange={setPassword}
           placeholder="Min 8 chars, 1 uppercase, 1 number"
@@ -223,7 +237,9 @@ function SignupForm({ onSuccess }: { onSuccess: () => void }) {
 
       <Field
         label="Confirm Password"
+        name="confirmPassword"
         type={showConfirm ? "text" : "password"}
+        autoComplete="new-password"
         value={confirmPw}
         onChange={setConfirmPw}
         placeholder="Re-enter your password"
@@ -270,10 +286,14 @@ export function AuthModal({ isOpen, onClose, onSuccess, message }: AuthGateModal
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center px-4">
-          {/* Backdrop */}
+          {/* Backdrop — plain overlay, no backdrop-filter. Blur forces the
+              browser to continuously re-composite everything behind it, which
+              is exactly what made this feel laggy on heavy pages (the Kitchen
+              recipe grid, the Hub feed) with lots of images and other
+              Framer Motion animations already running. */}
           <motion.div
             className="absolute inset-0"
-            style={{ backgroundColor: "rgba(0,0,0,0.78)", backdropFilter: "blur(6px)" }}
+            style={{ backgroundColor: "rgba(0,0,0,0.85)" }}
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.12 }}
             onClick={onClose}

@@ -118,7 +118,7 @@ export async function GET() {
         recent.push({
           type: "post",
           label: text ? (text.length > 40 ? `${text.slice(0, 40)}…` : text) : `New ${p.post_type ?? "post"}`,
-          detail: "posted to Hub",
+          detail: "posted to Social",
           at: p.created_at,
         });
       }

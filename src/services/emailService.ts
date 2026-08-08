@@ -13,6 +13,7 @@ import MerchantDocsApprovedEmail from "@/emails/MerchantDocsApprovedEmail";
 import MerchantDocsActionNeededEmail from "@/emails/MerchantDocsActionNeededEmail";
 import SupportTicketNotifyEmail from "@/emails/SupportTicketNotifyEmail";
 import SupportTicketReplyEmail from "@/emails/SupportTicketReplyEmail";
+import SupportTicketConfirmationEmail from "@/emails/SupportTicketConfirmationEmail";
 import CharityConnectInviteEmail from "@/emails/CharityConnectInviteEmail";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -108,6 +109,42 @@ export async function sendSupportNotifyEmail({
 
   if (error) {
     console.error("[emailService] sendSupportNotifyEmail failed", error);
+    throw new Error(`Email send failed: ${error.message}`);
+  }
+}
+
+export async function sendSupportConfirmationEmail({
+  to,
+  recipientName,
+  subject,
+  messagePreview,
+  conversationId,
+}: {
+  to: string;
+  recipientName: string;
+  subject: string;
+  messagePreview: string;
+  conversationId: string;
+}): Promise<void> {
+  const html = await render(
+    SupportTicketConfirmationEmail({
+      recipientName,
+      subject,
+      messagePreview,
+      reference: conversationId.slice(0, 8).toUpperCase(),
+    }),
+  );
+
+  const { error } = await resend.emails.send({
+    from: FROM,
+    to,
+    replyTo: SUPPORT_INBOX,
+    subject: "We've received your message — HalalMe Support",
+    html,
+  });
+
+  if (error) {
+    console.error("[emailService] sendSupportConfirmationEmail failed", error);
     throw new Error(`Email send failed: ${error.message}`);
   }
 }

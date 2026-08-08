@@ -3,7 +3,7 @@
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 
-/** Only ever rendered while on a themed route (/hub, /kitchen) - see Header. */
+/** Only ever rendered while on a themed route (/social, /kitchen) - see Header. */
 export default function ThemeToggle({ className = "" }: { className?: string }) {
   const { theme, toggleTheme } = useTheme();
   const isLight = theme === "light";

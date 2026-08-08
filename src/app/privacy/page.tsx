@@ -92,7 +92,7 @@ function DocumentBody() {
           <p>Depending on how you use HalalMe, we collect:</p>
           <ul className="list-disc pl-5 space-y-2">
             <li><strong style={{ color: CREAM }}>Account details</strong> — name, email, username, phone number, avatar, and password (stored securely hashed, we never see it in plain text).</li>
-            <li><strong style={{ color: CREAM }}>Profile and activity data</strong> — recipes, posts, comments, likes, follows, and messages you create on Kitchen and Hub.</li>
+            <li><strong style={{ color: CREAM }}>Profile and activity data</strong> — recipes, posts, comments, likes, follows, and messages you create on Kitchen and Social.</li>
             <li><strong style={{ color: CREAM }}>AI chat content</strong> — messages you send to our Kitchen AI assistant (AQI), used to generate recipe responses.</li>
             <li><strong style={{ color: CREAM }}>Payment and donation data</strong> — handled directly by Stripe; we store the outcome (amount, status, receipt reference), never your full card number.</li>
             <li><strong style={{ color: CREAM }}>Delivery details</strong> — if you use HalalMe Delivery, your name, phone number, and delivery address are shared with our delivery platform partner to fulfil your order.</li>

@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { track } from "@vercel/analytics";
 import {
   Bike,
   Store,
@@ -188,7 +189,7 @@ function HeroSection() {
     >
       <div className="absolute inset-0 z-0">
         <Image
-          src="/images/services/halal01.jpg"
+          src="/images/services/halal01.webp"
           alt="Halal food delivery"
           fill
           className="object-cover opacity-100 scale-105"
@@ -296,7 +297,7 @@ function HeroSection() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
             className="mt-6 md:mt-7 text-base md:text-lg max-w-md leading-relaxed mx-auto"
-            style={{ color: `${CREAM}75` }}
+            style={{ color: `${CREAM}B8` }}
           >
             “Craving Something Delicious?” Order fresh, halal-certified meals
             from thousands of your favorite local restaurants.
@@ -308,7 +309,7 @@ function HeroSection() {
             transition={{ delay: 0.72 }}
             className="mt-8 flex flex-wrap gap-4 justify-center"
           >
-            <a href={DELIVERY_URL} target="_blank" rel="noopener noreferrer">
+            <a href={DELIVERY_URL} onClick={() => track("Order Now")}>
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
@@ -355,7 +356,7 @@ function HeroSection() {
               <div
                 key={i}
                 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide"
-                style={{ color: `${CREAM}65` }}
+                style={{ color: `${CREAM}B8` }}
               >
                 <item.icon className="w-4 h-4" style={{ color: PURPLE }} />
                 {item.text}
@@ -445,7 +446,7 @@ function HowItWorksSection() {
       num: "03",
       icon: Bike,
       title: "Fast Delivery",
-      desc: "Track your order in real-time as our riders bring your food hot and fresh to your doorstep.",
+      desc: "Track your order in real-time as it's brought to your doorstep hot and fresh.",
     },
   ];
 
@@ -482,7 +483,7 @@ function HowItWorksSection() {
         >
           Three Steps
           <br />
-          <span style={{ color: `${CREAM}75` }}>Browse. Order. Deliver.</span>
+          <span style={{ color: `${CREAM}B8` }}>Browse. Order. Deliver.</span>
         </motion.h2>
       </div>
 
@@ -534,7 +535,7 @@ function HowItWorksSection() {
                 </h3>
                 <p
                   className="text-sm md:text-base leading-relaxed transition-colors duration-300 group-hover:text-white/75"
-                  style={{ color: `${CREAM}75` }}
+                  style={{ color: `${CREAM}B8` }}
                 >
                   {step.desc}
                 </p>
@@ -592,9 +593,9 @@ function RestaurantsSection() {
           >
             Partner
             <br />
-            <span style={{ color: `${CREAM}75` }}>Restaurants.</span>
+            <span style={{ color: `${CREAM}B8` }}>Restaurants.</span>
           </motion.h2>
-          <a href={DELIVERY_URL} target="_blank" rel="noopener noreferrer">
+          <a href={DELIVERY_URL} onClick={() => track("Order Now")}>
             <motion.button
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
@@ -658,13 +659,13 @@ function RestaurantsSection() {
                   </h3>
                   <p
                     className="text-sm mb-4 uppercase tracking-wide font-medium"
-                    style={{ color: `${CREAM}65` }}
+                    style={{ color: `${CREAM}B8` }}
                   >
                     {r.cuisine}
                   </p>
                   <div
                     className="flex items-center justify-between text-xs"
-                    style={{ color: `${CREAM}65` }}
+                    style={{ color: `${CREAM}B8` }}
                   >
                     <div className="flex items-center gap-3 font-semibold uppercase tracking-wide">
                       <span className="flex items-center gap-1">
@@ -694,7 +695,7 @@ function RestaurantsSection() {
         transition={{ delay: 0.7, duration: 0.5 }}
         className="max-w-[95vw] mx-auto px-6 md:px-10 mt-12"
       >
-        <a href={DELIVERY_URL} target="_blank" rel="noopener noreferrer">
+        <a href={DELIVERY_URL} onClick={() => track("Order Now")}>
           <motion.button
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
@@ -726,7 +727,7 @@ function WhyDeliverySection() {
       num: "02",
       icon: Zap,
       title: "Lightning Fast",
-      desc: "Average delivery in just 30-60 minutes. Our rider network ensures your food arrives hot and fresh, every time.",
+      desc: "Delivery typically takes 30-60 minutes, so your food arrives hot and fresh.",
     },
     {
       num: "03",
@@ -775,7 +776,7 @@ function WhyDeliverySection() {
         >
           Built for the
           <br />
-          <span style={{ color: `${CREAM}75` }}>Halal Community.</span>
+          <span style={{ color: `${CREAM}B8` }}>Halal Community.</span>
         </motion.h2>
       </div>
 
@@ -826,7 +827,7 @@ function WhyDeliverySection() {
                 </h3>
                 <p
                   className="text-sm leading-relaxed transition-colors duration-300 group-hover:text-[#08060F]/65"
-                  style={{ color: `${CREAM}75` }}
+                  style={{ color: `${CREAM}B8` }}
                 >
                   {b.desc}
                 </p>
@@ -871,7 +872,7 @@ function PromoBanner() {
               </p>
             </div>
           </div>
-          <a href={DELIVERY_URL} target="_blank" rel="noopener noreferrer">
+          <a href={DELIVERY_URL} onClick={() => track("Order Now")}>
             <motion.button
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
@@ -948,7 +949,7 @@ function FinalCTA() {
           transition={{ delay: 0.3 }}
           className="flex flex-col sm:flex-row gap-4 mb-16"
         >
-          <a href={DELIVERY_URL} target="_blank" rel="noopener noreferrer">
+          <a href={DELIVERY_URL} onClick={() => track("Order Now")}>
             <button
               className="flex items-center gap-3 px-8 py-4 bg-white font-extrabold uppercase tracking-tighter text-base hover:bg-[#F7E7CE] transition-colors"
               style={{ color: DEEP }}
@@ -957,7 +958,7 @@ function FinalCTA() {
               <ArrowRight className="w-5 h-5" />
             </button>
           </a>
-          <a href={DELIVERY_URL} target="_blank" rel="noopener noreferrer">
+          <a href={DELIVERY_URL} onClick={() => track("Order Now")}>
             <button className="flex items-center gap-3 px-8 py-4 border-2 border-white/30 text-white font-extrabold uppercase tracking-tighter text-base hover:bg-white/10 transition-colors">
               View Restaurants
             </button>
@@ -1054,23 +1055,29 @@ function MerchantSlideshow() {
 
       {/* Progress dots */}
       <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10">
-        {MERCHANT_IMAGES.map((_, i) => (
+        {MERCHANT_IMAGES.map((img, i) => (
           <button
             key={i}
             onClick={() => setCurrent(i)}
-            className="relative overflow-hidden rounded-full transition-all duration-300"
-            style={{
-              width: i === current ? 28 : 8,
-              height: 8,
-              backgroundColor: i === current ? PURPLE : `${CREAM}35`,
-            }}
+            aria-label={`Show ${img.alt}`}
+            aria-current={i === current}
+            className="flex items-center justify-center p-3"
           >
-            {i === current && (
-              <motion.div
-                className="absolute inset-y-0 left-0 rounded-full"
-                style={{ backgroundColor: CREAM, width: `${progress}%` }}
-              />
-            )}
+            <span
+              className="relative overflow-hidden rounded-full transition-all duration-300 block"
+              style={{
+                width: i === current ? 28 : 8,
+                height: 8,
+                backgroundColor: i === current ? PURPLE : `${CREAM}35`,
+              }}
+            >
+              {i === current && (
+                <motion.span
+                  className="absolute inset-y-0 left-0 rounded-full block"
+                  style={{ backgroundColor: CREAM, width: `${progress}%` }}
+                />
+              )}
+            </span>
           </button>
         ))}
       </div>
@@ -1479,7 +1486,7 @@ function ForRestaurantsSection() {
           >
             Run Your Kitchen
             <br />
-            <span style={{ color: `${CREAM}75` }}>Like a System.</span>
+            <span style={{ color: `${CREAM}B8` }}>Like a System.</span>
           </h2>
 
           <div
@@ -1581,7 +1588,7 @@ function DeliveryExperienceSection() {
           >
             Order Without
             <br />
-            <span style={{ color: `${CREAM}75` }}>Friction.</span>
+            <span style={{ color: `${CREAM}B8` }}>Friction.</span>
           </motion.h2>
 
           <motion.ul
@@ -1695,7 +1702,7 @@ function TestimonialsSection() {
         >
           Real People.
           <br />
-          <span style={{ color: `${CREAM}50` }}>Real Reviews.</span>
+          <span style={{ color: `${CREAM}99` }}>Real Reviews.</span>
         </motion.h2>
 
         <div
@@ -1725,15 +1732,23 @@ function TestimonialsSection() {
               <div className="flex items-center gap-3">
                 <div className="w-8 h-px" style={{ backgroundColor: GOLD }} />
                 <div>
-                  <span
-                    className="block text-xs uppercase tracking-[0.2em] font-bold"
-                    style={{ color: `${CREAM}80` }}
-                  >
-                    {t.name}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="block text-xs uppercase tracking-[0.2em] font-bold"
+                      style={{ color: `${CREAM}B8` }}
+                    >
+                      {t.name}
+                    </span>
+                    <span
+                      className="text-[9px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded-sm"
+                      style={{ color: GOLD, backgroundColor: `${GOLD}1A` }}
+                    >
+                      Customer review
+                    </span>
+                  </div>
                   <span
                     className="text-[10px] uppercase tracking-widest"
-                    style={{ color: `${CREAM}35` }}
+                    style={{ color: `${CREAM}99` }}
                   >
                     {t.date}
                   </span>

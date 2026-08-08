@@ -553,7 +553,7 @@ export default function CharityLandingPage() {
       >
         <div className="absolute inset-0 z-0">
           <Image
-            src="/images/page sections/rewards6.png"
+            src="/images/page sections/rewards6.webp"
             alt="Charity and giving"
             fill
             className="object-cover opacity-100 object-center"

@@ -155,10 +155,10 @@ export const blogPosts: BlogPost[] = [
 <h2>Knowledge Sharing</h2>
 <p>Online Islamic education has exploded in quality and accessibility. Whether it's learning Quran recitation via video call or attending virtual lectures by scholars worldwide, technology has democratized Islamic knowledge.</p>
 
-<h2>The HalalMe Hub Approach</h2>
-<p>At HalalMe Hub, we're building a space where community happens naturally. Share recipes, review halal businesses, organize local events, and connect with like-minded individuals in your area, all within a platform designed with Islamic values at its core.</p>
+<h2>The HalalMe Social Approach</h2>
+<p>At HalalMe Social, we're building a space where community happens naturally. Share recipes, review halal businesses, organize local events, and connect with like-minded individuals in your area, all within a platform designed with Islamic values at its core.</p>
 
-<p>Join the conversation on HalalMe Hub and be part of a community that's shaping the future of Muslim life in the digital era.</p>
+<p>Join the conversation on HalalMe Social and be part of a community that's shaping the future of Muslim life in the digital era.</p>
     `,
     category: "Community",
     image: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&q=80",
@@ -224,7 +224,7 @@ export const blogPosts: BlogPost[] = [
 <h2>Composting with Purpose</h2>
 <p>For scraps that can't be used in cooking, composting returns nutrients to the earth. Many Muslim community gardens now accept food scraps, creating a beautiful cycle of giving back.</p>
 
-<p>Find hundreds of zero-waste halal recipes on HalalMe Kitchen and join our sustainability challenge on HalalMe Hub.</p>
+<p>Find hundreds of zero-waste halal recipes on HalalMe Kitchen and join our sustainability challenge on HalalMe Social.</p>
     `,
     category: "Halal Living",
     image: "https://images.unsplash.com/photo-1466637574441-749b8f19452f?w=800&q=80",
@@ -255,7 +255,7 @@ export const blogPosts: BlogPost[] = [
 <p>Birthday parties, school lunches, and sleepovers can be tricky. Prepare your children with confident, positive ways to explain their dietary choices. Pack delicious halal alternatives so they never feel left out.</p>
 
 <h2>Build Community</h2>
-<p>Connect your children with other Muslim families. HalalMe Hub's family groups make it easy to organize halal playdates, cooking parties, and educational events.</p>
+<p>Connect your children with other Muslim families. HalalMe Social's family groups make it easy to organize halal playdates, cooking parties, and educational events.</p>
 
 <p>Explore family-friendly halal recipes on HalalMe Kitchen, designed to get little hands involved in the cooking process.</p>
     `,

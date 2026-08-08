@@ -124,8 +124,9 @@ function WhatWeOfferSection() {
   const services = [
     { num: '01', name: 'Delivery', desc: 'Halal food delivery from trusted, certified partners' },
     { num: '02', name: 'Kitchen',  desc: 'AI-powered recipes and home-style halal meal guides'  },
-    { num: '03', name: 'Hub',      desc: 'Community posts, recipes, and halal discussions'      },
-    { num: '04', name: 'Rewards',  desc: 'Charity, sadaqah & reward-based donations'            },
+    { num: '03', name: 'Social',   desc: 'Community posts, recipes, and halal discussions'      },
+    { num: '04', name: 'Charity',  desc: 'Verified causes, sadaqah and giving, tracked openly'  },
+    { num: '05', name: 'Rewards',  desc: 'Earn points and unlock perks across HalalMe'          },
   ];
 
   return (
@@ -199,7 +200,7 @@ function WhyDifferentSection() {
     {
       num: '02',
       title: 'Community-Driven',
-      desc: 'HalalMe is built by Muslims, for Muslims. Real reviews, shared recipes, and honest recommendations from people who live this lifestyle daily.',
+      desc: 'HalalMe is built around halal values, open to everyone. Real reviews, shared recipes, and honest recommendations from people who live this lifestyle daily.',
     },
     {
       num: '03',

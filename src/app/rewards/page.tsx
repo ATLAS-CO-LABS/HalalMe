@@ -29,19 +29,19 @@ const TIERS = [
   { level: "Bronze", min: 0, aiPerHour: 10, bg: "#B87333", hover: "#CD8B4A" },
   { level: "Silver", min: 1000, aiPerHour: 20, bg: "#9EA3A8", hover: "#C0C0C0" },
   { level: "Gold", min: 5000, aiPerHour: 30, bg: "#D4AF37", hover: "#FFD700" },
-  { level: "Diamond", min: 15000, aiPerHour: 50, bg: "#0E7490", hover: "#22B6DD" },
+  { level: "Platinum", min: 15000, aiPerHour: 50, bg: "#0E7490", hover: "#22B6DD" },
 ];
 
 const EARN_WAYS = [
   { icon: HandHeart, title: "Donate to Charity", desc: "10 points per £1 donated through HalalMe Charity", href: "/charity" },
   { icon: ChefHat, title: "Upload a Recipe", desc: "+50 points the first time, plus review bonuses", href: "/kitchen" },
-  { icon: Megaphone, title: "Post in the Hub", desc: "+50 for your first post, +20 for every post after", href: "/hub" },
+  { icon: Megaphone, title: "Post on Social", desc: "+50 for your first post, +20 for every post after", href: "/social" },
   { icon: Star, title: "Log In Daily", desc: "+10 points just for showing up, plus a one-off referral bonus", href: "/dashboard?tab=rewards" },
 ];
 
 const REDEEM_CATEGORIES = [
-  { icon: Palette, title: "Profile Flair", desc: "Stand out in Hub with an exclusive profile flair." },
-  { icon: Megaphone, title: "Hub Post Boost", desc: "Feature one of your posts in the discover feed." },
+  { icon: Palette, title: "Profile Flair", desc: "Stand out on Social with an exclusive profile flair." },
+  { icon: Megaphone, title: "Social Post Boost", desc: "Feature one of your posts in the discover feed." },
   { icon: ChefHat, title: "Recipe Boost", desc: "Get one of your recipes featured for extra reach." },
   { icon: Sparkles, title: "AI Power-Up", desc: "Unlock extra AI requests when you need them most." },
 ];
@@ -68,7 +68,7 @@ export default function RewardsLandingPage() {
       >
         <div className="absolute inset-0 z-0">
           <Image
-            src="/images/services/rewards.png"
+            src="/images/services/rewards.webp"
             alt="Earn and redeem rewards"
             fill
             className="object-cover opacity-100 object-center"
@@ -312,7 +312,7 @@ export default function RewardsLandingPage() {
           >
             Bronze to
             <br />
-            <span style={{ color: `${CREAM}65` }}>Diamond.</span>
+            <span style={{ color: `${CREAM}65` }}>Platinum.</span>
           </h2>
           <p
             className="max-w-xl text-sm md:text-base leading-relaxed"
@@ -467,7 +467,7 @@ export default function RewardsLandingPage() {
               className="text-base md:text-lg max-w-xl leading-relaxed mb-10 font-normal"
               style={{ color: `${BG}90`, fontFamily: "var(--font-body)" }}
             >
-              Post a recipe, share in the Hub, or donate to charity — every
+              Post a recipe, share on Social, or donate to charity — every
               action moves you closer to your next tier.
             </p>
             <div className="flex flex-wrap gap-4">

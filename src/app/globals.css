@@ -6,6 +6,27 @@
 @font-face {
   font-family: "Poppins";
   src: url("/fonts/Poppins/Poppins-Black.ttf") format("truetype");
+  font-weight: 600 900;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Work Sans";
+  src: url("/fonts/Work_Sans/static/WorkSans-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Work Sans";
+  src: url("/fonts/Work_Sans/static/WorkSans-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Work Sans";
+  src: url("/fonts/Work_Sans/static/WorkSans-SemiBold.ttf") format("truetype");
   font-weight: 600;
   font-style: normal;
 }
@@ -40,15 +61,40 @@
 
 @font-face {
   font-family: "Unbounded";
+  src: url("/fonts/Unbounded/static/Unbounded-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  size-adjust: 88%;
+}
+
+@font-face {
+  font-family: "Unbounded";
+  src: url("/fonts/Unbounded/static/Unbounded-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  size-adjust: 88%;
+}
+
+@font-face {
+  font-family: "Unbounded";
+  src: url("/fonts/Unbounded/static/Unbounded-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  size-adjust: 88%;
+}
+
+@font-face {
+  font-family: "Unbounded";
   src: url("/fonts/Unbounded/static/Unbounded-Bold.ttf") format("truetype");
   font-weight: 700;
   font-style: normal;
+  size-adjust: 88%;
 }
 
 :root {
   --font-logo: "poppins", sans-serif;
   --font-headline: "poppins", sans-serif;
-  --font-body: "Nunito", sans-serif;
+  --font-body: "Unbounded", sans-serif;
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);

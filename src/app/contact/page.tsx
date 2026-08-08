@@ -4,6 +4,7 @@ import { motion, useInView } from "framer-motion";
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { track } from "@vercel/analytics";
 
 export default function ContactPage() {
   return (
@@ -76,6 +77,7 @@ function ContactFormSection() {
     email: "",
     subject: "",
     message: "",
+    company: "", // honeypot — left blank by real users, see handleChange/route
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<
@@ -93,8 +95,15 @@ function ContactFormSection() {
         body: JSON.stringify(formData),
       });
       if (!res.ok) throw new Error("Request failed");
+      track("Contact Form Submit");
       setSubmitStatus("success");
-      setFormData({ fullName: "", email: "", subject: "", message: "" });
+      setFormData({
+        fullName: "",
+        email: "",
+        subject: "",
+        message: "",
+        company: "",
+      });
       setTimeout(() => setSubmitStatus("idle"), 5000);
     } catch {
       setSubmitStatus("error");
@@ -164,6 +173,30 @@ function ContactFormSection() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="bg-[#0A1C19] border border-[#F7E7CE]/8 p-6 md:p-8 space-y-5"
           >
+            {/* Honeypot: hidden from sighted/keyboard users and screen readers,
+                but visible to form-filling bots. Server rejects if this is set. */}
+            <div
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                left: "-9999px",
+                width: "1px",
+                height: "1px",
+                overflow: "hidden",
+              }}
+            >
+              <label htmlFor="company">Company</label>
+              <input
+                type="text"
+                id="company"
+                name="company"
+                tabIndex={-1}
+                autoComplete="off"
+                value={formData.company}
+                onChange={handleChange}
+              />
+            </div>
+
             <div>
               <label htmlFor="fullName" className={labelClass}>
                 Full Name *
@@ -173,6 +206,7 @@ function ContactFormSection() {
                 id="fullName"
                 name="fullName"
                 required
+                autoComplete="name"
                 value={formData.fullName}
                 onChange={handleChange}
                 className={inputClass}
@@ -189,6 +223,7 @@ function ContactFormSection() {
                 id="email"
                 name="email"
                 required
+                autoComplete="email"
                 value={formData.email}
                 onChange={handleChange}
                 className={inputClass}
@@ -379,7 +414,7 @@ function BusinessInfoSection() {
   const isInView = useInView(ref, { once: true, amount: 0.3 });
 
   const info = [
-    { label: "Company Name", value: "HalalMe Delivery Ltd" },
+    { label: "Company Name", value: "Halal Delivery Ltd" },
     { label: "Country", value: "United Kingdom" },
     {
       label: "Support Hours",

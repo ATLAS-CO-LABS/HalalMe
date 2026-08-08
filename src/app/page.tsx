@@ -55,7 +55,7 @@ export default function Home() {
 
       {/* Primary bg is deep forest - visible green, not near-black */}
       <div
-        className={`min-h-screen bg-[#102C26] font-sans antialiased selection:bg-[#F7E7CE] selection:text-[#102C26] ${
+        className={`min-h-screen bg-[#102C26] antialiased selection:bg-[#F7E7CE] selection:text-[#102C26] ${
           isLoading ? "overflow-hidden h-screen" : ""
         }`}
       >
@@ -83,7 +83,7 @@ export default function Home() {
               <h2 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-extrabold uppercase tracking-tighter leading-[0.88] text-[#F7E7CE]">
                 Five Services.
                 <br />
-                <span className="text-[#F7E7CE]/50">One Unified Account.</span>
+                <span className="text-[#F7E7CE]/72">One Unified Account.</span>
               </h2>
             </div>
           </div>
@@ -140,7 +140,7 @@ function HeroSection() {
           }
         >
           <Image
-            src="/images/hero/halal5.jpg"
+            src="/images/hero/halal5.webp"
             alt="Halal Lifestyle"
             fill
             className="object-cover"
@@ -157,7 +157,11 @@ function HeroSection() {
       </div>
 
       <motion.div
-        style={{ opacity: contentOpacity, y: contentY }}
+        style={{
+          opacity: contentOpacity,
+          y: contentY,
+          containerType: "inline-size",
+        }}
         className="relative z-10 flex flex-col items-center text-center px-6 pt-20 w-full"
       >
         {/* Eyebrow - lines draw outward from the label */}
@@ -190,11 +194,11 @@ function HeroSection() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.22, duration: 0.7 }}
-            className="block text-[clamp(2.5rem,8vw,8rem)] text-[#F7E7CE]"
+            className="block text-[clamp(2rem,10cqw,8rem)] text-[#F7E7CE]"
           >
             Halal Living
           </motion.span>
-          <span className="block text-[clamp(2.5rem,8vw,8rem)] min-h-[1em]">
+          <span className="block text-[clamp(2rem,10cqw,8rem)] min-h-[1em]">
             <AnimatePresence mode="wait">
               <motion.span
                 key={wordIndex}
@@ -263,7 +267,7 @@ function HeroSection() {
           transition={{ delay: 0.62 }}
           className="mt-7 text-base md:text-lg text-[#F7E7CE] max-w-sm leading-relaxed"
         >
-          Live daily life the halal way, without switching apps.
+          Food, recipes, community and giving all under one HalalMe account.
         </motion.p>
 
         {/* Buttons */}
@@ -310,7 +314,7 @@ function ServiceTicker() {
   const services = [
     { label: "HalalMe Delivery", href: "/delivery" },
     { label: "HalalMe Kitchen", href: "/kitchen" },
-    { label: "HalalMe Social", href: "/hub" },
+    { label: "HalalMe Social", href: "/social" },
     { label: "HalalMe Charity", href: "/charity" },
     { label: "HalalMe Rewards", href: "/rewards" },
   ];
@@ -376,7 +380,7 @@ function StatsStrip() {
           <div className="text-[3rem] md:text-[4.5rem] lg:text-[5.5rem] font-extrabold tracking-tighter leading-none text-[#F7E7CE]">
             {s.value}
           </div>
-          <div className="text-[#F7E7CE]/30 text-[10px] md:text-xs uppercase tracking-[0.25em] mt-2 font-medium">
+          <div className="text-[#F7E7CE]/60 text-[10px] md:text-xs uppercase tracking-[0.25em] mt-2 font-medium">
             {s.label}
           </div>
         </div>
@@ -457,7 +461,7 @@ function FeaturesSection() {
               initial={{ opacity: 0, y: 20 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ delay: 0.15, duration: 0.5 }}
-              className="mt-6 text-[#F7E7CE]/50 text-base md:text-lg leading-relaxed max-w-md"
+              className="mt-6 text-[#F7E7CE]/72 text-base md:text-lg leading-relaxed max-w-md"
             >
               One ecosystem built from the ground up around Halal life:
               identity, food, and trust, unified under a single platform.
@@ -483,7 +487,7 @@ function FeaturesSection() {
                   <div className="absolute inset-x-0 top-0 h-0 group-hover:h-full bg-[#F59E0B] transition-[height] duration-500 ease-out" />
                 </div>
 
-                <span className="text-xs font-bold text-[#F7E7CE]/25 mt-1.5 shrink-0">
+                <span className="text-xs font-bold text-[#F7E7CE]/60 mt-1.5 shrink-0">
                   {f.num}
                 </span>
                 <Icon className="w-6 h-6 md:w-7 md:h-7 text-[#F59E0B] shrink-0 mt-0.5 transition-transform duration-300 group-hover:scale-110" />
@@ -491,7 +495,7 @@ function FeaturesSection() {
                   <h3 className="text-xl md:text-2xl font-extrabold uppercase tracking-tighter text-[#F7E7CE] mb-2.5">
                     {f.title}
                   </h3>
-                  <p className="text-[#F7E7CE]/45 leading-relaxed text-sm md:text-base max-w-lg">
+                  <p className="text-[#F7E7CE]/72 leading-relaxed text-sm md:text-base max-w-lg">
                     {f.desc}
                   </p>
                 </div>
@@ -560,7 +564,7 @@ function HowItWorksSection() {
         >
           Simple.
           <br />
-          <span className="text-[#F7E7CE]/50">Unified.</span>
+          <span className="text-[#F7E7CE]/72">Unified.</span>
           <br />
           Elegant.
         </motion.h2>
@@ -591,11 +595,11 @@ function HowItWorksSection() {
               >
                 {step.num}
               </div>
-              <Icon className="w-6 h-6 text-[#F7E7CE]/50 group-hover:text-[#102C26] mb-4 transition-colors duration-300" />
+              <Icon className="w-6 h-6 text-[#F7E7CE]/72 group-hover:text-[#102C26] mb-4 transition-colors duration-300" />
               <h3 className="text-xl md:text-2xl font-extrabold uppercase tracking-tighter text-[#F7E7CE] group-hover:text-[#102C26] mb-3 transition-colors duration-300">
                 {step.title}
               </h3>
-              <p className="text-[#F7E7CE]/50 group-hover:text-[#102C26]/65 leading-relaxed text-sm md:text-base transition-colors duration-300">
+              <p className="text-[#F7E7CE]/72 group-hover:text-[#102C26]/65 leading-relaxed text-sm md:text-base transition-colors duration-300">
                 {step.desc}
               </p>
             </motion.div>
@@ -661,7 +665,7 @@ function TestimonialsSection() {
         >
           Real People.
           <br />
-          <span className="text-[#F7E7CE]/50">Real Stories.</span>
+          <span className="text-[#F7E7CE]/72">Real Stories.</span>
         </motion.h2>
       </div>
 
@@ -688,9 +692,14 @@ function TestimonialsSection() {
             <div className="flex items-center gap-3">
               <div className="w-8 h-px bg-[#F59E0B]" />
               <div>
-                <span className="block text-[#F7E7CE]/80 text-xs uppercase tracking-[0.2em] font-bold">
-                  {t.name}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="block text-[#F7E7CE]/80 text-xs uppercase tracking-[0.2em] font-bold">
+                    {t.name}
+                  </span>
+                  <span className="text-[9px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded-sm bg-[#F59E0B]/10 text-[#F59E0B]">
+                    Customer review
+                  </span>
+                </div>
                 <span className="text-[#F59E0B]/60 text-[10px] uppercase tracking-widest">
                   {t.feature}
                 </span>

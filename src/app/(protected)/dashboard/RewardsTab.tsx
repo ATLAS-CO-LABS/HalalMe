@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 
 const TIER_ORDER = ["bronze", "silver", "gold", "platinum"];
-const TIER_LABEL: Record<string, string> = { bronze: "Bronze", silver: "Silver", gold: "Gold", platinum: "Diamond" };
+const TIER_LABEL: Record<string, string> = { bronze: "Bronze", silver: "Silver", gold: "Gold", platinum: "Platinum" };
 const TIER_COLOR: Record<string, string> = { bronze: "#92400E", silver: "#6B7280", gold: "#B45309", platinum: "#0E7490" };
 
 // Category icon is the fallback; specific catalog items (e.g. each flair)
@@ -362,7 +362,7 @@ export default function RewardsTab() {
                     />
                   ) : (
                     <p className="text-[10px] text-[#F7E7CE]/30 mb-3">
-                      {item.category === "recipe_boost" ? "Upload a recipe first" : "Post in Hub first"}
+                      {item.category === "recipe_boost" ? "Upload a recipe first" : "Post on Social first"}
                     </p>
                   )
                 )}

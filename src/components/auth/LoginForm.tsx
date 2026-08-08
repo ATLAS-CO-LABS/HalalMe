@@ -73,7 +73,7 @@ export default function LoginForm() {
       <div>
         <label htmlFor="email" className={labelClass}>Email</label>
         <input
-          id="email" type="email" placeholder="you@example.com"
+          id="email" name="email" type="email" autoComplete="email" placeholder="you@example.com"
           value={email} onChange={(e) => setEmail(e.target.value)}
           required disabled={isLoading} className={inputClass}
         />
@@ -120,7 +120,9 @@ export default function LoginForm() {
           <div className="relative">
             <input
               id="password"
+              name="password"
               type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
               placeholder="Enter your password"
               value={password} onChange={(e) => setPassword(e.target.value)}
               required disabled={isLoading}

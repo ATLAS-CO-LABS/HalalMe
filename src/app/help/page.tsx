@@ -253,8 +253,26 @@ function FAQSection() {
     },
   ];
 
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqCategories.flatMap((cat) =>
+      cat.questions.map((item) => ({
+        "@type": "Question",
+        name: item.q,
+        acceptedAnswer: { "@type": "Answer", text: item.a },
+      })),
+    ),
+  };
+
   return (
     <section ref={ref} className="bg-[#102C26] px-6 py-24 md:py-32">
+      <script
+        type="application/ld+json"
+        // JSON.stringify of our own static FAQ copy above, not user input —
+        // safe to inject directly.
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
       <div className="max-w-[95vw] mx-auto mb-14 md:mb-20">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
@@ -278,6 +296,10 @@ function FAQSection() {
         </motion.h2>
       </div>
 
+      <div className="max-w-[95vw] mx-auto mb-10 md:mb-14 text-[#F7E7CE]/35 text-xs uppercase tracking-[0.2em]">
+        Last reviewed: 8 August 2026
+      </div>
+
       <div className="max-w-[95vw] mx-auto space-y-12 md:space-y-16">
         {faqCategories.map((cat, idx) => (
           <div key={cat.category}>
@@ -291,6 +313,7 @@ function FAQSection() {
               {cat.questions.map((item, i) => (
                 <FAQItem
                   key={i}
+                  category={cat.category}
                   question={item.q}
                   answer={item.a}
                   delay={idx * 0.1 + i * 0.05}
@@ -305,34 +328,48 @@ function FAQSection() {
   );
 }
 
+function slugify(text: string) {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
 function FAQItem({
+  category,
   question,
   answer,
   delay,
   isInView,
 }: {
+  category: string;
   question: string;
   answer: string;
   delay: number;
   isInView: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const anchorId = slugify(question);
 
   return (
     <motion.div
+      id={anchorId}
       initial={{ opacity: 0, y: 10 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.4, delay }}
-      className="bg-[#102C26] border-x border-[#F7E7CE]/8"
+      className="bg-[#102C26] border-x border-[#F7E7CE]/8 scroll-mt-32"
     >
       <button
         onClick={() => setIsOpen(!isOpen)}
+        aria-expanded={isOpen}
+        aria-controls={`${anchorId}-answer`}
         className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-[#F7E7CE]/5 transition-colors"
       >
         <span className="text-base md:text-lg font-semibold text-[#F7E7CE]/80 pr-6 uppercase tracking-tight">
           {question}
         </span>
         <svg
+          aria-hidden="true"
           className={`w-5 h-5 text-[#F7E7CE]/35 flex-shrink-0 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
           fill="none"
           viewBox="0 0 24 24"
@@ -346,18 +383,26 @@ function FAQItem({
           />
         </svg>
       </button>
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0, y: -4 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2 }}
-          className="px-6 pb-5 border-t border-[#F7E7CE]/8"
-        >
-          <p className="text-[#F7E7CE]/50 leading-relaxed pt-4 text-sm md:text-base">
+      {/* Answer stays in the DOM (and server HTML) at all times — only its
+          visibility is toggled via CSS, so crawlers and screen readers get
+          the full answer even though sighted users see it collapsed. */}
+      <div
+        id={`${anchorId}-answer`}
+        className={`grid transition-[grid-template-rows] duration-300 ease-out px-6 border-t border-[#F7E7CE]/8 ${
+          isOpen
+            ? "grid-rows-[1fr] pb-5 pt-4 opacity-100"
+            : "grid-rows-[0fr] py-0 opacity-0 border-t-0"
+        }`}
+      >
+        <div className="overflow-hidden">
+          <p className="text-[#F7E7CE]/50 leading-relaxed text-sm md:text-base">
             {answer}
           </p>
-        </motion.div>
-      )}
+          <span className="mt-3 inline-block text-[#F7E7CE]/25 text-[10px] uppercase tracking-[0.2em]">
+            {category}
+          </span>
+        </div>
+      </div>
     </motion.div>
   );
 }

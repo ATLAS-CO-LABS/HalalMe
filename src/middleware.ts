@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 
 const SUBDOMAIN_MAP: Record<string, string> = {
   kitchen: '/kitchen',
-  social:  '/hub',
+  social:  '/social',
   rewards: '/rewards',
   charity: '/charity',
 };
@@ -24,7 +24,7 @@ export function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
-    // Rewrite / to /kitchen, /hub, /rewards
+    // Rewrite / to /kitchen, /social, /rewards
     const url = request.nextUrl.clone();
     url.pathname = pathname === '/' ? targetPath : `${targetPath}${pathname}`;
     return NextResponse.rewrite(url);
