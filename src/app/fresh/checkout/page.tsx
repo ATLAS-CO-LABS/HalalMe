@@ -533,7 +533,7 @@ export default function CheckoutPage() {
                 <div className="bg-lime-500/10 border border-lime-500/30 rounded-xl p-3 mt-4 flex items-center gap-3">
                   <Leaf className="w-5 h-5 text-lime-400 flex-shrink-0" />
                   <p className="text-lime-300 text-xs">
-                    100% Halal Certified
+                    Halal Status Reviewed
                   </p>
                 </div>
               </motion.div>

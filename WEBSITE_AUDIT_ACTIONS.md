@@ -12,6 +12,8 @@ Single source of truth for the outstanding work from the August 2026 website aud
 
 Audit C is a markdown copy of Audit B, so it contributed nothing new.
 
+**Governance note (10 Aug 2026):** Sami's response to the 7 blockers sent from this tracker arrived as `HME-WEB-DEC-001` ("Founder, Brand & Governance Decision Response", v1.0, 9 Aug 2026). It's the authoritative decision layer — this tracker stays the engineering execution register, but where the two conflict on a founder/brand/governance call, HME-WEB-DEC-001 governs. Answers folded in below: WA-01/02 (Blocker 1/2), WA-04 (Blocker 3), WA-05 (Blocker 4), WA-09 (Blocker 5), WA-10 (Blocker 6), WA-48 (Blocker 7). It also overrides three things this tracker had already shipped differently — WA-31 (Diamond locked, Platinum reverted), WA-32 (un-skipped — purple stays, brought into the governed Delivery visual system, not master green/cream), and WA-05's own "name the five cities" instruction (reversed — city names and rollout sequence are now confidential, not just pending). See the session log below for what changed in code and DB.
+
 **How this list was built.** Every item was checked against the code on the `dev` branch before being included. Anything already shipped was dropped. See [Appendix A](#appendix-a--verified-as-already-done-excluded) for what was removed and why.
 
 **Item IDs.** Each item has a new `WA-xx` ID. The `Source` line maps it back to the original audit IDs so you can trace it.
@@ -38,14 +40,26 @@ Audit C is a markdown copy of Audit B, so it contributed nothing new.
 
 | Priority | Items | 🔴 Serious | 🟡 Your call | ⛔ Waiting | ✅ Ready | ⏭️ Skipped | Done |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| P0 — this week | 12 (WA-01 to WA-12) | 6 | 0 | 0 | 6 | 0 | 5 / 12 |
+| P0 — this week | 12 (WA-01 to WA-12) | 6 | 0 | 0 | 6 | 0 | 9 / 12 |
 | P1 — next two weeks | 19 (WA-13 to WA-31) | 0 | 0 | 0 | 18 | 1 | 18 / 19 |
-| P2 — this quarter | 25 (WA-32 to WA-56) | 1 | 2 | 2 | 19 | 1 | 7 / 25 |
-| **Total** | **56** | **7** | **2** | **2** | **43** | **2** | **30 / 56** |
+| P2 — this quarter | 25 (WA-32 to WA-56) | 1 | 2 | 2 | 20 | 0 | 10 / 25 |
+| **Total** | **56** | **7** | **2** | **2** | **44** | **1** | **37 / 56** |
+
+*10 Aug 2026, HME-WEB-DEC-001 pass: WA-05 moved to done (P0 6→7), WA-32 un-skipped into the ready queue (P2 skipped 1→0, ready 19→20). WA-01/02/04/09/10/48 stay tagged 🔴 in this table even though Sami has now answered all of them — "answered" isn't "built," and the red tag here tracks build status, not whether a decision exists.*
+
+*11 Aug 2026, sixth pass — P2 UX work, founder-scoped to skip the bigger positioning bets (homepage, WA-38, WA-39's revert) and focus on what's concretely missing: **WA-43 done** (P2 9→10) — real point costs pulled from the catalog replaced a misleading "unlocks by tier" claim, daily-login copy reframed away from manufactured engagement, and deliberately did *not* invent a Delivery/Rewards ownership split that doesn't exist in the schema. **404 page built** (part of WA-46, done; app links/waitlist still open, not counted). **WA-51's framework built** as `HALAL_TRUST_MODEL.md` — found real per-merchant evidence data already exists (`merchant_documents`) but has no public-facing home yet, since Delivery's real listings live on Hyperzod, not this codebase (stays 🟡, not counted — public evidence page is WA-55's job). **WA-41 attempted and reverted** — tried fixing a landing-page headline ("Real Posts. Real People.") that's literally false over a stack of fabricated stock-photo personas with fake verified badges; founder asked to leave it as-is, fully reverted, flagged as a live finding rather than silently dropped. **Separately, a founder-requested fix that stuck:** Social's copy leaned on food/recipe language sitewide despite Kitchen owning recipes — reworded across `social/page.tsx`, `HorizontalServices.tsx`, `OverviewTab.tsx` and `about/page.tsx` toward community/story framing (not a WA-numbered item, tracked under WA-41's entry). **WA-40 explicitly not touched** — founder said leave it.*
+
+*11 Aug 2026, second pass: WA-04 and WA-09 both moved to done (P0 7→9) — the language/copy rewrite is built for both, matching the same bar as WA-05. WA-02's entity constant is built and live-verified against Companies House, but the item itself stays open pending WA-01.*
+
+*11 Aug 2026, third pass (same day): WA-02's Cookies-page gap closed. WA-42 finished and moved to done (P2 7→8) — the donation-impact block no longer invents per-amount outcomes. WA-48's retention periods drafted into the Privacy Policy — caught and fixed a real mismatch in the process (see WA-48's own section: account deletion doesn't yet anonymise community content the way the drafted policy first claimed; corrected the copy, flagged the schema work as a separate follow-up). WA-48 stays 🟡, not counted as fully done — OpenAI's training-data terms and the consent-banner conclusion still need external confirmation, not just code.*
+
+*11 Aug 2026, fifth pass — starting the P2 UX work: **WA-44 done** (P2 8→9) — intention-based role labels, the "Operational" badge removed, plus a self-contradiction the audit never named (service grid listed 4 services directly above a "5 Unified Services" trust bar). **WA-39 attempted and reverted by founder decision** — the split was built as specified, reviewed, and judged worse than the original; see its item for the full reasoning and the revised direction (cut the repetition, keep one page). Its status is now 🔴 as a warning not to re-attempt the split, even though the underlying length/repetition problem is still genuinely open. Nothing was lost in the revert — verified the same session's earlier copy fixes to `delivery/page.tsx` all survived.*
+
+*11 Aug 2026, fourth pass (same day) — pre-launch triage of the P2 list: went through WA-37–WA-56 and separated genuine launch-blocking risk (deceptive/unsubstantiated claims, same class as the P0 items) from growth/UX/perf work that can wait. Fixed the two that were real risk: **WA-52** — 3 live, indexed blog posts were instructing readers to go use "HalalMe Travel/Fresh/Marketplace" today, with invented specific features, for verticals that don't exist yet (the pages themselves were already correctly middleware-blocked and out of the sitemap — the blog content was the actual live exposure, not the routes). **WA-53** — two blog posts carried unverified "Dr."/"Prof." titles on health/nutrition content making specific uncited claims; `blogPosts.ts` is documented in this repo's own `CLAUDE.md` as placeholder mock data, so these credentials were never real to begin with. Removed the honorifics, added medical/dietary disclaimers to both health articles, and fixed a blanket "every vendor undergoes strict verification" claim found in the same file (a WA-04-pattern miss — it was in blog content, not a page component, so the original sweep skipped it). Both items stay 🟡 — the specific risky instances are gone, but the general systems these items describe (product-status labelling, full editorial governance) are real separate projects, not built today. WA-41's moderation/reporting piece and WA-45 (city pages) were both explicitly *not* pulled forward — the former is gated behind WA-10's legal assessment, the latter behind a "don't name cities" instruction that reverses what WA-45 assumes.*
 
 *Recount note (8 Aug 2026, later session): the previous table undercounted P0 by one (WA-03/06/08/12 were all already checked off, four items not three) — corrected here rather than carried forward. WA-07, WA-30 and WA-35's decisions are now made (see [Sign-off](#sign-off)), so they've moved out of the 🟡 column; WA-33's brand-spelling half is decided too, its entity-name half stays 🟡 pending WA-02.*
 
-**⏭️ Skipped (2), confirmed 8 Aug 2026:** WA-27 and WA-32 both live on `delivery.halalme.co.uk`, the separate Hyperzod white-label platform — not this codebase. Left as-is on purpose, not an oversight. Not counted toward "done," not sitting in the ready queue either.
+**⏭️ Skipped (1):** WA-27 lives on `delivery.halalme.co.uk`, the separate Hyperzod white-label platform — not this codebase. Left as-is on purpose, not an oversight. Not counted toward "done," not sitting in the ready queue either. **WA-32 was skipped alongside it on 8 Aug but un-skipped 10 Aug** — HME-WEB-DEC-001 makes it a canonical override (bring the Hyperzod theme into the governed HalalMe Delivery visual system, purple retained) rather than out-of-scope. Still not built — it's a theme-settings change on the Hyperzod platform, not this codebase, but it's back in the queue.
 
 **Session log — 7 Aug 2026:**
 - Closed: WA-03, WA-06, WA-08, WA-12 (P0); WA-13 (mostly), WA-14, WA-15 (mostly), WA-16, WA-17, WA-19, WA-28, WA-47 (P1/P2 ready); WA-36 (your-call).
@@ -79,6 +93,24 @@ Audit C is a markdown copy of Audit B, so it contributed nothing new.
 - **WA-11:** DMARC needs a Cloudflare DNS change I can't make — handed you the exact TXT record to paste in rather than skipping it.
 - Full `npm run build` (130 pages) + `tsc --noEmit` + `eslint` clean throughout. Still nothing committed — 30/56 done overall.
 
+**Session log — 10 Aug 2026, HME-WEB-DEC-001 response:**
+- Sami's decision doc answered all 7 serious blockers and overrode three items this tracker had already shipped. Worked the two live conflicts first, per your instruction to start there.
+- **WA-31 reverted.** Sami's doc locks the public tier name as Diamond, not Platinum ("do not rename Diamond to Platinum") — directly against the WA-31 fix shipped on 8 Aug. Reverted the 3 code sites (`RewardsTab.tsx`'s `TIER_LABEL` map, `rewards/page.tsx`'s tier table and headline, `HorizontalServices.tsx`'s Rewards preview card) back to "Diamond", and wrote `supabase/migrations/071_revert_diamond_tier_name.sql` to undo the DB half of `070_hub_to_social_rename.sql` (the `tier-diamond` badge's `name`/`description`) — applied via Supabase MCP and verified by re-query. Internal tier keys (`"platinum"` in `TIER_ORDER`, `min_tier_required`, the `tier-diamond` badge slug itself) were left alone, same precedent as the Hub→Social rename: internal identifiers aren't public copy, and touching the slug risks orphaning already-earned badges. **Not touched:** `admin/users/page.tsx`'s `TIER_CONFIG` renders the raw `u.reward_tier` DB value through CSS `capitalize`, so admin staff will see "Platinum" in the user table while the public site now says "Diamond" — cosmetic, staff-only, flagged rather than fixed since it mirrors the same internal/external split as everything else here.
+- **WA-05 substantially done.** Sami's blocker-4 table names six figures to strip (900+ restaurants, five UK cities, 5,000+ recipes, 1,000+ daily AI chats, 10,000+ community members, 500+ daily posts) plus donations/donors/causes — removed all of them from live copy: `/`, `/delivery` (+ its layout meta description), `/for-restaurants`, `/kitchen`, `/social`, `/charity`, `/select-role`, and `HorizontalServices.tsx`'s service-card previews. Replaced with qualitative copy per his stated principle ("strong qualitative positioning now, quantitative claims only from verified live data") rather than inventing new numbers. Also caught and fixed the same problem on two figures he didn't name specifically but are the identical issue sitting right next to the ones he did (50+ Cuisines, 50+/30+ Countries on Kitchen/Social/Charity) — left inconsistent unverified numbers next to freshly-fixed ones would have been worse than fixing them. Found and fixed two unrelated stale-count bugs surfaced while in this code: `select-role/page.tsx` and `page.tsx`'s `StatsStrip` both still said "4 Services" — a leftover from before WA-35 locked five services, now "5". **Not touched:** the `/travel` and `/travel/guide` pages have their own set of fabricated stats (500+ travel partners, 50K+ happy travelers, 20K+ halal restaurants, etc.) — Travel is Phase 2 and hidden via middleware, not reachable publicly, so left for whenever Travel actually gets worked rather than expanding tonight's scope. Also not touched: `/charity`'s `EXAMPLE_CAUSES` array (explicitly named as illustrative in its own comment, but not labelled as such to the visitor) — a real gap, but it's an unlabelled-illustrative-content problem (WA-07 territory) not a headline-number problem (WA-05), flagging for a separate pass. **Also reversed one of this tracker's own instructions:** WA-05's original "Do" list said to name the five cities once Sami confirmed them — his doc does the opposite, marking city names and rollout sequence as confidential and instructing the site to stay general ("HalalMe is growing across the UK, with availability varying by location"). No city names were ever actually published, so nothing to undo in code, but the item's Do-list text below is now stale against the new instruction.
+- **WA-34 copy updated to Sami's approved wording.** The 8 Aug session had already fixed the underlying problem (dropped `target="_blank"` on Delivery CTAs, softened the homepage hero's false "one account" claim). Swapped the homepage hero line to his exact approved interim proposition, *"A whole halal world, connected through HalalMe."* Also caught a second, un-swept "one account" claim in the footer (`Header.tsx:500`, "Five services. One account.") that the original WA-34 fix hadn't reached — softened to "Five services. One HalalMe." rather than asserting a unified login that doesn't exist yet.
+- **WA-32 un-skipped.** Was marked ⏭️ skipped on 8 Aug as out-of-scope (separate Hyperzod platform). Sami's doc makes it a canonical override instead: bring `delivery.halalme.co.uk` into the governed HalalMe Delivery visual system, but keep the purple — it's a deliberate pillar signal, not legacy styling to strip. Not yet built (it's a Hyperzod white-label theme change, not this codebase) — item text below updated, actual theming work still open.
+- **WA-04/09/10/48 (blockers 3/5/6/7) — founder answers logged, not yet built.** Sami's doc gives enough to unblock WA-04 (evidence-led trust model, no blanket "Scholar Verified", no named body needed) and WA-05-adjacent charity/privacy direction, but the actual badge/trust-model rewrite (WA-04), charity fund-flow page rebuild (WA-09), OSA quote commissioning (WA-10) and the privacy data map (WA-48) are real follow-up sessions, not folded into tonight's pass. Answers recorded in each item below so the next session doesn't have to re-derive them from HME-WEB-DEC-001.
+- **WA-01/02 still genuinely blocked.** Sami settled the target name (HalalMe Ltd, one word) and proposed office (Leicester/Deccan, via ASF), but both are explicitly conditional on Companies House accepting the regularisation — his own instruction is "do not hard-code future legal entity/address details until Companies House has registered them." No code changes made; WA-02's single-entity-string-constant is still worth building now so it's ready to receive real values once WA-01 clears, but has to be populated with the *current* Companies House record, not the future one.
+- Full `npm run build` (130 pages) + `tsc --noEmit` clean after all edits. Nothing committed yet.
+
+**Session log — 11 Aug 2026, second pass on HME-WEB-DEC-001 items:**
+- Continued the same night's work: closed the small loose ends, then built out WA-04, WA-09, started WA-42, and did WA-48's scan. Full `npm run build` (130 pages) + `tsc --noEmit` clean after every step; nothing committed.
+- **Loose ends closed:** US-spelling sweep (WA-05) — found and fixed `favorite`→`favourite` (`/delivery`) and `personalized`→`personalised` (`/`, `/kitchen`), plus `traveler(s)`→`traveller(s)` across five Travel pages since they were the same class of fix and already being touched. **WA-31's admin gap fixed** — `admin/users/page.tsx` and `admin/users/[id]/page.tsx` were both rendering the raw `platinum` DB value instead of the locked "Diamond" label; added the same `TIER_LABEL` map pattern used in `RewardsTab.tsx` to both. **WA-02's entity constant built** — before hardcoding anything, fetched the *live* Companies House page for 13450710 (not just trusted the audit's snapshot) and confirmed it's unchanged: "HALAL DELIVERY LTD", active-proposal-to-strike-off, registered office still the Companies House default (PO Box 4385, Cardiff CF14 8LH). Built `src/lib/legalEntity.ts` as the single source of truth and wired it into Terms, Privacy, Footer and Contact, replacing the inconsistent "HalalMe Delivery LTD"/"Halal Delivery LTD" mix and the stale Shelton Street, London address. Verified the real values render in the built HTML output, not just that the build succeeded.
+- **WA-04 built — the language half, not a new verification-data system.** Sami's evidence-led model implies real per-merchant status data that doesn't exist yet (that's WA-51's job); scoped this pass to what WA-06 already proved out — fix the false blanket-claim language, don't invent a badge system with no data behind it. Swept every "Scholar Verified", "100% Halal Verified/Certified", and "Charity Commission verified" instance found via a full-codebase grep (turned out much bigger than the audit's original 6 named locations — 25+ instances once "100% Halal" and "certified" variants were included) across Footer, Delivery, for-restaurants, About, homepage, select-role, HorizontalServices, and all 6 Fresh pages (Phase 2/hidden, but explicitly in this item's original scope so it doesn't ship later). Replaced with "Halal-Focused" / "Halal Status Reviewed" language, or for Charity specifically "Registered" (matches what's actually true — registration, not blanket verification). **Left alone, and correctly so:** Terms §3 and the Footer disclaimer already said almost exactly Sami's own recommended line ("we verify halal certification at merchant onboarding, but cannot guarantee...") — no change needed, a rare case of the audit's suggested fix already being live. Also left the merchant-onboarding copy (`for-restaurants`, `help`) that describes requiring a certificate at signup — that's a process description, not a blanket claim, and matches the evidence-led model already. **Not touched:** Marketplace (Phase 2, same fabricated-certification pattern, same treatment as Travel's stats — flagged, not fixed tonight).
+- **WA-09 built.** Fixed a real inaccuracy in both the Charity page's £20-split visual and Terms §8: both said the 5% platform fee "covers payment processing" — conflates HalalMe's platform fee with Stripe's separate processing fee, and doesn't match what Sami actually said the 5% funds (charity operations, Rewards, Community Impact Reserve — not exposing the 1/2/2 split itself, per his instruction). Corrected both to say the fee funds HalalMe's charity operations, Rewards programme and community initiatives. Tightened the refund line in Terms to match his exact wording ("normally non-refundable... except where required by law, in exceptional circumstances, or at the discretion of the receiving charity") and added a one-line version at the actual donation checkout, not just buried in Terms — donors should see it at the point of paying, not just in a document they didn't open. Swept "verified charity"/"verified causes"/"Verified Islamic Charities" → "registered" across `/charity`, `/charity/causes`, `/charity/checkout`, `/about`, dashboard `OverviewTab.tsx`, `manifest.ts` and `privacy/page.tsx` — same blanket-verification problem WA-04 targets, just on the Charity side.
+- **WA-42 started, not finished.** Found the `charities` DB table already has real evidence columns — `legal_name`, `registration_number`, `verification_level` (0-3), `verified_at` — sitting completely unused by the UI (confirmed via grep: zero references in `src/app/charity`, despite `select("*")` already fetching them). This is exactly WA-42's "see what evidence HalalMe reviewed" requirement, buildable with real data instead of another badge. Extended the `Charity` type, added `src/lib/charityEvidence.ts` for the level→label mapping, and wired a real evidence line into `CharityCard.tsx` (list view) and a full "Who Operates This Cause" block into the charity detail page (legal name, registration number, review status, last-reviewed date). Verified against live DB data via Supabase MCP — two real charities (Islamic Relief Worldwide, Penny Appeal) already have `legal_name`/`registration_number` on file and would render correctly; none are `is_active`/`stripe_charges_enabled` yet, so the existing "Our First Causes Are Coming Soon" empty state is still correctly what's live. **Not done:** the "£5 / £10 / £20 / £50+ — what your donation does" block is still generic, same-for-every-charity filler text (the emotional-pressure-to-informed-agency rewrite WA-42's done-when calls for) — flagged, not touched tonight.
+- **WA-48's cookie/data scan done** — built `PRIVACY_DATA_MAP.md`, a code-level inventory (every `localStorage`/`sessionStorage`/cookie read-write site in the codebase, plus every third-party processor actually called server-side: OpenAI via a Supabase Edge Function for AQI, Stripe, Cloudinary, Resend, Hyperzod) rather than a manual browser click-through — more complete since it catches every code path. Confirmed no `document.cookie` calls, no ad/analytics tracking cookies, no consent platform anywhere in the code; Vercel Analytics/Speed Insights are cookieless by design. Flagged what's still a policy call, not a code fact: OpenAI's current API training-data terms need confirming (not assumed), exact retention periods per category, and whether the cookie footprint found here needs a consent banner. Also surfaced an unrelated bug while scanning: the blog's newsletter signup form has no submit handler at all — not a privacy problem (nothing is collected), but it currently lies to visitors who think they've subscribed.
+
 ---
 
 ## 🔴 Serious blockers — this is what to send Sami (7)
@@ -96,6 +128,8 @@ Copy this list to him. Everything else in the document you can either decide you
 | [WA-48](#wa-48--build-the-privacy-data-map-and-verify-the-cookie-inventory) | Retention periods, whether AI prompts train models, OpenAI processing terms | GDPR liability sits with him, not with a dev call |
 
 Two more items are stuck, but they're not separate asks — they just sit downstream of WA-05 and WA-09 and unblock automatically once those land: **WA-42** (Charity page rebuild) and **WA-45** (city pages).
+
+**Answered (10 Aug 2026) via `HME-WEB-DEC-001`.** All 7 are no longer waiting on Sami — see each item below for what he said. WA-05 is now built. WA-01/02 remain externally blocked (Companies House, not a dev task) even though the target name and address are known. WA-04/09/10/48 have enough direction to build the structural/technical half now; final legal/regulatory wording on each still needs the professional review his doc calls for before publishing.
 
 ---
 
@@ -122,7 +156,7 @@ Sami's delegated these. Each one has a recommended answer already sitting in the
 
 A few of these have a small dependency noted inline (e.g. WA-44's service list matching WA-35, WA-54's final published figures) — flagged in the item itself. The bulk of each one is not blocked on anything.
 
-**⏭️ WA-27 and WA-32 removed from this list** — both live on the separate Hyperzod platform, confirmed intentionally skipped, see the note above the progress table.
+**⏭️ WA-27 removed from this list** — lives on the separate Hyperzod platform, confirmed intentionally skipped, see the note above the progress table. **WA-32 is back in scope** (un-skipped 10 Aug, see its item below) but not yet built, so not added here either.
 
 ---
 
@@ -133,8 +167,10 @@ Legal exposure, misleading claims, or costing money right now.
 ## Legal and corporate
 
 ### WA-01 · Resolve the Companies House position
-🔴 **SERIOUS BLOCKER — needs Sami / accountant / solicitor**
+🔴 **ANSWERED (HME-WEB-DEC-001, 9 Aug 2026) — still externally blocked, not a dev task**
 - [ ] **Not started**
+
+**Sami's answer:** retain and regularise the existing company rather than let it be struck off. Proposed registered office is the Deccan premises in Leicester — leased by ASF Group Holdings (a joint company of Sami and AJ), so use by HalalMe Ltd needs its own documented permission checked against the underlying lease. Also: file proper non-dormant statutory accounts (£0 turnover, genuine pre-trading/development expenditure — don't force dormant treatment), get a startup accountant familiar with the company's SEIS/EIS history, correct director/PSC service-address records, complete Companies House ID-verification, and get written confirmation the compulsory strike-off has actually been discontinued before treating the record as clean.
 
 **Source:** A P0.1, A WEB-P0-001 · **Owner:** Founder / accountant / solicitor · **Not a code task**
 
@@ -152,8 +188,10 @@ Companies House record 13450710 is **HALAL DELIVERY LTD**, not "HalalMe Delivery
 ---
 
 ### WA-02 · Correct the legal entity details site-wide
-🔴 **SERIOUS BLOCKER — needs Sami's exact wording** (and WA-01 resolved)
-- [ ] **Not started**
+✅ **BUILT for the current record (11 Aug 2026)** — target name locked by Sami, but stays out until WA-01 clears
+- [x] **Done, including the Cookies page.** See below.
+
+**Sami's answer:** the intended registered name is locked as **HalalMe Ltd** (one word) — not "Halal Me Ltd", not the current "HalalMe Delivery LTD" / "Halal Delivery LTD" mix. The rename happens only after the company is back in good standing (WA-01), and the Leicester address only after Companies House actually accepts it. His explicit instruction: **do not hard-code the future name or address until Companies House has registered them.** Build the single exported entity-string constant now (still the right move — five copies is still the bug), but populate it with the *current* Companies House record, not "HalalMe Ltd" / Leicester, until WA-01 clears — then it's a one-line update instead of a five-file sweep.
 
 **Source:** A P0.1, A WEB-P0-002, B HM-03 · **Owner:** Legal + dev · **Blocked on:** WA-01 and Sami's wording
 
@@ -163,14 +201,14 @@ Companies House record 13450710 is **HALAL DELIVERY LTD**, not "HalalMe Delivery
 - `src/components/layout/Footer.tsx:275` says "Halal Delivery LTD"; `Footer.tsx:282` says "© HalalMe Delivery LTD". Two names in one footer.
 - `src/app/contact/page.tsx:382` says "HalalMe Delivery Ltd", and "Find Us" gives only "United Kingdom".
 
-**Do:**
-- [ ] Wait for corrected wording from Sami. Do not invent an address.
-- [ ] Pattern to use: *"HalalMe is a trading name of Halal Delivery Ltd, a company registered in England and Wales (No. 13450710). Registered office: `<address>`."*
-- [ ] Put the entity string in **one exported constant** and import it into Terms, Privacy, Cookies, Contact and the footer. Not five copies.
-- [ ] Add registered name, company number, registered address and a contact email to the footer. UK e-commerce regulations expect these to be readily accessible.
-- [ ] Add a real geographic address to `/contact`.
+**Do — done 11 Aug 2026:**
+- [x] Built `src/lib/legalEntity.ts` as the single exported constant, imported into Terms, Privacy, Footer, Contact, **and Cookies** (Cookies previously didn't name the entity at all).
+- [x] Populated it with the **current, live-verified** Companies House record, not invented: fetched the live page for 13450710 before writing anything down. Registered name "Halal Delivery Ltd", registered office PO Box 4385, Cardiff, CF14 8LH (the Companies House default address — not a real trading address, but the legally accurate current record).
+- [x] Added registered name, company number and registered office to `/contact`'s business-info section (previously just said "United Kingdom").
+- [ ] Cookies page still needs the constant wired in.
+- [ ] Still waiting on WA-01: once the company is regularised and the Leicester address registers, update `legalEntity.ts` — and only that file — to the future "HalalMe Ltd" / Leicester details.
 
-**Done when:** one constant holds the entity string, every page imports it, and the name and registered office match Companies House exactly.
+**Done when:** one constant holds the entity string, every page imports it, and the name and registered office match Companies House exactly. *(True today against the current record — will need a one-file update, not a re-sweep, once WA-01 clears.)*
 
 ---
 
@@ -196,8 +234,10 @@ Companies House record 13450710 is **HALAL DELIVERY LTD**, not "HalalMe Delivery
 ---
 
 ### WA-04 · Remove universal certification and authority language
-🔴 **SERIOUS BLOCKER — needs a real scholar/certifying body named, and the charities named**
-- [ ] **Not started**
+✅ **LANGUAGE REWRITE DONE (11 Aug 2026)** — evidence-data system (WA-51) still open
+- [x] **Done — the copy half.** Swept every "Scholar Verified", "100% Halal Verified/Certified" and blanket "Charity Commission verified" instance sitewide — turned out to be 25+ instances once "100% Halal" and "certified" variants were included, not just the 6 named below. Covered Footer, Delivery, for-restaurants, About, homepage, select-role, HorizontalServices, and all 6 Fresh pages (Phase 2/hidden, but this item's own scope said fix it anyway so it doesn't ship later). Replaced with "Halal-Focused" / "Halal Status Reviewed" language. Terms §3 and the Footer disclaimer already used almost exactly Sami's own recommended line — left untouched, already correct. Merchant-onboarding copy describing "must provide a halal certificate" left alone too — that's a process description, not a blanket claim. **Not done:** a real per-merchant evidence-status system (the *Merchant-declared · Supplier evidence reviewed · Certification supplied · Site review completed · Last reviewed: [date]* statuses below) needs actual per-merchant data that doesn't exist yet — that's WA-51's job, not a copy fix. **Not touched:** Marketplace (Phase 2) has the identical pattern, left for later, same call as Travel's stats.
+
+**Sami's answer:** no blanket "Scholar Verified" claim, ever — and there isn't a documented platform-wide scholar-verification programme to point to. Real relationships with scholars/teachers exist and are willing to advise, but a formal **Scholar & Halal Advisory Panel** is a separate future project, not something to fake into existence for this copy pass. So the original blocker ("does a real body exist?") resolves to *no, and that's fine* — go straight to the evidence-led model already sketched below. Also: registered-charity giving and Community support cases are distinct systems and must not be conflated in copy; for registered charities, show legal name + registration number + regulator + review date rather than a generic "verified" badge.
 
 **Source:** A P0.3, A WEB-P0-004, B HM-27 · **Owner:** Trust lead + content
 
@@ -212,10 +252,10 @@ The site claims a comprehensive, continuously maintained assurance regime that d
 - Fresh pages (`fresh/cart`, `fresh/checkout`, `fresh/meals`, `fresh/meals/[id]`, `fresh/order-success`) — "100% halal certified". Phase 2 and middleware-blocked, but fix in the same sweep so it does not ship later.
 - "Charity Commission verified" appears with no charity named.
 
-**What's blocking it:** the badge language can't just be softened generically — it needs either a real named scholar/certifying body, or Sami's sign-off that none exists and the "no authority" rewrite (below) is correct instead.
+Charity names still need to come from WA-09/finance before the "name the charities" bullet below can close.
 
-**Do — once Sami answers:**
-- [ ] Name the scholar or certifying body, or rewrite to describe the actual process. Example: "We verify halal certification at merchant onboarding."
+**Do:**
+- [x] Rewrite to describe the actual process rather than naming a body that doesn't exist. Done — see above.
 - [ ] Name the charities and link their Charity Commission entries.
 - [ ] Replace universal badges with evidence-specific statuses: *Merchant-declared halal · Supplier evidence reviewed · Certification supplied · Operational information reviewed · Site review completed · Last reviewed: [date]*.
 - [ ] Public wording must not imply that HalalMe is a religious certifying authority, that every merchant passed the same threshold, that every product stays continuously verified, or that AI recipes were independently checked.
@@ -225,8 +265,8 @@ The site claims a comprehensive, continuously maintained assurance regime that d
 ---
 
 ### WA-05 · Reconcile the numbers used across the site
-🔴 **SERIOUS BLOCKER — needs Sami's sign-off on every headline figure**
-- [ ] **Not started**
+✅ **ANSWERED AND BUILT (HME-WEB-DEC-001, session of 10 Aug 2026)**
+- [x] **Done — qualitative copy, no replacement numbers invented.** Sami's principle: "strong qualitative positioning now, quantitative claims only from verified live data." Stripped every figure named in his blocker-4 table plus donations/donors/causes from `/`, `/delivery` (+ layout meta), `/for-restaurants`, `/kitchen`, `/social`, `/charity`, `/select-role`, `HorizontalServices.tsx` — see the 10 Aug session log above for the full file list. Also fixed two adjacent stale-count bugs found in the same sweep (`select-role` and homepage `StatsStrip` both still said "4 Services" from before WA-35 locked five). **US spelling ("favorite") not yet swept** — that part of the original Do-list is still open, unrelated to the numbers work. Travel's own fabricated stats (Phase 2, hidden) and Charity's unlabelled `EXAMPLE_CAUSES` array left for separate passes — see session log for why.
 
 **Source:** A P0.2, A 4.2, A WEB-P0-003, B HM-15 · **Owner:** Sami (sign-off) then dev · **Needs founder decision**
 
@@ -241,14 +281,14 @@ No public statistic currently shows a measurement date, source, definition, or w
 - Also claimed elsewhere: 1,000+ daily AI chats, 10,000+ community members, 500+ daily posts, £50,000+ donated, 2,000+ donors, 25+ causes, 30 or 50 country coverage.
 - `src/app/delivery/page.tsx:302` uses US spelling "favorite".
 
-**Do — once Sami answers:**
-- [ ] Sami fixes one agreed figure per metric with a precise definition. Example: "signed" versus "live today".
-- [ ] Devs apply the agreed values from a **single constants module**. No literal numbers in page copy.
-- [ ] Where no reliable figure exists, replace with accurate qualitative language. Example: "Discover participating halal restaurants through HalalMe Delivery."
-- [ ] Change "favorite" to "favourite" and sweep for other US spellings. *(This part doesn't need Sami — can do today.)*
-- [ ] Name the five cities.
+**Do:**
+- [x] Where no reliable figure exists, replace with accurate qualitative language — done, see session log.
+- [x] Change "favorite" to "favourite" and sweep for other US spellings — done 11 Aug 2026 (`favorite`, `personalized`, `traveler(s)` across live and Travel/Fresh pages).
+- [ ] ~~Name the five cities~~ **Reversed by HME-WEB-DEC-001.** Sami's doc explicitly overrides this: don't name cities or disclose rollout sequence, ever, in public copy — "HalalMe will activate local markets quietly and sequentially," marked internal/confidential, not just pending. Public language stays general: *"HalalMe is growing across the UK, with availability varying by location."* If a location-check UX gets built later (postcode → unavailable state → notify-me), that's the right place for this, not a homepage stat.
+- [ ] Restaurant network specifically: Sami says it's fine to describe "approximately 1,000 historically onboarded partners" **only after evidence/export validates the figure** — still needs that validation before it can go back on the site as a real number, even a rounded one.
+- [ ] Build the single constants module (WA-49/WA-54 territory) once real, source-backed figures exist to put in it.
 
-**Done when:** one constants module holds every headline figure, and meta descriptions and on-page copy agree on the service count and list all five.
+**Done when:** every headline figure is either qualitative or backed by a register entry (WA-49), and no page discloses city names or rollout sequence.
 
 ---
 
@@ -307,14 +347,14 @@ The Delivery page refers to "HalalMe's rider network", plus "free delivery over 
 ## Compliance and safety
 
 ### WA-09 · Review Charity fundraising architecture and language
-🔴 **SERIOUS BLOCKER — needs legal/finance decisions on the fund flow**
-- [ ] **Not started**
+✅ **COPY BUILT (11 Aug 2026)** — structure decided; final legal wording still pending professional review
+- [x] **Done — the language half.** Found and fixed a real inaccuracy: both the Charity page's £20-split visual and Terms §8 said the 5% fee "covers payment processing" — conflates HalalMe's platform fee with Stripe's separate processing fee, and doesn't match what the 5% actually funds per Sami (charity operations, Rewards, Community Impact Reserve). Corrected both, without exposing the internal 1/2/2 split as instructed. Tightened the refund line in Terms to Sami's exact wording and added a visible one-line version at the actual donation checkout — not just buried in a Terms page nobody opens mid-donation. Swept "verified charity"/"verified causes" → "registered" across `/charity`, `/charity/causes`, `/charity/checkout`, `/about`, `OverviewTab.tsx`, `manifest.ts`, `privacy/page.tsx`.
+
+**Sami's answer:** direct connected-payment flow to approved registered charities, fixed **5% HalalMe platform fee** (confirms the 95/5 split the audit found). Internal allocation of that 5% — 1% admin, 2% Rewards funding, 2% Community Impact Reserve — is HalalMe's own money once earned, and stays internal-only; public wording only needs to disclose the total fee and the charity's receipt mechanics, not the 1/2/2 split. Donations described as **normally non-refundable**, not an absolute no-refunds rule, subject to legal rights and exceptional circumstances. Critically: **this structure has not yet had formal charity/fundraising legal review** — build to this spec, but don't lock final public legal/regulatory wording until that review lands.
 
 **Source:** A P0.6, A WEB-P0-007, A 5.5 · **Owner:** Legal / finance / Community
 
 The Charity page claims direct giving, a 95/5 split, donor and fundraising totals, verified causes and international participation, and closes with emotional pressure. `/charity/causes` returned only a loading state to the crawler, so none of it is publicly verifiable.
-
-**What's blocking it:** none of this is a copy tweak — it requires actual decisions about money handling that only Sami/finance can make.
 
 **Do — document for every fundraising mechanism:**
 - [ ] Who legally receives the payment.
@@ -333,14 +373,16 @@ The Charity page claims direct giving, a 95/5 split, donor and fundraising total
 ---
 
 ### WA-10 · Establish Online Safety Act readiness for Hub/Social
-🔴 **SERIOUS BLOCKER — needs approval to commission a legal/OSA assessment**
+🔴 **PARTIALLY ANSWERED (HME-WEB-DEC-001) — quoting authorised, commissioning still needs sign-off**
 - [ ] **Not started**
+
+**Sami's answer:** Muzz is authorised to obtain quotes for an OSA scope/readiness assessment covering Social's user-to-user functionality — scoping, recommended obligations, implementation requirements and pricing. That's the authorisation, not a blank cheque: **material legal/compliance spend still needs to come back to Sami for approval** before actually commissioning the assessment.
 
 **Source:** A P0.7, A WEB-P0-008 · **Owner:** Legal / Social / moderation
 
 Hub is a user-to-user service with profiles, posts, comments and community activity. In-scope services may be required to hold a children's access assessment and illegal-content risk assessment, and to provide effective reporting and complaints routes. A user-facing report function was previously deferred in the admin plan.
 
-**What's blocking it:** this needs a legal scoping engagement commissioned before dev can build the right thing — building a reporting UI without the assessment risks building the wrong one.
+**What's unblocked now:** get the scope/cost quotes — that's authorised today. **What's still blocked:** actually commissioning the work and building against its findings, until the quote comes back and spend is approved.
 
 **Do — commission a formal OSA scope assessment, then build at minimum:**
 - [ ] Illegal-content risk assessment.
@@ -360,14 +402,14 @@ A general "we may remove content" clause is not a complete operating system.
 ---
 
 ### WA-11 · Publish a DMARC record
-✅ **READY — no blocker, just do it**
-- [ ] **Not started**
+✅ **DONE (8 Aug 2026)**
+- [x] **Done.** `_dmarc.halalme.co.uk` now resolves: `v=DMARC1; p=none; rua=mailto:dmarc@halalme.co.uk; fo=1` — confirmed live via public DNS lookup, not just present in the Cloudflare dashboard. Added by the founder directly in Cloudflare (not a code task, no DNS access from this session).
 
 **Source:** B HM-04 · **Owner:** Ops · **Where:** Cloudflare DNS
 
-`_dmarc.halalme.co.uk` returns NXDOMAIN. SPF exists (`v=spf1 include:_spf-eu.ionos.com ~all`). Without DMARC anyone can spoof `@halalme.co.uk`, and transactional mail is more likely to be filtered.
+`_dmarc.halalme.co.uk` returned NXDOMAIN before this. SPF exists (`v=spf1 include:_spf-eu.ionos.com ~all`). Without DMARC anyone could spoof `@halalme.co.uk`, and transactional mail was more likely to be filtered.
 
-**Not a code task — handed off 8 Aug 2026.** No DNS access from this session. Exact record to paste into Cloudflare (DNS → Add record): `TXT` at name `_dmarc`, value `v=DMARC1; p=none; rua=mailto:dmarc@halalme.co.uk; fo=1`. Still needs doing.
+**Still open — not blocking, just the next step:** currently `p=none` (monitor-only, nothing is blocked yet). Per the original plan: watch the aggregate reports for 2–4 weeks to confirm every real sender passes (Supabase, Stripe, Resend, IONOS, Amazon SES via `send.halalme.co.uk`, Mailjet all showed up in the DNS records), then tighten to `p=quarantine` and eventually `p=reject`. Also noticed two unrelated ⚠️-flagged records in Cloudflare (`google-site-verification`, `mailjet._2c1f132d...`) while checking this — not part of WA-11, worth a look separately.
 
 **Do:**
 - [ ] Add TXT at `_dmarc`: `v=DMARC1; p=none; rua=mailto:dmarc@halalme.co.uk; fo=1`.
@@ -763,6 +805,8 @@ Pageview analytics is already live. `@vercel/analytics`, `@vercel/speed-insights
 
 **Follow-up caught from a live screenshot, same session:** the code-only sweep couldn't reach copy that lives in the database — `/dashboard?tab=rewards` still showed "in Hub" on 5 reward-catalog descriptions (flair unlocks, post boost) and 1 badge, plus historical ledger rows reading "Posted in Hub". Fixed via `supabase/migrations/070_hub_to_social_rename.sql`, applied to the remote DB directly and verified clean by re-querying. The migration also re-points the `handle_post_created()` trigger so newly created posts stop generating fresh "Posted in Hub" ledger text going forward, not just backfilling the old rows.
 
+**Confirmed by HME-WEB-DEC-001 (10 Aug 2026):** "HalalMe Social is the official public pillar name. 'HalalMe Hub' is retired as public branding, internal/legacy terminology only." Matches what was already shipped — no changes needed. His doc adds one detail worth keeping in mind: the internal rationale for retiring "Hub" includes avoiding the naming/visual association with a certain other site starting with "Porn" — that rationale itself is internal-only and shouldn't surface in public brand copy, but explains why "Hub" isn't coming back as a public name even informally.
+
 **Source:** A 3.4, A WEB-P1-002 · **Owner:** Product + dev
 
 The public page is branded "HalalMe Social" but the route, legal content and internal references all use Hub. `src/components/layout/Footer.tsx:11` maps `{ label: "Social", href: "/hub" }`, which is the mismatch in one line. Audit A recommends HalalMe Social as the stronger public name — this is a naming call you're already trusted to make.
@@ -775,24 +819,19 @@ The public page is branded "HalalMe Social" but the route, legal content and int
 ---
 
 ### WA-31 · Resolve Rewards ownership and tier names
-✅ **READY — no blocker, just do it**
-- [x] **Done — tier naming half, now actually complete.** Renamed Diamond → Platinum in the 3 code locations found in the earlier session: `RewardsTab.tsx`'s `TIER_LABEL` map, `rewards/page.tsx`'s tier table and hero text, and `HorizontalServices.tsx`'s Rewards preview card. **Found a 4th location this session, in the database, not the code:** the `badges` catalog's `tier-diamond` row still had `name = "Diamond"`, `description = "Reached Platinum tier"` — the earlier fix only touched the reward_tiers display map, not the separate badges table shown on the dashboard's "Your Badges" section. Caught this from a screenshot the founder sent showing the badge still reading "Diamond" live. Fixed via migration `070_hub_to_social_rename.sql`, applied directly to the remote DB and verified. **Still not done:** the ownership-split half (Delivery-owned vs Rewards-owned language in the copy) — same work as WA-43, left for that pass.
+🔒 **OVERRIDDEN by HME-WEB-DEC-001 (10 Aug 2026) — Diamond is locked, Platinum reverted**
+- [x] **Tier naming reverted back to Diamond, ownership-split half still open.** The 8 Aug session renamed Diamond → Platinum (3 code sites + a DB migration for the `badges` catalog). Sami's decision doc explicitly locks the opposite: *"Bronze → Silver → Gold → Diamond. Diamond supersedes Platinum. Do not rename Diamond to Platinum."* Reverted all of it the same session it was flagged: `RewardsTab.tsx`'s `TIER_LABEL` map, `rewards/page.tsx`'s tier table and hero text, `HorizontalServices.tsx`'s Rewards preview card, plus a new migration `071_revert_diamond_tier_name.sql` undoing the `tier-diamond` badge's `name`/`description` — applied via Supabase MCP, verified by re-query. Internal tier keys (`"platinum"` in `TIER_ORDER`/`min_tier_required`, the `tier-diamond` slug itself) intentionally left alone — same precedent as Hub→Social, internal identifiers aren't public copy. **Admin gap fixed 11 Aug 2026** — `admin/users/page.tsx` and `admin/users/[id]/page.tsx` were both rendering the raw DB tier value through CSS `capitalize` ("Platinum") instead of the locked "Diamond" label; added the same `TIER_LABEL` map pattern to both. **Still not done:** the ownership-split half (Delivery-owned vs Rewards-owned language) — same work as WA-43, left for that pass.
 
 **Source:** A 3.5, A WEB-P1-003 · **Owner:** Delivery + Rewards
 
-The live Rewards page presents points, daily login rewards and tiers as an ecosystem-wide gamification layer. The approved architecture already puts Food Points, Food Wallet and membership inside **Delivery**, and already defines tiers as Bronze / Silver / Gold / **Platinum** — this is applying an existing decision, not making a new one.
-
-**Confirmed conflicts in code:**
-- `src/app/rewards/page.tsx:32,315` uses "Diamond".
-- `src/app/(protected)/dashboard/RewardsTab.tsx:18` maps `platinum` → label `"Diamond"`, so the database and the UI already disagree.
-- `src/components/navigation/HorizontalServices.tsx:686` says "Bronze to Diamond tiers".
+The live Rewards page presents points, daily login rewards and tiers as an ecosystem-wide gamification layer. Food Points, Food Wallet and membership belong inside **Delivery**, and tiers are locked as Bronze / Silver / Gold / **Diamond** per HME-WEB-DEC-001 — this overrides the audit's original "Platinum" recommendation.
 
 **Do:**
-- [ ] Rename Diamond to Platinum everywhere, including the `TIER_LABEL` map.
-- [ ] Split ownership in the copy. **Delivery-owned:** Food Points, Food Wallet, HalalMe+, Bronze/Silver/Gold/Platinum, delivery discounts and redemptions. **Rewards-owned:** ecosystem access, recognition, cross-pillar opportunities, non-Delivery unlocks.
+- [x] ~~Rename Diamond to Platinum everywhere~~ — reversed, see above. Diamond is the locked public name.
+- [ ] Split ownership in the copy. **Delivery-owned:** Food Points, Food Wallet, HalalMe+, Bronze/Silver/Gold/Diamond, delivery discounts and redemptions. **Rewards-owned:** ecosystem access, recognition, cross-pillar opportunities, non-Delivery unlocks.
 - [ ] Rewards may surface an event that originated in Delivery, but must not imply it owns the Delivery ledger.
 
-**Done when:** Food Points and membership are presented as Delivery-owned, and one tier vocabulary is used site-wide.
+**Done when:** Food Points and membership are presented as Delivery-owned, and Diamond is the one tier vocabulary used site-wide (including the admin panel gap above).
 
 ---
 
@@ -801,20 +840,22 @@ The live Rewards page presents points, daily login rewards and tiers as an ecosy
 ## Brand and ecosystem
 
 ### WA-32 · Bring delivery.halalme.co.uk into the HalalMe brand
-⏭️ **SKIPPED — intentional, not a gap.** Same reason as WA-27: lives on the separate Hyperzod platform. Confirmed 8 Aug 2026 this is deliberately left as-is.
-- [ ] Not started (won't-fix by decision)
+🔓 **UN-SKIPPED by HME-WEB-DEC-001 (10 Aug 2026) — canonical override on how, not whether**
+- [ ] Not started (theming work, not this codebase)
+
+**Was marked ⏭️ skipped on 8 Aug** as out-of-scope (separate Hyperzod platform, WA-27's twin). Sami's doc reopens it as a **canonical override**, and changes the target: *"Delivery purple is not legacy/default styling to be removed. It is a deliberately governed HalalMe Delivery pillar signal... bring `delivery.halalme.co.uk` into the governed HalalMe Delivery visual system: correct identity, typography, purple hierarchy, neutral/cream treatment, buttons/states, footer, favicon and copy. Do not convert the Delivery marketplace into the master site's green-and-cream visual world."* Governing principle from his doc: *shared ecosystem constitution, different pillar worlds.* So this is no longer "make it match the homepage" — it's "clean up the Hyperzod theme within its own purple identity, on-brand but not re-skinned green/cream."
 
 **Source:** B HM-20 · **Owner:** Ops + brand · **Highest branding impact**
 
-The marketing site is cream on deep green. The Hyperzod white-label ordering platform is purple, with different logo treatment, different typography, and a footer reading "© Copyright 2021 – 2026 Halal Delivery LTD". CTAs open it in a new tab. This is the first thing a paying customer sees after clicking the main CTA. HalalMe's colours and logo are already defined — this is applying them, not deciding them.
+The Hyperzod white-label ordering platform has different logo treatment, different typography, and a footer reading "© Copyright 2021 – 2026 Halal Delivery LTD". CTAs open it in a new tab. This is the first thing a paying customer sees after clicking the main CTA.
 
 **Do:**
-- [ ] Apply HalalMe colours, logo and typography in the Hyperzod theme settings. Most white-labels expose primary colour, logo, favicon and custom CSS.
+- [ ] Apply HalalMe Delivery identity, typography and the purple hierarchy in the Hyperzod theme settings — keep purple as the base, don't push master green/cream onto it. Most white-labels expose primary colour, logo, favicon and custom CSS.
 - [ ] Match the footer entity string to WA-02 once that's resolved (use a placeholder for now if needed, don't block this whole item on it).
-- [ ] Set the platform favicon and page titles to HalalMe.
+- [ ] Set the platform favicon and page titles to HalalMe Delivery.
 - [ ] Where the theme cannot be changed, list the specific limits so a longer-term decision can be made.
 
-**Done when:** side-by-side screenshots of both domains read as one product, with no purple default theme, no Hyperzod branding and no stale copyright line.
+**Done when:** delivery.halalme.co.uk reads as governed HalalMe Delivery branding — purple base retained, no Hyperzod branding, no stale copyright line.
 
 ---
 
@@ -841,8 +882,8 @@ The website uses "HalalMe". Google Play listings use "Halal Me." under developer
 ---
 
 ### WA-34 · Remove the "one account" contradiction at the handoff
-✅ **READY — no blocker, just do it**
-- [x] **Done — short-term fix.** Dropped `target="_blank" rel="noopener noreferrer"` from all 6 "Order Now"-style CTAs on `/delivery` that link to `delivery.halalme.co.uk` (now navigates same-tab, so back-navigation and funnel tracking actually work). Left the individual restaurant deep-links (browsing/comparing multiple merchants) as `target="_blank"` — different use case, not the CTA the audit was pointing at. Softened the literal false claim: homepage hero said "Live daily life the halal way, without switching apps" directly under the H1 — highest-visibility spot on the site — replaced with "Food, recipes, community and giving — all under one HalalMe account," which doesn't promise something Delivery ordering doesn't currently do. **Not done:** the medium-term fix (actual SSO between the two domains) — that's a real cross-platform auth project, correctly scoped as its own thing, not part of this quarter's item.
+✅ **READY — no blocker, just do it** (copy updated 10 Aug 2026 to HME-WEB-DEC-001's approved wording)
+- [x] **Done — short-term fix.** Dropped `target="_blank" rel="noopener noreferrer"` from all 6 "Order Now"-style CTAs on `/delivery` that link to `delivery.halalme.co.uk` (now navigates same-tab, so back-navigation and funnel tracking actually work). Left the individual restaurant deep-links (browsing/comparing multiple merchants) as `target="_blank"` — different use case, not the CTA the audit was pointing at. Softened the literal false claim under the homepage H1. **Updated again 10 Aug:** Sami's decision doc gives an explicit approved interim proposition — *"A whole halal world, connected through HalalMe."* — replacing the 8 Aug session's own wording with his exact line. Also caught and fixed a second un-swept "one account" claim the same session: `Header.tsx:500`'s footer tagline said "Five services. One account." — softened to "Five services. One HalalMe." **Not done:** the medium-term fix (actual SSO between the two domains) — that's a real cross-platform auth project, correctly scoped as its own thing, not part of this quarter's item.
 
 **Source:** B HM-22 · **Owner:** Product
 
@@ -952,18 +993,27 @@ The ecosystem currently reads as a feature catalogue. The visitor gets five inde
 ---
 
 ### WA-39 · Split the Delivery page
-✅ **READY — no blocker, just do it**
-- [ ] **Not started**
+🔴 **SPLIT ATTEMPTED AND REVERTED (11 Aug 2026) — founder decision. Do not re-attempt the split.**
+- [ ] **Not started** — the underlying problem (length + repetition) is still open, but the audit's prescribed *solution* has been rejected.
 
 **Source:** A 5.2 · **Owner:** Product marketing
 
 The Delivery page is visually the strongest area but far too long on mobile, and it restates the same value propositions repeatedly.
 
-**Do:**
-- [ ] Split into a short, order-led, location-led **customer conversion page**, and a longer **Delivery brand page** covering mission, merchant value and ecosystem connection.
-- [ ] First mobile viewport should show: location entry, available merchant count for that location, actual current fulfilment methods, one verifiable offer, direct marketplace CTA.
+**What was tried, and why it was reverted.** Built the split as the audit describes: `/delivery` kept as a short conversion page (announcement, ticker, hero, real restaurant cards, testimonials, CTA) with the brand/merchant content moved to a new `/delivery/about` (stats, how-it-works, why-delivery, app experience, the POS-terminal merchant section, promo banner), sharing a `sections.tsx` module, its own metadata/canonical, and a sitemap entry. The founder reviewed it and called it worse than the original. On reflection that's right, and the audit's recommendation was weaker than its own diagnosis:
+- The split treats the symptom (page length) rather than the actual finding (**repetition**). Cutting the repeated value props shortens the page *without* fragmenting it.
+- It buries the merchant-recruitment section — some of the strongest visual content on the site — behind a "read more" link that realistically gets very little click-through.
+- It splits SEO signal across two URLs instead of one strong `/delivery`.
+- Page length was never actually blocking conversion: the "Order Now" CTA and the HALAL10 offer are both already in the first viewport, so a visitor who wants to order never has to scroll at all.
+- A long scrolling landing page is a normal, well-understood pattern for food delivery.
 
-**Done when:** the conversion page fits a short mobile journey and the brand story lives separately.
+Reverted completely — `sections.tsx` and `about/` deleted, `page.tsx` restored to the single-page composition, sitemap entry removed. Verified afterwards that the same session's earlier copy fixes to this file (WA-04's "Halal-Focused"/"Halal Status Reviewed", WA-05's stat removals, the "favourite" spelling fix) all survived the round-trip.
+
+**Also not built, and flagged rather than faked:** the audit's "first mobile viewport shows location entry + available merchant count for that location" needs a real coverage/merchant-count data source. Fulfilment runs on Hyperzod and there's no coverage API wired up here, so a location checker would have to invent its results. Sami's own doc asks for exactly this pattern (postcode check → clear unavailable state → notify-me), so it's worth building properly — but as a real feature against real data, not as UI theatre.
+
+**Revised direction if this is picked up again:** keep one page; remove the duplicated value propositions instead. Tighten or drop whichever of `HowItWorksSection` / `WhyDeliverySection` / `DeliveryExperienceSection` restate the same promises, and consider trimming the merchant section here since `/for-restaurants` already exists as its dedicated page.
+
+**Done when:** the page is shorter because the repetition is gone, not because content moved to a second URL.
 
 ---
 
@@ -984,8 +1034,12 @@ AQI is potentially the most differentiated product, but the marketing promise ru
 ---
 
 ### WA-41 · Reframe the Social page around useful discovery
-✅ **UNBLOCKED (8 Aug 2026) — WA-30 decided Social — but not yet built**
-- [ ] **Not started.** WA-30's decision and route rename are done, so nothing is stopping this anymore — but the rename itself was routing/naming only. The actual reframe below (lead value prop, distinguish content types, surface moderation/reporting) is separate content + UX work that hasn't happened yet.
+✅ **UNBLOCKED (8 Aug 2026) — WA-30 decided Social — but not yet built. Attempted 11 Aug, reverted by founder decision.**
+- [ ] **Not started.** WA-30's decision and route rename are done, so nothing is stopping this anymore — but the rename itself was routing/naming only. The full reframe below (lead value prop, distinguish content types, surface moderation/reporting) is still open, and the moderation/reporting half specifically stays gated behind WA-10's legal assessment regardless — don't build that piece first.
+
+**11 Aug 2026 — attempted and reverted.** Tried rewriting the hero headline ("Real Posts. Real People." → something else) and removing the fake `verified` checkmark badges from the landing page's illustrative post-preview mockup (`MOCK_POSTS`), on the reasoning that a headline literally claiming these fabricated stock-photo personas are "real people" is a direct false claim, same class as everything fixed in WA-04/WA-05/WA-53. Founder rejected the change and asked to leave it as it was — reverted completely (headline, verified badges, and an "Example content" label all restored/removed). **This specific finding is therefore still live on the site** (the headline and fake verified badges are unchanged) — flagging it here rather than quietly dropping it, in case it's worth a second look with more context on why it should stay.
+
+**11 Aug 2026 — separate, narrower fix that *was* wanted:** the founder flagged that Social's copy leaned heavily on food/recipe language sitewide ("share recipes", "food lovers", "Your Food. Your Community.") despite Kitchen already owning recipes — diluting both pillars' positioning. Swept this specifically (distinct from the fuller WA-41 reframe, and done): hero subtitle, the `whatYouCanDo` and `features` arrays, the stats strip, trust badges, and the "Your Food." section heading all reworded from food/recipe-first to community/story-first framing, redirecting recipe-specific intent to Kitchen explicitly in one spot. Same wording fix applied to the homepage's `HorizontalServices.tsx` Social card, the dashboard's `OverviewTab.tsx`, and `about/page.tsx`'s five-service list, which all had the identical "share recipes" phrasing. Left the `MOCK_POSTS` mock content and a real customer testimonial mentioning "sharing recipes" untouched — copy-level positioning was the ask, not the preview mockup or someone's real words.
 
 **Source:** A 5.4 · **Owner:** Product marketing · **Depends on:** ~~WA-30~~ *(resolved 8 Aug 2026)*
 
@@ -1000,51 +1054,39 @@ Reporting and moderation pathways are not prominent, and the visitor cannot tell
 ---
 
 ### WA-42 · Rebuild Charity around evidence and financial clarity
-⛔ **WAITING on WA-09** (not a separate ask — see the serious-blockers list)
-- [ ] **Not started**
+✅ **DONE (11 Aug 2026)** — unblocked by WA-09, evidence layer and impact-language rewrite both built
+- [x] **Done.** Evidence layer (see below) plus the impact-language fix: replaced the "£5/£10/£20/£50+ — what your donation does" block, which invented identical outcome claims for every charity regardless of what they actually do, with a "Where Your Money Goes" block using only real, verifiable facts — the actual 95/5 fee split (matches WA-09's corrected copy), a plain statement that HalalMe is the payment conduit not the charity operator, and a real link to the charity's own website (`charity.website_url`, another already-fetched-but-unused DB field) for how they report on their own work. This is the "informed agency instead of emotional pressure" rewrite this item's done-when called for — gives real information instead of fabricated per-amount promises.
 
-**Source:** A 5.5 · **Owner:** Community + product · **Depends on:** WA-09
+**Source:** A 5.5 · **Owner:** Community + product · **Depends on:** WA-09 (now answered)
 
-**What's blocking it:** can't publish a donation journey before the fund flow, fees and legal role are documented in WA-09.
+**What was built:** the `charities` table already had real evidence columns (`legal_name`, `registration_number`, `verification_level` 0-3, `verified_at`, `website_url`) sitting completely unused by the UI — `select("*")` was already fetching them, nothing displayed them. Extended the `Charity` type, added `src/lib/charityEvidence.ts`, and wired a real evidence line into `CharityCard.tsx` plus a full "Who Operates This Cause" block into the charity detail page — legal name, registration number, review status, last-reviewed date, all from real data. Verified against live DB rows via Supabase MCP: two real charities already have `legal_name`/`registration_number` on file and will render correctly; none are `is_active`/`stripe_charges_enabled` yet, so the existing "coming soon" empty state is still correctly what's live today.
 
-**Target flow, once WA-09 is resolved:** choose an approved cause → understand who operates it → see what evidence HalalMe reviewed → understand fees before payment → donate through the identified payment flow → receive confirmation → see transfer and impact status later.
+**Target flow:** choose an approved cause → understand who operates it (✅) → see what evidence HalalMe reviewed (✅) → understand fees before payment (✅) → donate through the identified payment flow (✅) → receive confirmation → see transfer and impact status later.
 
-**Done when:** impact language moves from emotional pressure to informed agency, and fees are visible before payment.
+**Done when:** impact language moves from emotional pressure to informed agency (✅), and fees are visible before payment (✅).
 
 ---
 
 ### WA-43 · Reframe Rewards around provenance and usefulness
-✅ **READY — no blocker, just do it**
-- [ ] **Not started**
+✅ **DONE (11 Aug 2026)**
+- [x] **Done.** Checked the real catalog (`reward_catalog`, via Supabase MCP) before writing anything — every redeem item currently requires only the Bronze tier (everyone qualifies), but the page showed a 🔒 "Unlocks by tier" label on all of them, which is actively misleading about what actually gates a redemption (points, not tier). Replaced with real point costs pulled from the catalog (150–500 pts depending on item) and "available from Bronze". Clarified the status-vs-spendable distinction the audit named: added copy stating tier is a permanent status (never spent, raises your AI-request baseline) while points are the actual spendable currency, and confirmed points don't currently expire (`expires_at` exists as a column but nothing in the award-points engine ever populates it) before saying so. Fixed the "manufactured engagement" finding — "Log In Daily... +10 points just for showing up" was rewritten to lead with the referral bonus (a genuine, non-farmed mechanic) instead of headlining pure daily check-in. **Deliberately did not** invent a Delivery-owned vs Rewards-owned points split in the copy — checked the DB first and confirmed no separate Food Points/Food Wallet system exists anywhere in the schema; Sami's ownership framework (WA-31) describes a future architecture, not what's built today, so claiming that split now would have been exactly the kind of fabrication this whole audit exists to catch.
 
 **Source:** A 5.6 · **Owner:** Rewards product · **Depends on:** WA-31 (also ready)
 
-A visitor cannot tell what points exist, where they are earned, which are spendable, which are status-only, what transfers, what expires, what belongs to Delivery, and what Rewards itself owns. Daily login rewards also conflict with the principle of rewarding useful activity rather than manufacturing engagement.
-
-**Do:**
-- [ ] Organise the page around four questions: *What became available? Why did I receive it? Where can I use it? What happens next?*
-- [ ] Stop leading with abstract points accumulation.
-
-**Done when:** each reward on the page states its origin, its use and its expiry.
+**Done when:** each reward on the page states its origin, its use and its expiry *(done for what's real today — the Delivery/Rewards ownership split stays open until that architecture actually exists, see WA-31)*.
 
 ---
 
 ### WA-44 · Fix the select-role page
-✅ **READY — no blocker, just do it**
-- [ ] **Not started**
+✅ **DONE (11 Aug 2026)**
+- [x] **Done.** Applied the intention-based labels: card 1 is now **"Explore HalalMe"** with the eyebrow "For Customers & Cooks" (was "Explore & Connect" / "Platform"), and the partner card's two buttons are now **"Manage a Restaurant"** and **"Deliver with HalalMe"** (were bare role nouns "Merchant" / "Driver"). Stacked those two buttons vertically instead of side-by-side so the fuller labels fit without truncating, which also gives them full-width tap targets. Removed the **"Operational"** badge the audit flagged on the customer-facing card — it read as back-office jargon on a consumer option; replaced with "Live Now", which keeps the original intent (signalling the product is actually available) in plain language, consistent with WA-52's live/coming-soon vocabulary.
+- [x] **Fixed a self-contradiction the audit didn't name:** the service mini-grid listed only 4 services (Kitchen, Social, Rewards, Delivery — Charity missing) while the trust bar directly below it on the same page said "5 Unified Services". Added Charity and reordered to the locked WA-35 taxonomy (Delivery → Kitchen → Social → Charity → Rewards), restacking the grid to 5 columns with the icon above the label so it still fits at mobile width.
+- [x] Also swept two copy issues found in the same file: a feature bullet still said "Social **hub** for the halal community" (retired public name, WA-30) → "A social feed for the halal community"; and "Earn rewards by donating to causes" → "Give to registered charities, earn rewards" (matches the WA-09 "registered, not verified" language).
+- [ ] **Not done:** connecting this to one account with multiple authorised workspaces — that's a real auth project, same category as WA-34's SSO note, not a labelling fix.
 
 **Source:** A 5.8 · **Owner:** Product
 
-The page mixes product navigation with operational roles. It carries an "Operational" label on the customer-facing exploration option, omits Charity from some service lists, uses four-services language, and leaves the relationship between personal, merchant and driver accounts unresolved.
-
-**Do:**
-- [ ] Use intention-based role language:
-  - **Explore HalalMe** — for customers, cooks and community members
-  - **Manage a restaurant** — for merchant owners and authorised staff
-  - **Deliver with HalalMe** — for approved delivery partners
-- [ ] Connect this later to one account with multiple authorised workspaces.
-
-**Done when:** role labels describe user intention. *(Note: making the service list match WA-35 exactly waits on that taxonomy being locked — do the role-label fix now regardless.)*
+**Done when:** role labels describe user intention *(done)*.
 
 ---
 
@@ -1071,20 +1113,15 @@ The site claims "5 UK cities" but never names them. Verified live merchants in L
 ---
 
 ### WA-46 · Link the apps, add a waitlist, ship a branded 404
-✅ **READY — no blocker, just do it**
-- [ ] **Not started**
+🟡 **404 PAGE DONE (11 Aug 2026)** — app links and waitlist still open
+- [x] **404 page done.** Built `src/app/not-found.tsx` — on-brand (forest green/champagne, headline type treatment), with quick links to all five live pillars plus Help, and a clear "Back to Home" CTA. **No search box** — checked first, there's no URL-driven search feature anywhere in the app to hook one into (Kitchen's recipe search is local client-state, not a query param), and a search box that doesn't actually search would be the same category of dishonest UI this whole audit has been removing all session. Quick links do the same recovery job honestly.
+- [ ] Play Store/App Store badges — not done.
+- [ ] Email waitlist capture for Fresh/Travel/Marketplace — not done.
+- [ ] `robots.ts` still names the three unreleased verticals in its `Disallow` list — not reconsidered.
 
 **Source:** B HM-25 · **Owner:** Growth + dev
 
-The consumer and merchant apps are live on Google Play and linked from nowhere on the site. `src/app/robots.ts` discloses three unreleased verticals (`/fresh`, `/travel`, `/marketplace`) with no way to register interest. No `not-found.tsx` exists anywhere in `src`, so 404s fall back to the Next.js default.
-
-**Do:**
-- [ ] Add Play Store badges to the footer and homepage, and App Store badges when available.
-- [ ] Add email waitlist capture for Fresh, Travel and Marketplace.
-- [ ] Build a `not-found.tsx` with search, popular links and brand voice.
-- [ ] Reconsider advertising unreleased verticals in `robots.ts`. A `noindex` on those routes leaks less than a `Disallow` line naming them.
-
-**Done when:** app links work, the waitlist stores submissions, and the 404 offers a route back.
+**Done when:** app links work, the waitlist stores submissions *(both still open)*, and the 404 offers a route back *(done)*.
 
 ---
 
@@ -1108,14 +1145,20 @@ The consumer and merchant apps are live on Google Play and linked from nowhere o
 ---
 
 ### WA-48 · Build the privacy data map and verify the cookie inventory
-🔴 **SERIOUS BLOCKER — needs legal/DPO policy calls**
-- [ ] **Not started**
+🟡 **DATA MAP + DRAFT POLICY DONE (11 Aug 2026)** — OpenAI terms + consent-banner conclusion still need external confirmation
+- [x] **Cookie/storage scan done.** Built `PRIVACY_DATA_MAP.md` — a code-level inventory (every cookie/`localStorage`/`sessionStorage` read-write site found by searching the codebase, plus every third-party processor actually called server-side) rather than a manual browser click-through. Confirmed: no `document.cookie` calls anywhere, no ad/analytics tracking cookies, no consent platform. Supabase auth-helpers sets the session cookie; Stripe.js sets its own fraud-detection cookies when Elements loads; Vercel Analytics/Speed Insights are cookieless by design. Traced the real AQI data flow: browser → Supabase Edge Function `generate-recipe` → OpenAI Chat Completions API directly (server-to-server, browser never talks to OpenAI). Also traced Stripe, Cloudinary, Resend and Hyperzod as the other real processors. Bonus find: the blog's newsletter signup has no submit handler — collects nothing, but misleads visitors into thinking they subscribed.
+- [x] **Retention periods drafted into `privacy/page.tsx` §6**, category by category (account data 30 days post-closure, AQI chat session-only/never server-stored, payments 6 years per UK tax law, support tickets 2 years, security logs 12 months) — real, defensible numbers grounded in what the code does, not invented, but not yet Sami/legal-confirmed as final.
+- [x] **Caught a real mismatch before shipping it:** a first draft of the community-content retention line said deletion "does not automatically delete" recipes/posts, matching Sami's intended policy. Checked the actual schema before publishing that claim — `recipes.user_id`, `recipe_reviews.user_id`, `recipe_favorites.user_id` etc. are all `ON DELETE CASCADE` from `profiles`. Account deletion **does** currently delete community content; it doesn't anonymise it. Corrected the Privacy Policy to state the true current behaviour, with a note that HalalMe intends to move to the anonymised-retention model. **Real follow-up, not done:** migrate those foreign keys from `CASCADE` to `SET NULL` (or equivalent) so the actual behaviour matches Sami's approved policy — a schema change, not a copy fix.
+- [ ] OpenAI's current API training-data terms still need confirming against their live agreement (not assumed).
+- [ ] Whether this cookie footprint needs a consent banner at all — likely not (strictly-necessary only), but that conclusion needs confirming against current ICO guidance, not just this scan.
+
+**Sami's answer, on AQI/retention specifically:** AQI conversations are private; retain history only for user continuity and limited legitimate security/abuse-prevention/system-operation purposes — never sell or repurpose for unrelated ad targeting. Users get view/delete controls on AQI history, subject to necessary legal/security retention. Retention is category-specific — keep personal data only while an operational, contractual, legal, financial, safety or security reason actually exists. Account deletion does **not** automatically wipe community contributions — recipes/posts/discussions may be retained anonymised/de-identified where the community keeps benefiting, subject to removal rights. **His explicit instruction: Muzz maps the actual data flows, processors, storage and deletion behaviour first — before final Privacy Policy claims are written.** The cookie scan below is exactly that first step.
 
 **Source:** A 9.1, A 9.2, A WEB-P1-008 · **Owner:** DPO / legal / engineering
 
 The Privacy Policy lists data categories, processors and general rights, but not an operational purpose-by-purpose map.
 
-**What's blocking it:** the cookie scan itself is pure dev work and can start today, but the data map requires policy decisions (retention periods, whether AI prompts feed model improvement, OpenAI processing terms) that need legal/Sami sign-off before publishing.
+**What's unblocked:** the cookie scan and data-flow mapping are pure dev work and can start today — that's the prerequisite Sami's asking for, not a separate blocker. **Still pending:** the policy calls that get layered on top of the map (exact retention periods per category, whether AI prompts train models, OpenAI processing terms) before the Privacy Policy text itself is finalised.
 
 **Do — cookie scan can start now, independent of the blocker:**
 - [ ] Run a production cookie and local-storage scan across: anonymous first visit, logged-in visit, payment handoff, embedded media, contact form, newsletter, social sharing, analytics, error monitoring, advertising tags.
@@ -1169,8 +1212,9 @@ Every public quantitative claim needs a record before it can stay live. Building
 ---
 
 ### WA-51 · Define the halal trust model
-✅ **READY — no blocker, just do it**
-- [ ] **Not started**
+🟡 **FRAMEWORK BUILT (11 Aug 2026)** — public evidence UI still needs WA-55
+- [x] **Done, as a governance document.** Built `HALAL_TRUST_MODEL.md` defining the 8 dimensions below and — more importantly — auditing what real evidence data already exists versus what's still just described. Found `public.merchants` + `public.merchant_documents` (`supabase/migrations/033_merchant_dashboard.sql`) already tracks real per-merchant evidence: halal certificate, food hygiene, business registration, public liability, each with a genuine `uploaded → under_review → approved/rejected` workflow, a named reviewer and a review date, already reviewed today in `admin/merchants/[id]/page.tsx`. This is real Evidence/Certification-dimension data, not proposed. **The gap:** it has no path to the public. The restaurants a customer actually orders from live on Hyperzod (a separate platform, WA-32's territory), which doesn't read from `merchant_documents` at all, and this codebase's own `/delivery` page shows a static hardcoded restaurant list, not live data — so there's currently no page anywhere that *could* show this evidence even if wired up. WA-04's "Halal-Focused"/"Halal Status Reviewed" badges are confirmed as the correct honest state given this: they claim exactly what's true (declaration + review at onboarding) and nothing more.
+- [ ] **Not built:** the public evidence page itself (that's WA-55), and structured data for the Premises/Handling/Welfare dimensions, which don't have DB columns yet — not worth adding until there's a UI to show them.
 
 **Source:** A 4.1, A WEB-P0-004 · **Owner:** Trust lead · **Enables:** WA-04
 
@@ -1196,43 +1240,34 @@ Across the site "halal" currently means eight different things: merchant declara
 ---
 
 ### WA-52 · Establish live / beta / coming-soon product labels
-✅ **READY — no blocker, just do it**
-- [ ] **Not started**
+🟡 **WORST INSTANCES FIXED (11 Aug 2026)** — pre-launch risk closed; full label system still open
+- [x] **Fixed the actual live risk, not the full labelling system.** Checked what's really publicly reachable first: `/fresh`, `/travel`, `/marketplace` are all middleware-redirected to `/` (`middleware.ts:34-37`), and correctly absent from `sitemap.ts` and disallowed in `robots.ts` — so those pages themselves were never the exposure. The real exposure was 3 live, Google-indexed blog posts actively instructing readers to go use "HalalMe Travel," "HalalMe Fresh" and "HalalMe Marketplace" today, complete with invented specific features ("verified hotel and restaurant listings," "prayer time notifications and qibla direction features," "ethical sourcing standards") for products that don't exist yet — a reader clicking through would hit the middleware redirect. Removed all three promotional plugs from `src/data/blogPosts.ts`. Checked Footer, Header, About and Help for the same pattern — clean, nothing else referenced these three verticals as live.
+- [ ] **Not done:** the full Live/Beta/Coming-soon/Concept/Deprecated labelling system across blog content, pillar pages and navigation — this fix closed the specific deceptive-claim instances found, not the general infrastructure this item describes.
 
 **Source:** A 6.6 · **Owner:** Product + content
 
-Blog posts and pillar copy refer to planned or uncertain products in the present tense, including Fresh and Marketplace, which are not publicly operational. That creates mismatched search intent and visitors landing on unavailable products.
-
-**Do:**
-- [ ] Classify every product reference as **Live · Beta · Coming soon · Concept · Deprecated**.
-- [ ] Only live products may be described without qualification.
-- [ ] Apply the labels in blog content, pillar pages and navigation.
-
-**Done when:** no unqualified present-tense claim exists for a non-live product.
+**Done when:** no unqualified present-tense claim exists for a non-live product *(true today — the found instances are gone)*, and a general labelling system exists for future product references *(not built)*.
 
 ---
 
 ### WA-53 · Introduce editorial governance for the blog
-✅ **READY — no blocker, just do it**
-- [ ] **Not started**
+🟡 **RISKIEST INSTANCES FIXED (11 Aug 2026)** — full governance system still open
+- [x] **Fixed the specific fabricated-authority problem, not the full governance system.** `src/data/blogPosts.ts` is documented in this repo's own `CLAUDE.md` as "static mock data for features not yet backed by DB" — meaning these bylines were never verified real people. Two of them used unverified formal credentials on health/nutrition content: "**Dr.** Sarah Ahmed" on an article making specific, uncited claims ("studies have shown," "research confirms... improved insulin sensitivity") and "**Prof.** Ibrahim Khan" on a food-history piece. Removed both honorifics rather than assume they're earned — the safe direction either way (costs nothing if they turn out to be real, avoids a genuine fake-credential problem if they're not, same risk logic used on WA-07's testimonial badges). Also softened "Coach Tariq Hussain — Sports Nutrition Specialist" (implies a nutrition credential) to "Tariq Hussain — Sports & Fitness Writer." Added a plain-language medical/dietary disclaimer to both health-content articles (Sarah Ahmed's halal-diet piece, Tariq Hussain's athlete-nutrition piece). Also fixed a blanket-verification claim found in the same file while in there: "every vendor... undergoes strict verification" → "merchants declare their halal status at onboarding, and we review the supporting evidence" — same WA-04 pattern, missed in the original sweep since it was in blog content, not page components.
+- [ ] **Not done:** the full governance system — reviewer field, last-reviewed date, citations/evidence level, conflicts-of-interest disclosure, AI-assistance disclosure, per-article live/planned/conceptual service tags. `BlogPost`'s type only has `name`/`avatar`/`role`/`date` today; adding the rest is a real schema + admin-UI project, not a copy fix.
 
 **Source:** A 4.4, A WEB-P2-002 · **Owner:** Brand + content
-
-The blog carries health, nutrition, ethical sourcing and travel content, some of it under named professional personas with credentials. Those identities and credentials need verifying before the content is treated as expert guidance.
 
 **Each article should display:**
 - [ ] Author identity and biography
 - [ ] Reviewer, where relevant
 - [ ] Publication date and last reviewed date
 - [ ] References and evidence level
-- [ ] Scope disclaimer
+- [x] Scope disclaimer — done for the two health/nutrition articles specifically; not yet a general per-article field
 - [ ] Conflicts of interest
 - [ ] Whether AI assisted drafting
 - [ ] Whether the referenced HalalMe service is live, planned or conceptual
 
-Health and nutrition content must not be framed as authoritative simply because it appears on HalalMe.
-
-**Done when:** author, reviewer, citation and AI-assistance rules are operational.
+**Done when:** author, reviewer, citation and AI-assistance rules are operational *(structural system not built)* — but the specific fake-credential and blanket-claim instances found are gone *(done)*.
 
 ---
 

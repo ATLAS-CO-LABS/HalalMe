@@ -57,7 +57,7 @@ export default function TravelTipsPage() {
                 >
                   Travel Tips
                 </h1>
-                <p className="text-gray-400">Essential advice for Muslim travelers</p>
+                <p className="text-gray-400">Essential advice for Muslim travellers</p>
               </div>
             </div>
           </motion.div>
@@ -168,7 +168,7 @@ export default function TravelTipsPage() {
               Have a Travel Tip?
             </h2>
             <p className="text-gray-400 mb-6">
-              Share your experiences and help fellow Muslim travelers explore the world with confidence.
+              Share your experiences and help fellow Muslim travellers explore the world with confidence.
             </p>
             <Link href="/social">
               <motion.button

@@ -139,7 +139,7 @@ export default function MealDetailPage() {
                 <div className="bg-gray-950/70 backdrop-blur-md rounded-full px-4 py-2 flex items-center gap-2 border border-gray-700/50">
                   <ShieldCheck className="w-4 h-4 text-lime-400" />
                   <span className="text-xs font-semibold text-white">
-                    Halal Certified
+                    Halal-Focused
                   </span>
                 </div>
               </div>
@@ -243,7 +243,7 @@ export default function MealDetailPage() {
             <div className="flex items-center gap-4 text-xs text-gray-500 pt-4 border-t border-gray-800/50">
               <div className="flex items-center gap-1.5">
                 <ShieldCheck className="w-3.5 h-3.5 text-lime-500/60" />
-                <span>100% Halal</span>
+                <span>Halal-Focused</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <Leaf className="w-3.5 h-3.5 text-lime-500/60" />

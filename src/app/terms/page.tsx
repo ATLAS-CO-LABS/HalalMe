@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { LEGAL_ENTITY, LEGAL_ENTITY_STATEMENT } from "@/lib/legalEntity";
 
 const CREAM = "#F7E7CE";
 const GOLD = "#F59E0B";
@@ -84,9 +85,9 @@ function DocumentBody() {
 
         <Section title="1. Who we are">
           <p>
-            HalalMe is operated by <strong style={{ color: CREAM }}>HalalMe Delivery LTD</strong>{" "}
-            (Company No. 13450710), registered in England and Wales, with a registered office at
-            71-75 Shelton Street, London, WC2H 9JQ, United Kingdom.
+            {LEGAL_ENTITY.tradingName} is operated by <strong style={{ color: CREAM }}>{LEGAL_ENTITY.registeredName}</strong>{" "}
+            (Company No. {LEGAL_ENTITY.companyNumber}), registered in {LEGAL_ENTITY.jurisdiction}, with a registered office at{" "}
+            {LEGAL_ENTITY.registeredOffice}.
           </p>
         </Section>
 
@@ -164,12 +165,14 @@ function DocumentBody() {
 
         <Section title="8. Charitable donations">
           <p>
-            Donations made through HalalMe Charity are processed by verified charity partners via
+            Donations made through HalalMe Charity are processed by registered charity partners via
             Stripe Connect, funds are paid directly to the receiving charity&apos;s own connected
-            account, not held by HalalMe. A small platform fee, shown before you confirm your
-            donation, is deducted to cover payment processing and platform costs. Donations are
-            generally non-refundable once completed, except where required by law or at the
-            discretion of the receiving charity.
+            account, not held by HalalMe. A platform fee, currently 5% of each donation and shown
+            before you confirm your donation, is deducted to fund HalalMe&apos;s charity operations,
+            Rewards programme and community initiatives; payment-processing costs are separate and
+            are not covered by this fee. Donations are normally non-refundable once processed,
+            except where required by law, in exceptional circumstances, or at the discretion of
+            the receiving charity.
           </p>
         </Section>
 
@@ -185,7 +188,7 @@ function DocumentBody() {
 
         <Section title="10. Intellectual property">
           <p>
-            The HalalMe name, logo, and platform design are owned by HalalMe Delivery LTD. You may
+            The HalalMe name, logo, and platform design are owned by {LEGAL_ENTITY.registeredName}. You may
             not copy, reproduce, or use them without our written permission.
           </p>
         </Section>
@@ -194,7 +197,7 @@ function DocumentBody() {
           <p>
             Services are provided on an <strong style={{ color: CREAM }}>&quot;as is&quot;</strong> basis,
             without warranties of any kind, express or implied. To the fullest extent permitted by
-            law, HalalMe Delivery LTD is not liable for any indirect, incidental, or consequential
+            law, {LEGAL_ENTITY.registeredName} is not liable for any indirect, incidental, or consequential
             loss arising from your use of the platform, including loss arising from the acts of
             independent merchants, delivery partners, or charity partners. Nothing in these Terms
             excludes liability that cannot be excluded under UK law, such as liability for death or
@@ -223,7 +226,7 @@ function DocumentBody() {
             <a href="mailto:support@halalme.co.uk" className="underline" style={{ color: GOLD }}>
               support@halalme.co.uk
             </a>{" "}
-            or write to us at 71-75 Shelton Street, London, WC2H 9JQ, United Kingdom.
+            or write to us at {LEGAL_ENTITY.registeredOffice}.
           </p>
         </Section>
       </div>

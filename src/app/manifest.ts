@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "HalalMe — Halal Food Delivery, Recipes and Giving",
     short_name: "HalalMe",
-    description: "Order halal food, discover recipes, connect with the community and give to verified causes — all in one account.",
+    description: "Order halal food, discover recipes, connect with the community and give to registered causes — all in one account.",
     start_url: "/",
     display: "standalone",
     background_color: "#102C26",

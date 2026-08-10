@@ -124,8 +124,8 @@ function WhatWeOfferSection() {
   const services = [
     { num: '01', name: 'Delivery', desc: 'Halal food delivery from trusted, certified partners' },
     { num: '02', name: 'Kitchen',  desc: 'AI-powered recipes and home-style halal meal guides'  },
-    { num: '03', name: 'Social',   desc: 'Community posts, recipes, and halal discussions'      },
-    { num: '04', name: 'Charity',  desc: 'Verified causes, sadaqah and giving, tracked openly'  },
+    { num: '03', name: 'Social',   desc: 'Community posts, experiences, and halal discussions'   },
+    { num: '04', name: 'Charity',  desc: 'Registered causes, sadaqah and giving, tracked openly'  },
     { num: '05', name: 'Rewards',  desc: 'Earn points and unlock perks across HalalMe'          },
   ];
 
@@ -210,7 +210,7 @@ function WhyDifferentSection() {
     {
       num: '04',
       title: 'Purpose Beyond Profit',
-      desc: 'Every transaction earns points you can donate to verified Islamic charities. We believe a business should give back, not just take.',
+      desc: 'Every transaction earns points you can donate to registered Islamic charities. We believe a business should give back, not just take.',
     },
   ];
 
@@ -278,7 +278,7 @@ function OurValuesSection() {
   const isInView = useInView(ref, { once: true, amount: 0.2 });
 
   const values = [
-    { num: '01', Icon: ShieldCheck, title: 'Trust & Transparency',    desc: 'Every service is verified and halal-certified, ensuring complete transparency.'             },
+    { num: '01', Icon: ShieldCheck, title: 'Trust & Transparency',    desc: 'Halal status is reviewed at onboarding and kept on file, so you can see the evidence behind every listing.'             },
     { num: '02', Icon: Fingerprint, title: 'Community First',         desc: 'Built by the community, for the community - your voice matters in everything we do.'        },
     { num: '03', Icon: BookOpen,    title: 'Halal Integrity',         desc: '100% commitment to halal standards across all our services, no compromises.'               },
     { num: '04', Icon: ArrowRight,  title: 'Innovation with Purpose', desc: 'Using technology to make halal living easier, more rewarding, and more connected.'          },

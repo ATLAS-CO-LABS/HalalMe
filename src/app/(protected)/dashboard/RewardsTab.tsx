@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 
 const TIER_ORDER = ["bronze", "silver", "gold", "platinum"];
-const TIER_LABEL: Record<string, string> = { bronze: "Bronze", silver: "Silver", gold: "Gold", platinum: "Platinum" };
+const TIER_LABEL: Record<string, string> = { bronze: "Bronze", silver: "Silver", gold: "Gold", platinum: "Diamond" };
 const TIER_COLOR: Record<string, string> = { bronze: "#92400E", silver: "#6B7280", gold: "#B45309", platinum: "#0E7490" };
 
 // Category icon is the fallback; specific catalog items (e.g. each flair)

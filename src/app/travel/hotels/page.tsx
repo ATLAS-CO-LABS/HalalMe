@@ -170,7 +170,7 @@ export default function HotelsPage() {
             >
               Halal-Friendly Hotel Features
             </h2>
-            <p className="text-gray-400">We help you find hotels that cater to Muslim travelers</p>
+            <p className="text-gray-400">We help you find hotels that cater to Muslim travellers</p>
           </motion.div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">

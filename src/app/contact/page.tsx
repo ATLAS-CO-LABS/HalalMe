@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { track } from "@vercel/analytics";
+import { LEGAL_ENTITY } from "@/lib/legalEntity";
 
 export default function ContactPage() {
   return (
@@ -414,8 +415,9 @@ function BusinessInfoSection() {
   const isInView = useInView(ref, { once: true, amount: 0.3 });
 
   const info = [
-    { label: "Company Name", value: "Halal Delivery Ltd" },
-    { label: "Country", value: "United Kingdom" },
+    { label: "Company Name", value: LEGAL_ENTITY.registeredName },
+    { label: "Company No.", value: LEGAL_ENTITY.companyNumber },
+    { label: "Registered Office", value: LEGAL_ENTITY.registeredOffice },
     {
       label: "Support Hours",
       value: "Mon–Fri: 9:00 AM – 6:00 PM GMT\nSat–Sun: 10:00 AM – 4:00 PM GMT",

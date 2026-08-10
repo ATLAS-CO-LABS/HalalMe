@@ -132,6 +132,10 @@ function PaymentForm({
         <Lock className="w-3 h-3 shrink-0" />
         Secured by Stripe · 256-bit SSL
       </div>
+      <p className="text-xs" style={{ color: `${CREAM}30` }}>
+        Donations are normally non-refundable once processed. See our{" "}
+        <a href="/terms" className="underline">Terms</a> for details.
+      </p>
     </form>
   );
 }
@@ -363,7 +367,7 @@ function CheckoutContent() {
               {/* Trust signals */}
               <div className="p-6 md:p-8 space-y-3">
                 {[
-                  { icon: Shield,       text: "Verified charity partner" },
+                  { icon: Shield,       text: "Registered charity partner" },
                   { icon: CheckCircle,  text: "Tax receipt available"    },
                   { icon: Lock,         text: "256-bit SSL encryption"   },
                 ].map(({ icon: Icon, text }, i) => (

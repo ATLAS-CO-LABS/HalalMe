@@ -497,7 +497,7 @@ export default function Header() {
                 className="mt-10 pt-5 border-t border-(--hm-text)/8 flex items-center justify-between gap-4 text-[10px] uppercase tracking-[0.2em] text-[color:color-mix(in_oklab,var(--hm-text)_25%,var(--hm-lm-anchor))]"
               >
                 <span>© {new Date().getFullYear()} HalalMe</span>
-                <span>Five services. One account.</span>
+                <span>Five services. One HalalMe.</span>
               </motion.div>
             </div>
           </motion.div>

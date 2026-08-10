@@ -41,6 +41,10 @@ const MODULE_LABELS: Record<Module, string> = {
   merchants: "Merchant CRM", users: "User Management", kitchen: "Kitchen", hub: "Social", rewards: "Rewards", analytics: "Analytics",
 };
 
+const TIER_LABEL: Record<string, string> = {
+  bronze: "Bronze", silver: "Silver", gold: "Gold", platinum: "Diamond",
+};
+
 interface UserDetail {
   id: string; full_name: string; username: string | null; email: string | null;
   phone: string | null; bio: string | null; location: string | null; avatar_url: string | null;
@@ -314,7 +318,7 @@ export default function UserDetailPage() {
                 <InfoRow icon={Phone} label="Phone" value={user.phone} />
                 <InfoRow icon={MapPin} label="Location" value={user.location} />
                 <InfoRow icon={Calendar} label="Joined" value={fmtDate(user.created_at)} />
-                <InfoRow icon={Award} label="Rewards" value={`${user.reward_tier} · ${user.reward_points.toLocaleString()} pts`} />
+                <InfoRow icon={Award} label="Rewards" value={`${TIER_LABEL[user.reward_tier] ?? user.reward_tier} · ${user.reward_points.toLocaleString()} pts`} />
               </div>
               {user.bio && (
                 <div className="mt-4 pt-4 border-t border-gray-100">

@@ -366,7 +366,7 @@ export default function TravelLandingPage() {
             {[
               { label: "Travel Partners", value: "500+" },
               { label: "Destinations", value: "1000+" },
-              { label: "Happy Travelers", value: "50K+" },
+              { label: "Happy Travellers", value: "50K+" },
               { label: "Halal Hotels", value: "10K+" },
             ].map((stat, index) => (
               <motion.div

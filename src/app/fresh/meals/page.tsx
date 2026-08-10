@@ -95,7 +95,7 @@ export default function PreparedMealsPage() {
             <div className="inline-flex items-center gap-2 bg-lime-500/10 border border-lime-500/20 rounded-full px-4 py-2 mb-5">
               <Leaf className="w-4 h-4 text-lime-400" />
               <span className="text-lime-300 text-sm font-semibold">
-                Fresh & Halal Certified
+                Fresh & Halal-Focused
               </span>
             </div>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white mb-4 tracking-tight">
@@ -205,7 +205,7 @@ export default function PreparedMealsPage() {
         <div className="mx-auto max-w-7xl px-4 md:px-8 py-8">
           <div className="flex flex-wrap items-center justify-center gap-8 text-sm text-gray-500">
             {[
-              { icon: ShieldCheck, text: '100% Halal Certified' },
+              { icon: ShieldCheck, text: 'Halal Status Reviewed' },
               { icon: Sparkles, text: 'Fresh Daily' },
               { icon: Clock, text: 'Ready in 5-10 min' },
             ].map((item, i) => (

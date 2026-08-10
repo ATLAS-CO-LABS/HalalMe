@@ -199,7 +199,7 @@ export default function OrderSuccessPage() {
           >
             <Leaf className="w-6 h-6 text-lime-400" />
             <p className="text-lime-300">
-              Your meals are 100% halal certified and prepared with care
+              Your meals are prepared to our halal standards with care
             </p>
           </motion.div>
 

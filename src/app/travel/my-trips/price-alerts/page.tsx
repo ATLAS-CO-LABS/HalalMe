@@ -113,7 +113,7 @@ export default function PriceAlertsPage() {
               <Bell className="w-16 h-16 text-gray-600 mx-auto mb-4" />
               <h3 className="text-white font-semibold text-xl mb-2">No price alerts</h3>
               <p className="text-gray-400 mb-4">
-                Set up alerts to get notified when prices drop on your favorite routes.
+                Set up alerts to get notified when prices drop on your favourite routes.
               </p>
               <Link href="/travel/flights">
                 <motion.button

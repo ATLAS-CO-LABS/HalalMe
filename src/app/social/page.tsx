@@ -205,19 +205,19 @@ export default function HubLandingPage() {
     {
       Icon: Share2,
       title: "Share Posts",
-      desc: "Upload food pictures, share recipes, and tell your cooking stories with the community.",
+      desc: "Share photos, stories and everyday moments from your halal life with the community.",
       num: "01",
     },
     {
       Icon: Heart,
       title: "Engage & Connect",
-      desc: "Like, comment, and interact with posts from fellow food lovers around the world.",
+      desc: "Like, comment, and connect with people who share your values, from around the world.",
       num: "02",
     },
     {
       Icon: MessageCircle,
       title: "Build Community",
-      desc: "Follow your favourite creators, earn followers, and grow your own food community.",
+      desc: "Follow people you connect with, grow your own following, and be part of theirs.",
       num: "03",
     },
   ];
@@ -227,25 +227,25 @@ export default function HubLandingPage() {
       Icon: Users,
       num: "01",
       title: "Join the Community",
-      desc: "Connect with halal food lovers from around the world.",
+      desc: "Connect with the halal community from around the world.",
     },
     {
       Icon: ChefHat,
       num: "02",
-      title: "Share Recipes",
-      desc: "Showcase your culinary creations to thousands of food enthusiasts.",
+      title: "Share Your Story",
+      desc: "Post updates, photos and experiences — for recipes themselves, HalalMe Kitchen is home.",
     },
     {
       Icon: TrendingUp,
       num: "03",
       title: "Discover Trending",
-      desc: "Find the most popular halal recipes and posts every single day.",
+      desc: "Find the most popular posts and conversations every single day.",
     },
     {
       Icon: Globe,
       num: "04",
       title: "Global Reach",
-      desc: "A worldwide platform for the halal food community to connect.",
+      desc: "A worldwide platform for the halal community to connect.",
     },
   ];
 
@@ -262,7 +262,7 @@ export default function HubLandingPage() {
         <div className="absolute inset-0 z-0">
           <Image
             src="/images/services/halal03.webp"
-            alt="Halal food community"
+            alt="HalalMe Social community"
             fill
             className="object-cover object-center opacity-100"
             priority
@@ -364,8 +364,8 @@ export default function HubLandingPage() {
               className="mt-6 md:mt-7 text-base md:text-lg max-w-md leading-relaxed text-white/50 font-normal mx-auto"
               style={{ fontFamily: "var(--font-body)" }}
             >
-              Join thousands of food lovers sharing recipes, posting food
-              pictures, and building a vibrant halal food community.
+              Join a growing community sharing halal experiences, everyday
+              moments, and the places and people that make up Muslim life.
             </motion.p>
 
             <motion.div
@@ -408,7 +408,7 @@ export default function HubLandingPage() {
               className="mt-8 flex flex-wrap gap-6 justify-center"
             >
               {[
-                { Icon: Users, text: "10K+ Members" },
+                { Icon: Users, text: "Growing Community" },
                 { Icon: Globe, text: "Global Community" },
                 { Icon: Sparkles, text: "Daily Content" },
               ].map((item, i) => (
@@ -437,10 +437,10 @@ export default function HubLandingPage() {
         }}
       >
         {[
-          { value: "10K+", label: "Community Members" },
-          { value: "5K+", label: "Recipes Shared" },
-          { value: "500+", label: "Daily Posts" },
-          { value: "50+", label: "Countries" },
+          { value: "New", label: "Community" },
+          { value: "Active", label: "Conversations" },
+          { value: "Daily", label: "New Posts" },
+          { value: "UK", label: "Wide" },
         ].map((s, i) => (
           <motion.div
             key={i}
@@ -619,7 +619,7 @@ export default function HubLandingPage() {
                 {[
                   {
                     icon: ChefHat,
-                    text: "Share recipes, food pics & cooking stories",
+                    text: "Share stories, photos & everyday moments",
                   },
                   {
                     icon: Heart,
@@ -627,11 +627,11 @@ export default function HubLandingPage() {
                   },
                   {
                     icon: Users,
-                    text: "Follow creators and build your food network",
+                    text: "Follow people and build your community",
                   },
                   {
                     icon: TrendingUp,
-                    text: "Discover trending halal food content daily",
+                    text: "Discover trending posts and conversations daily",
                   },
                 ].map(({ icon: Icon, text }, i) => (
                   <motion.div
@@ -869,7 +869,7 @@ export default function HubLandingPage() {
             transition={{ duration: 0.6 }}
             className="text-4xl sm:text-5xl md:text-7xl font-extrabold uppercase tracking-tighter leading-[0.88] text-(--hub-fg)"
           >
-            Your Food.
+            Your Story.
             <br />
             <span className="text-[color:color-mix(in_oklab,var(--hub-fg)_40%,var(--hm-lm-anchor))]">Your Community.</span>
           </motion.h2>
@@ -974,7 +974,7 @@ export default function HubLandingPage() {
             className="text-base md:text-lg max-w-xl mb-12 leading-relaxed text-[#0B0D0F]/65"
             style={{ fontFamily: "var(--font-body)" }}
           >
-            Create your account and start building your halal food community
+            Create your account and start building your halal community
             today.
           </motion.p>
 
@@ -1003,8 +1003,8 @@ export default function HubLandingPage() {
 
           <div className="flex flex-wrap gap-6 md:gap-10">
             {[
-              { Icon: Users, text: "10K+ Community Members" },
-              { Icon: ChefHat, text: "5K+ Recipes Shared" },
+              { Icon: Users, text: "Growing Community" },
+              { Icon: MessageCircle, text: "Active Discussions" },
             ].map((item, i) => (
               <div
                 key={i}

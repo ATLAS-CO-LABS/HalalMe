@@ -11,6 +11,7 @@ import DonationAmountSelector from "@/components/charity/DonationAmountSelector"
 import { rewardsService } from "@/services/rewardsService";
 import type { Charity } from "@/types/app";
 import AuthGuard from "@/components/auth/AuthGuard";
+import { verificationLevelLabel, formatReviewDate } from "@/lib/charityEvidence";
 
 const BG    = "#0F1F17";
 const BG2   = "#162B20";
@@ -174,40 +175,82 @@ function CharityDetailContent() {
                   ))}
                 </div>
 
-                {/* What your donation does */}
+                {/* Who operates this cause + what evidence HalalMe reviewed */}
                 <div className="mb-8 p-6 md:p-8" style={{ backgroundColor: BG2, border: `1px solid ${CREAM}08` }}>
                   <div className="flex items-center gap-3 mb-5">
                     <div className="w-6 h-px" style={{ backgroundColor: TEAL }} />
-                    <span className="text-[10px] font-bold uppercase tracking-[0.3em]" style={{ color: TEAL }}>Impact</span>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.3em]" style={{ color: TEAL }}>Who Operates This Cause</span>
+                  </div>
+                  <dl className="space-y-3 text-sm">
+                    <div className="flex justify-between gap-4">
+                      <dt style={{ color: `${CREAM}40` }}>Legal name</dt>
+                      <dd className="text-right font-semibold" style={{ color: CREAM }}>
+                        {charity.legal_name ?? charity.name}
+                      </dd>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <dt style={{ color: `${CREAM}40` }}>Registration number</dt>
+                      <dd className="text-right font-semibold" style={{ color: CREAM }}>
+                        {charity.registration_number ?? "Not yet on file"}
+                      </dd>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <dt style={{ color: `${CREAM}40` }}>Review status</dt>
+                      <dd className="text-right font-semibold" style={{ color: CREAM }}>
+                        {verificationLevelLabel(charity.verification_level)}
+                      </dd>
+                    </div>
+                    {formatReviewDate(charity.verified_at) && (
+                      <div className="flex justify-between gap-4">
+                        <dt style={{ color: `${CREAM}40` }}>Last reviewed</dt>
+                        <dd className="text-right font-semibold" style={{ color: CREAM }}>
+                          {formatReviewDate(charity.verified_at)}
+                        </dd>
+                      </div>
+                    )}
+                  </dl>
+                  <p className="text-xs leading-relaxed mt-5" style={{ color: `${CREAM}35` }}>
+                    Donations settle directly into this charity&apos;s own Stripe-connected account.
+                    HalalMe never holds or pools donation funds.
+                  </p>
+                </div>
+
+                {/* Where your money goes - real fee transparency, not invented per-amount outcomes */}
+                <div className="mb-8 p-6 md:p-8" style={{ backgroundColor: BG2, border: `1px solid ${CREAM}08` }}>
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="w-6 h-px" style={{ backgroundColor: TEAL }} />
+                    <span className="text-[10px] font-bold uppercase tracking-[0.3em]" style={{ color: TEAL }}>Where Your Money Goes</span>
                   </div>
                   <h3
                     className="text-xl md:text-2xl font-extrabold uppercase tracking-tighter leading-[0.88] mb-6"
                     style={{ color: CREAM, fontFamily: "var(--font-headline)" }}
                   >
-                    What Your
+                    Transparent
                     <br />
-                    <span style={{ color: `${CREAM}40` }}>Donation Does.</span>
+                    <span style={{ color: `${CREAM}40` }}>By Design.</span>
                   </h3>
-                  <div className="space-y-4">
-                    {[
-                      { amount: "£5",   desc: "Provides essential supplies for one person" },
-                      { amount: "£10",  desc: "Supports a family for one week" },
-                      { amount: "£20",  desc: "Makes a meaningful impact on the community" },
-                      { amount: "£50+", desc: "Creates lasting change for those in need" },
-                    ].map(({ amount, desc }, i) => (
-                      <div key={i} className="flex items-start gap-4">
-                        <span
-                          className="text-sm font-extrabold tracking-tighter shrink-0 mt-0.5 w-10"
-                          style={{ color: TEAL, fontFamily: "var(--font-headline)" }}
+                  <p className="text-sm font-normal leading-relaxed mb-4" style={{ color: `${CREAM}55`, fontFamily: "var(--font-body)" }}>
+                    95% of your donation goes directly to {charity.name}&apos;s own Stripe-connected
+                    account. The 5% platform fee funds HalalMe&apos;s charity operations, Rewards
+                    programme and community initiatives.
+                  </p>
+                  <p className="text-sm font-normal leading-relaxed" style={{ color: `${CREAM}55`, fontFamily: "var(--font-body)" }}>
+                    How {charity.name} spends what it receives is determined by the charity itself, not
+                    HalalMe — we&apos;re the payment conduit, not the operator. See their registration
+                    details above{charity.website_url ? (
+                      <>, or visit{" "}
+                        <a
+                          href={charity.website_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="underline"
+                          style={{ color: TEAL }}
                         >
-                          {amount}
-                        </span>
-                        <p className="text-sm font-normal leading-relaxed" style={{ color: `${CREAM}50`, fontFamily: "var(--font-body)" }}>
-                          {desc}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
+                          their own website
+                        </a>{" "}
+                        for how they report on their work.</>
+                    ) : " for how they report on their work."}
+                  </p>
                 </div>
 
                 <button

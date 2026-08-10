@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
@@ -41,7 +41,7 @@ export default function FreshLandingPage() {
 
 /* ───────────────────────────── Promo Bar ───────────────────────────── */
 function PromoBar() {
-  const tickerText = 'FREE DELIVERY OVER £30  \u00B7  100% HALAL CERTIFIED  \u00B7  20% OFF YOUR FIRST ORDER  \u00B7  CHEF-PREPARED DAILY  \u00B7  ';
+  const tickerText = 'FREE DELIVERY OVER £30  \u00B7  HALAL-FOCUSED MENU  \u00B7  20% OFF YOUR FIRST ORDER  \u00B7  CHEF-PREPARED DAILY  \u00B7  ';
 
   return (
     <div className="bg-lime-500 overflow-hidden">
@@ -93,7 +93,7 @@ function HeroSection() {
           >
             <span className="w-2.5 h-2.5 rounded-full bg-lime-400 animate-pulse" />
             <span className="text-lime-300 text-sm font-semibold tracking-wide">
-              Fresh & Halal Certified
+              Fresh & Halal-Focused
             </span>
           </motion.div>
 
@@ -122,7 +122,7 @@ function HeroSection() {
             transition={{ duration: 0.6, delay: 0.5 }}
             className="text-base sm:text-lg md:text-xl text-gray-300/90 max-w-xl leading-relaxed mb-6 sm:mb-10"
           >
-            Chef-prepared meals made fresh daily with certified halal ingredients.
+            Chef-prepared meals made fresh daily to our halal standards.
             No cooking, no hassle - just heat, eat, and enjoy.
           </motion.p>
 
@@ -160,7 +160,7 @@ function HeroSection() {
             className="flex flex-wrap gap-4 sm:gap-6 text-xs sm:text-sm"
           >
             {[
-              { icon: ShieldCheck, text: '100% Halal' },
+              { icon: ShieldCheck, text: 'Halal-Focused' },
               { icon: Sparkles, text: 'Fresh Daily' },
               { icon: Truck, text: 'Free Delivery over £30' },
             ].map((item, i) => (
@@ -198,7 +198,7 @@ function HowItWorksSection() {
       num: '02',
       icon: Truck,
       title: 'We Prepare & Deliver',
-      desc: 'Fresh meals cooked daily in halal-certified kitchens. Delivered straight to your door in eco-friendly packaging.',
+      desc: 'Fresh meals cooked daily to our halal standards. Delivered straight to your door in eco-friendly packaging.',
     },
     {
       num: '03',
@@ -392,8 +392,8 @@ function WhyFreshSection() {
   const benefits = [
     {
       icon: ShieldCheck,
-      title: '100% Halal Certified',
-      desc: 'Every meal prepared in halal-certified kitchens with fully traceable ingredients. No compromises.',
+      title: 'Halal Status Reviewed',
+      desc: 'Every meal prepared to our halal standards, with traceable ingredients we stand behind.',
     },
     {
       icon: ChefHat,
@@ -429,7 +429,7 @@ function WhyFreshSection() {
             Why <span className="text-lime-400">HalalMe Fresh</span>
           </h2>
           <p className="text-lg text-gray-400 max-w-xl mx-auto">
-            Everyone deserves access to delicious, certified halal meals without the hassle of cooking from scratch.
+            Everyone deserves access to delicious, halal-focused meals without the hassle of cooking from scratch.
           </p>
         </motion.div>
 
@@ -471,7 +471,7 @@ function StatsSection() {
   const stats = [
     { value: '50,000+', label: 'Meals Delivered', icon: Truck },
     { value: '4.9', label: 'Star Rating', icon: Star },
-    { value: '100%', label: 'Halal Certified', icon: ShieldCheck },
+    { value: 'Halal', label: 'Focused Menu', icon: ShieldCheck },
     { value: '12+', label: 'Weekly Options', icon: UtensilsCrossed },
   ];
 

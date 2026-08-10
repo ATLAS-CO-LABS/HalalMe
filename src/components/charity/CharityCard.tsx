@@ -3,8 +3,9 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, Users, ArrowRight } from "lucide-react";
+import { Heart, Users, ArrowRight, ShieldCheck } from "lucide-react";
 import type { Charity } from "@/types/app";
+import { verificationLevelLabel } from "@/lib/charityEvidence";
 
 const BG    = "#0F1F17";
 const BG2   = "#162B20";
@@ -64,11 +65,20 @@ export default function CharityCard({ charity }: CharityCardProps) {
             {charity.name}
           </h3>
           <p
-            className="text-xs leading-relaxed mb-4 line-clamp-2 flex-1 font-normal"
+            className="text-xs leading-relaxed mb-3 line-clamp-2 flex-1 font-normal"
             style={{ color: `${CREAM}45`, fontFamily: "var(--font-body)" }}
           >
             {charity.description}
           </p>
+
+          {/* Evidence line - real verification status, not a blanket badge */}
+          <div className="flex items-center gap-1.5 text-[10px] mb-4" style={{ color: `${TEAL}B0` }}>
+            <ShieldCheck className="w-3 h-3 shrink-0" />
+            <span className="truncate">
+              {verificationLevelLabel(charity.verification_level)}
+              {charity.registration_number ? ` · Reg. No. ${charity.registration_number}` : ""}
+            </span>
+          </div>
 
           {/* Progress */}
           <div className="mb-3">

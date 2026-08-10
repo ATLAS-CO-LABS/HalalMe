@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useRef, useState, useEffect } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
@@ -150,7 +150,7 @@ function AnnouncementBanner() {
 /* ───────────────────────── Promo Ticker ───────────────────────── */
 function PromoBar() {
   const tickerText =
-    "£10 OFF YOUR FIRST ORDER  ·  100% HALAL CERTIFIED  ·  FREE DELIVERY OVER £25  ·  900+ ACTIVE RESTAURANTS  ·  30-60 MIN AVG DELIVERY  ·  ";
+    "£10 OFF YOUR FIRST ORDER  ·  HALAL-FOCUSED MARKETPLACE  ·  FREE DELIVERY OVER £25  ·  HALAL RESTAURANTS NEAR YOU  ·  30-60 MIN AVG DELIVERY  ·  ";
   return (
     <div className="overflow-hidden" style={{ backgroundColor: PURPLE }}>
       <div
@@ -288,7 +288,7 @@ function HeroSection() {
               className="block text-[clamp(1.25rem,4vw,4rem)]"
               style={{ color: CREAM }}
             >
-              100% Halal. Delivered Fast.
+              Halal-Focused. Delivered Fast.
             </motion.span>
           </h1>
 
@@ -299,8 +299,8 @@ function HeroSection() {
             className="mt-6 md:mt-7 text-base md:text-lg max-w-md leading-relaxed mx-auto"
             style={{ color: `${CREAM}B8` }}
           >
-            “Craving Something Delicious?” Order fresh, halal-certified meals
-            from thousands of your favorite local restaurants.
+            “Craving Something Delicious?” Order fresh, halal-focused meals
+            from thousands of your favourite local restaurants.
           </motion.p>
 
           <motion.div
@@ -349,9 +349,9 @@ function HeroSection() {
             className="mt-8 flex flex-wrap gap-6 justify-center"
           >
             {[
-              { icon: ShieldCheck, text: "100% Halal" },
+              { icon: ShieldCheck, text: "Halal-Focused" },
               { icon: Timer, text: "30-60 Min Delivery" },
-              { icon: Store, text: "900+ Active Restaurants" },
+              { icon: Store, text: "Growing Restaurant Network" },
             ].map((item, i) => (
               <div
                 key={i}
@@ -386,7 +386,7 @@ function StatsStrip() {
       }}
     >
       {[
-        { value: "900+", label: "Active Restaurants", icon: Store },
+        { value: "New", label: "Restaurant Network", icon: Store },
         { value: "30-60m", label: "Avg Delivery", icon: Timer },
         { value: "Free", label: "Over £25 Delivery", icon: BadgePercent },
         { value: "100%", label: "Halal Verified", icon: ShieldCheck },
@@ -434,7 +434,7 @@ function HowItWorksSection() {
       num: "01",
       icon: Store,
       title: "Browse Restaurants",
-      desc: "Explore 900+ certified halal restaurants near you. Filter by cuisine, rating, or delivery time.",
+      desc: "Explore halal restaurants near you. Filter by cuisine, rating, or delivery time.",
     },
     {
       num: "02",
@@ -720,8 +720,8 @@ function WhyDeliverySection() {
     {
       num: "01",
       icon: ShieldCheck,
-      title: "100% Halal Certified",
-      desc: "Every restaurant on our platform is verified halal. We audit regularly so you can order with complete confidence.",
+      title: "Halal Status Reviewed",
+      desc: "Every restaurant declares its halal status at onboarding, with supporting evidence reviewed where it's supplied. We keep that review on file and update it over time.",
     },
     {
       num: "02",
@@ -868,7 +868,7 @@ function PromoBanner() {
               </h3>
               <p className="text-white/70 text-base">
                 Use code <span className="font-bold text-white">HALAL10</span>{" "}
-                at checkout. Certified halal food, delivered for less.
+                at checkout. Halal-focused food, delivered for less.
               </p>
             </div>
           </div>
@@ -939,8 +939,8 @@ function FinalCTA() {
           transition={{ delay: 0.2 }}
           className="text-white/60 text-base md:text-lg max-w-xl mb-12 leading-relaxed"
         >
-          900+ halal restaurants. 30-60 minute delivery. Zero compromise. Your
-          next favourite meal is just a tap away.
+          Halal restaurants near you. 30-60 minute delivery. Zero compromise.
+          Your next favourite meal is just a tap away.
         </motion.p>
 
         <motion.div
@@ -967,9 +967,9 @@ function FinalCTA() {
 
         <div className="flex flex-wrap gap-6 md:gap-10">
           {[
-            { icon: ShieldCheck, text: "100% Halal Verified" },
+            { icon: ShieldCheck, text: "Halal Status Reviewed" },
             { icon: Timer, text: "30-60 Min Delivery" },
-            { icon: Store, text: "900+ Restaurants" },
+            { icon: Store, text: "Growing Restaurant Network" },
           ].map((item, i) => (
             <div
               key={i}

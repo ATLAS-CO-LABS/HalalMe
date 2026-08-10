@@ -267,7 +267,7 @@ function HeroSection() {
           transition={{ delay: 0.62 }}
           className="mt-7 text-base md:text-lg text-[#F7E7CE] max-w-sm leading-relaxed"
         >
-          Food, recipes, community and giving all under one HalalMe account.
+          A whole halal world, connected through HalalMe.
         </motion.p>
 
         {/* Buttons */}
@@ -358,9 +358,9 @@ function ServiceTicker() {
 
 function StatsStrip() {
   const stats = [
-    { value: "900+", label: "Restaurants Signed" },
-    { value: "5", label: "UK Cities" },
-    { value: "4", label: "Services" },
+    { value: "New", label: "Restaurant Network" },
+    { value: "UK", label: "Expanding Coverage" },
+    { value: "5", label: "Services" },
     { value: "100%", label: "Halal Verified" },
   ];
 
@@ -405,7 +405,7 @@ function FeaturesSection() {
     {
       num: "02",
       title: "AI-Powered Kitchen",
-      desc: "Get personalized Halal recipes and meal ideas, generated instantly for your taste and dietary needs.",
+      desc: "Get personalised Halal recipes and meal ideas, generated instantly for your taste and dietary needs.",
       Icon: BookOpen,
     },
     {
@@ -524,7 +524,7 @@ function HowItWorksSection() {
     {
       num: "02",
       title: "Select Service",
-      desc: "Choose from Delivery, Kitchen, Social, and Rewards. All connected, all Halal certified.",
+      desc: "Choose from Delivery, Kitchen, Social, and Rewards. All connected, all halal-focused.",
       Icon: LayoutGrid,
     },
     {
@@ -786,7 +786,7 @@ function FinalCTA() {
           transition={{ delay: 0.4 }}
           className="flex flex-wrap gap-6 md:gap-10"
         >
-          {[{ Icon: ShieldCheck, text: "100% Halal Certified" }].map(
+          {[{ Icon: ShieldCheck, text: "Halal-Focused Platform" }].map(
             (item, i) => (
               <div
                 key={i}

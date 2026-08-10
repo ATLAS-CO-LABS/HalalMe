@@ -184,7 +184,7 @@ export default function GuideLandingPage() {
               { icon: '🍽️', title: 'Halal Restaurants', desc: 'Verified halal dining options' },
               { icon: '🏛️', title: 'Attractions', desc: 'Muslim-friendly places to visit' },
               { icon: '⭐', title: 'Halal Score', desc: 'Overall halal-friendliness rating' },
-              { icon: '💡', title: 'Local Tips', desc: 'Insider advice for Muslim travelers' },
+              { icon: '💡', title: 'Local Tips', desc: 'Insider advice for Muslim travellers' },
               { icon: '✈️', title: 'Travel Info', desc: 'Best times to visit and transport' },
             ].map((item, index) => (
               <motion.div
@@ -221,7 +221,7 @@ export default function GuideLandingPage() {
               >
                 Travel Tips
               </h2>
-              <p className="text-gray-400">Essential advice for Muslim travelers</p>
+              <p className="text-gray-400">Essential advice for Muslim travellers</p>
             </div>
             <Link
               href="/travel/guide/tips"

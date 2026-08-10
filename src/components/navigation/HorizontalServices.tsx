@@ -149,7 +149,7 @@ function DeliveryPreview({ accent }: { accent: string }) {
                         {item.name}
                       </p>
                       <p className="text-[9px]" style={{ color: `${CREAM}35` }}>
-                        Halal certified · {item.price}
+                        Halal-focused · {item.price}
                       </p>
                     </div>
                     <motion.span
@@ -271,7 +271,7 @@ function KitchenPreview({ accent }: { accent: string }) {
   const uploading = phase >= 2;
 
   return (
-    <PreviewShell accent={accent} title="Kitchen" sub="5K+ recipes">
+    <PreviewShell accent={accent} title="Kitchen" sub="Growing recipe library">
       {/* Tabs */}
       <div className="flex gap-1.5 mb-3">
         {["Browse", "Upload"].map((tab, i) => {
@@ -510,7 +510,7 @@ function CharityPreview({ accent }: { accent: string }) {
             Water Wells for Villages
           </p>
           <p className="text-[8px] uppercase tracking-[0.14em]" style={{ color: `${CREAM}35` }}>
-            Charity Commission verified
+            Registered UK charity
           </p>
         </div>
       </div>
@@ -638,7 +638,7 @@ const SERVICES = [
     name: "Delivery",
     tagline: "Halal food at your door",
     desc: "Order from the best halal restaurants near you, delivered in minutes.",
-    features: ["Certified halal restaurants only", "Live order & rider tracking", "Delivery in minutes, not hours"],
+    features: ["Halal-focused restaurants only", "Live order & rider tracking", "Delivery in minutes, not hours"],
     link: "/delivery",
     image: "/images/services/halal01.webp",
     accent: "#B96AF0",
@@ -650,7 +650,7 @@ const SERVICES = [
     name: "Kitchen",
     tagline: "AI-powered recipes",
     desc: "Discover thousands of halal recipes and get AI-generated meal plans tailored to you.",
-    features: ["Browse 5K+ community recipes", "Upload & share your own dishes", "AQI - your AI cooking assistant"],
+    features: ["Browse community recipes", "Upload & share your own dishes", "AQI - your AI cooking assistant"],
     link: "/kitchen",
     image: "/images/services/halal02.webp",
     accent: "#F03E9E",
@@ -660,8 +660,8 @@ const SERVICES = [
     num: "03",
     name: "Social",
     tagline: "The halal social network",
-    desc: "Connect with the global Muslim community. Share recipes, reviews, and halal finds.",
-    features: ["Share photos, recipes & finds", "Follow cooks you love", "Boost your best posts"],
+    desc: "Connect with the global Muslim community. Share experiences, reviews, and halal finds.",
+    features: ["Share stories, reviews & finds", "Follow people you connect with", "Boost your best posts"],
     link: "/social",
     image: "/images/services/halal03.webp",
     accent: "#F59E0B",
@@ -670,9 +670,9 @@ const SERVICES = [
   {
     num: "04",
     name: "Charity",
-    tagline: "Give back, verified and tracked",
-    desc: "Donate to verified Islamic charities and see the real-world impact of every contribution.",
-    features: ["Charity Commission verified", "Payments go direct to charity", "Receipts for zakat & Gift Aid"],
+    tagline: "Give back, transparently tracked",
+    desc: "Donate to registered Islamic charities and see the real-world impact of every contribution.",
+    features: ["Registered UK charities", "Payments go direct to charity", "Receipts for zakat & Gift Aid"],
     link: "/charity",
     image: "/images/page sections/rewards6.webp",
     accent: "#14B8A6",
@@ -683,7 +683,7 @@ const SERVICES = [
     name: "Rewards",
     tagline: "Earn points, redeem perks",
     desc: "Every recipe, post, and donation earns points you can redeem across HalalMe.",
-    features: ["Earn from every service", "Bronze to Platinum tiers", "Boosts, flair & AI power-ups"],
+    features: ["Earn from every service", "Bronze to Diamond tiers", "Boosts, flair & AI power-ups"],
     link: "/rewards",
     image: "/images/services/rewards.webp",
     accent: "#FB7185",

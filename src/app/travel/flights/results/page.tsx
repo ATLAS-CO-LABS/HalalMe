@@ -60,7 +60,7 @@ function FlightResultsContent() {
                 {originAirport?.city || origin || 'London'} → {destAirport?.city || destination || 'Dubai'}
               </h1>
               <p className="text-gray-400 text-sm">
-                {formatDate(departure)} {returnDate && `- ${formatDate(returnDate)}`} · {passengers} traveler{parseInt(passengers) > 1 ? 's' : ''}
+                {formatDate(departure)} {returnDate && `- ${formatDate(returnDate)}`} · {passengers} traveller{parseInt(passengers) > 1 ? 's' : ''}
               </p>
             </div>
 

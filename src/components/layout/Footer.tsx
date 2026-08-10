@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
 import { ArrowUp, ArrowUpRight } from "lucide-react";
+import { LEGAL_ENTITY } from "@/lib/legalEntity";
 
 const services = [
   { label: "Delivery", href: "/delivery", accent: "#B96AF0" },
@@ -154,7 +155,7 @@ export default function Footer() {
             <div className="inline-flex items-center gap-2 bg-[#F7E7CE]/6 border border-[#F7E7CE]/12 px-4 py-2 w-fit">
               <span className="text-[#F7E7CE]/60 text-xs">☪</span>
               <span className="text-[#F7E7CE]/60 text-xs font-semibold uppercase tracking-wide">
-                Scholar Verified Platform
+                Halal-Focused Platform
               </span>
             </div>
             {/* Social Icons */}
@@ -293,8 +294,8 @@ export default function Footer() {
             charity partners. We process personal data under UK GDPR and the
             Data Protection Act 2018. Services are provided on an &ldquo;as
             is&rdquo; basis. By using HalalMe you agree to our Terms of Service
-            and Privacy Policy. HalalMe is operated by Halal Delivery LTD
-            (Company No. 13450710), registered in England and Wales. Last
+            and Privacy Policy. HalalMe is operated by {LEGAL_ENTITY.registeredName}
+            (Company No. {LEGAL_ENTITY.companyNumber}), registered in {LEGAL_ENTITY.jurisdiction}. Last
             updated 13/05/2026.
           </p>
         </div>
@@ -302,7 +303,7 @@ export default function Footer() {
         {/* ── Bottom Bar ────────────────────────────────────────── */}
         <div className="mt-6 pt-6 border-t border-[#F7E7CE]/8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-[#F7E7CE]/25 text-xs">
-            © {currentYear} Halal Delivery LTD. All Rights Reserved.
+            © {currentYear} {LEGAL_ENTITY.registeredName}. All Rights Reserved.
           </p>
           <div className="flex items-center gap-5 flex-wrap justify-center">
             {legalLinks.map((link) => (

@@ -1544,6 +1544,13 @@ export interface Charity {
   stripe_account_id:   string | null;
   stripe_charges_enabled: boolean;
   created_at:          string;
+  // Legal identity + evidence (WA-42: shown to donors as real evidence,
+  // not a generic "verified" badge — see legalEntity-style honesty pattern)
+  legal_name:          string | null;
+  registration_number: string | null;
+  verification_level:  number;
+  verified_at:         string | null;
+  website_url:         string | null;
 }
 
 export interface Donation {

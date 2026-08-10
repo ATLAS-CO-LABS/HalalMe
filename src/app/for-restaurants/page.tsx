@@ -204,8 +204,8 @@ function HeroSection() {
               className="text-base md:text-lg max-w-md leading-relaxed"
               style={{ color: `${CREAM}75` }}
             >
-              Join 900+ restaurants already signed up across the UK. Lower
-              commission. Halal-verified customers. Zero hassle.
+              Join a growing network of halal restaurants across the UK. Lower
+              commission. Halal-focused customers. Zero hassle.
             </motion.p>
 
             <motion.div
@@ -234,8 +234,8 @@ function HeroSection() {
               className="flex flex-wrap gap-6 justify-center"
             >
               {[
-                { icon: ShieldCheck, text: "100% Halal Verified" },
-                { icon: Store, text: "900+ Registered Partners" },
+                { icon: ShieldCheck, text: "Halal-Focused Marketplace" },
+                { icon: Store, text: "Growing Partner Network" },
                 { icon: Timer, text: "Go Live in 48hrs" },
               ].map((item, i) => (
                 <div
@@ -263,8 +263,8 @@ function StatsStrip() {
   const isInView = useInView(ref, { once: true });
 
   const stats = [
-    { value: "900+", label: "Restaurants Signed", icon: Store },
-    { value: "5", label: "UK Cities", icon: MapPin },
+    { value: "New", label: "Restaurant Network", icon: Store },
+    { value: "UK", label: "Expanding Coverage", icon: MapPin },
     { value: "48hrs", label: "Average Go-Live Time", icon: Timer },
     { value: "100%", label: "Halal Verified", icon: ShieldCheck },
   ];
@@ -841,9 +841,9 @@ function TestimonialsSection() {
           className="text-4xl sm:text-5xl md:text-7xl font-extrabold uppercase tracking-tighter leading-[0.88]"
           style={{ color: CREAM }}
         >
-          900+ Partners.
+          Restaurants Are Joining.
           <br />
-          <span style={{ color: `${CREAM}75` }}>Here's Why They Joined.</span>
+          <span style={{ color: `${CREAM}75` }}>Here&apos;s Why.</span>
         </motion.h2>
       </div>
 
@@ -951,8 +951,8 @@ function FinalCTASection() {
           transition={{ delay: 0.2 }}
           className="text-white/60 text-base md:text-lg max-w-xl mb-10 leading-relaxed"
         >
-          Join 900+ restaurants across the UK. No setup fees. No long contracts.
-          Go live in 48 hours.
+          Join our growing network of halal restaurants across the UK. No setup
+          fees. No long contracts. Go live in 48 hours.
         </motion.p>
 
         <motion.div
@@ -986,9 +986,9 @@ function FinalCTASection() {
 
         <div className="flex flex-wrap gap-6 md:gap-10">
           {[
-            { icon: ShieldCheck, text: "Halal Certified" },
-            { icon: BookOpen, text: "Scholar Verified" },
-            { icon: Store, text: "900+ Registered Partners" },
+            { icon: ShieldCheck, text: "Halal Status Reviewed" },
+            { icon: BookOpen, text: "Evidence-Led Onboarding" },
+            { icon: Store, text: "Growing Partner Network" },
             { icon: Wallet, text: "Payout Every 3 Days" },
           ].map((item, i) => (
             <div

@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { LEGAL_ENTITY } from "@/lib/legalEntity";
 
 const CREAM = "#F7E7CE";
 const GOLD = "#F59E0B";
@@ -74,8 +75,9 @@ function DocumentBody() {
     <section className="bg-[#102C26] px-6 py-20 md:py-28">
       <div className="max-w-3xl mx-auto">
         <p className="text-sm md:text-base leading-relaxed mb-16" style={{ color: `${CREAM}70` }}>
-          This policy explains what cookies and similar technologies (like local storage) HalalMe
-          uses, and why.
+          This policy explains what cookies and similar technologies (like local storage) HalalMe,
+          operated by {LEGAL_ENTITY.registeredName} (Company No. {LEGAL_ENTITY.companyNumber}), uses,
+          and why.
         </p>
 
         <Section title="1. What cookies are">
@@ -95,10 +97,12 @@ function DocumentBody() {
           <ul className="list-disc pl-5 space-y-2">
             <li><strong style={{ color: CREAM }}>Authentication</strong> — keeps you signed in securely between visits. Without this, you&apos;d need to log in again on every page.</li>
             <li><strong style={{ color: CREAM }}>App functionality</strong> — remembers things like an in-progress Kitchen AI conversation or draft form data, so you don&apos;t lose your place if you navigate away and come back.</li>
+            <li><strong style={{ color: CREAM }}>Payment fraud prevention</strong> — when you make a donation or payment, our payment processor Stripe sets its own cookies to detect fraudulent transactions. These are only set on payment pages, not sitewide.</li>
           </ul>
           <p>
-            We do not currently use advertising cookies or third-party analytics/tracking cookies. If
-            that changes in future, for example to add privacy-respecting analytics, we&apos;ll update
+            We do not currently use advertising cookies or third-party analytics/tracking cookies —
+            our page-view and performance metrics (Vercel Analytics and Speed Insights) are cookieless.
+            If that changes in future, for example to add a different analytics tool, we&apos;ll update
             this policy and, where required by law, ask for your consent first.
           </p>
         </Section>

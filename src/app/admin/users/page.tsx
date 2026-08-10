@@ -68,6 +68,9 @@ const STATUS_CONFIG: Record<string, { label: string; dot: string; cls: string }>
 const TIER_CONFIG: Record<string, string> = {
   bronze: "text-amber-700", silver: "text-gray-600", gold: "text-yellow-700", platinum: "text-[#102C26]",
 };
+const TIER_LABEL: Record<string, string> = {
+  bronze: "Bronze", silver: "Silver", gold: "Gold", platinum: "Diamond",
+};
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function initials(name: string) {
@@ -520,7 +523,7 @@ export default function UsersPage() {
                         <td className="px-4 py-3.5"><RoleBadge role={u.role} /></td>
                         <td className="px-4 py-3.5"><StatusBadge status={u.status} /></td>
                         <td className="px-4 py-3.5 hidden xl:table-cell">
-                          <span className={`text-xs font-semibold capitalize ${TIER_CONFIG[u.reward_tier] ?? "text-gray-600"}`}>{u.reward_tier}</span>
+                          <span className={`text-xs font-semibold ${TIER_CONFIG[u.reward_tier] ?? "text-gray-600"}`}>{TIER_LABEL[u.reward_tier] ?? u.reward_tier}</span>
                           <span className="text-gray-500 text-xs ml-1">· {u.reward_points.toLocaleString()}pt</span>
                         </td>
                         <td className="px-4 py-3.5 hidden lg:table-cell text-gray-600 text-sm whitespace-nowrap">{fmtDate(u.created_at)}</td>

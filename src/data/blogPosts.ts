@@ -53,7 +53,7 @@ export const blogPosts: BlogPost[] = [
 <h2>Beyond Food: Halal in Everyday Life</h2>
 <p>Halal certification extends beyond food to cosmetics, pharmaceuticals, and even financial products. As the halal economy grows (projected to reach $3.2 trillion by 2027), understanding these certifications becomes increasingly relevant for mindful consumers everywhere.</p>
 
-<p>At HalalMe, we take certification seriously. Every vendor on our platform undergoes strict verification to ensure you can shop, order, and dine with complete confidence.</p>
+<p>At HalalMe, we take certification seriously. Merchants declare their halal status at onboarding, and we review the supporting evidence they provide.</p>
     `,
     category: "Halal Living",
     image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80",
@@ -125,7 +125,6 @@ export const blogPosts: BlogPost[] = [
 <h2>5. Tokyo, Japan</h2>
 <p>Japan has made remarkable strides in halal tourism. Tokyo now boasts hundreds of halal-certified restaurants and prayer rooms in major shopping districts.</p>
 
-<p>Book your halal-friendly trip through HalalMe Travel and access our verified hotel and restaurant listings, complete with prayer time notifications and qibla direction features.</p>
     `,
     category: "Travel",
     image: "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=800&q=80",
@@ -192,11 +191,13 @@ export const blogPosts: BlogPost[] = [
 <p>Intermittent fasting, now one of the most popular health trends worldwide, has been practiced by Muslims during Ramadan for over 1,400 years. Research confirms benefits including improved insulin sensitivity, cellular repair, and weight management.</p>
 
 <p>Explore halal health-conscious recipes on HalalMe Kitchen, where our AI assistant can create personalized meal plans that honor both your faith and your fitness goals.</p>
+
+<p><em>This article is general information, not medical or dietary advice. Speak to a qualified healthcare professional before making changes based on health conditions.</em></p>
     `,
     category: "Health & Wellness",
     image: "https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&q=80",
     author: {
-      name: "Dr. Sarah Ahmed",
+      name: "Sarah Ahmed",
       avatar: "SA",
       role: "Nutrition & Wellness Writer",
     },
@@ -213,7 +214,7 @@ export const blogPosts: BlogPost[] = [
 <p>The Quran reminds us: "Eat and drink, but do not waste" (7:31). This divine guidance perfectly aligns with the modern zero-waste movement, making sustainability not just a trend but a spiritual practice for Muslim households.</p>
 
 <h2>Start with Smart Shopping</h2>
-<p>Plan your meals for the week before heading to the store. Use HalalMe Fresh to order exactly what you need, reducing impulse purchases and packaging waste.</p>
+<p>Plan your meals for the week before heading to the store. A written list keeps you buying exactly what you need, reducing impulse purchases and packaging waste.</p>
 
 <h2>Nose-to-Tail Cooking</h2>
 <p>Traditional Islamic cooking has always valued using every part of the animal. Bones become rich broths, organ meats are transformed into delicacies, and even fat is rendered for cooking.</p>
@@ -294,7 +295,7 @@ export const blogPosts: BlogPost[] = [
     category: "Recipes",
     image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=800&q=80",
     author: {
-      name: "Prof. Ibrahim Khan",
+      name: "Ibrahim Khan",
       avatar: "IK",
       role: "Food History Writer",
     },
@@ -323,13 +324,15 @@ export const blogPosts: BlogPost[] = [
 <p>Many elite Muslim athletes maintain their training through Ramadan with smart timing and nutrition strategies. Training just before iftar allows immediate refueling, while suhoor should focus on slow-releasing energy foods.</p>
 
 <p>Get personalized halal meal plans for your training regimen using HalalMe Kitchen's AI assistant. Just input your sport, training schedule, and goals.</p>
+
+<p><em>This article is general information, not medical or dietary advice. Speak to a qualified healthcare professional or sports nutritionist before changing your supplement or training routine.</em></p>
     `,
     category: "Health & Wellness",
     image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&q=80",
     author: {
-      name: "Coach Tariq Hussain",
+      name: "Tariq Hussain",
       avatar: "TH",
-      role: "Sports Nutrition Specialist",
+      role: "Sports & Fitness Writer",
     },
     date: "2025-12-20",
     readTime: "9 min read",
@@ -355,7 +358,6 @@ export const blogPosts: BlogPost[] = [
 <h2>The Second-Hand Solution</h2>
 <p>Thrift shopping aligns perfectly with Islamic values of avoiding waste. Many Muslim communities are now organizing clothing swaps and establishing online marketplaces for pre-loved modest fashion.</p>
 
-<p>Discover ethical halal fashion brands and sustainable modest wear on HalalMe Marketplace, where every listed brand meets our ethical sourcing standards.</p>
     `,
     category: "Halal Living",
     image: "https://images.unsplash.com/photo-1571513800374-df1bbe650e56?w=800&q=80",

@@ -318,7 +318,7 @@ function DonationFlowDemo() {
                       <div className="flex items-center gap-2 mb-3">
                         <Search className="w-3 h-3" style={{ color: `${CREAM}30` }} />
                         <span className="text-[9px] font-bold uppercase tracking-[0.2em]" style={{ color: `${CREAM}40` }}>
-                          Verified causes near you
+                          Registered causes near you
                         </span>
                       </div>
                       {DEMO_CAUSES.map((c, i) => {
@@ -583,7 +583,7 @@ export default function CharityLandingPage() {
                 className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em]"
                 style={{ color: TEAL }}
               >
-                Verified Causes. Direct Giving. Real Impact.
+                Registered Causes. Direct Giving. Real Impact.
               </span>
               <div className="w-8 h-px" style={{ backgroundColor: TEAL }} />
             </motion.div>
@@ -700,8 +700,8 @@ export default function CharityLandingPage() {
               className="mt-8 flex flex-wrap gap-6 justify-center"
             >
               {[
-                { icon: ShieldCheck, text: "Verified Causes" },
-                { icon: HandHeart, text: "£50K+ Donated" },
+                { icon: ShieldCheck, text: "Registered Causes" },
+                { icon: HandHeart, text: "Growing Community of Givers" },
                 { icon: Banknote, text: "Direct to Charity" },
               ].map((item, i) => (
                 <div
@@ -730,10 +730,10 @@ export default function CharityLandingPage() {
         }}
       >
         {[
-          { value: "£50K+", label: "Total Donated" },
-          { value: "25+", label: "Causes Supported" },
-          { value: "2K+", label: "Active Donors" },
-          { value: "30+", label: "Countries Reached" },
+          { value: "Direct", label: "To Registered Charities" },
+          { value: "Listed", label: "Registered Causes" },
+          { value: "New", label: "Community of Givers" },
+          { value: "UK", label: "Wide" },
         ].map((s, i) => (
           <motion.div
             key={i}
@@ -982,8 +982,8 @@ export default function CharityLandingPage() {
               </motion.div>
             </div>
             <p className="text-xs" style={{ color: `${CREAM}40`, fontFamily: "var(--font-body)" }}>
-              95% goes straight to the cause. The 5% platform fee covers payment
-              processing, charity verification, and keeping HalalMe Charity running.
+              95% goes straight to the cause. The 5% platform fee funds HalalMe&apos;s
+              charity operations, Rewards programme, and community initiatives.
             </p>
           </div>
         </div>

@@ -222,7 +222,7 @@ export default function DealsPage() {
               Never Miss a Deal
             </h2>
             <p className="text-gray-400 mb-6">
-              Set up price alerts and get notified when prices drop on your favorite routes.
+              Set up price alerts and get notified when prices drop on your favourite routes.
             </p>
             <Link href="/travel/my-trips/price-alerts">
               <motion.button

@@ -13,11 +13,11 @@ const TEAL  = "#14B8A6";
 
 export const metadata: Metadata = {
   title: "Browse Causes",
-  description: "Browse verified charity causes on HalalMe and give sadaqah or zakat directly, with a full record of your impact.",
+  description: "Browse registered charity causes on HalalMe and give sadaqah or zakat directly, with a full record of your impact.",
   alternates: { canonical: "/charity/causes" },
   openGraph: {
     title: "Browse Causes | HalalMe Charity",
-    description: "Browse verified charity causes on HalalMe and give sadaqah or zakat directly, with a full record of your impact.",
+    description: "Browse registered charity causes on HalalMe and give sadaqah or zakat directly, with a full record of your impact.",
     url: "https://halalme.co.uk/charity/causes",
   },
 };
@@ -75,7 +75,7 @@ export default async function CausesPage() {
           <div className="flex items-center gap-3 mb-5">
             <div className="w-8 h-px" style={{ backgroundColor: TEAL }} />
             <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em]" style={{ color: TEAL }}>
-              Verified Causes
+              Registered Causes
             </span>
           </div>
 
@@ -90,7 +90,7 @@ export default async function CausesPage() {
             className="text-base max-w-xl leading-relaxed font-normal"
             style={{ color: `${CREAM}50`, fontFamily: "var(--font-body)" }}
           >
-            Browse through our verified charity causes and make a donation that makes a difference.
+            Browse through our registered charity causes and make a donation that makes a difference.
           </p>
         </div>
       </section>

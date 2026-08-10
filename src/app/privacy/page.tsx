@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { LEGAL_ENTITY } from "@/lib/legalEntity";
 
 const CREAM = "#F7E7CE";
 const GOLD = "#F59E0B";
@@ -74,16 +75,16 @@ function DocumentBody() {
     <section className="bg-[#102C26] px-6 py-20 md:py-28">
       <div className="max-w-3xl mx-auto">
         <p className="text-sm md:text-base leading-relaxed mb-16" style={{ color: `${CREAM}70` }}>
-          HalalMe Delivery LTD ("HalalMe", "we", "us") processes personal data under UK GDPR and the
+          {LEGAL_ENTITY.registeredName} (&quot;HalalMe&quot;, &quot;we&quot;, &quot;us&quot;) processes personal data under UK GDPR and the
           Data Protection Act 2018. This policy explains what we collect, why, who we share it with,
           and the rights you have over it.
         </p>
 
         <Section title="1. Who we are">
           <p>
-            HalalMe is operated by <strong style={{ color: CREAM }}>HalalMe Delivery LTD</strong>{" "}
-            (Company No. 13450710), registered in England and Wales, registered office at 71-75
-            Shelton Street, London, WC2H 9JQ, United Kingdom. We are the data controller for the
+            {LEGAL_ENTITY.tradingName} is operated by <strong style={{ color: CREAM }}>{LEGAL_ENTITY.registeredName}</strong>{" "}
+            (Company No. {LEGAL_ENTITY.companyNumber}), registered in {LEGAL_ENTITY.jurisdiction}, registered office at{" "}
+            {LEGAL_ENTITY.registeredOffice}. We are the data controller for the
             personal data described in this policy.
           </p>
         </Section>
@@ -119,7 +120,7 @@ function DocumentBody() {
           </p>
           <ul className="list-disc pl-5 space-y-2">
             <li><strong style={{ color: CREAM }}>Supabase</strong> — hosts our database, authentication, and file storage.</li>
-            <li><strong style={{ color: CREAM }}>Stripe</strong> — processes payments and charitable donations, including transferring donations directly to verified charity partners.</li>
+            <li><strong style={{ color: CREAM }}>Stripe</strong> — processes payments and charitable donations, including transferring donations directly to registered charity partners.</li>
             <li><strong style={{ color: CREAM }}>Cloudinary</strong> — hosts images you upload (avatars, post photos, recipe photos).</li>
             <li><strong style={{ color: CREAM }}>OpenAI</strong> — processes the messages you send to our Kitchen AI assistant to generate recipe responses.</li>
             <li><strong style={{ color: CREAM }}>Resend</strong> — sends transactional emails on our behalf.</li>
@@ -141,11 +142,21 @@ function DocumentBody() {
 
         <Section title="6. How long we keep it">
           <p>
-            We keep your data for as long as your account is active, and for a reasonable period
-            after closure to meet legal, accounting, or fraud-prevention obligations (for example,
-            financial transaction records are typically kept for 6 years as required by UK tax law).
-            You can ask us to delete your account and associated data at any time, subject to those
-            obligations.
+            We keep different categories of data for different lengths of time, based on why we
+            actually need them, not a single blanket period:
+          </p>
+          <ul className="list-disc pl-5 space-y-2">
+            <li><strong style={{ color: CREAM }}>Account and profile data</strong> — kept while your account is active, deleted within 30 days of you closing your account, unless a category below requires longer.</li>
+            <li><strong style={{ color: CREAM }}>Recipes, posts, comments and other community content</strong> — currently deleted along with your account. We&apos;re moving to a model where community content you contributed may instead be retained in an anonymised, de-identified form so others can keep benefiting from it — this policy will be updated when that change ships.</li>
+            <li><strong style={{ color: CREAM }}>Kitchen AI (AQI) conversations</strong> — kept in your browser&apos;s session storage only, not on our servers. It clears automatically when you log out or end your browser session. We do not maintain a separate server-side copy of your AQI chat history.</li>
+            <li><strong style={{ color: CREAM }}>Payment and donation records</strong> — kept for 6 years from the transaction date, as required by UK tax law.</li>
+            <li><strong style={{ color: CREAM }}>Support tickets</strong> — kept for up to 2 years after your query is resolved, in case of follow-up, then deleted, unless a related legal or safety issue requires us to keep them longer.</li>
+            <li><strong style={{ color: CREAM }}>Device, usage and security logs</strong> — kept for up to 12 months for fraud-prevention and security purposes, then deleted or aggregated so it can no longer identify you.</li>
+          </ul>
+          <p>
+            You can ask us to delete your account and associated data at any time, subject to the
+            retention needed to meet the legal, accounting, fraud-prevention and community obligations
+            described above.
           </p>
         </Section>
 
@@ -211,7 +222,7 @@ function DocumentBody() {
             <a href="mailto:support@halalme.co.uk" className="underline" style={{ color: GOLD }}>
               support@halalme.co.uk
             </a>{" "}
-            or write to us at 71-75 Shelton Street, London, WC2H 9JQ, United Kingdom.
+            or write to us at {LEGAL_ENTITY.registeredOffice}.
           </p>
         </Section>
       </div>

@@ -59,7 +59,7 @@ export default function KitchenLandingPage() {
       num: "01",
       Icon: ChefHat,
       title: "Personalised Recipes",
-      desc: "Get personalized recipe suggestions based on your ingredients",
+      desc: "Get personalised recipe suggestions based on your ingredients",
     },
     {
       num: "02",
@@ -254,8 +254,8 @@ export default function KitchenLandingPage() {
             >
               {[
                 { Icon: Sparkles, text: "AI-Powered" },
-                { Icon: BookOpen, text: "5K+ Recipes" },
-                { Icon: Globe, text: "50+ Cuisines" },
+                { Icon: BookOpen, text: "Growing Recipe Library" },
+                { Icon: Globe, text: "Multiple Cuisines" },
               ].map((item, i) => (
                 <div
                   key={i}
@@ -283,10 +283,10 @@ export default function KitchenLandingPage() {
         }}
       >
         {[
-          { value: "5K+", label: "Recipes" },
-          { value: "1K+", label: "AI Chats Daily" },
-          { value: "10K+", label: "Community Members" },
-          { value: "50+", label: "Cuisines" },
+          { value: "AI", label: "Powered Recipes" },
+          { value: "Live", label: "AI Chat Assistant" },
+          { value: "New", label: "Community" },
+          { value: "Many", label: "Cuisines" },
         ].map((s, i) => (
           <motion.div
             key={i}
@@ -1099,8 +1099,8 @@ export default function KitchenLandingPage() {
           <div className="flex flex-wrap gap-6 md:gap-10">
             {[
               { Icon: Sparkles, text: "AI-Powered Suggestions" },
-              { Icon: BookOpen, text: "5K+ Halal Recipes" },
-              { Icon: Globe, text: "50+ Cuisines" },
+              { Icon: BookOpen, text: "Growing Halal Recipe Library" },
+              { Icon: Globe, text: "Multiple Cuisines" },
             ].map((item, i) => (
               <div
                 key={i}

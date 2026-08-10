@@ -21,7 +21,7 @@ const services = [
   {
     name: "Delivery",
     description:
-      "Order fresh halal meals from certified restaurants and vendors delivered straight to your door.",
+      "Order fresh halal meals from halal-focused restaurants and vendors delivered straight to your door.",
     accent: "#B96AF0",
     logoColor: "#5E188F",
     href: "/delivery",
@@ -40,7 +40,7 @@ const services = [
   {
     name: "Social",
     description:
-      "Connect with the global Muslim community. Share recipes, reviews, and halal finds.",
+      "Connect with the global Muslim community. Share experiences, reviews, and halal finds.",
     accent: "#F59E0B",
     href: "/social",
     external: false,
@@ -49,7 +49,7 @@ const services = [
   {
     name: "Charity",
     description:
-      "Donate to verified Islamic charities and track the real-world impact of every contribution.",
+      "Donate to registered Islamic charities and track the real-world impact of every contribution.",
     accent: "#14B8A6",
     href: "/charity",
     external: false,

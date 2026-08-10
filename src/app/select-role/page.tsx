@@ -14,6 +14,7 @@ import {
   ArrowRight,
   ShieldCheck,
   Check,
+  HandHeart,
 } from "lucide-react";
 
 export default function SelectRolePage() {
@@ -101,11 +102,11 @@ export default function SelectRolePage() {
               transition={{ delay: 0.15, duration: 0.5 }}
               className="relative bg-[#0A1C19] border border-[#F7E7CE]/8 p-5 sm:p-6 overflow-hidden"
             >
-              {/* Operational badge */}
+              {/* Availability badge — states the product is live, not a role label */}
               <div className="absolute top-3 right-3 z-20">
                 <span className="inline-flex items-center gap-1.5 bg-[#F7E7CE]/8 border border-[#F7E7CE]/15 px-2.5 py-0.5 text-[9px] font-bold text-[#F7E7CE]/60 uppercase tracking-widest">
                   <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
-                  Operational
+                  Live Now
                 </span>
               </div>
 
@@ -124,25 +125,25 @@ export default function SelectRolePage() {
                   </div>
                   <div>
                     <p className="text-[9px] font-bold text-[#F59E0B] uppercase tracking-[0.25em] mb-0.5">
-                      Platform
+                      For Customers &amp; Cooks
                     </p>
                     <h2 className="text-base sm:text-lg font-extrabold uppercase tracking-tighter text-[#F7E7CE] leading-tight">
-                      Explore & Connect
+                      Explore HalalMe
                     </h2>
                   </div>
                 </div>
 
                 <p className="text-[#F7E7CE]/45 text-xs mb-4 leading-relaxed">
-                  Explore recipes, social community, rewards & halal food
-                  delivery - all in one place.
+                  For customers, cooks and community members. Recipes, community,
+                  giving, rewards and halal food delivery, all in one place.
                 </p>
 
                 {/* Feature bullets */}
                 <div className="flex flex-col gap-2 mb-4">
                   {[
                     "AI-powered halal recipe assistant",
-                    "Social hub for the halal community",
-                    "Earn rewards by donating to causes",
+                    "A social feed for the halal community",
+                    "Give to registered charities, earn rewards",
                     "Order halal food from local restaurants",
                   ].map((text, i) => (
                     <div key={i} className="flex items-center gap-2">
@@ -154,20 +155,21 @@ export default function SelectRolePage() {
                   ))}
                 </div>
 
-                {/* Service mini-grid */}
-                <div className="grid grid-cols-4 gap-px bg-[#F7E7CE]/8 mb-5">
+                {/* Service mini-grid — all five services, matching the locked taxonomy */}
+                <div className="grid grid-cols-5 gap-px bg-[#F7E7CE]/8 mb-5">
                   {[
+                    { Icon: Truck, label: "Delivery" },
                     { Icon: ChefHat, label: "Kitchen" },
                     { Icon: Users, label: "Social" },
+                    { Icon: HandHeart, label: "Charity" },
                     { Icon: Gift, label: "Rewards" },
-                    { Icon: Truck, label: "Delivery" },
                   ].map(({ Icon, label }, i) => (
                     <div
                       key={i}
-                      className="bg-[#0A1C19] px-2 py-2 flex items-center gap-1.5"
+                      className="bg-[#0A1C19] px-1 py-2 flex flex-col items-center gap-1 text-center"
                     >
                       <Icon className="w-3 h-3 text-[#F7E7CE]/35 shrink-0" />
-                      <span className="text-[10px] text-[#F7E7CE]/50 font-medium">
+                      <span className="text-[9px] text-[#F7E7CE]/50 font-medium leading-tight">
                         {label}
                       </span>
                     </div>
@@ -208,17 +210,17 @@ export default function SelectRolePage() {
                   </div>
                   <div>
                     <p className="text-[9px] font-bold text-[#F59E0B] uppercase tracking-[0.25em] mb-0.5">
-                      Partners
+                      For Partners
                     </p>
                     <h2 className="text-base sm:text-lg font-extrabold uppercase tracking-tighter text-[#F7E7CE] leading-tight">
-                      Merchants & Drivers
+                      Work With HalalMe
                     </h2>
                   </div>
                 </div>
 
                 <p className="text-[#F7E7CE]/45 text-xs mb-4 leading-relaxed">
-                  Join the HalalMe Delivery network as a restaurant partner or
-                  delivery driver.
+                  For restaurant owners, authorised staff and approved delivery
+                  partners on the HalalMe Delivery network.
                 </p>
 
                 <div className="flex flex-col gap-2 mb-5">
@@ -236,15 +238,15 @@ export default function SelectRolePage() {
                   ))}
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
+                <div className="flex flex-col gap-2">
                   <motion.button
                     onClick={() => router.push("/partner/merchant")}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="w-full h-10 bg-[#F7E7CE] text-[#102C26] font-extrabold uppercase tracking-tighter text-xs flex items-center justify-center gap-1.5 hover:bg-[#F7E7CE]/90 transition-colors"
+                    className="w-full h-10 bg-[#F7E7CE] text-[#102C26] font-extrabold uppercase tracking-tighter text-xs flex items-center justify-center gap-2 hover:bg-[#F7E7CE]/90 transition-colors"
                   >
                     <Store className="w-3.5 h-3.5" />
-                    Merchant
+                    Manage a Restaurant
                   </motion.button>
                   <a
                     href="https://tally.so/r/Pd96Nx"
@@ -255,10 +257,10 @@ export default function SelectRolePage() {
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className="w-full h-10 bg-[#F7E7CE] text-[#102C26] font-extrabold uppercase tracking-tighter text-xs flex items-center justify-center gap-1.5 hover:bg-[#F7E7CE]/90 transition-colors"
+                      className="w-full h-10 bg-[#F7E7CE]/10 border border-[#F7E7CE]/20 text-[#F7E7CE] font-extrabold uppercase tracking-tighter text-xs flex items-center justify-center gap-2 hover:bg-[#F7E7CE]/15 transition-colors"
                     >
                       <Truck className="w-3.5 h-3.5" />
-                      Driver
+                      Deliver with HalalMe
                     </motion.button>
                   </a>
                 </div>
@@ -284,9 +286,9 @@ export default function SelectRolePage() {
             className="mt-10 flex flex-wrap items-center justify-center gap-6 md:gap-8"
           >
             {[
-              { Icon: ShieldCheck, text: "100% Halal Verified" },
-              { text: "900+ Restaurants" },
-              { text: "4 Unified Services" },
+              { Icon: ShieldCheck, text: "Halal-Focused Platform" },
+              { text: "Growing Restaurant Network" },
+              { text: "5 Unified Services" },
             ].map((item, i) => (
               <div
                 key={i}

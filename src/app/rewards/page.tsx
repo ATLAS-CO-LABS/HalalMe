@@ -14,7 +14,6 @@ import {
   Palette,
   ChefHat,
   ArrowRight,
-  Lock,
   HandHeart,
 } from "lucide-react";
 
@@ -29,21 +28,25 @@ const TIERS = [
   { level: "Bronze", min: 0, aiPerHour: 10, bg: "#B87333", hover: "#CD8B4A" },
   { level: "Silver", min: 1000, aiPerHour: 20, bg: "#9EA3A8", hover: "#C0C0C0" },
   { level: "Gold", min: 5000, aiPerHour: 30, bg: "#D4AF37", hover: "#FFD700" },
-  { level: "Platinum", min: 15000, aiPerHour: 50, bg: "#0E7490", hover: "#22B6DD" },
+  { level: "Diamond", min: 15000, aiPerHour: 50, bg: "#0E7490", hover: "#22B6DD" },
 ];
 
 const EARN_WAYS = [
   { icon: HandHeart, title: "Donate to Charity", desc: "10 points per £1 donated through HalalMe Charity", href: "/charity" },
   { icon: ChefHat, title: "Upload a Recipe", desc: "+50 points the first time, plus review bonuses", href: "/kitchen" },
   { icon: Megaphone, title: "Post on Social", desc: "+50 for your first post, +20 for every post after", href: "/social" },
-  { icon: Star, title: "Log In Daily", desc: "+10 points just for showing up, plus a one-off referral bonus", href: "/dashboard?tab=rewards" },
+  { icon: Star, title: "Refer a Friend", desc: "A one-off bonus when someone you invite joins HalalMe, plus a small top-up for staying active", href: "/dashboard?tab=rewards" },
 ];
 
+// Real catalog costs (reward_catalog, checked 11 Aug 2026) — every item here
+// only requires the Bronze tier, i.e. everyone qualifies. Points are what you
+// actually spend; tier is a separate, passive status that isn't a gate on
+// these redemptions. Update the numbers here if the catalog changes.
 const REDEEM_CATEGORIES = [
-  { icon: Palette, title: "Profile Flair", desc: "Stand out on Social with an exclusive profile flair." },
-  { icon: Megaphone, title: "Social Post Boost", desc: "Feature one of your posts in the discover feed." },
-  { icon: ChefHat, title: "Recipe Boost", desc: "Get one of your recipes featured for extra reach." },
-  { icon: Sparkles, title: "AI Power-Up", desc: "Unlock extra AI requests when you need them most." },
+  { icon: Palette, title: "Profile Flair", desc: "A gold frame or themed accent for your profile photo on Social.", points: 150 },
+  { icon: ChefHat, title: "Recipe Boost", desc: "Feature your recipe in Kitchen discover for 7 days.", points: 400 },
+  { icon: Megaphone, title: "Social Post Boost", desc: "Feature your post in the discover feed for 5 days.", points: 300 },
+  { icon: Sparkles, title: "AI Power-Up", desc: "+20 AI requests per hour on top of your tier's limit, for 24 hours.", points: 500 },
 ];
 
 export default function RewardsLandingPage() {
@@ -312,14 +315,16 @@ export default function RewardsLandingPage() {
           >
             Bronze to
             <br />
-            <span style={{ color: `${CREAM}65` }}>Platinum.</span>
+            <span style={{ color: `${CREAM}65` }}>Diamond.</span>
           </h2>
           <p
             className="max-w-xl text-sm md:text-base leading-relaxed"
             style={{ color: `${CREAM}55`, fontFamily: "var(--font-body)" }}
           >
-            Your tier is set by your lifetime points and never resets. Higher
-            tiers unlock more AI requests per hour on top of every redemption perk.
+            Your tier is a status set by your lifetime points earned — it&apos;s
+            never spent and never resets. Higher tiers raise your baseline AI
+            requests per hour. Your current points balance is what you actually
+            spend below, separately from your tier.
           </p>
         </div>
 
@@ -396,6 +401,14 @@ export default function RewardsLandingPage() {
             <br />
             <span style={{ color: `${CREAM}65` }}>Real Perks.</span>
           </motion.h2>
+          <p
+            className="mt-6 max-w-xl text-sm md:text-base leading-relaxed"
+            style={{ color: `${CREAM}55`, fontFamily: "var(--font-body)" }}
+          >
+            Every item below costs points, not tier — your Bronze tier already
+            qualifies for all of it. Points don&apos;t expire, so spend them
+            whenever something below is worth it to you.
+          </p>
         </div>
 
         <div
@@ -432,7 +445,7 @@ export default function RewardsLandingPage() {
                   {item.desc}
                 </p>
                 <div className="mt-auto pt-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: `${CREAM}30` }}>
-                  <Lock className="w-3 h-3" /> Unlocks by tier
+                  <Coins className="w-3 h-3" /> {item.points} points · available from Bronze
                 </div>
               </div>
             </motion.div>
