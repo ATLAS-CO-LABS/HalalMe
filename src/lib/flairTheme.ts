@@ -13,6 +13,14 @@ export interface FlairTheme {
   cardBorder: string;
   /** Profile banner background. */
   banner: string;
+  /**
+   * Texture layer painted over `banner`. A flat gradient bar reads as a
+   * placeholder rather than something earned, so every flair carries its own
+   * repeating pattern. Sits under a fixed sheen + fade in the profile cover.
+   */
+  pattern: string;
+  /** Text/icon color that stays legible on top of `banner`. */
+  bannerFg: string;
 }
 
 export const FLAIR_THEMES: Record<string, FlairTheme> = {
@@ -23,6 +31,10 @@ export const FLAIR_THEMES: Record<string, FlairTheme> = {
     glow: "rgba(255, 216, 107, 0.35)",
     cardBorder: "rgba(255, 216, 107, 0.35)",
     banner: "linear-gradient(135deg, #FFD86B, #B8860B)",
+    // Fine engraved pinstripe, like a certificate border.
+    pattern:
+      "repeating-linear-gradient(45deg, rgba(74,44,0,0.22) 0 1px, transparent 1px 8px)",
+    bannerFg: "#3B2600",
   },
   "ocean-wave": {
     name: "Ocean Wave",
@@ -31,6 +43,10 @@ export const FLAIR_THEMES: Record<string, FlairTheme> = {
     glow: "rgba(20, 184, 166, 0.35)",
     cardBorder: "rgba(20, 184, 166, 0.35)",
     banner: "linear-gradient(135deg, #14B8A6, #0EA5E9)",
+    // Concentric arcs reading as a ripple across the banner.
+    pattern:
+      "repeating-radial-gradient(circle at 18% 130%, rgba(255,255,255,0.16) 0 2px, transparent 2px 22px)",
+    bannerFg: "#FFFFFF",
   },
   sunset: {
     name: "Sunset",
@@ -39,6 +55,10 @@ export const FLAIR_THEMES: Record<string, FlairTheme> = {
     glow: "rgba(240, 62, 158, 0.32)",
     cardBorder: "rgba(240, 62, 158, 0.35)",
     banner: "linear-gradient(135deg, #F59E0B, #F03E9E 55%, #7C3AED)",
+    // Soft grain so the three-stop gradient doesn't band.
+    pattern:
+      "repeating-linear-gradient(115deg, rgba(255,255,255,0.10) 0 2px, transparent 2px 9px)",
+    bannerFg: "#FFFFFF",
   },
   // Deliberately understated to match its name — a thin neutral ring and a
   // near-invisible hover glow, no color pop like the other three.
@@ -49,6 +69,10 @@ export const FLAIR_THEMES: Record<string, FlairTheme> = {
     glow: "rgba(247, 231, 206, 0.16)",
     cardBorder: "rgba(247, 231, 206, 0.22)",
     banner: "linear-gradient(135deg, #3F3F3F, #17181A)",
+    // Thin horizontal rules - restrained, in keeping with the name.
+    pattern:
+      "repeating-linear-gradient(0deg, rgba(247,231,206,0.07) 0 1px, transparent 1px 10px)",
+    bannerFg: "#F7E7CE",
   },
 };
 

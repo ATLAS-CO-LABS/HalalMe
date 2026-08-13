@@ -7,6 +7,7 @@ import Image from "next/image";
 import type { PostType, Profile } from "@/types";
 import { withTimeout } from "@/lib/withTimeout";
 import { friendlyError } from "@/lib/friendlyError";
+import { useModalDismiss } from "@/hooks/useModalDismiss";
 import Avatar from "./Avatar";
 
 const BG = "var(--hub-bg)";
@@ -105,6 +106,10 @@ export default function CreatePostModal({
     onClose();
   };
 
+  // Escape to close + body scroll lock. Refused mid-submit so an in-flight
+  // upload can't be dismissed out from under itself.
+  useModalDismiss(isOpen, handleClose, !isSubmitting);
+
   const displayName = currentUser?.full_name ?? currentUser?.username ?? "You";
   const username = currentUser?.username ? `@${currentUser.username}` : null;
   const avatarUrl = currentUser?.avatar_url ?? undefined;
@@ -118,18 +123,26 @@ export default function CreatePostModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            onClick={handleClose}
             className="fixed inset-0 bg-black/70 z-50"
           />
 
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* The wrapper, not the backdrop beneath it, is what an outside click
+              actually lands on, so it owns the dismiss. */}
+          <div
+            className="fixed inset-0 z-50 flex items-stretch sm:items-center justify-center sm:p-4"
+            onClick={handleClose}
+          >
             <motion.div
               initial={{ opacity: 0, scale: 0.96, y: 12 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 8 }}
               transition={{ type: "tween", duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col border shadow-2xl"
+              className="w-full max-w-2xl h-dvh sm:h-auto sm:max-h-[90vh] overflow-hidden flex flex-col border shadow-2xl"
               style={{ backgroundColor: BG2, borderColor: `color-mix(in oklab, var(--hm-text) 7%, transparent)` }}
+              onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Create post"
             >
               {/* Header */}
               <div className="flex items-center justify-between p-4 md:p-5 border-b" style={{ borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)` }}>

@@ -1810,12 +1810,13 @@ export interface AIAssistantResponse {
 }
 
 export interface UserSearchResult {
-  id:          string;
-  username:    string | null;
-  full_name:   string | null;
-  avatar_url:  string | null;
-  is_verified: boolean | null;
-  bio:         string | null;
+  id:            string;
+  username:      string | null;
+  full_name:     string | null;
+  avatar_url:    string | null;
+  is_verified:   boolean | null;
+  bio:           string | null;
+  profile_flair: string | null;
 }
 
 export interface Comment {

@@ -26,12 +26,15 @@ import { useAuthGate } from "@/hooks/useAuthGate";
 import ReportModal from "@/components/common/ReportModal";
 import Avatar from "./Avatar";
 import { getFlairTheme } from "@/lib/flairTheme";
+import { profileHref } from "@/lib/profileHref";
 
 const BG = "var(--hub-bg)";
 const BG2 = "var(--hub-bg2)";
 const BG3 = "var(--hub-bg3)";
 const AMBER = "var(--hm-amber)";
 const CREAM = "var(--hm-text)";
+const MUTED = "var(--hm-text-muted)";
+const SUBTLE = "var(--hm-text-subtle)";
 
 interface PostCardProps {
   post: Post;
@@ -40,7 +43,6 @@ interface PostCardProps {
   onBookmark?: (postId: string, currentIsBookmarked: boolean) => void;
   onEdit?: (post: Post) => void;
   onDelete?: (postId: string) => void;
-  onUserClick?: (userId: string) => void;
 }
 
 export default function PostCard({
@@ -50,7 +52,6 @@ export default function PostCard({
   onBookmark,
   onEdit,
   onDelete,
-  onUserClick,
 }: PostCardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -112,17 +113,11 @@ export default function PostCard({
     >
       {/* User Info */}
       <div className="p-4 md:p-5 flex items-center gap-3">
-        <div
-          onClick={() => onUserClick?.(post.user_id)}
-          className="cursor-pointer shrink-0"
-        >
+        <Link href={profileHref(post.user_id, post.profiles?.username)} className="shrink-0">
           <Avatar src={avatarUrl} alt={displayName} size="lg" flair={authorFlair} />
-        </div>
+        </Link>
 
-        <div
-          className="flex-1 min-w-0 cursor-pointer"
-          onClick={() => onUserClick?.(post.user_id)}
-        >
+        <Link href={profileHref(post.user_id, post.profiles?.username)} className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 flex-wrap">
             <h3
               className="font-extrabold text-base hover:text-(--flair-accent) transition-colors truncate"
@@ -142,7 +137,7 @@ export default function PostCard({
           <div className="flex items-center gap-2 flex-wrap">
             <p
               className="text-sm font-normal truncate"
-              style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))`, fontFamily: "var(--font-body)" }}
+              style={{ color: SUBTLE, fontFamily: "var(--font-body)" }}
             >
               {username && <span>{username} • </span>}
               {formatRelativeTime(post.created_at)}
@@ -156,7 +151,7 @@ export default function PostCard({
               </span>
             )}
           </div>
-        </div>
+        </Link>
 
         {/* Three-dot menu — own posts: edit/delete · others: report */}
         <div className="relative shrink-0">
@@ -167,9 +162,9 @@ export default function PostCard({
             }}
             aria-label="Post options"
             className="p-2 transition-colors"
-            style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))` }}
+            style={{ color: SUBTLE }}
             onMouseEnter={(e) => (e.currentTarget.style.color = CREAM)}
-            onMouseLeave={(e) => (e.currentTarget.style.color = `color-mix(in oklab, var(--hm-text) 27%, transparent)`)}
+            onMouseLeave={(e) => (e.currentTarget.style.color = SUBTLE)}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
           >
@@ -220,7 +215,7 @@ export default function PostCard({
                         <button
                           onClick={() => setConfirmingDelete(false)}
                           className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-semibold transition-colors border"
-                          style={{ backgroundColor: BG, color: `color-mix(in oklab, var(--hm-text) 44%, var(--hm-lm-anchor))`, borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)` }}
+                          style={{ backgroundColor: BG, color: MUTED, borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)` }}
                         >
                           <X className="w-3.5 h-3.5" />
                           Cancel
@@ -350,7 +345,7 @@ export default function PostCard({
             <motion.button
               onClick={() => requireAuth(() => onLike(post.id, !!post.is_liked), "Sign in to like posts")}
               className="flex items-center gap-2 transition-colors"
-              style={{ color: post.is_liked ? "#EF4444" : `color-mix(in oklab, var(--hm-text) 27%, transparent)` }}
+              style={{ color: post.is_liked ? "#EF4444" : SUBTLE }}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
             >
@@ -361,9 +356,9 @@ export default function PostCard({
             <Link href={`/social/post/${post.id}`}>
               <motion.button
                 className="flex items-center gap-2 transition-colors"
-                style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))` }}
+                style={{ color: SUBTLE }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = AMBER)}
-                onMouseLeave={(e) => (e.currentTarget.style.color = `color-mix(in oklab, var(--hm-text) 27%, transparent)`)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = SUBTLE)}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
               >
@@ -378,7 +373,7 @@ export default function PostCard({
               <motion.button
                 onClick={() => requireAuth(() => onBookmark(post.id, !!post.is_bookmarked), "Sign in to bookmark posts")}
                 className="transition-colors"
-                style={{ color: post.is_bookmarked ? AMBER : `color-mix(in oklab, var(--hm-text) 27%, transparent)` }}
+                style={{ color: post.is_bookmarked ? AMBER : SUBTLE }}
                 title={post.is_bookmarked ? "Remove bookmark" : "Bookmark"}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
@@ -389,7 +384,7 @@ export default function PostCard({
             <motion.button
               onClick={handleShare}
               className="transition-colors"
-              style={{ color: copied ? AMBER : `color-mix(in oklab, var(--hm-text) 27%, transparent)` }}
+              style={{ color: copied ? AMBER : SUBTLE }}
               title={copied ? "Copied!" : "Share"}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
@@ -404,7 +399,7 @@ export default function PostCard({
           <Link href={`/social/post/${post.id}`}>
             <motion.div
               className="text-sm cursor-pointer font-normal transition-colors"
-              style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))`, fontFamily: "var(--font-body)" }}
+              style={{ color: SUBTLE, fontFamily: "var(--font-body)" }}
               whileHover={{ x: 4 }}
             >
               View all {post.comment_count} comment{post.comment_count !== 1 ? "s" : ""}

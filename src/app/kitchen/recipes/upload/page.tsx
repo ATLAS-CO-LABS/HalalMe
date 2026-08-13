@@ -476,7 +476,9 @@ function UploadRecipeInner() {
     if (!currentUser) return;
     setIsSubmitting(true);
     try {
-      const recipeData = {
+      // Only the fields this form actually has controls for. Shared by both
+      // create and edit.
+      const sharedFields = {
         title:            form.title.trim(),
         description:      form.description.trim(),
         cuisine:          form.cuisine === "Other" ? form.cuisineOther.trim() : form.cuisine,
@@ -486,22 +488,37 @@ function UploadRecipeInner() {
         servings:         Number(form.servings),
         ingredients:      form.ingredients,
         instructions:     form.instructions.map((text, i) => ({ step: i + 1, text })),
-        is_published:     true,
-        is_ai_generated:  false,
-        is_halal_verified: false,
         tags:             form.tags,
-        nutrition:        null,
-        image_url:        form.existingImageUrl ?? null,
-        image_public_id:  null,
       };
 
       let recipeId: string;
 
       if (isEditMode && editId) {
-        await recipeService.updateRecipe(editId, recipeData);
+        // Partial update — deliberately leaves is_published, is_ai_generated,
+        // is_halal_verified, nutrition and image_public_id untouched. This
+        // form has no controls for any of them, so writing them here used to
+        // silently force-publish AI drafts, strip their AI badge, revoke an
+        // admin's halal verification, wipe AI-generated nutrition data, and
+        // null out the Cloudinary public_id of an untouched existing image —
+        // on every single edit.
+        await recipeService.updateRecipe(editId, {
+          ...sharedFields,
+          image_url: form.existingImageUrl ?? null,
+        });
         recipeId = editId;
       } else {
-        const created = await recipeService.createRecipe(recipeData, currentUser.id);
+        // A brand new recipe from this form is always a fresh, published,
+        // human-authored row — these fields don't exist yet, so setting them
+        // here is correct (unlike the edit branch above).
+        const created = await recipeService.createRecipe({
+          ...sharedFields,
+          is_published:      true,
+          is_ai_generated:   false,
+          is_halal_verified: false,
+          nutrition:         null,
+          image_url:         form.existingImageUrl ?? null,
+          image_public_id:   null,
+        }, currentUser.id);
         recipeId = created.id;
       }
 
@@ -514,7 +531,11 @@ function UploadRecipeInner() {
         type: "success",
         message: isEditMode ? "Recipe updated successfully!" : "Recipe uploaded successfully!",
       });
-      setTimeout(() => router.push("/kitchen/recipes"), 1500);
+      // Edit lands back on the recipe itself so the change is visible
+      // immediately; a brand-new upload still goes to the list since there's
+      // no obvious existing page the user was just looking at.
+      const destination = isEditMode ? `/kitchen/recipes/${recipeId}` : "/kitchen/recipes";
+      setTimeout(() => router.push(destination), 1500);
     } catch (err) {
       setNotification({
         type: "error",

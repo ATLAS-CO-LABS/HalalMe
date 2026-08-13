@@ -24,6 +24,8 @@ import {
   Trash2,
   Printer,
   Flag,
+  Lock,
+  ImagePlus,
 } from "lucide-react";
 import { recipeService } from "@/services/recipeService";
 import { useAuth } from "@/hooks/useAuth";
@@ -294,6 +296,11 @@ export default function RecipeDetailClient({ id, initialRecipe, initialReviews }
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
 
+  // ── Owner publish state (AI-generated recipes save as unpublished
+  //    drafts — see supabase/functions/generate-recipe) ──────────
+  const [publishing, setPublishing] = useState(false);
+  const [publishError, setPublishError] = useState("");
+
   // ── Ingredient/step checklist state ──────────────────────────
   const [checkedIngredients, setCheckedIngredients] = useState<number[]>([]);
   const [checkedSteps, setCheckedSteps] = useState<number[]>([]);
@@ -408,6 +415,25 @@ export default function RecipeDetailClient({ id, initialRecipe, initialReviews }
     } catch (err) {
       setDeleting(false);
       setDeleteError(err instanceof Error ? err.message : "Failed to delete recipe.");
+    }
+  };
+
+  // ── Publish (draft → public) ─────────────────────────────────
+  // Requires an image — a browse grid of grey placeholder tiles for
+  // AI recipes nobody has actually cooked and photographed isn't a good
+  // Explore experience, and it reads as scaled/unedited AI content to search
+  // engines (published recipes are in the sitemap).
+  const handlePublish = async () => {
+    if (!recipe || publishing || !recipe.image_url) return;
+    setPublishing(true);
+    setPublishError("");
+    try {
+      await recipeService.updateRecipe(recipe.id, { is_published: true });
+      setRecipe((prev) => (prev ? { ...prev, is_published: true } : prev));
+    } catch (err) {
+      setPublishError(err instanceof Error ? err.message : "Failed to publish recipe.");
+    } finally {
+      setPublishing(false);
     }
   };
 
@@ -818,6 +844,62 @@ export default function RecipeDetailClient({ id, initialRecipe, initialReviews }
 
       {/* Content */}
       <div className="mx-auto max-w-5xl px-4 md:px-6 py-6 md:py-8">
+        {/* Draft banner - owner only, unpublished recipes (AI-generated
+            recipes save this way; see generate-recipe edge function) */}
+        {isOwner && recipe && !recipe.is_published && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8 border p-4 md:p-5 flex flex-col sm:flex-row sm:items-center gap-4 justify-between"
+            style={{ backgroundColor: BG2, borderColor: `color-mix(in oklab, var(--hm-magenta) 25%, transparent)` }}
+          >
+            <div className="flex items-start gap-3">
+              <Lock className="w-5 h-5 shrink-0 mt-0.5" style={{ color: MAGENTA }} />
+              <div>
+                <p className="text-sm font-bold uppercase tracking-tight" style={{ color: CREAM }}>
+                  Draft — only you can see this recipe
+                </p>
+                <p className="text-xs mt-1" style={{ color: `color-mix(in oklab, var(--hm-text) 44%, var(--hm-lm-anchor))` }}>
+                  {recipe.image_url
+                    ? "Publish it to add it to Explore Recipes."
+                    : "Add a photo before you can publish it."}
+                </p>
+                {publishError && (
+                  <p className="text-xs mt-1 text-red-400">{publishError}</p>
+                )}
+              </div>
+            </div>
+            {recipe.image_url ? (
+              <motion.button
+                onClick={handlePublish}
+                disabled={publishing}
+                className="shrink-0 flex items-center justify-center gap-2 px-5 py-2.5 text-xs font-extrabold uppercase tracking-tighter text-white transition-colors disabled:opacity-60"
+                style={{ backgroundColor: DEEP }}
+                onMouseEnter={(e) => { if (!publishing) e.currentTarget.style.backgroundColor = MAGENTA; }}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = DEEP)}
+                whileHover={!publishing ? { scale: 1.02 } : {}}
+                whileTap={!publishing ? { scale: 0.98 } : {}}
+              >
+                {publishing ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                {publishing ? "Publishing…" : "Publish to Recipes"}
+              </motion.button>
+            ) : (
+              <Link href={`/kitchen/recipes/upload?edit=${id}`} className="shrink-0">
+                <motion.button
+                  className="flex items-center justify-center gap-2 px-5 py-2.5 text-xs font-extrabold uppercase tracking-tighter text-white transition-colors"
+                  style={{ backgroundColor: DEEP }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = MAGENTA)}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = DEEP)}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <ImagePlus className="w-4 h-4" /> Add Photo
+                </motion.button>
+              </Link>
+            )}
+          </motion.div>
+        )}
+
         {/* Title + meta */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

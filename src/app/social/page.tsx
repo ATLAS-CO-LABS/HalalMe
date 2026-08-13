@@ -551,12 +551,6 @@ export default function HubLandingPage() {
                     >
                       {item.desc}
                     </p>
-                    <div
-                      className="mt-8 flex items-center gap-2 text-sm font-extrabold uppercase tracking-tighter transition-colors duration-300 group-hover:text-[#0B0D0F]"
-                      style={{ color: AMBER }}
-                    >
-                      Get Started <ArrowRight className="w-4 h-4" />
-                    </div>
                   </div>
                 </div>
               </motion.div>

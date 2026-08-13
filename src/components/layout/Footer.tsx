@@ -276,27 +276,32 @@ export default function Footer() {
           </motion.div>
         </motion.div>
 
-        {/* ── Disclaimer ───────────────────────────────────────── */}
-        <div className="mt-12 pt-8 border-t border-[#F7E7CE]/8">
-          <p className="text-[#F7E7CE]/20 text-[11px] leading-[1.8] max-w-5xl">
-            HalalMe verifies halal certification for all listed merchants at
-            onboarding but cannot guarantee the halal status of every individual
-            item at all times. Report concerns to{" "}
+        {/* ── Halal caveat ─────────────────────────────────────────
+            Trimmed from the old eleven-line block. Every other clause it
+            carried (independent merchants, liability, "as is", UK GDPR, and
+            the company registration details) is stated in full on Terms,
+            Privacy, Cookies and Contact, all linked from the bar below. The
+            halal caveat stays because it is the one line a customer needs at
+            the point of browsing, not buried in a legal page. */}
+        <div className="mt-12 pt-6 border-t border-[#F7E7CE]/8">
+          <p className="text-[#F7E7CE]/45 text-[11px] leading-[1.7] max-w-3xl">
+            HalalMe verifies halal certification at merchant onboarding but
+            cannot guarantee the halal status of every individual item at all
+            times. Report concerns to{" "}
             <a
               href="mailto:Support@HalalMe.co.uk"
-              className="underline underline-offset-2 decoration-[#F7E7CE]/20 hover:text-[#F7E7CE]/45 hover:decoration-[#F59E0B]/50 transition-colors"
+              className="underline underline-offset-2 decoration-[#F7E7CE]/30 hover:text-[#F7E7CE] hover:decoration-[#F59E0B]/60 transition-colors"
             >
               Support@HalalMe.co.uk
             </a>
-            . Merchants and delivery partners operate independently. HalalMe is
-            a marketplace and is not liable for third-party fulfilment or
-            merchant conduct. Charitable donations are processed by verified
-            charity partners. We process personal data under UK GDPR and the
-            Data Protection Act 2018. Services are provided on an &ldquo;as
-            is&rdquo; basis. By using HalalMe you agree to our Terms of Service
-            and Privacy Policy. HalalMe is operated by {LEGAL_ENTITY.registeredName}
-            (Company No. {LEGAL_ENTITY.companyNumber}), registered in {LEGAL_ENTITY.jurisdiction}. Last
-            updated 13/05/2026.
+            . See our{" "}
+            <Link
+              href="/terms"
+              className="underline underline-offset-2 decoration-[#F7E7CE]/30 hover:text-[#F7E7CE] hover:decoration-[#F59E0B]/60 transition-colors"
+            >
+              Terms of Service
+            </Link>{" "}
+            for full details.
           </p>
         </div>
 

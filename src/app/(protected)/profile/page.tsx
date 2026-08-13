@@ -66,7 +66,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block text-xs font-semibold uppercase tracking-wider text-[#F7E7CE]/35 mb-1.5">
+      <label className="block text-xs font-semibold uppercase tracking-wider text-[#F7E7CE]/60 mb-1.5">
         {label}
       </label>
       {children}
@@ -99,7 +99,7 @@ function TextInput({
   textarea?: boolean;
 }) {
   const base =
-    "w-full rounded-md border bg-[#F7E7CE]/5 text-sm text-[#F7E7CE] placeholder-[#F7E7CE]/20 outline-none transition-colors focus:ring-1 disabled:opacity-50 disabled:cursor-not-allowed";
+    "w-full rounded-md border bg-[#F7E7CE]/5 text-sm text-[#F7E7CE] placeholder-[#F7E7CE]/50 outline-none transition-colors focus:ring-1 disabled:opacity-50 disabled:cursor-not-allowed";
   const border = error
     ? "border-red-500/60 focus:border-red-400 focus:ring-red-400/20"
     : success
@@ -123,7 +123,7 @@ function TextInput({
   return (
     <div className="relative">
       {Icon && (
-        <Icon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#F7E7CE]/25 pointer-events-none" />
+        <Icon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#F7E7CE]/55 pointer-events-none" />
       )}
       <input
         id={id}
@@ -288,7 +288,7 @@ export default function ProfilePage() {
   /* ── availability slot ── */
   const availSlot =
     availState === "checking" ? (
-      <Loader2 className="h-4 w-4 animate-spin text-[#F7E7CE]/40" />
+      <Loader2 className="h-4 w-4 animate-spin text-[#F7E7CE]/65" />
     ) : availState === "available" ? (
       <CheckCircle2 className="h-4 w-4 text-emerald-400" />
     ) : availState === "taken" ? (
@@ -314,7 +314,7 @@ export default function ProfilePage() {
           <h1 className="text-3xl sm:text-4xl font-extrabold uppercase tracking-tighter leading-none text-[#F7E7CE]">
             Profile
             <br />
-            <span className="text-[#F7E7CE]/30">Settings</span>
+            <span className="text-[#F7E7CE]/55">Settings</span>
           </h1>
         </div>
 
@@ -341,7 +341,7 @@ export default function ProfilePage() {
                       unoptimized={avatarPreview.startsWith("blob:")}
                     />
                   ) : (
-                    <span className="text-xl font-bold text-[#F7E7CE]/40">
+                    <span className="text-xl font-bold text-[#F7E7CE]/65">
                       {initials}
                     </span>
                   )}
@@ -355,7 +355,7 @@ export default function ProfilePage() {
                 <p className="text-sm font-semibold text-[#F7E7CE]/80 mb-1">
                   {user.full_name}
                 </p>
-                <p className="text-xs text-[#F7E7CE]/35 mb-3">
+                <p className="text-xs text-[#F7E7CE]/60 mb-3">
                   {user.email}
                 </p>
                 <button
@@ -366,7 +366,7 @@ export default function ProfilePage() {
                   {avatarFile ? "Change photo" : "Upload photo"}
                 </button>
                 {avatarFile && (
-                  <span className="ml-3 text-xs text-[#F7E7CE]/30">
+                  <span className="ml-3 text-xs text-[#F7E7CE]/55">
                     {avatarFile.name}
                   </span>
                 )}
@@ -453,17 +453,17 @@ export default function ProfilePage() {
                   ))}
                 </select>
                 <div className="relative flex-1">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#F7E7CE]/25 pointer-events-none" />
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#F7E7CE]/55 pointer-events-none" />
                   <input
                     type="tel"
                     value={mobile}
                     onChange={(e) => { setMobile(e.target.value.replace(/\D/g, "")); setSaveSuccess(false); }}
                     placeholder="7911 123456"
-                    className="w-full h-10.5 rounded-md border border-[#F7E7CE]/15 bg-[#F7E7CE]/5 pl-9 pr-3 text-sm text-[#F7E7CE] placeholder-[#F7E7CE]/20 outline-none focus:border-[#F59E0B]/60 focus:ring-1 focus:ring-[#F59E0B]/15"
+                    className="w-full h-10.5 rounded-md border border-[#F7E7CE]/15 bg-[#F7E7CE]/5 pl-9 pr-3 text-sm text-[#F7E7CE] placeholder-[#F7E7CE]/50 outline-none focus:border-[#F59E0B]/60 focus:ring-1 focus:ring-[#F59E0B]/15"
                   />
                 </div>
               </div>
-              <p className="text-xs text-[#F7E7CE]/20 mt-1.5">Numbers only · no country prefix needed</p>
+              <p className="text-xs text-[#F7E7CE]/50 mt-1.5">Numbers only · no country prefix needed</p>
             </Field>
           </Section>
 
@@ -510,10 +510,10 @@ export default function ProfilePage() {
             className="w-full flex items-center justify-between px-5 py-4 text-sm text-[#F7E7CE]/70 hover:bg-[#F7E7CE]/5 transition-colors"
           >
             <div className="flex items-center gap-3">
-              <Lock className="h-4 w-4 text-[#F7E7CE]/30" />
+              <Lock className="h-4 w-4 text-[#F7E7CE]/55" />
               <span>Change Password</span>
             </div>
-            <ChevronRight className="h-4 w-4 text-[#F7E7CE]/25" />
+            <ChevronRight className="h-4 w-4 text-[#F7E7CE]/55" />
           </button>
         </div>
 
@@ -530,10 +530,10 @@ export default function ProfilePage() {
             className="w-full flex items-center justify-between px-5 py-4 text-sm text-[#F7E7CE]/70 hover:bg-[#F7E7CE]/5 transition-colors"
           >
             <div className="flex items-center gap-3">
-              <MessageSquare className="h-4 w-4 text-[#F7E7CE]/30" />
+              <MessageSquare className="h-4 w-4 text-[#F7E7CE]/55" />
               <span>My Messages</span>
             </div>
-            <ChevronRight className="h-4 w-4 text-[#F7E7CE]/25" />
+            <ChevronRight className="h-4 w-4 text-[#F7E7CE]/55" />
           </button>
         </div>
 
@@ -545,7 +545,7 @@ export default function ProfilePage() {
             </h2>
           </div>
           <div className="px-5 py-5">
-            <p className="text-xs text-[#F7E7CE]/30 mb-4">
+            <p className="text-xs text-[#F7E7CE]/55 mb-4">
               Permanently delete your account and all associated data. This
               action cannot be undone.
             </p>

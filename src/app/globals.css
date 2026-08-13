@@ -488,6 +488,45 @@ button {
   --hm-lm-anchor: color-mix(in oklab, var(--hm-text) 70%, transparent);
 }
 
+/* Secondary text ramp.
+   Muted text across the app was hand-rolled per call site at anything from 20%
+   to 45%, and most of it landed around 2.2:1 contrast - well under the 4.5:1
+   WCAG AA needs for body text. These two tokens are the sanctioned steps:
+
+     --hm-text-muted   secondary text a user is expected to READ
+                       (bios, help text, meta lines, values)
+     --hm-text-subtle  de-emphasised labels and non-essential chrome
+                       (field labels, timestamps, placeholder-adjacent text)
+
+   Nothing a user reads should sit below --hm-text-subtle.
+
+   Declared as flat rgba literals per theme below, NOT as
+   `color-mix(in oklab, var(--hm-text) N%, var(--hm-lm-anchor))` the way
+   --hm-lm-anchor itself is. That two-level chain (a custom property whose
+   value is a color-mix() referencing another color-mix()-valued custom
+   property) goes through this project's Lightning CSS build when declared in
+   a stylesheet, and got folded wrong there - real, rendered dark-mode text
+   ended up inheriting an unrelated dark ancestor color instead of resolving
+   to champagne. Every other `color-mix(var(--hm-text) N%, var(--hm-lm-anchor))`
+   call in the codebase is written inline in a React `style` prop instead,
+   which the browser parses directly at runtime with no build transform - that
+   path is fine and is why nothing else broke. Literals sidestep the whole
+   class of bug: nothing for the build to fold. */
+:root {
+  --hm-text-muted: rgba(247, 231, 206, 0.72);
+  --hm-text-subtle: rgba(247, 231, 206, 0.55);
+}
+
+:root[data-hm-theme="dark"] {
+  --hm-text-muted: rgba(247, 231, 206, 0.72);
+  --hm-text-subtle: rgba(247, 231, 206, 0.55);
+}
+
+:root[data-hm-theme="light"] {
+  --hm-text-muted: rgba(16, 44, 38, 0.72);
+  --hm-text-subtle: rgba(16, 44, 38, 0.55);
+}
+
 /* Social (/hub) and Kitchen (/kitchen) each ship their own near-black dark
    palette (not the forest green above) with a per-service accent - amber for
    Social, magenta for Kitchen. Same scoping, same light-mode direction

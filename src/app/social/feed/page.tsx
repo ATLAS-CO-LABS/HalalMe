@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Plus,
@@ -30,11 +30,11 @@ import { withTimeout, TimeoutError } from "@/lib/withTimeout";
 import { useResumeKey } from "@/context/AppResumeContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthGate } from "@/hooks/useAuthGate";
+import { profileHref } from "@/lib/profileHref";
 import Avatar from "@/components/hub/Avatar";
 import PostCard from "@/components/hub/PostCard";
 import CreatePostModal from "@/components/hub/CreatePostModal";
 import EditPostModal from "@/components/hub/EditPostModal";
-import UserProfileModal from "@/components/hub/UserProfileModal";
 import NotificationPanel from "@/components/hub/NotificationPanel";
 import { PostCardSkeletonList } from "@/components/hub/PostCardSkeleton";
 import EmptyState from "@/components/hub/EmptyState";
@@ -88,6 +88,7 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
   const { user } = useAuth();
   const { requireAuth } = useAuthGate();
   const resumeKey = useResumeKey();
+  const router = useRouter();
 
   // Feed state
   const [posts, setPosts]               = useState<Post[]>([]);
@@ -113,15 +114,6 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
   // Modal state
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
   const [editingPost, setEditingPost]           = useState<Post | null>(null);
-  const [profileModal, setProfileModal]         = useState<{
-    userId: string;
-    displayName: string;
-    username: string | null;
-    avatarUrl: string | null;
-    isVerified: boolean | null;
-    profileFlair: string | null;
-    bio: string | null;
-  } | null>(null);
 
   // Stable ref to current user id - used inside realtime callback to avoid stale closure
   const userIdRef = useRef<string | undefined>(user?.id);
@@ -508,28 +500,6 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
     [activeTab, loadFeed]
   );
 
-  const handleUserClick = async (post: Post) => {
-    // Open modal immediately with data we already have, then enrich with bio
-    setProfileModal({
-      userId:      post.user_id,
-      displayName: post.profiles?.full_name ?? post.profiles?.username ?? "Unknown",
-      username:    post.profiles?.username ?? null,
-      avatarUrl:   post.profiles?.avatar_url ?? null,
-      isVerified:  post.profiles?.is_verified ?? null,
-      profileFlair: post.profiles?.profile_flair ?? null,
-      bio:         null,
-    });
-    try {
-      const profile = await hubService.getUserProfile(post.user_id);
-      if (profile) {
-        setProfileModal((prev) =>
-          prev?.userId === post.user_id ? { ...prev, bio: profile.bio, profileFlair: profile.profile_flair } : prev
-        );
-      }
-    } catch {
-      // bio is non-critical - leave as null
-    }
-  };
 
   // Following/Saved need an account (you can't follow people or save posts
   // without one) — prompt sign-in instead of switching to a tab that can
@@ -770,15 +740,7 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
               {userResults.map((u) => (
                 <motion.button
                   key={u.id}
-                  onClick={() => setProfileModal({
-                    userId: u.id,
-                    displayName: u.full_name ?? u.username ?? "Unknown",
-                    username: u.username,
-                    avatarUrl: u.avatar_url,
-                    isVerified: u.is_verified,
-                    profileFlair: null,
-                    bio: u.bio,
-                  })}
+                  onClick={() => router.push(profileHref(u.id, u.username))}
                   className="w-full flex items-center gap-3 border px-4 py-3 text-left transition-colors"
                   style={{ backgroundColor: BG2, borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)` }}
                   onMouseEnter={(e) => (e.currentTarget.style.borderColor = `color-mix(in oklab, var(--hm-amber) 25%, transparent)`)}
@@ -861,7 +823,6 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
                   onBookmark={handleBookmark}
                   onEdit={(p) => setEditingPost(p)}
                   onDelete={handleDeletePost}
-                  onUserClick={() => handleUserClick(post)}
                 />
               </motion.div>
             ))}
@@ -908,22 +869,6 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
           onSubmit={handleEditPost}
           initialContent={editingPost.content}
           currentUser={user}
-        />
-      )}
-
-      {profileModal && (
-        <UserProfileModal
-          isOpen={!!profileModal}
-          onClose={() => setProfileModal(null)}
-          userId={profileModal.userId}
-          displayName={profileModal.displayName}
-          username={profileModal.username}
-          avatarUrl={profileModal.avatarUrl}
-          isVerified={profileModal.isVerified}
-          profileFlair={profileModal.profileFlair}
-          bio={profileModal.bio}
-          userPosts={posts.filter((p) => p.user_id === profileModal.userId)}
-          onLike={handleLike}
         />
       )}
     </div>

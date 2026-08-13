@@ -9,6 +9,7 @@ import { hubService } from "@/services/hubService";
 import { formatRelativeTime } from "@/lib/relativeTime";
 import { withTimeout } from "@/lib/withTimeout";
 import { useResumeKey } from "@/context/AppResumeContext";
+import { profileHref } from "@/lib/profileHref";
 import Avatar from "./Avatar";
 
 interface NotificationPanelProps {
@@ -43,6 +44,10 @@ function notificationText(n: Notification): string {
 
 function notificationHref(n: Notification): string {
   if (n.post_id) return `/social/post/${n.post_id}`;
+  // Was a dead end to /social/feed - a "started following you" notification
+  // has no post_id, so it fell through to this fallback and never actually
+  // took the user anywhere useful. Route it to the follower's own profile.
+  if (n.type === "follow") return profileHref(n.actor_id, n.actor?.username);
   return "/social/feed";
 }
 

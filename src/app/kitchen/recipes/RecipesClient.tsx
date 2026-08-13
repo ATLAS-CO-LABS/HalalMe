@@ -89,6 +89,11 @@ function RecipeCard({
 
             {/* Badges */}
             <div className="absolute top-2 left-2 flex gap-1.5">
+              {!recipe.is_published && (
+                <span className="flex items-center gap-1 text-white text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 bg-black/70 backdrop-blur-sm">
+                  <Lock className="w-2.5 h-2.5" /> Draft
+                </span>
+              )}
               {recipe.is_featured && (
                 <span className="flex items-center gap-1 text-(--kitchen-bg) text-[10px] font-bold uppercase tracking-wide px-2 py-0.5" style={{ backgroundColor: CREAM }}>
                   <Star className="w-2.5 h-2.5 fill-(--kitchen-bg)" /> Featured

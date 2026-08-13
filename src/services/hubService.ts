@@ -310,8 +310,15 @@ export const hubService = {
     return posts;
   },
 
-  /** Fetches a user's public profile data (for the profile modal). */
-  async getUserProfile(userId: string): Promise<{
+  /**
+   * Fetches a user's public profile data, for the /social/u/[handle] page.
+   * `handle` is whatever profileHref() put in the URL — a username, or a
+   * raw user id when the caller didn't have a username on hand. Usernames
+   * are lowercase letters/numbers/underscores only (see validateUsername in
+   * complete-profile), so they can never collide with a UUID, and detecting
+   * which one we got is a plain shape check.
+   */
+  async getProfileByHandle(handle: string): Promise<{
     id: string;
     username: string | null;
     full_name: string | null;
@@ -321,11 +328,12 @@ export const hubService = {
     bio: string | null;
     created_at: string;
   } | null> {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(handle);
     const { data } = await supabase
       .from("profiles")
       .select("id, username, full_name, avatar_url, is_verified, profile_flair, bio, created_at")
-      .eq("id", userId)
-      .single();
+      .eq(isUuid ? "id" : "username", handle)
+      .maybeSingle();
     return data ?? null;
   },
 
@@ -672,7 +680,7 @@ export const hubService = {
     if (!query.trim()) return [];
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, username, full_name, avatar_url, is_verified, bio")
+      .select("id, username, full_name, avatar_url, is_verified, bio, profile_flair")
       .or(`username.ilike.%${query}%,full_name.ilike.%${query}%`)
       .order("full_name", { ascending: true })
       .limit(limit);

@@ -20,6 +20,7 @@ import {
   CornerDownRight,
   Trash2,
   Flag,
+  Check,
 } from "lucide-react";
 import type { Post, Comment } from "@/types";
 import { hubService } from "@/services/hubService";
@@ -29,12 +30,15 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAuthGate } from "@/hooks/useAuthGate";
 import { useResumeKey } from "@/context/AppResumeContext";
 import { formatRelativeTime } from "@/lib/relativeTime";
+import { profileHref } from "@/lib/profileHref";
 import Avatar from "@/components/hub/Avatar";
 
 const BG = "var(--hub-bg)";
 const BG2 = "var(--hub-bg2)";
 const AMBER = "var(--hm-amber)";
 const CREAM = "var(--hm-text)";
+const MUTED = "var(--hm-text-muted)";
+const SUBTLE = "var(--hm-text-subtle)";
 
 interface PostDetailClientProps {
   id: string;
@@ -71,6 +75,7 @@ export default function PostDetailClient({ id, initialPost, initialComments }: P
   const [replyingTo, setReplyingTo] = useState<{ id: string; username: string } | null>(null);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [reportTarget, setReportTarget] = useState<{ type: "post" | "comment"; id: string } | null>(null);
+  const [copied, setCopied] = useState(false);
 
   // ---------------------------------------------------------------------------
   // Load post + comments
@@ -263,12 +268,25 @@ export default function PostDetailClient({ id, initialPost, initialComments }: P
   // ---------------------------------------------------------------------------
   // Share
   // ---------------------------------------------------------------------------
+  // Was clipboard.writeText with a silent catch-and-drop - if the clipboard
+  // call was rejected (no permission, non-secure context) there was no
+  // fallback and no feedback either way, so a successful copy looked
+  // identical to a completely broken button. Mirrors PostCard's handleShare:
+  // native share sheet first, clipboard + a visible "Copied" state next,
+  // and a `prompt()` as a last resort that always gives the user the link.
   const handleShare = async () => {
     const url = `${window.location.origin}/social/post/${id}`;
+    const shareData = { title: post?.profiles?.username ?? "HalalMe", text: post?.content?.slice(0, 100), url };
     try {
-      await navigator.clipboard.writeText(url);
+      if (navigator.share && navigator.canShare?.(shareData)) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(url);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }
     } catch {
-      // fallback - no-op
+      window.prompt("Copy this link:", url);
     }
   };
 
@@ -298,20 +316,23 @@ export default function PostDetailClient({ id, initialPost, initialComments }: P
   const renderComment = (comment: Comment, isReply = false) => (
     <div key={comment.id} className={isReply ? "ml-10 mt-3" : ""}>
       <div className="flex items-start gap-3">
-        <Avatar
-          src={comment.profiles?.avatar_url ?? undefined}
-          alt={comment.profiles?.username ?? "User"}
-          size={isReply ? "sm" : "md"}
-          flair={comment.profiles?.profile_flair}
-        />
+        <Link href={profileHref(comment.user_id, comment.profiles?.username)} aria-label={`View ${comment.profiles?.username ?? "user"}'s profile`} className="shrink-0">
+          <Avatar
+            src={comment.profiles?.avatar_url ?? undefined}
+            alt={comment.profiles?.username ?? "User"}
+            size={isReply ? "sm" : "md"}
+            flair={comment.profiles?.profile_flair}
+          />
+        </Link>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <span
-              className="font-extrabold text-sm"
+            <Link
+              href={profileHref(comment.user_id, comment.profiles?.username)}
+              className="font-extrabold text-sm text-left hover:underline"
               style={{ color: CREAM, fontFamily: "var(--font-headline)" }}
             >
               {comment.profiles?.username ?? "Unknown"}
-            </span>
+            </Link>
             <span
               className="text-xs font-normal"
               style={{ color: `color-mix(in oklab, var(--hm-text) 21%, var(--hm-lm-anchor))`, fontFamily: "var(--font-body)" }}
@@ -478,22 +499,29 @@ export default function PostDetailClient({ id, initialPost, initialComments }: P
         >
           {/* User Info */}
           <div className="p-4 md:p-5 flex items-center gap-3">
-            <Avatar src={post.profiles?.avatar_url ?? undefined} alt={displayName} size="lg" flair={post.profiles?.profile_flair} />
+            <Link
+              href={profileHref(post.user_id, post.profiles?.username)}
+              aria-label={`View ${displayName}'s profile`}
+              className="shrink-0"
+            >
+              <Avatar src={post.profiles?.avatar_url ?? undefined} alt={displayName} size="lg" flair={post.profiles?.profile_flair} />
+            </Link>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <h3
-                  className="font-extrabold text-base truncate"
+                <Link
+                  href={profileHref(post.user_id, post.profiles?.username)}
+                  className="font-extrabold text-base truncate text-left hover:underline"
                   style={{ color: CREAM, fontFamily: "var(--font-headline)" }}
                 >
                   {displayName}
-                </h3>
+                </Link>
                 {isVerified && (
                   <BadgeCheck className="w-4 h-4 shrink-0" style={{ color: AMBER }} />
                 )}
               </div>
               <p
                 className="text-sm font-normal"
-                style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))`, fontFamily: "var(--font-body)" }}
+                style={{ color: MUTED, fontFamily: "var(--font-body)" }}
               >
                 {username && <span>{username} • </span>}
                 {formatRelativeTime(post.created_at)}
@@ -590,12 +618,12 @@ export default function PostDetailClient({ id, initialPost, initialComments }: P
                   <span className="text-base font-semibold">{post.like_count}</span>
                 </motion.button>
 
-                <div className="flex items-center gap-2" style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))` }}>
+                <div className="flex items-center gap-2" style={{ color: MUTED }}>
                   <MessageCircle className="w-6 h-6" />
                   <span className="text-base font-semibold">{post.comment_count}</span>
                 </div>
 
-                <div className="flex items-center gap-2" style={{ color: `color-mix(in oklab, var(--hm-text) 19%, var(--hm-lm-anchor))` }}>
+                <div className="flex items-center gap-2" style={{ color: SUBTLE }}>
                   <Eye className="w-5 h-5" />
                   <span className="text-sm font-semibold">{post.view_count}</span>
                 </div>
@@ -604,14 +632,12 @@ export default function PostDetailClient({ id, initialPost, initialComments }: P
               <motion.button
                 onClick={handleShare}
                 className="transition-colors"
-                style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))` }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = AMBER)}
-                onMouseLeave={(e) => (e.currentTarget.style.color = `color-mix(in oklab, var(--hm-text) 27%, transparent)`)}
-                title="Copy link"
+                style={{ color: copied ? AMBER : MUTED }}
+                title={copied ? "Copied!" : "Share"}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
               >
-                <Share2 className="w-6 h-6" />
+                {copied ? <Check className="w-6 h-6" /> : <Share2 className="w-6 h-6" />}
               </motion.button>
             </div>
           </div>

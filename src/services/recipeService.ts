@@ -44,15 +44,25 @@ export const recipeService = {
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
 
-    // Always use public client — queries are filtered by is_published=true (public RLS covers it)
-    let query = supabasePublic
+    // A user_id-filtered query is "My Recipes" and must show the caller's own
+    // drafts (AI-generated recipes save unpublished — see
+    // supabase/functions/generate-recipe). RLS already allows an owner to read
+    // their own recipes regardless of is_published ("Users can read own
+    // recipes", 003_kitchen.sql), but only for an authenticated request —
+    // supabasePublic carries no session, so auth.uid() is null and that rule
+    // never fires. A public browse (no user_id) stays on the public client and
+    // stays filtered to published-only, exactly as before.
+    const client = rest.user_id ? supabase : supabasePublic;
+
+    let query = client
       .from("recipes")
       .select("*, profiles!user_id(username, avatar_url, is_verified)", { count: "exact" })
-      .eq("is_published", true)
       .range(from, to)
       // Featured recipes float to the top, then newest first.
       .order("is_featured", { ascending: false })
       .order("created_at", { ascending: false });
+
+    if (!rest.user_id) query = query.eq("is_published", true);
 
     if (rest.cuisine) query = query.eq("cuisine", rest.cuisine);
     if (rest.difficulty) query = query.eq("difficulty", rest.difficulty);
