@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
-import { motion, useInView, AnimatePresence } from "framer-motion";
-import Image from "next/image";
+import React, { useRef, useState } from "react";
+import { motion, useInView } from "framer-motion";
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 import {
   ArrowRight,
@@ -51,92 +50,17 @@ export default function ForRestaurantsPage() {
   );
 }
 
-/* ─────────────────────────── Restaurant Slideshow ─────────────────────────── */
-const RESTAURANT_IMAGES = [
-  { src: "/images/page sections/delivery3.jpg", alt: "Restaurant kitchen" },
-  { src: "/images/page sections/delivery4.jpg", alt: "Menu management" },
-  { src: "/images/page sections/delivery5.jpg", alt: "Rider pickup" },
-  { src: "/images/page sections/delivery6.jpg", alt: "Delivery handoff" },
-];
-
+/* ─────────────────────────── Tablet dashboard loop ─────────────────────────── */
 function RestaurantSlideshow() {
-  const [current, setCurrent] = useState(0);
-  const [progress, setProgress] = useState(0);
-  const startRef = useRef(0);
-  const DURATION = 3000;
-
-  useEffect(() => {
-    startRef.current = performance.now();
-    let raf: number;
-    const tick = (now: number) => {
-      const elapsed = now - startRef.current;
-      const pct = Math.min((elapsed / DURATION) * 100, 100);
-      setProgress(pct);
-      if (elapsed < DURATION) {
-        raf = requestAnimationFrame(tick);
-      } else {
-        setCurrent((p) => (p + 1) % RESTAURANT_IMAGES.length);
-      }
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [current]);
-
   return (
-    <div className="relative w-full h-full select-none overflow-hidden rounded-2xl">
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={current}
-          initial={{ opacity: 0, x: 50, scale: 1.04 }}
-          animate={{ opacity: 1, x: 0, scale: 1 }}
-          exit={{ opacity: 0, x: -50, scale: 0.97 }}
-          transition={{ duration: 0.6, ease: [0.32, 0, 0.67, 0] }}
-          className="absolute inset-0"
-        >
-          <Image
-            src={RESTAURANT_IMAGES[current].src}
-            alt={RESTAURANT_IMAGES[current].alt}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, 900px"
-          />
-          <div
-            className="absolute inset-0"
-            style={{
-              background: `linear-gradient(to top, rgba(13,7,32,0.6) 0%, transparent 55%)`,
-            }}
-          />
-        </motion.div>
-      </AnimatePresence>
-
-      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10">
-        {RESTAURANT_IMAGES.map((img, i) => (
-          <button
-            key={i}
-            onClick={() => setCurrent(i)}
-            aria-label={`Show ${img.alt}`}
-            aria-current={i === current}
-            className="flex items-center justify-center p-3"
-          >
-            <span
-              className="relative overflow-hidden rounded-full transition-all duration-300 block"
-              style={{
-                width: i === current ? 28 : 8,
-                height: 8,
-                backgroundColor: i === current ? PURPLE : `${CREAM}35`,
-              }}
-            >
-              {i === current && (
-                <motion.span
-                  className="absolute inset-y-0 left-0 rounded-full block"
-                  style={{ backgroundColor: CREAM, width: `${progress}%` }}
-                />
-              )}
-            </span>
-          </button>
-        ))}
-      </div>
-    </div>
+    <video
+      src="/videos/tablet-loop.mp4"
+      autoPlay
+      loop
+      muted
+      playsInline
+      className="w-full h-full object-cover rounded-2xl"
+    />
   );
 }
 

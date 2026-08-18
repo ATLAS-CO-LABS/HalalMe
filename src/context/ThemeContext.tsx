@@ -3,8 +3,9 @@
 /**
  * ThemeContext
  *
- * HalalMe is dark-only everywhere except Social (/social) and Kitchen
- * (/kitchen), where the user can switch to a light theme. The chosen
+ * HalalMe is dark-only everywhere except Social (/social), Kitchen
+ * (/kitchen), and Delivery (/delivery), where the user can switch to a
+ * light theme. The chosen
  * theme is remembered (localStorage), but it is only ever painted while
  * browsing a themed route - everywhere else stays the platform's usual
  * dark forest look regardless of the stored preference.
@@ -28,7 +29,7 @@ import { usePathname } from "next/navigation";
 export type Theme = "light" | "dark";
 
 const STORAGE_KEY = "hm-theme";
-const THEMED_PREFIXES = ["/social", "/kitchen"];
+const THEMED_PREFIXES = ["/social", "/kitchen", "/delivery"];
 
 function isThemedRoute(pathname: string | null): boolean {
   if (!pathname) return false;

@@ -30,8 +30,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAuthGate } from "@/hooks/useAuthGate";
 import { useResumeKey } from "@/context/AppResumeContext";
 import { formatRelativeTime } from "@/lib/relativeTime";
-import { profileHref } from "@/lib/profileHref";
 import Avatar from "@/components/hub/Avatar";
+import ProfileLink from "@/components/hub/ProfileLink";
 
 const BG = "var(--hub-bg)";
 const BG2 = "var(--hub-bg2)";
@@ -316,23 +316,24 @@ export default function PostDetailClient({ id, initialPost, initialComments }: P
   const renderComment = (comment: Comment, isReply = false) => (
     <div key={comment.id} className={isReply ? "ml-10 mt-3" : ""}>
       <div className="flex items-start gap-3">
-        <Link href={profileHref(comment.user_id, comment.profiles?.username)} aria-label={`View ${comment.profiles?.username ?? "user"}'s profile`} className="shrink-0">
+        <ProfileLink userId={comment.user_id} username={comment.profiles?.username} ariaLabel={`View ${comment.profiles?.username ?? "user"}'s profile`} className="shrink-0">
           <Avatar
             src={comment.profiles?.avatar_url ?? undefined}
             alt={comment.profiles?.username ?? "User"}
             size={isReply ? "sm" : "md"}
             flair={comment.profiles?.profile_flair}
           />
-        </Link>
+        </ProfileLink>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <Link
-              href={profileHref(comment.user_id, comment.profiles?.username)}
+            <ProfileLink
+              userId={comment.user_id}
+              username={comment.profiles?.username}
               className="font-extrabold text-sm text-left hover:underline"
               style={{ color: CREAM, fontFamily: "var(--font-headline)" }}
             >
               {comment.profiles?.username ?? "Unknown"}
-            </Link>
+            </ProfileLink>
             <span
               className="text-xs font-normal"
               style={{ color: `color-mix(in oklab, var(--hm-text) 21%, var(--hm-lm-anchor))`, fontFamily: "var(--font-body)" }}
@@ -499,22 +500,24 @@ export default function PostDetailClient({ id, initialPost, initialComments }: P
         >
           {/* User Info */}
           <div className="p-4 md:p-5 flex items-center gap-3">
-            <Link
-              href={profileHref(post.user_id, post.profiles?.username)}
-              aria-label={`View ${displayName}'s profile`}
+            <ProfileLink
+              userId={post.user_id}
+              username={post.profiles?.username}
+              ariaLabel={`View ${displayName}'s profile`}
               className="shrink-0"
             >
               <Avatar src={post.profiles?.avatar_url ?? undefined} alt={displayName} size="lg" flair={post.profiles?.profile_flair} />
-            </Link>
+            </ProfileLink>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <Link
-                  href={profileHref(post.user_id, post.profiles?.username)}
+                <ProfileLink
+                  userId={post.user_id}
+                  username={post.profiles?.username}
                   className="font-extrabold text-base truncate text-left hover:underline"
                   style={{ color: CREAM, fontFamily: "var(--font-headline)" }}
                 >
                   {displayName}
-                </Link>
+                </ProfileLink>
                 {isVerified && (
                   <BadgeCheck className="w-4 h-4 shrink-0" style={{ color: AMBER }} />
                 )}

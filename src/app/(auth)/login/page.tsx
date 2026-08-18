@@ -3,13 +3,13 @@ import Image from "next/image";
 import Link from "next/link";
 import LoginForm from "@/components/auth/LoginForm";
 
-export default async function LoginPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ redirect?: string }>;
-}) {
-  const { redirect } = await searchParams;
-  const backHref = redirect ?? "/";
+export default function LoginPage() {
+  // "Continue browsing without signing in" always lands on home. The
+  // `redirect` query param (read client-side by LoginForm for the
+  // post-login destination) is only ever set to a page that itself requires
+  // auth — that's why the user got sent here — so reusing it for this link
+  // would just bounce them straight back to /login.
+  const backHref = "/";
 
   return (
     <div className="bg-[#0A1C19] border border-[#F7E7CE]/10 p-6 sm:p-8">

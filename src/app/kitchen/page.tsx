@@ -12,6 +12,7 @@ import {
   Globe,
   Sparkles,
   ArrowRight,
+  Upload,
 } from "lucide-react";
 import AQISection from "./AQISection";
 import { recipeService } from "@/services/recipeService";
@@ -57,27 +58,58 @@ export default function KitchenLandingPage() {
   const features = [
     {
       num: "01",
-      Icon: ChefHat,
+      Icon: Sparkles,
       title: "Personalised Recipes",
-      desc: "Get personalised recipe suggestions based on your ingredients",
+      desc: "Tell it what you have. Get quantities, method and halal swaps back.",
     },
     {
       num: "02",
       Icon: BookOpen,
       title: "Recipe Library",
-      desc: "Browse thousands of verified halal recipes",
+      desc: "Thousands of halal recipes, free to browse without an account.",
     },
     {
       num: "03",
       Icon: Utensils,
       title: "Cooking Tips",
-      desc: "Expert advice and substitution suggestions",
+      desc: "Ask about a technique, a swap, or how to rescue a dish mid cook.",
     },
     {
       num: "04",
-      Icon: ChefHat,
+      Icon: Upload,
       title: "Share Recipes",
-      desc: "Upload and share your own culinary creations",
+      desc: "Post your own with photos and steps, and build a following.",
+    },
+  ];
+
+  const doCards = [
+    {
+      num: "01",
+      href: "/kitchen/ai-assistant",
+      Icon: ChefHat,
+      image: "/images/Recipes/moroccan-chicken-tagine.jpg",
+      title: "AI Recipe Assistant",
+      desc: "Tell it what's in your fridge and get a halal recipe with full steps.",
+      points: [
+        "Recipes built from your ingredients",
+        "Swaps, timings and cooking help",
+        "Step by step method",
+      ],
+      cta: "Start Now",
+    },
+    {
+      num: "02",
+      href: "/kitchen/recipes",
+      Icon: BookOpen,
+      image: "/images/Recipes/chicken-shawarma.jpg",
+      title: "Explore Recipes",
+      desc: "Thousands of community recipes, free to browse without an account.",
+      points: [
+        "Cuisines from around the world",
+        "Filter by time and difficulty",
+        "Save and share your own",
+      ],
+      cta: "Browse Now",
     },
   ];
 
@@ -353,182 +385,139 @@ export default function KitchenLandingPage() {
         </div>
 
         <div
-          className="max-w-[95vw] mx-auto px-6 md:px-10 grid md:grid-cols-2"
-          style={{
-            gap: "1px",
-            backgroundColor: `color-mix(in oklab, var(--hm-magenta) 31%, transparent)`,
-            borderLeft: `2px solid color-mix(in oklab, var(--hm-magenta) 50%, transparent)`,
-            borderRight: `2px solid color-mix(in oklab, var(--hm-magenta) 50%, transparent)`,
-          }}
+          className="relative max-w-[95vw] mx-auto px-6 md:px-10 grid md:grid-cols-2 gap-px"
+          style={{ backgroundColor: `color-mix(in oklab, var(--hm-magenta) 31%, transparent)` }}
         >
-          {/* AI Card - hover to fuchsia */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={cardsInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ delay: 0.1, duration: 0.5 }}
-          >
-            <Link href="/kitchen/ai-assistant">
-              <div
-                className="group relative p-8 md:p-10 overflow-hidden cursor-pointer min-h-85 flex flex-col transition-colors duration-300"
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.backgroundColor = DEEP)
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.backgroundColor = "var(--kitchen-bg2)")
-                }
-                style={{
-                  backgroundColor: "var(--kitchen-bg2)",
-                  border: `1px solid color-mix(in oklab, var(--hm-text) 3%, transparent)`,
-                }}
+          {doCards.map((c, i) => {
+            const Icon = c.Icon;
+            return (
+              <motion.div
+                key={c.num}
+                initial={{ opacity: 0, y: 30 }}
+                animate={cardsInView ? { opacity: 1, y: 0 } : {}}
+                transition={{ delay: 0.1 + i * 0.1, duration: 0.5 }}
+                className="flex"
               >
-                <span
-                  aria-hidden="true"
-                  className="absolute -top-6 -right-3 text-[8rem] md:text-[10rem] font-extrabold leading-none select-none pointer-events-none"
-                  style={{ color: "color-mix(in oklab, var(--hm-text) 10%, transparent)" }}
+                <Link
+                  href={c.href}
+                  onMouseMove={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    e.currentTarget.style.setProperty("--mx", `${e.clientX - rect.left}px`);
+                    e.currentTarget.style.setProperty("--my", `${e.clientY - rect.top}px`);
+                  }}
+                  className="group relative flex w-full flex-col overflow-hidden p-8 md:p-10 min-h-104"
+                  style={{
+                    backgroundColor: BG2,
+                    border: `1px solid color-mix(in oklab, var(--hm-text) 3%, transparent)`,
+                  }}
                 >
-                  01
-                </span>
-                <div className="relative z-10 flex flex-col flex-1">
-                  <ChefHat
-                    className="w-7 h-7 mb-8 shrink-0 transition-colors duration-300 group-hover:text-black!"
-                    style={{ color: MAGENTA }}
+                  {/* Decorative food photo - the link's own text carries the meaning */}
+                  <Image
+                    src={c.image}
+                    alt=""
+                    fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    className="object-cover opacity-[0.13] transition-all duration-700 group-hover:opacity-[0.26] group-hover:scale-105"
                   />
-                  <h3
-                    className="text-xl md:text-2xl lg:text-3xl font-extrabold uppercase tracking-tighter mb-4 transition-colors duration-300 group-hover:text-black!"
-                    style={{ color: CREAM }}
-                  >
-                    AI Recipe Assistant
-                  </h3>
-                  <p
-                    className="leading-relaxed text-sm md:text-base transition-colors duration-300 group-hover:text-black/70! flex-1"
-                    style={{ color: `color-mix(in oklab, var(--hm-text) 46%, var(--hm-lm-anchor))` }}
-                  >
-                    Have ingredients but don&apos;t know what to cook? Let our
-                    AI create delicious halal recipes with step-by-step
-                    instructions.
-                  </p>
-                  <div className="mt-6 flex flex-col gap-2">
-                    {[
-                      "Paste your ingredients and get recipe suggestions",
-                      "Ask for cooking help and substitutions",
-                      "Get step-by-step cooking instructions",
-                    ].map((item, i) => (
-                      <div
-                        key={i}
-                        className="flex items-start gap-3 text-sm transition-colors duration-300 group-hover:text-black/70!"
-                        style={{ color: `color-mix(in oklab, var(--hm-text) 40%, var(--hm-lm-anchor))` }}
-                      >
-                        <span
-                          className="group-hover:text-black! mt-0.5 font-bold"
-                          style={{ color: MAGENTA }}
-                        >
-                          ✓
-                        </span>
-                        {item}
-                      </div>
-                    ))}
-                  </div>
+                  {/* Scrim so the copy stays legible over the photo */}
                   <div
-                    className="mt-8 flex items-center gap-2 text-sm font-extrabold uppercase tracking-tighter transition-colors duration-300 group-hover:text-black!"
-                    style={{ color: MAGENTA }}
+                    aria-hidden="true"
+                    className="absolute inset-0"
+                    style={{
+                      background: `linear-gradient(to top, var(--kitchen-bg2) 20%, color-mix(in oklab, var(--kitchen-bg2) 70%, transparent) 100%)`,
+                    }}
+                  />
+                  {/* Cursor-tracked spotlight */}
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                    style={{
+                      background: `radial-gradient(320px circle at var(--mx, 50%) var(--my, 50%), color-mix(in oklab, var(--hm-magenta) 20%, transparent), transparent 70%)`,
+                    }}
+                  />
+                  {/* Accent rule that draws across the top on hover */}
+                  <span
+                    aria-hidden="true"
+                    className="absolute left-0 top-0 h-0.5 w-0 transition-all duration-500 group-hover:w-full"
+                    style={{ backgroundColor: MAGENTA }}
+                  />
+                  <span
+                    aria-hidden="true"
+                    className="absolute -top-6 -right-3 text-[8rem] md:text-[10rem] font-extrabold leading-none select-none pointer-events-none"
+                    style={{ color: "color-mix(in oklab, var(--hm-text) 8%, transparent)" }}
                   >
-                    Start Now <ArrowRight className="w-4 h-4" />
-                  </div>
-                </div>
-              </div>
-            </Link>
-          </motion.div>
+                    {c.num}
+                  </span>
 
-          {/* Recipes Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={cardsInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ delay: 0.2, duration: 0.5 }}
-          >
-            <Link href="/kitchen/recipes">
-              <div
-                className="group relative p-8 md:p-10 overflow-hidden cursor-pointer min-h-85 flex flex-col transition-colors duration-300"
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.backgroundColor = DEEP)
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.backgroundColor = "var(--kitchen-bg2)")
-                }
-                style={{
-                  backgroundColor: "var(--kitchen-bg2)",
-                  border: `1px solid color-mix(in oklab, var(--hm-text) 3%, transparent)`,
-                }}
-              >
-                <span
-                  aria-hidden="true"
-                  className="absolute -top-6 -right-3 text-[8rem] md:text-[10rem] font-extrabold leading-none select-none pointer-events-none"
-                  style={{ color: "color-mix(in oklab, var(--hm-text) 10%, transparent)" }}
-                >
-                  02
-                </span>
-                <div className="relative z-10 flex flex-col flex-1">
-                  <BookOpen
-                    className="w-7 h-7 mb-8 shrink-0 transition-colors duration-300 group-hover:text-black!"
-                    style={{ color: MAGENTA }}
-                  />
-                  <h3
-                    className="text-xl md:text-2xl lg:text-3xl font-extrabold uppercase tracking-tighter mb-4 transition-colors duration-300 group-hover:text-black!"
-                    style={{ color: CREAM }}
-                  >
-                    Explore Recipes
-                  </h3>
-                  <p
-                    className="leading-relaxed text-sm md:text-base transition-colors duration-300 group-hover:text-black/70! flex-1"
-                    style={{ color: `color-mix(in oklab, var(--hm-text) 46%, var(--hm-lm-anchor))` }}
-                  >
-                    Browse thousands of halal recipes from our community. Find
-                    inspiration and share your own creations.
-                  </p>
-                  <div className="mt-6 flex flex-col gap-2">
-                    {[
-                      "Discover recipes from around the world",
-                      "Filter by cuisine, difficulty, and cooking time",
-                      "Upload and share your own recipes",
-                    ].map((item, i) => (
-                      <div
-                        key={i}
-                        className="flex items-start gap-3 text-sm transition-colors duration-300 group-hover:text-black/70!"
-                        style={{ color: `color-mix(in oklab, var(--hm-text) 40%, var(--hm-lm-anchor))` }}
-                      >
-                        <span
-                          className="mt-0.5 font-bold group-hover:text-black!"
-                          style={{ color: MAGENTA }}
+                  <div className="relative z-10 flex flex-1 flex-col">
+                    {/* Bare, oversized and hairline-weight: reads as a drawn mark
+                        rather than a cramped app tile. */}
+                    <Icon
+                      className="w-10 h-10 mb-8 shrink-0 transition-transform duration-500 group-hover:scale-110"
+                      strokeWidth={1}
+                      style={{ color: MAGENTA }}
+                    />
+                    <h3
+                      className="text-xl md:text-2xl lg:text-3xl font-extrabold uppercase tracking-tighter mb-3"
+                      style={{ color: CREAM }}
+                    >
+                      {c.title}
+                    </h3>
+                    <p
+                      className="text-sm md:text-base leading-relaxed max-w-md"
+                      style={{ color: `color-mix(in oklab, var(--hm-text) 52%, var(--hm-lm-anchor))` }}
+                    >
+                      {c.desc}
+                    </p>
+                    <div className="mt-7 flex flex-col gap-2.5">
+                      {c.points.map((item) => (
+                        <div
+                          key={item}
+                          className="flex items-center gap-3 text-sm"
+                          style={{ color: `color-mix(in oklab, var(--hm-text) 45%, var(--hm-lm-anchor))` }}
                         >
-                          ✓
-                        </span>
-                        {item}
-                      </div>
-                    ))}
+                          <span className="h-px w-4 shrink-0" style={{ backgroundColor: MAGENTA }} />
+                          {item}
+                        </div>
+                      ))}
+                    </div>
+                    {/* mt-auto keeps both CTAs on the same baseline regardless of copy length */}
+                    <div
+                      className="mt-auto pt-9 flex items-center gap-2 text-sm font-extrabold uppercase tracking-tighter"
+                      style={{ color: MAGENTA }}
+                    >
+                      {c.cta}
+                      <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
+                    </div>
                   </div>
-                  <div
-                    className="mt-8 flex items-center gap-2 text-sm font-extrabold uppercase tracking-tighter transition-colors duration-300 group-hover:text-black!"
-                    style={{ color: MAGENTA }}
-                  >
-                    Browse Now <ArrowRight className="w-4 h-4" />
-                  </div>
-                </div>
-              </div>
-            </Link>
-          </motion.div>
+                </Link>
+              </motion.div>
+            );
+          })}
         </div>
       </section>
 
       {/* ─── Features Grid ────────────────────────────────── */}
       <section
         ref={featuresRef}
-        className="py-24 md:py-32"
+        className="relative overflow-hidden py-24 md:py-32"
         style={{
           backgroundColor: BG2,
           borderTop: `1px solid color-mix(in oklab, var(--hm-magenta) 31%, transparent)`,
           borderBottom: `1px solid color-mix(in oklab, var(--hm-magenta) 31%, transparent)`,
         }}
       >
-        <div className="max-w-[95vw] mx-auto px-6 md:px-10 mb-14 md:mb-20">
+        {/* Faint grain so the flat panel isn't pure dead-flat color */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 opacity-[0.05] mix-blend-overlay"
+          style={{
+            backgroundImage:
+              "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
+          }}
+        />
+
+        <div className="relative max-w-[95vw] mx-auto px-6 md:px-10 mb-14 md:mb-20">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={featuresInView ? { opacity: 1, x: 0 } : {}}
@@ -555,56 +544,59 @@ export default function KitchenLandingPage() {
           </motion.h2>
         </div>
 
-        <div
-          className="max-w-[95vw] mx-auto px-6 md:px-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
-          style={{ gap: "1px", backgroundColor: `color-mix(in oklab, var(--hm-magenta) 31%, transparent)` }}
-        >
-          {features.map((f, i) => {
-            const Icon = f.Icon;
-            return (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 30 }}
-                animate={featuresInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ delay: i * 0.1, duration: 0.5 }}
-                className="group relative p-8 overflow-hidden hover:bg-(--hm-text) transition-colors duration-300 cursor-default"
-                style={{
-                  backgroundColor: BG,
-                  border: `1px solid color-mix(in oklab, var(--hm-text) 3%, transparent)`,
-                  minHeight: "220px",
-                }}
-              >
-                <span
-                  aria-hidden="true"
-                  className="absolute -top-6 -right-3 text-[7rem] font-extrabold leading-none select-none pointer-events-none transition-colors duration-300"
-                  style={{ color: "color-mix(in oklab, var(--hm-text) 10%, transparent)" }}
+        {/* Editorial rows rather than four identical boxes - the number and the
+            rule carry the structure, so nothing has to shout to be read. */}
+        <div className="relative max-w-[95vw] mx-auto px-6 md:px-10">
+          <div style={{ borderTop: `1px solid color-mix(in oklab, var(--hm-magenta) 22%, transparent)` }}>
+            {features.map((f, i) => {
+              const Icon = f.Icon;
+              return (
+                <motion.div
+                  key={f.num}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={featuresInView ? { opacity: 1, y: 0 } : {}}
+                  transition={{ delay: i * 0.08, duration: 0.5 }}
+                  className="group relative flex flex-col gap-3 py-7 pl-5 pr-4 transition-colors duration-300 md:flex-row md:items-center md:gap-10 md:py-9 md:pl-8 hover:bg-[color-mix(in_oklab,var(--hm-magenta)_7%,transparent)]"
+                  style={{ borderBottom: `1px solid color-mix(in oklab, var(--hm-magenta) 22%, transparent)` }}
                 >
-                  {f.num}
-                </span>
-                <div
-                  className="relative z-10 flex flex-col"
-                  style={{ minHeight: "180px" }}
-                >
-                  <Icon
-                    className="w-6 h-6 mb-6 transition-colors duration-300 group-hover:text-(--hm-magenta-deep)"
-                    style={{ color: MAGENTA }}
+                  {/* Accent bar that wipes down the left edge on hover */}
+                  <span
+                    aria-hidden="true"
+                    className="absolute left-0 top-0 bottom-0 w-0.5 origin-top scale-y-0 transition-transform duration-300 group-hover:scale-y-100"
+                    style={{ backgroundColor: MAGENTA }}
                   />
-                  <h3
-                    className="text-lg md:text-xl font-extrabold uppercase tracking-tighter mb-3 transition-colors duration-300 group-hover:text-(--kitchen-bg)"
-                    style={{ color: CREAM }}
-                  >
-                    {f.title}
-                  </h3>
+
+                  <div className="flex items-center gap-5 md:w-80 md:shrink-0">
+                    <span
+                      className="text-3xl md:text-4xl font-extrabold leading-none tabular-nums opacity-40 transition-opacity duration-300 group-hover:opacity-100"
+                      style={{ color: MAGENTA }}
+                    >
+                      {f.num}
+                    </span>
+                    <h3
+                      className="text-lg md:text-xl font-extrabold uppercase tracking-tighter"
+                      style={{ color: CREAM }}
+                    >
+                      {f.title}
+                    </h3>
+                  </div>
+
                   <p
-                    className="text-sm leading-relaxed transition-colors duration-300 group-hover:text-(--kitchen-bg)/65"
-                    style={{ color: `color-mix(in oklab, var(--hm-text) 46%, var(--hm-lm-anchor))` }}
+                    className="text-sm md:text-base leading-relaxed md:flex-1 md:max-w-2xl"
+                    style={{ color: `color-mix(in oklab, var(--hm-text) 52%, var(--hm-lm-anchor))` }}
                   >
                     {f.desc}
                   </p>
-                </div>
-              </motion.div>
-            );
-          })}
+
+                  <Icon
+                    className="hidden md:block w-7 h-7 shrink-0 opacity-35 transition-opacity duration-300 group-hover:opacity-100"
+                    strokeWidth={1}
+                    style={{ color: MAGENTA }}
+                  />
+                </motion.div>
+              );
+            })}
+          </div>
         </div>
       </section>
 

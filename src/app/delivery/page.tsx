@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import React, { useRef, useState, useEffect } from "react";
-import { motion, useInView, AnimatePresence } from "framer-motion";
+import { motion, useInView } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import { gsap } from "gsap";
@@ -25,9 +25,9 @@ import {
   SignalHigh,
 } from "lucide-react";
 
-const BG = "#1E0E38";
-const BG2 = "#160A2A";
-const CREAM = "#F7E7CE";
+const BG = "var(--delivery-bg)";
+const BG2 = "var(--delivery-bg2)";
+const CREAM = "var(--hm-text)";
 const GOLD = "#D4AF37";
 const PURPLE = "#5E188F";
 const LIGHT_PURPLE = "#B96AF0";
@@ -38,6 +38,20 @@ if (typeof window !== "undefined") {
 }
 
 const DELIVERY_URL = "https://delivery.halalme.co.uk";
+
+// Real store listings go here. Both are intentionally empty until the actual
+// URLs are confirmed: StoreBadges renders a non-clickable badge while a URL is
+// blank, so the page can never ship a dead link into an app store.
+const APP_STORE_URL = "";
+const PLAY_STORE_URL = "";
+
+// Phone mockup screens run light (white surface, purple accents) so they read
+// as a real app against the dark purple section behind them.
+const SCREEN_BG = "#FFFFFF";
+const SCREEN_SURFACE = "#F5F1FA";
+const SCREEN_INK = "#1A0B2E";
+const SCREEN_MUTED = "#6B5B80";
+const SCREEN_LINE = "#E4DAF0";
 
 const restaurants = [
   {
@@ -126,7 +140,7 @@ function AnnouncementBanner() {
   return (
     <div
       className="relative flex items-center justify-center gap-3 px-10 py-2.5 text-xs font-semibold text-center"
-      style={{ backgroundColor: DEEP, color: CREAM }}
+      style={{ backgroundColor: DEEP, color: "#F7E7CE" }}
     >
       <BadgePercent className="w-3.5 h-3.5 shrink-0" style={{ color: GOLD }} />
       <span>
@@ -185,8 +199,11 @@ function HeroSection() {
   return (
     <section
       className="relative h-screen min-h-[600px] flex items-center justify-center overflow-hidden"
-      style={{ backgroundColor: BG, borderBottom: `1px solid ${PURPLE}50` }}
+      style={{ backgroundColor: "#1E0E38", borderBottom: `1px solid ${PURPLE}50` }}
     >
+      {/* This hero is a full-bleed photograph, not a page surface - the scrim and
+          text below stay fixed dark regardless of theme so the photo stays
+          visible and legible in both, instead of washing out under a light-mode tint. */}
       <div className="absolute inset-0 z-0">
         <Image
           src="/images/services/halal01.webp"
@@ -196,11 +213,11 @@ function HeroSection() {
           priority
           sizes="100vw"
         />
-        <div className="absolute inset-0" style={{ backgroundColor: `${BG}CC` }} />
+        <div className="absolute inset-0" style={{ backgroundColor: "#1E0E38CC" }} />
         <div
           className="absolute inset-0"
           style={{
-            background: `radial-gradient(ellipse at center, transparent 0%, ${BG}50 55%, ${BG}90 100%)`,
+            background: "radial-gradient(ellipse at center, transparent 0%, #1E0E3850 55%, #1E0E3890 100%)",
           }}
         />
       </div>
@@ -260,7 +277,7 @@ function HeroSection() {
               </div>
               <span
                 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight"
-                style={{ fontFamily: "var(--font-logo)", color: CREAM }}
+                style={{ fontFamily: "var(--font-logo)", color: "#F7E7CE" }}
               >
                 HalalMe
               </span>
@@ -286,7 +303,7 @@ function HeroSection() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.56, duration: 0.7 }}
               className="block text-[clamp(1.25rem,4vw,4rem)]"
-              style={{ color: CREAM }}
+              style={{ color: "#F7E7CE" }}
             >
               Halal-Focused. Delivered Fast.
             </motion.span>
@@ -297,9 +314,9 @@ function HeroSection() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
             className="mt-6 md:mt-7 text-base md:text-lg max-w-md leading-relaxed mx-auto"
-            style={{ color: `${CREAM}B8` }}
+            style={{ color: "#F7E7CEB8" }}
           >
-            “Craving Something Delicious?” Order fresh, halal-focused meals
+            &ldquo;Craving Something Delicious?&rdquo; Order fresh, halal-focused meals
             from thousands of your favourite local restaurants.
           </motion.p>
 
@@ -356,7 +373,7 @@ function HeroSection() {
               <div
                 key={i}
                 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide"
-                style={{ color: `${CREAM}B8` }}
+                style={{ color: "#F7E7CEB8" }}
               >
                 <item.icon className="w-4 h-4" style={{ color: PURPLE }} />
                 {item.text}
@@ -398,7 +415,7 @@ function StatsStrip() {
             initial={{ opacity: 0, y: 20 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: i * 0.1, duration: 0.5 }}
-            className="py-10 md:py-14 px-8 md:px-12 text-center md:text-left"
+            className="py-10 md:py-14 px-5 sm:px-8 md:px-12 text-center md:text-left"
             style={{ backgroundColor: BG2 }}
           >
             <Icon
@@ -406,7 +423,7 @@ function StatsStrip() {
               style={{ color: `rgba(180,100,220,0.85)` }}
             />
             <div
-              className="text-[3rem] md:text-[4.5rem] font-extrabold tracking-tighter leading-none"
+              className="text-[clamp(1.35rem,7vw,4.5rem)] md:text-[clamp(2rem,4vw,4.5rem)] font-extrabold tracking-tighter leading-none whitespace-nowrap"
               style={{ color: CREAM }}
             >
               {s.value}
@@ -483,7 +500,7 @@ function HowItWorksSection() {
         >
           Three Steps
           <br />
-          <span style={{ color: `${CREAM}B8` }}>Browse. Order. Deliver.</span>
+          <span style={{ color: `color-mix(in oklab, var(--hm-text) 72%, var(--hm-lm-anchor))` }}>Browse. Order. Deliver.</span>
         </motion.h2>
       </div>
 
@@ -507,7 +524,7 @@ function HowItWorksSection() {
               className="group relative p-8 md:p-10 overflow-hidden transition-colors duration-300"
               style={{
                 backgroundColor: BG,
-                border: `1px solid ${CREAM}08`,
+                border: `1px solid color-mix(in oklab, var(--hm-text) 3%, transparent)`,
                 minHeight: "280px",
               }}
               onMouseEnter={(e) =>
@@ -518,29 +535,29 @@ function HowItWorksSection() {
               <span
                 aria-hidden="true"
                 className="absolute -top-6 -right-3 text-[8rem] md:text-[10rem] font-extrabold leading-none select-none pointer-events-none"
-                style={{ color: "#180830" }}
+                style={{ color: "color-mix(in oklab, var(--hm-text) 10%, transparent)" }}
               >
                 {step.num}
               </span>
               <div className="relative z-10 flex flex-col">
                 <Icon
-                  className="w-7 h-7 mb-8 transition-colors duration-300 group-hover:text-white"
+                  className="w-7 h-7 mb-8 transition-colors duration-300 group-hover:text-white!"
                   style={{ color: PURPLE }}
                 />
                 <h3
-                  className="text-xl md:text-2xl font-extrabold uppercase tracking-tighter mb-4 transition-colors duration-300 group-hover:text-white"
+                  className="text-xl md:text-2xl font-extrabold uppercase tracking-tighter mb-4 transition-colors duration-300 group-hover:text-white!"
                   style={{ color: CREAM }}
                 >
                   {step.title}
                 </h3>
                 <p
-                  className="text-sm md:text-base leading-relaxed transition-colors duration-300 group-hover:text-white/75"
-                  style={{ color: `${CREAM}B8` }}
+                  className="text-sm md:text-base leading-relaxed transition-colors duration-300 group-hover:text-white/75!"
+                  style={{ color: `color-mix(in oklab, var(--hm-text) 72%, var(--hm-lm-anchor))` }}
                 >
                   {step.desc}
                 </p>
                 <div
-                  className="mt-6 flex items-center gap-2 text-sm font-extrabold uppercase tracking-tighter transition-colors duration-300 group-hover:text-white"
+                  className="mt-6 flex items-center gap-2 text-sm font-extrabold uppercase tracking-tighter transition-colors duration-300 group-hover:text-white!"
                   style={{ color: PURPLE }}
                 >
                   <ArrowRight className="w-4 h-4" />
@@ -593,7 +610,7 @@ function RestaurantsSection() {
           >
             Partner
             <br />
-            <span style={{ color: `${CREAM}B8` }}>Restaurants.</span>
+            <span style={{ color: `color-mix(in oklab, var(--hm-text) 72%, var(--hm-lm-anchor))` }}>Restaurants.</span>
           </motion.h2>
           <a href={DELIVERY_URL} onClick={() => track("Order Now")}>
             <motion.button
@@ -627,7 +644,7 @@ function RestaurantsSection() {
             <a href={r.url} target="_blank" rel="noopener noreferrer">
               <div
                 className="group relative overflow-hidden cursor-pointer transition-colors duration-300"
-                style={{ backgroundColor: BG2, border: `1px solid ${CREAM}08` }}
+                style={{ backgroundColor: BG2, border: `1px solid color-mix(in oklab, var(--hm-text) 3%, transparent)` }}
                 onMouseEnter={(e) =>
                   (e.currentTarget.style.backgroundColor = "#0F0620")
                 }
@@ -652,20 +669,20 @@ function RestaurantsSection() {
                 </div>
                 <div className="p-6">
                   <h3
-                    className="text-lg font-extrabold uppercase tracking-tight mb-1.5 transition-colors duration-300 group-hover:opacity-70"
+                    className="text-lg font-extrabold uppercase tracking-tight mb-1.5 transition-colors duration-300 group-hover:text-white!"
                     style={{ color: CREAM }}
                   >
                     {r.name}
                   </h3>
                   <p
-                    className="text-sm mb-4 uppercase tracking-wide font-medium"
-                    style={{ color: `${CREAM}B8` }}
+                    className="text-sm mb-4 uppercase tracking-wide font-medium transition-colors duration-300 group-hover:text-white/75!"
+                    style={{ color: `color-mix(in oklab, var(--hm-text) 72%, var(--hm-lm-anchor))` }}
                   >
                     {r.cuisine}
                   </p>
                   <div
-                    className="flex items-center justify-between text-xs"
-                    style={{ color: `${CREAM}B8` }}
+                    className="flex items-center justify-between text-xs transition-colors duration-300 group-hover:text-white/75!"
+                    style={{ color: `color-mix(in oklab, var(--hm-text) 72%, var(--hm-lm-anchor))` }}
                   >
                     <div className="flex items-center gap-3 font-semibold uppercase tracking-wide">
                       <span className="flex items-center gap-1">
@@ -776,7 +793,7 @@ function WhyDeliverySection() {
         >
           Built for the
           <br />
-          <span style={{ color: `${CREAM}B8` }}>Halal Community.</span>
+          <span style={{ color: `color-mix(in oklab, var(--hm-text) 72%, var(--hm-lm-anchor))` }}>Halal Community.</span>
         </motion.h2>
       </div>
 
@@ -800,14 +817,14 @@ function WhyDeliverySection() {
               className="group relative p-8 overflow-hidden hover:bg-[#F7E7CE] transition-colors duration-300 cursor-default"
               style={{
                 backgroundColor: BG,
-                border: `1px solid ${CREAM}08`,
+                border: `1px solid color-mix(in oklab, var(--hm-text) 3%, transparent)`,
                 minHeight: "220px",
               }}
             >
               <span
                 aria-hidden="true"
                 className="absolute -top-6 -right-3 text-[7rem] font-extrabold leading-none select-none pointer-events-none transition-colors duration-300"
-                style={{ color: "#130626" }}
+                style={{ color: "color-mix(in oklab, var(--hm-text) 10%, transparent)" }}
               >
                 {b.num}
               </span>
@@ -827,7 +844,7 @@ function WhyDeliverySection() {
                 </h3>
                 <p
                   className="text-sm leading-relaxed transition-colors duration-300 group-hover:text-[#08060F]/65"
-                  style={{ color: `${CREAM}B8` }}
+                  style={{ color: `color-mix(in oklab, var(--hm-text) 72%, var(--hm-lm-anchor))` }}
                 >
                   {b.desc}
                 </p>
@@ -993,95 +1010,17 @@ function FinalCTA() {
   );
 }
 
-/* ─────────────────── Merchant Image Slideshow (inside ContainerScroll card) ─────────────────── */
-const MERCHANT_IMAGES = [
-  { src: "/images/page sections/delivery3.jpg", alt: "Restaurant kitchen" },
-  { src: "/images/page sections/delivery4.jpg", alt: "Menu management" },
-  { src: "/images/page sections/delivery5.jpg", alt: "Rider pickup" },
-  { src: "/images/page sections/delivery6.jpg", alt: "Delivery handoff" },
-];
-
+/* ─────────────────── Merchant POS dashboard loop (inside POS terminal screen) ─────────────────── */
 function MerchantSlideshow() {
-  const [current, setCurrent] = useState(0);
-  const [progress, setProgress] = useState(0);
-  const startRef = useRef(0);
-  const DURATION = 3000;
-
-  useEffect(() => {
-    startRef.current = performance.now();
-    let raf: number;
-
-    const tick = (now: number) => {
-      const elapsed = now - startRef.current;
-      const pct = Math.min((elapsed / DURATION) * 100, 100);
-      setProgress(pct);
-      if (elapsed < DURATION) {
-        raf = requestAnimationFrame(tick);
-      } else {
-        setCurrent((p) => (p + 1) % MERCHANT_IMAGES.length);
-      }
-    };
-
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [current]);
-
   return (
-    <div className="relative w-full h-full select-none overflow-hidden rounded-2xl">
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={current}
-          initial={{ opacity: 0, x: 50, scale: 1.04 }}
-          animate={{ opacity: 1, x: 0, scale: 1 }}
-          exit={{ opacity: 0, x: -50, scale: 0.97 }}
-          transition={{ duration: 0.6, ease: [0.32, 0, 0.67, 0] }}
-          className="absolute inset-0"
-        >
-          <Image
-            src={MERCHANT_IMAGES[current].src}
-            alt={MERCHANT_IMAGES[current].alt}
-            fill
-            className="object-contain"
-            sizes="(max-width: 768px) 100vw, 900px"
-          />
-          <div
-            className="absolute inset-0"
-            style={{
-              background: `linear-gradient(to top, rgba(13,7,32,0.6) 0%, transparent 55%)`,
-            }}
-          />
-        </motion.div>
-      </AnimatePresence>
-
-      {/* Progress dots */}
-      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10">
-        {MERCHANT_IMAGES.map((img, i) => (
-          <button
-            key={i}
-            onClick={() => setCurrent(i)}
-            aria-label={`Show ${img.alt}`}
-            aria-current={i === current}
-            className="flex items-center justify-center p-3"
-          >
-            <span
-              className="relative overflow-hidden rounded-full transition-all duration-300 block"
-              style={{
-                width: i === current ? 28 : 8,
-                height: 8,
-                backgroundColor: i === current ? PURPLE : `${CREAM}35`,
-              }}
-            >
-              {i === current && (
-                <motion.span
-                  className="absolute inset-y-0 left-0 rounded-full block"
-                  style={{ backgroundColor: CREAM, width: `${progress}%` }}
-                />
-              )}
-            </span>
-          </button>
-        ))}
-      </div>
-    </div>
+    <video
+      src="/videos/pos-loop.mp4"
+      autoPlay
+      loop
+      muted
+      playsInline
+      className="w-full h-full object-cover"
+    />
   );
 }
 
@@ -1092,6 +1031,7 @@ function POSTerminal3D({ children }: { children: React.ReactNode }) {
   const shadowRef = useRef<HTMLDivElement>(null);
   const sheenRef = useRef<HTMLDivElement>(null);
   const receiptRef = useRef<HTMLDivElement>(null);
+  const receiptWrapRef = useRef<HTMLDivElement>(null);
   const ledRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -1099,7 +1039,13 @@ function POSTerminal3D({ children }: { children: React.ReactNode }) {
       gsap.set([rigRef.current, floatRef.current], {
         transformPerspective: 2000,
       });
-      gsap.set(receiptRef.current, { scaleY: 0, transformOrigin: "50% 0%" });
+      // The slot masks the paper, so the sheet slides out at true size instead
+      // of being scaled up from nothing (which squashed the text).
+      gsap.set(receiptWrapRef.current, { height: 0, overflow: "hidden" });
+      gsap.set(receiptRef.current, { y: 0, rotate: 0, autoAlpha: 1 });
+      gsap.set(receiptRef.current?.querySelectorAll(".receipt-line") ?? [], {
+        autoAlpha: 0,
+      });
 
       // Scroll-linked reveal: tilts up into a held, diagonal angle
       gsap.fromTo(
@@ -1209,12 +1155,37 @@ function POSTerminal3D({ children }: { children: React.ReactNode }) {
           repeat: -1,
         });
 
-        // receipt printing loop
-        const receiptTl = gsap.timeline({ repeat: -1, repeatDelay: 2.2, delay: 1.6 });
+        // Receipt printing loop: the sheet ratchets out of the slot in feed
+        // steps, each line appearing as it clears the cutter, then the docket
+        // is torn off and flutters away rather than retracting back inside.
+        const wrap = receiptWrapRef.current;
+        const paper = receiptRef.current;
+        const lines = paper?.querySelectorAll(".receipt-line") ?? [];
+
+        const receiptTl = gsap.timeline({ repeat: -1, repeatDelay: 1.8, delay: 1.6 });
         receiptTl
-          .to(receiptRef.current, { scaleY: 1, duration: 1.1, ease: "steps(16)" })
-          .to({}, { duration: 1.5 })
-          .to(receiptRef.current, { scaleY: 0, duration: 0.45, ease: "power1.in" });
+          .to(wrap, { height: "auto", duration: 1.5, ease: "steps(24)" })
+          // Lines print as the paper feeds past them
+          .to(lines, { autoAlpha: 1, duration: 0.01, stagger: 0.17 }, 0.08)
+          // Paper wavers slightly as it feeds
+          .to(
+            paper,
+            { rotate: 0.9, duration: 0.45, yoyo: true, repeat: 2, ease: "sine.inOut" },
+            0.25
+          )
+          .to({}, { duration: 1.1 })
+          // Tear off: let it leave the slot, then drop away
+          .set(wrap, { overflow: "visible" })
+          .to(paper, {
+            y: 80,
+            rotate: 10,
+            autoAlpha: 0,
+            duration: 0.8,
+            ease: "power2.in",
+          })
+          .set(wrap, { overflow: "hidden", height: 0 })
+          .set(paper, { y: 0, rotate: 0, autoAlpha: 1 })
+          .set(lines, { autoAlpha: 0 });
 
         return () => {
           floatTweens.forEach((t) => t.kill());
@@ -1249,20 +1220,71 @@ function POSTerminal3D({ children }: { children: React.ReactNode }) {
 
       <div
         ref={rigRef}
-        className="relative w-full max-w-[13.5rem] md:max-w-[14.5rem]"
+        className="relative w-full max-w-[15rem] md:max-w-[16.5rem]"
         style={{ transformStyle: "preserve-3d" }}
       >
        <div ref={floatRef} style={{ transformStyle: "preserve-3d" }}>
         {/* ── Device body ── */}
         <div
-          className="relative w-full rounded-[1.7rem] p-[0.5rem] flex flex-col"
+          className="relative w-full rounded-[1.7rem] p-[0.95rem] flex flex-col"
           style={{
+            transformStyle: "preserve-3d",
             background:
               "linear-gradient(150deg, #3a3a3f 0%, #1a1a1d 22%, #050506 55%, #141416 100%)",
             boxShadow:
               "0 40px 70px -25px rgba(0,0,0,0.75), 0 2px 0 rgba(255,255,255,0.14) inset, 0 -2px 6px rgba(0,0,0,0.6) inset",
           }}
         >
+          {/* Extruded rear shells. The rig holds a tilt, so these sit behind the
+              face in real Z and the offset reveals the casing's side wall,
+              which is what was missing when it read as a floating screen. */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 rounded-[1.7rem]"
+            style={{
+              transform: "translateZ(-9px)",
+              background: "linear-gradient(150deg,#33333a 0%,#141417 45%,#050506 100%)",
+            }}
+          />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 rounded-[1.7rem]"
+            style={{
+              transform: "translateZ(-19px)",
+              background: "linear-gradient(150deg,#26262b 0%,#0d0d10 50%,#000 100%)",
+              boxShadow: "0 0 0 1px rgba(0,0,0,0.9)",
+            }}
+          />
+          {/* Rear plate, the deepest face of the shell */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 rounded-[1.7rem]"
+            style={{
+              transform: "translateZ(-28px)",
+              background: "linear-gradient(150deg,#1b1b1f 0%,#08080a 60%,#000 100%)",
+            }}
+          />
+          {/* Machined chamfer: a bright top edge and a hairline all round, so
+              the housing catches light like an extruded shell instead of a
+              flat rounded rectangle. */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 rounded-[1.7rem]"
+            style={{
+              boxShadow:
+                "inset 0 0 0 1px rgba(255,255,255,0.09), inset 0 1.5px 1px rgba(255,255,255,0.20), inset 0 -2px 3px rgba(0,0,0,0.7)",
+            }}
+          />
+          {/* Fine moulding texture on the plastic */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 rounded-[1.7rem] opacity-[0.10] mix-blend-overlay"
+            style={{
+              backgroundImage:
+                "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)'/%3E%3C/svg%3E\")",
+            }}
+          />
+
           {/* Side buttons (left edge) */}
           <div
             className="absolute left-[-3px] top-[38%] w-[3px] h-[2.4rem] rounded-l-[3px]"
@@ -1270,6 +1292,11 @@ function POSTerminal3D({ children }: { children: React.ReactNode }) {
           />
           <div
             className="absolute left-[-3px] top-[54%] w-[3px] h-[1.4rem] rounded-l-[3px]"
+            style={{ background: "linear-gradient(180deg,#2a2a2d,#0c0c0e)" }}
+          />
+          {/* Power button (right edge) */}
+          <div
+            className="absolute right-[-3px] top-[42%] w-[3px] h-[1.9rem] rounded-r-[3px]"
             style={{ background: "linear-gradient(180deg,#2a2a2d,#0c0c0e)" }}
           />
 
@@ -1337,29 +1364,34 @@ function POSTerminal3D({ children }: { children: React.ReactNode }) {
           {/* ── Receipt paper feeding out of the slot ── */}
           <div className="relative h-0 z-20">
             <div
-              ref={receiptRef}
-              className="absolute left-1/2 -translate-x-1/2 top-0 w-[68%] font-mono"
-              style={{
-                background: "#f6f2e8",
-                color: "#241a05",
-                fontSize: "0.4rem",
-                lineHeight: 1.5,
-                padding: "0.35rem 0.3rem 0.45rem",
-                boxShadow: "0 8px 16px -6px rgba(0,0,0,0.6)",
-                transformOrigin: "50% 0%",
-                clipPath:
-                  "polygon(0 0,100% 0,100% calc(100% - 3px),94% 100%,88% calc(100% - 3px),82% 100%,76% calc(100% - 3px),70% 100%,64% calc(100% - 3px),58% 100%,52% calc(100% - 3px),46% 100%,40% calc(100% - 3px),34% 100%,28% calc(100% - 3px),22% 100%,16% calc(100% - 3px),10% 100%,4% calc(100% - 3px),0 100%)",
-              }}
+              ref={receiptWrapRef}
+              className="absolute left-1/2 -translate-x-1/2 top-0 w-[68%]"
             >
-              <p className="m-0 whitespace-pre text-center font-bold tracking-[0.1em]">
-                HalalMe
-              </p>
-              <p className="m-0 whitespace-pre opacity-50">*** ORDER #4821 ***</p>
-              <p className="m-0 whitespace-pre">1x Zinger Wrap&nbsp;&nbsp;£6.50</p>
-              <p className="m-0 whitespace-pre">1x Loaded Fries&nbsp;&nbsp;£3.20</p>
-              <p className="m-0 whitespace-pre opacity-50">------------------</p>
-              <p className="m-0 whitespace-pre font-bold">TOTAL&nbsp;&nbsp;&nbsp;£9.70</p>
-              <p className="m-0 whitespace-pre opacity-50">STATUS: PAID ✓</p>
+              <div
+                ref={receiptRef}
+                className="w-full font-mono"
+                style={{
+                  background: "#f6f2e8",
+                  color: "#241a05",
+                  fontSize: "0.4rem",
+                  lineHeight: 1.5,
+                  padding: "0.35rem 0.3rem 0.45rem",
+                  boxShadow: "0 8px 16px -6px rgba(0,0,0,0.6)",
+                  transformOrigin: "50% 0%",
+                  clipPath:
+                    "polygon(0 0,100% 0,100% calc(100% - 3px),94% 100%,88% calc(100% - 3px),82% 100%,76% calc(100% - 3px),70% 100%,64% calc(100% - 3px),58% 100%,52% calc(100% - 3px),46% 100%,40% calc(100% - 3px),34% 100%,28% calc(100% - 3px),22% 100%,16% calc(100% - 3px),10% 100%,4% calc(100% - 3px),0 100%)",
+                }}
+              >
+                <p className="receipt-line m-0 whitespace-pre text-center font-bold tracking-[0.1em]">
+                  HalalMe
+                </p>
+                <p className="receipt-line m-0 whitespace-pre opacity-50">*** ORDER #4821 ***</p>
+                <p className="receipt-line m-0 whitespace-pre">1x Zinger Wrap&nbsp;&nbsp;£6.50</p>
+                <p className="receipt-line m-0 whitespace-pre">1x Loaded Fries&nbsp;&nbsp;£3.20</p>
+                <p className="receipt-line m-0 whitespace-pre opacity-50">------------------</p>
+                <p className="receipt-line m-0 whitespace-pre font-bold">TOTAL&nbsp;&nbsp;&nbsp;£9.70</p>
+                <p className="receipt-line m-0 whitespace-pre opacity-50">STATUS: PAID ✓</p>
+              </div>
             </div>
           </div>
 
@@ -1430,6 +1462,54 @@ function POSTerminal3D({ children }: { children: React.ReactNode }) {
               className="absolute bottom-[0.4rem] left-1/2 -translate-x-1/2 w-[28%] h-[3px] rounded-full z-10"
               style={{ background: "rgba(255,255,255,0.55)" }}
             />
+
+            {/* Bezel occlusion: the glass sits below the housing lip, so the
+                edges fall into shadow rather than meeting the body flat. */}
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 pointer-events-none z-20 rounded-[0.9rem]"
+              style={{ boxShadow: "inset 0 0 14px 3px rgba(0,0,0,0.8)" }}
+            />
+          </div>
+
+          {/* ── Card reader chin ── */}
+          <div className="relative mx-[0.3rem] mb-[0.5rem] px-[0.5rem] pt-[0.45rem]">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-[0.3rem]">
+                {/* Contactless arcs */}
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M7 8.5a7 7 0 010 7" stroke="rgba(255,255,255,0.8)" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M11 5.5a12 12 0 010 13" stroke="rgba(255,255,255,0.45)" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M15 2.5a17 17 0 010 19" stroke="rgba(255,255,255,0.22)" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+                <span
+                  className="font-semibold uppercase tracking-[0.12em]"
+                  style={{ fontSize: "0.4rem", color: "rgba(255,255,255,0.5)" }}
+                >
+                  Tap to pay
+                </span>
+              </div>
+              {/* Speaker grille */}
+              <div className="flex gap-[2px]">
+                {[...Array(5)].map((_, i) => (
+                  <span
+                    key={i}
+                    className="w-[2px] h-[2px] rounded-full"
+                    style={{ background: "rgba(255,255,255,0.22)" }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Recessed chip card slot */}
+            <div
+              className="mt-[0.35rem] h-[4px] rounded-[2px]"
+              style={{
+                background: "linear-gradient(180deg,#000 0%,#0c0c0e 55%,#2b2b2f 100%)",
+                boxShadow:
+                  "inset 0 2px 3px rgba(0,0,0,0.95), 0 1px 0 rgba(255,255,255,0.10)",
+              }}
+            />
           </div>
         </div>
        </div>
@@ -1458,7 +1538,7 @@ function ForRestaurantsSection() {
       <span
         aria-hidden="true"
         className="absolute -top-4 -right-6 md:-top-10 md:-right-10 text-[10rem] md:text-[18rem] font-extrabold leading-none select-none pointer-events-none z-0"
-        style={{ color: "#0F0620" }}
+        style={{ color: "color-mix(in oklab, var(--hm-text) 10%, transparent)" }}
       >
         02
       </span>
@@ -1486,20 +1566,20 @@ function ForRestaurantsSection() {
           >
             Run Your Kitchen
             <br />
-            <span style={{ color: `${CREAM}B8` }}>Like a System.</span>
+            <span style={{ color: `color-mix(in oklab, var(--hm-text) 72%, var(--hm-lm-anchor))` }}>Like a System.</span>
           </h2>
 
           <div
             className="w-full max-w-md flex flex-col"
-            style={{ borderTop: `1px solid ${CREAM}12` }}
+            style={{ borderTop: `1px solid color-mix(in oklab, var(--hm-text) 7%, transparent)` }}
           >
             {points.map((p, i) => (
               <div
                 key={i}
                 className="flex items-center justify-between gap-4 py-3 text-sm font-semibold uppercase tracking-wide"
                 style={{
-                  color: `${CREAM}B3`,
-                  borderBottom: `1px solid ${CREAM}12`,
+                  color: `color-mix(in oklab, var(--hm-text) 70%, var(--hm-lm-anchor))`,
+                  borderBottom: `1px solid color-mix(in oklab, var(--hm-text) 7%, transparent)`,
                 }}
               >
                 <span>{p}</span>
@@ -1558,7 +1638,7 @@ function DeliveryExperienceSection() {
       <span
         aria-hidden="true"
         className="absolute -top-4 -left-4 md:-top-10 md:-left-6 text-[10rem] md:text-[18rem] font-extrabold leading-none select-none pointer-events-none"
-        style={{ color: "#130626" }}
+        style={{ color: "color-mix(in oklab, var(--hm-text) 10%, transparent)" }}
       >
         01
       </span>
@@ -1588,7 +1668,7 @@ function DeliveryExperienceSection() {
           >
             Order Without
             <br />
-            <span style={{ color: `${CREAM}B8` }}>Friction.</span>
+            <span style={{ color: `color-mix(in oklab, var(--hm-text) 72%, var(--hm-lm-anchor))` }}>Friction.</span>
           </motion.h2>
 
           <motion.ul
@@ -1596,15 +1676,15 @@ function DeliveryExperienceSection() {
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: 0.15, duration: 0.6 }}
             className="flex flex-col md:max-w-sm w-full"
-            style={{ borderTop: `1px solid ${CREAM}12` }}
+            style={{ borderTop: `1px solid color-mix(in oklab, var(--hm-text) 7%, transparent)` }}
           >
             {points.map((p, i) => (
               <li
                 key={i}
                 className="flex items-center justify-between gap-4 py-3 text-sm md:text-base font-semibold uppercase tracking-wide"
                 style={{
-                  color: `${CREAM}B3`,
-                  borderBottom: `1px solid ${CREAM}12`,
+                  color: `color-mix(in oklab, var(--hm-text) 70%, var(--hm-lm-anchor))`,
+                  borderBottom: `1px solid color-mix(in oklab, var(--hm-text) 7%, transparent)`,
                 }}
               >
                 <span>{p}</span>
@@ -1620,30 +1700,402 @@ function DeliveryExperienceSection() {
         </div>
       </div>
 
-      <div
-        className="relative max-w-[95vw] mx-auto px-6 md:px-10 grid md:grid-cols-2"
-        style={{ gap: "1px", backgroundColor: `${CREAM}08` }}
-      >
-        {["delivery1", "delivery2"].map((img, i) => (
+      {/* App mockups + store badges */}
+      <div className="relative max-w-[95vw] mx-auto px-6 md:px-10 mb-16 md:mb-24">
+        <div className="grid lg:grid-cols-2 gap-16 lg:gap-20 items-center">
+          {/* Phones. Side units tuck behind the centre one with negative
+              margins so the cluster stays inside its own column instead of
+              spilling over the copy beside it. */}
           <motion.div
-            key={img}
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 40 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ delay: 0.1 + i * 0.1, duration: 0.6 }}
-            className="relative w-full aspect-[12/5] overflow-hidden"
-            style={{ backgroundColor: BG2 }}
+            transition={{ duration: 0.7 }}
+            className="relative flex items-end justify-center order-2 lg:order-1"
           >
-            <Image
-              src={`/images/page sections/${img}.jpg`}
-              alt={img === "delivery1" ? "Order at the door" : "Rider handoff"}
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, 48vw"
-            />
+            <PhoneFrame className="hidden sm:block scale-[0.82] translate-y-8 -mr-12" rotate={-8}>
+              <CartScreen />
+            </PhoneFrame>
+            <PhoneFrame className="relative z-10 shrink-0" rotate={0}>
+              <BrowseScreen />
+            </PhoneFrame>
+            <PhoneFrame className="hidden sm:block scale-[0.82] translate-y-8 -ml-12" rotate={8}>
+              <TrackScreen />
+            </PhoneFrame>
           </motion.div>
+
+          {/* Copy + badges */}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: 0.15, duration: 0.6 }}
+            className="order-1 lg:order-2"
+          >
+            <h3
+              className="text-3xl sm:text-4xl md:text-5xl font-extrabold uppercase tracking-tighter leading-[0.9] mb-5"
+              style={{ color: CREAM }}
+            >
+              Get The
+              <br />
+              <span style={{ color: LIGHT_PURPLE }}>HalalMe App.</span>
+            </h3>
+            <p
+              className="text-sm md:text-base leading-relaxed mb-8 max-w-md"
+              style={{ color: `color-mix(in oklab, var(--hm-text) 60%, var(--hm-lm-anchor))` }}
+            >
+              Order from halal restaurants near you, track your rider live, and
+              keep every receipt in one place. Free delivery over £25.
+            </p>
+
+            <StoreBadges />
+
+            <p
+              className="mt-6 text-xs"
+              style={{ color: `color-mix(in oklab, var(--hm-text) 38%, var(--hm-lm-anchor))` }}
+            >
+              New customer? Use code{" "}
+              <span className="font-extrabold tracking-wider" style={{ color: GOLD }}>
+                HALAL10
+              </span>{" "}
+              for £10 off your first order.
+            </p>
+          </motion.div>
+        </div>
+      </div>
+
+    </section>
+  );
+}
+
+/* ─────────────────── App store badges ─────────────────── */
+/* Monochrome so the pair sits in the purple palette instead of fighting it.
+   Apple and Google both require their official badge artwork on production
+   marketing pages, so these should be swapped for the downloaded assets
+   before launch. */
+function StoreBadge({
+  href,
+  glyph,
+  kicker,
+  name,
+}: {
+  href: string;
+  glyph: React.ReactNode;
+  kicker: string;
+  name: string;
+}) {
+  const inner = (
+    <>
+      <span className="shrink-0" style={{ color: CREAM }}>
+        {glyph}
+      </span>
+      <span className="flex flex-col leading-none text-left">
+        <span
+          className="text-[9px] uppercase tracking-wider mb-1"
+          style={{ color: `color-mix(in oklab, var(--hm-text) 55%, var(--hm-lm-anchor))` }}
+        >
+          {kicker}
+        </span>
+        <span className="text-sm font-bold" style={{ color: CREAM }}>
+          {name}
+        </span>
+      </span>
+    </>
+  );
+
+  const base =
+    "flex items-center gap-3 px-4 py-2.5 transition-colors duration-200";
+  const style = {
+    backgroundColor: "rgba(255,255,255,0.04)",
+    border: `1px solid ${PURPLE}`,
+  } as const;
+
+  // No URL yet: render the badge but keep it inert rather than link nowhere.
+  if (!href) {
+    return (
+      <div className={`${base} opacity-45 cursor-default`} style={style} aria-disabled="true">
+        {inner}
+      </div>
+    );
+  }
+
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={() => track(`App Store · ${name}`)}
+      className={`${base} hover:bg-white/8`}
+      style={style}
+    >
+      {inner}
+    </a>
+  );
+}
+
+function StoreBadges() {
+  return (
+    <div className="flex flex-wrap gap-3">
+      <StoreBadge
+        href={APP_STORE_URL}
+        kicker="Download on the"
+        name="App Store"
+        glyph={
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M16.365 1.43c0 1.14-.42 2.2-1.25 3.02-.9.9-1.98 1.42-3.1 1.33-.02-.13-.04-.3-.04-.47 0-1.1.47-2.2 1.28-3 .8-.8 1.94-1.35 3.03-1.4.02.17.08.35.08.52zM20.9 17.1c-.55 1.27-.82 1.84-1.53 2.96-.99 1.57-2.38 3.52-4.1 3.53-1.53.02-1.92-.99-4-.98-2.08.01-2.51 1-4.04.98-1.72-.01-3.04-1.77-4.03-3.34-2.77-4.4-3.06-9.56-1.35-12.3 1.21-1.95 3.12-3.09 4.92-3.09 1.83 0 2.98 1 4.5 1 1.47 0 2.36-1 4.48-1 1.6 0 3.3.87 4.51 2.38-3.97 2.17-3.33 7.84.64 9.86z" />
+          </svg>
+        }
+      />
+      <StoreBadge
+        href={PLAY_STORE_URL}
+        kicker="Get it on"
+        name="Google Play"
+        glyph={
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M3.5 2.1v19.8c0 .42.45.68.81.47l16.2-9.9a.55.55 0 0 0 0-.94L4.31 1.63a.55.55 0 0 0-.81.47z" />
+          </svg>
+        }
+      />
+    </div>
+  );
+}
+
+/* ─────────────────── Phone mockups ─────────────────── */
+/* Screens are rendered in markup rather than dropped in as images: the only
+   captures available are landscape desktop shots, which crop to an unreadable
+   sliver at phone width. Everything shown is real partner data from the
+   `restaurants` array above. */
+function PhoneFrame({
+  children,
+  className = "",
+  rotate = 0,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  rotate?: number;
+}) {
+  return (
+    <div className={className} style={{ transform: `rotate(${rotate}deg)` }}>
+      <div
+        className="relative rounded-[2rem] p-2"
+        style={{
+          backgroundColor: "#0A0414",
+          border: `1px solid ${PURPLE}`,
+          boxShadow: `0 30px 60px -18px rgba(0,0,0,0.8), 0 0 40px -10px ${PURPLE}80`,
+        }}
+      >
+        <div
+          className="relative overflow-hidden rounded-[1.6rem] w-[190px] sm:w-[205px] h-[400px] sm:h-[425px] flex flex-col"
+          style={{ backgroundColor: SCREEN_BG }}
+        >
+          {/* Notch */}
+          <div
+            aria-hidden="true"
+            className="absolute left-1/2 top-1.5 -translate-x-1/2 h-3.5 w-16 rounded-full z-20"
+            style={{ backgroundColor: "#0A0414" }}
+          />
+          {/* Status bar */}
+          <div
+            className="flex items-center justify-between px-4 pt-2 pb-1 text-[9px] font-semibold shrink-0"
+            style={{ color: SCREEN_INK }}
+          >
+            <span>19:24</span>
+            <span className="flex items-center gap-1">
+              <SignalHigh className="w-2.5 h-2.5" />
+              <Wifi className="w-2.5 h-2.5" />
+              <BatteryFull className="w-3 h-3" />
+            </span>
+          </div>
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BrowseScreen() {
+  const shown = [restaurants[0], restaurants[4], restaurants[5]];
+  return (
+    <div className="flex-1 overflow-hidden px-3 pt-1">
+      <div className="flex items-center gap-1 mb-2.5">
+        <MapPin className="w-3 h-3" style={{ color: PURPLE }} />
+        <span className="text-[10px] font-bold" style={{ color: SCREEN_INK }}>
+          Leicester
+        </span>
+      </div>
+      <div
+        className="flex items-center gap-1.5 px-2.5 py-2 mb-3 rounded-md"
+        style={{ backgroundColor: SCREEN_SURFACE, border: `1px solid ${SCREEN_LINE}` }}
+      >
+        <Tag className="w-2.5 h-2.5" style={{ color: SCREEN_MUTED }} />
+        <span className="text-[9px]" style={{ color: SCREEN_MUTED }}>
+          Search restaurants
+        </span>
+      </div>
+      <div className="flex gap-1.5 mb-3">
+        {["Pizza", "Burger", "Dessert"].map((c, i) => (
+          <span
+            key={c}
+            className="text-[8px] font-bold uppercase tracking-wide px-2 py-1 rounded-full"
+            style={
+              i === 0
+                ? { backgroundColor: PURPLE, color: "#fff" }
+                : { backgroundColor: SCREEN_SURFACE, color: SCREEN_MUTED }
+            }
+          >
+            {c}
+          </span>
         ))}
       </div>
-    </section>
+      <div className="flex flex-col gap-2">
+        {shown.map((r) => (
+          <div
+            key={r.id}
+            className="flex items-center gap-2 p-1.5 rounded-md"
+            style={{ backgroundColor: "#fff", border: `1px solid ${SCREEN_LINE}` }}
+          >
+            <div
+              className="relative w-8 h-8 shrink-0 overflow-hidden rounded"
+              style={{ backgroundColor: SCREEN_SURFACE }}
+            >
+              <Image src={r.image} alt="" fill sizes="32px" className="object-contain p-0.5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-[9px] font-bold truncate" style={{ color: SCREEN_INK }}>
+                {r.name}
+              </div>
+              <div className="text-[7px] truncate" style={{ color: SCREEN_MUTED }}>
+                {r.distance} · {r.deliveryFee} delivery
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CartScreen() {
+  return (
+    <div className="flex-1 overflow-hidden px-3 pt-1 flex flex-col">
+      <div className="text-[10px] font-extrabold uppercase tracking-wide mb-3" style={{ color: SCREEN_INK }}>
+        Your Order
+      </div>
+      <div className="flex flex-col gap-2 mb-3">
+        {[
+          { qty: 1, item: "Peri Peri Wrap", price: "£7.49" },
+          { qty: 2, item: "Loaded Fries", price: "£6.00" },
+        ].map((l) => (
+          <div key={l.item} className="flex items-center gap-2">
+            <span
+              className="text-[8px] font-bold w-4 h-4 flex items-center justify-center shrink-0 rounded"
+              style={{ backgroundColor: PURPLE, color: "#fff" }}
+            >
+              {l.qty}
+            </span>
+            <span className="text-[9px] flex-1 truncate" style={{ color: SCREEN_INK }}>
+              {l.item}
+            </span>
+            <span className="text-[9px] font-semibold" style={{ color: SCREEN_MUTED }}>
+              {l.price}
+            </span>
+          </div>
+        ))}
+      </div>
+      <div
+        className="flex items-center justify-between px-2 py-1.5 mb-3 rounded-md"
+        style={{ backgroundColor: SCREEN_SURFACE, border: `1px dashed ${PURPLE}` }}
+      >
+        <span className="text-[8px] font-extrabold tracking-wider" style={{ color: PURPLE }}>
+          HALAL10
+        </span>
+        <span className="text-[8px] font-bold" style={{ color: PURPLE }}>
+          -£10.00
+        </span>
+      </div>
+      <div
+        className="flex items-center justify-between pt-2 mt-auto mb-3"
+        style={{ borderTop: `1px solid ${SCREEN_LINE}` }}
+      >
+        <span className="text-[9px] font-bold uppercase" style={{ color: SCREEN_MUTED }}>
+          Total
+        </span>
+        <span className="text-sm font-extrabold" style={{ color: SCREEN_INK }}>
+          £3.49
+        </span>
+      </div>
+      <div
+        className="text-center text-[9px] font-extrabold uppercase tracking-wider py-2.5 mb-3 rounded-md"
+        style={{ backgroundColor: PURPLE, color: "#fff" }}
+      >
+        Checkout
+      </div>
+    </div>
+  );
+}
+
+function TrackScreen() {
+  const steps = ["Order confirmed", "Being prepared", "Rider on the way"];
+  return (
+    <div className="flex-1 overflow-hidden px-3 pt-1 flex flex-col">
+      {/* Map stand-in */}
+      <div
+        className="relative h-24 mb-3 overflow-hidden rounded-md"
+        style={{ backgroundColor: SCREEN_SURFACE, border: `1px solid ${SCREEN_LINE}` }}
+      >
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 opacity-60"
+          style={{
+            backgroundImage: `linear-gradient(${SCREEN_LINE} 1px, transparent 1px), linear-gradient(90deg, ${SCREEN_LINE} 1px, transparent 1px)`,
+            backgroundSize: "18px 18px",
+          }}
+        />
+        {/* Route line */}
+        <svg aria-hidden="true" className="absolute inset-0 w-full h-full" viewBox="0 0 180 96" fill="none">
+          <path
+            d="M18 78 L18 46 L74 46 L74 22 L150 22"
+            stroke={PURPLE}
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeDasharray="5 5"
+          />
+          <circle cx="150" cy="22" r="4" fill={PURPLE} />
+        </svg>
+        <span
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full"
+          style={{ backgroundColor: PURPLE, boxShadow: `0 4px 10px ${PURPLE}66` }}
+        >
+          <Bike className="w-4 h-4" style={{ color: "#fff" }} />
+        </span>
+      </div>
+
+      <div className="text-[9px] uppercase tracking-wider mb-0.5" style={{ color: SCREEN_MUTED }}>
+        Arriving in
+      </div>
+      <div className="text-xl font-extrabold leading-none mb-3" style={{ color: SCREEN_INK }}>
+        12 min
+      </div>
+
+      <div className="flex flex-col gap-2.5">
+        {steps.map((s, i) => {
+          const done = i < 2;
+          return (
+            <div key={s} className="flex items-center gap-2">
+              <span
+                className="w-2 h-2 shrink-0 rounded-full"
+                style={{ backgroundColor: done ? PURPLE : SCREEN_LINE }}
+              />
+              <span
+                className="text-[9px]"
+                style={{ color: done ? SCREEN_INK : SCREEN_MUTED }}
+              >
+                {s}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -1702,7 +2154,7 @@ function TestimonialsSection() {
         >
           Real People.
           <br />
-          <span style={{ color: `${CREAM}99` }}>Real Reviews.</span>
+          <span style={{ color: `color-mix(in oklab, var(--hm-text) 60%, var(--hm-lm-anchor))` }}>Real Reviews.</span>
         </motion.h2>
 
         <div
@@ -1725,7 +2177,7 @@ function TestimonialsSection() {
             >
               <p
                 className="text-base md:text-lg leading-relaxed italic"
-                style={{ color: `${CREAM}B3` }}
+                style={{ color: `color-mix(in oklab, var(--hm-text) 70%, var(--hm-lm-anchor))` }}
               >
                 &ldquo;{t.quote}&rdquo;
               </p>
@@ -1735,7 +2187,7 @@ function TestimonialsSection() {
                   <div className="flex items-center gap-2">
                     <span
                       className="block text-xs uppercase tracking-[0.2em] font-bold"
-                      style={{ color: `${CREAM}B8` }}
+                      style={{ color: `color-mix(in oklab, var(--hm-text) 72%, var(--hm-lm-anchor))` }}
                     >
                       {t.name}
                     </span>
@@ -1748,7 +2200,7 @@ function TestimonialsSection() {
                   </div>
                   <span
                     className="text-[10px] uppercase tracking-widest"
-                    style={{ color: `${CREAM}99` }}
+                    style={{ color: `color-mix(in oklab, var(--hm-text) 60%, var(--hm-lm-anchor))` }}
                   >
                     {t.date}
                   </span>
@@ -1767,7 +2219,7 @@ function BottomNav() {
   return (
     <div
       className="px-6 py-8"
-      style={{ backgroundColor: BG, borderTop: `1px solid ${CREAM}08` }}
+      style={{ backgroundColor: BG, borderTop: `1px solid color-mix(in oklab, var(--hm-text) 3%, transparent)` }}
     >
       <div className="max-w-[95vw] mx-auto flex justify-between items-center">
         <div className="flex items-center gap-2" style={{ opacity: 0.75 }}>

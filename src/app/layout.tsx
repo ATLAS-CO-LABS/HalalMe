@@ -12,14 +12,14 @@ import { CartProvider } from "@/context/CartContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
-// Runs before hydration so a themed route (/social, /kitchen) with a stored
-// "light" preference never flashes dark first. Every other route is left
-// untouched (no attribute → CSS default → dark), matching the platform's
-// baseline hardcoded colors.
+// Runs before hydration so a themed route (/social, /kitchen, /delivery)
+// with a stored "light" preference never flashes dark first. Every other
+// route is left untouched (no attribute → CSS default → dark), matching the
+// platform's baseline hardcoded colors.
 const THEME_INIT_SCRIPT = `
 (function () {
   try {
-    var themed = ["/social", "/kitchen"].some(function (p) {
+    var themed = ["/social", "/kitchen", "/delivery"].some(function (p) {
       return window.location.pathname.startsWith(p);
     });
     var stored = window.localStorage.getItem("hm-theme");

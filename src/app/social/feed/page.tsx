@@ -740,7 +740,7 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
               {userResults.map((u) => (
                 <motion.button
                   key={u.id}
-                  onClick={() => router.push(profileHref(u.id, u.username))}
+                  onClick={() => requireAuth(() => router.push(profileHref(u.id, u.username)), "Sign in to view profiles")}
                   className="w-full flex items-center gap-3 border px-4 py-3 text-left transition-colors"
                   style={{ backgroundColor: BG2, borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)` }}
                   onMouseEnter={(e) => (e.currentTarget.style.borderColor = `color-mix(in oklab, var(--hm-amber) 25%, transparent)`)}

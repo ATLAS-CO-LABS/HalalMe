@@ -253,7 +253,7 @@ export default function Header() {
                 )}
               </div>
 
-              {/* Theme toggle - only meaningful on themed routes (Social, Kitchen) */}
+              {/* Theme toggle - only meaningful on themed routes (Social, Kitchen, Delivery) */}
               {isThemedRoute && <ThemeToggle />}
 
               {/* Menu trigger - morphing lines + label */}

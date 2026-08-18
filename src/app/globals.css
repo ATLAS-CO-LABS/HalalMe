@@ -565,6 +565,27 @@ button {
   --kitchen-bubble-bg: rgba(244, 230, 204, 0.9);
 }
 
+/* Delivery (/delivery) ships its own dark violet palette with a purple/gold
+   accent - same scoping, same light-mode direction as Social and Kitchen
+   above (dark surface -> warm cream). Accent colors (purple, light purple,
+   deep purple, gold) are unchanged across themes, same as Social's amber and
+   Kitchen's magenta, so they stay hardcoded literals in the component
+   instead of tokens here. */
+:root {
+  --delivery-bg: #1E0E38;
+  --delivery-bg2: #160A2A;
+}
+
+:root[data-hm-theme="dark"] {
+  --delivery-bg: #1E0E38;
+  --delivery-bg2: #160A2A;
+}
+
+:root[data-hm-theme="light"] {
+  --delivery-bg: #FAF2E1;
+  --delivery-bg2: #F4E6CC;
+}
+
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);

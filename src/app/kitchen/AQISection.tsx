@@ -13,6 +13,9 @@ const CREAM = "var(--hm-text)";
 const MAGENTA = "var(--hm-magenta)";
 const DEEP = "var(--hm-magenta-deep)";
 
+const MUTED = `color-mix(in oklab, var(--hm-text) 52%, var(--hm-lm-anchor))`;
+const FAINT = `color-mix(in oklab, var(--hm-text) 33%, var(--hm-lm-anchor))`;
+
 const DEMO_SEQUENCES = [
   [
     {
@@ -21,21 +24,21 @@ const DEMO_SEQUENCES = [
     },
     {
       role: "assistant",
-      text: "Perfect combo! Try Chicken Biryani - aromatic, layered and 100% halal. Want the full recipe?",
+      text: "Try chicken biryani. Aromatic, layered, and built from what you already have. Want the full recipe?",
     },
   ],
   [
     { role: "user", text: "What's a quick halal breakfast under 15 minutes?" },
     {
       role: "assistant",
-      text: "Egg paratha with mint chutney - ready in 12 mins. I'll walk you through every step.",
+      text: "Egg paratha with mint chutney, ready in about 12 minutes. I'll walk you through every step.",
     },
   ],
   [
     { role: "user", text: "Can I substitute butter with something halal?" },
     {
       role: "assistant",
-      text: "Yes! Use ghee for richness, or coconut oil for baking. Both are halal and work beautifully.",
+      text: "Ghee works for richness, coconut oil for baking. Both are halal and both behave well in most recipes.",
     },
   ],
 ];
@@ -117,18 +120,24 @@ export default function AQISection() {
 
   const currentSeq = DEMO_SEQUENCES[seqIdx];
 
-  const handleSubmit = () => {
-    const text = query.trim();
-    if (!text) return;
-    sessionStorage.setItem("aqi_pending_message", text);
+  // The assistant itself is behind auth, so unauthenticated visitors get the
+  // sign-in modal rather than a bounce to /login.
+  const openAssistant = () => {
     if (user) {
       router.push("/kitchen/ai-assistant");
     } else {
       requireAuth(
         () => router.push("/kitchen/ai-assistant"),
-        "Sign up to chat with AQI - your personal halal cooking assistant"
+        "Sign up to chat with AQI, your personal halal cooking assistant"
       );
     }
+  };
+
+  const handleSubmit = () => {
+    const text = query.trim();
+    if (!text) return;
+    sessionStorage.setItem("aqi_pending_message", text);
+    openAssistant();
   };
 
   return (
@@ -199,7 +208,7 @@ export default function AQISection() {
               className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold uppercase tracking-tighter leading-[0.9] mb-6"
               style={{ color: CREAM }}
             >
-              Meet AQI -{" "}
+              Meet AQI,{" "}
               <motion.span
                 style={{
                   background: `linear-gradient(135deg, ${MAGENTA}, ${DEEP}, ${MAGENTA})`,
@@ -220,14 +229,14 @@ export default function AQISection() {
               initial={{ opacity: 0 }}
               animate={inView ? { opacity: 1 } : {}}
               transition={{ delay: 0.22 }}
-              className="text-sm md:text-base leading-relaxed mb-8 max-w-sm"
-              style={{ color: `color-mix(in oklab, var(--hm-text) 33%, var(--hm-lm-anchor))` }}
+              className="text-sm md:text-base leading-relaxed mb-8 max-w-md"
+              style={{ color: MUTED }}
             >
-              AQI helps adapt recipes using the information available to it.
-              Always check ingredients, allergens and dietary requirements before cooking.
+              Ask for a recipe, an ingredient swap, or a method you have never
+              tried. Answers come back in plain language, not a wall of text.
             </motion.p>
 
-            {/* Feature pills with stagger */}
+            {/* Capability list, hairline markers to match the cards below */}
             <motion.div
               initial="hidden"
               animate={inView ? "show" : "hidden"}
@@ -236,11 +245,11 @@ export default function AQISection() {
                   transition: { staggerChildren: 0.1, delayChildren: 0.3 },
                 },
               }}
-              className="flex flex-col gap-2 mb-10"
+              className="flex flex-col gap-3 mb-9"
             >
               {[
                 "Recipe ideas from your fridge",
-                "Step-by-step cooking guidance",
+                "Step by step cooking guidance",
                 "AI-assisted halal ingredient checks",
               ].map((text, i) => (
                 <motion.div
@@ -249,22 +258,40 @@ export default function AQISection() {
                     hidden: { opacity: 0, x: -16 },
                     show: { opacity: 1, x: 0 },
                   }}
-                  className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-wider"
-                  style={{ color: `color-mix(in oklab, var(--hm-text) 33%, var(--hm-lm-anchor))` }}
+                  className="flex items-center gap-3 text-xs md:text-sm font-semibold uppercase tracking-wider"
+                  style={{ color: MUTED }}
                 >
-                  <motion.span
-                    className="w-1.5 h-1.5 shrink-0"
+                  <span
+                    className="h-px w-5 shrink-0"
                     style={{ backgroundColor: MAGENTA }}
-                    animate={{ scale: [1, 1.4, 1], opacity: [0.6, 1, 0.6] }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      delay: i * 0.4,
-                    }}
                   />
                   {text}
                 </motion.div>
               ))}
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ delay: 0.55, duration: 0.5 }}
+            >
+              <button
+                onClick={openAssistant}
+                className="group inline-flex items-center gap-2.5 px-7 py-3.5 text-sm font-extrabold uppercase tracking-tighter text-white transition-all hover:brightness-110"
+                style={{ background: `linear-gradient(135deg, ${DEEP}, ${MAGENTA})` }}
+              >
+                Ask AQI
+                <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
+              </button>
+
+              <p
+                className="mt-5 text-[11px] leading-relaxed max-w-sm"
+                style={{ color: FAINT }}
+              >
+                AQI adapts recipes using the information available to it. Always
+                check ingredients, allergens and dietary requirements before
+                cooking.
+              </p>
             </motion.div>
           </div>
 
@@ -281,7 +308,7 @@ export default function AQISection() {
                   ? {
                       boxShadow: [
                         `0 0 0px rgba(240,62,158,0)`,
-                        `0 0 30px rgba(240,62,158,0.12)`,
+                        `0 0 40px rgba(240,62,158,0.14)`,
                         `0 0 0px rgba(240,62,158,0)`,
                       ],
                     }
@@ -294,34 +321,34 @@ export default function AQISection() {
               }}
               style={{
                 background: "rgba(255,255,255,0.02)",
-                border: "1px solid rgba(240,62,158,0.14)",
+                border: "1px solid rgba(240,62,158,0.18)",
               }}
             >
               {/* Window chrome */}
               <div
-                className="flex items-center gap-2.5 px-4 py-3"
-                style={{ borderBottom: "1px solid rgba(240,62,158,0.08)" }}
+                className="flex items-center gap-3 px-5 py-4"
+                style={{ borderBottom: "1px solid rgba(240,62,158,0.12)" }}
               >
                 <Image
                   src="/logo/aqi.png"
-                  alt="AQI"
-                  width={20}
-                  height={20}
+                  alt=""
+                  width={26}
+                  height={26}
                   className="object-contain rounded-full bg-white p-1"
                 />
                 <span
-                  className="text-[10px] font-black uppercase"
+                  className="text-xs font-black uppercase"
                   style={{ color: CREAM, letterSpacing: "0.2em" }}
                 >
                   AQI
                 </span>
                 <span
-                  className="text-[8px] font-medium ml-1"
-                  style={{ color: `color-mix(in oklab, var(--hm-text) 19%, var(--hm-lm-anchor))` }}
+                  className="text-[11px] font-medium hidden sm:inline"
+                  style={{ color: FAINT }}
                 >
                   · AI Kitchen Assistant
                 </span>
-                <div className="flex items-center gap-1 ml-auto">
+                <div className="flex items-center gap-1.5 ml-auto">
                   <motion.span
                     className="w-1.5 h-1.5 rounded-full"
                     style={{ backgroundColor: "#4ade80" }}
@@ -335,16 +362,17 @@ export default function AQISection() {
                     transition={{ duration: 1.8, repeat: Infinity }}
                   />
                   <span
-                    className="text-[8px] font-bold uppercase"
-                    style={{ color: "#4ade8080", letterSpacing: "0.14em" }}
+                    className="text-[10px] font-bold uppercase"
+                    style={{ color: "#4ade80", opacity: 0.7, letterSpacing: "0.14em" }}
                   >
                     Online
                   </span>
                 </div>
               </div>
 
-              {/* Messages area */}
-              <div className="px-4 py-5 space-y-3 min-h-35">
+              {/* Messages area. Fixed min-height so the panel doesn't jump as
+                  bubbles mount and unmount through the demo loop. */}
+              <div className="px-5 py-6 space-y-4 min-h-60">
                 <AnimatePresence mode="wait">
                   {userVisible && (
                     <motion.div
@@ -356,10 +384,10 @@ export default function AQISection() {
                       className="flex justify-end"
                     >
                       <div
-                        className="max-w-[78%] px-3.5 py-2.5 text-xs leading-relaxed"
+                        className="max-w-[80%] px-4 py-3 text-[13px] leading-relaxed"
                         style={{
                           background: `color-mix(in oklab, var(--hm-magenta) 12%, var(--kitchen-bg2))`,
-                          border: "1px solid rgba(240,62,158,0.18)",
+                          border: "1px solid rgba(240,62,158,0.22)",
                           color: CREAM,
                         }}
                       >
@@ -376,18 +404,18 @@ export default function AQISection() {
                       initial={{ opacity: 0, y: 6 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0 }}
-                      className="flex justify-start"
+                      className="flex flex-col items-start"
                     >
-                      <div className="flex items-center gap-1.5 mb-1">
+                      <div className="flex items-center gap-2 mb-1.5">
                         <Image
                           src="/logo/aqi.png"
-                          alt="AQI"
-                          width={12}
-                          height={12}
+                          alt=""
+                          width={16}
+                          height={16}
                           className="object-contain rounded-full bg-white p-0.5"
                         />
                         <span
-                          className="text-[8px] font-black uppercase"
+                          className="text-[10px] font-black uppercase"
                           style={{
                             color: `color-mix(in oklab, var(--hm-magenta) 56%, var(--hm-text))`,
                             letterSpacing: "0.22em",
@@ -397,10 +425,10 @@ export default function AQISection() {
                         </span>
                       </div>
                       <div
-                        className="ml-2 px-3 py-2.5 flex items-center gap-1"
+                        className="px-4 py-3 flex items-center gap-1.5"
                         style={{
                           background: "var(--kitchen-bubble-bg)",
-                          border: "1px solid rgba(240,62,158,0.10)",
+                          border: "1px solid rgba(240,62,158,0.12)",
                           borderLeft: `3px solid color-mix(in oklab, var(--hm-magenta) 44%, transparent)`,
                         }}
                       >
@@ -435,17 +463,17 @@ export default function AQISection() {
                       transition={{ duration: 0.3 }}
                       className="flex justify-start"
                     >
-                      <div className="max-w-[82%]">
-                        <div className="flex items-center gap-1.5 mb-1.5">
+                      <div className="max-w-[85%]">
+                        <div className="flex items-center gap-2 mb-2">
                           <Image
                             src="/logo/aqi.png"
-                            alt="AQI"
-                            width={12}
-                            height={12}
+                            alt=""
+                            width={16}
+                            height={16}
                             className="object-contain rounded-full bg-white p-0.5"
                           />
                           <span
-                            className="text-[8px] font-black uppercase"
+                            className="text-[10px] font-black uppercase"
                             style={{
                               color: `color-mix(in oklab, var(--hm-magenta) 56%, var(--hm-text))`,
                               letterSpacing: "0.22em",
@@ -455,10 +483,10 @@ export default function AQISection() {
                           </span>
                         </div>
                         <div
-                          className="px-3.5 py-2.5 text-xs leading-relaxed"
+                          className="px-4 py-3 text-[13px] leading-relaxed"
                           style={{
                             background: "var(--kitchen-bubble-bg)",
-                            border: "1px solid rgba(240,62,158,0.10)",
+                            border: "1px solid rgba(240,62,158,0.12)",
                             borderLeft: `3px solid color-mix(in oklab, var(--hm-magenta) 44%, transparent)`,
                             color: `color-mix(in oklab, var(--hm-text) 80%, var(--hm-lm-anchor))`,
                           }}
@@ -473,7 +501,7 @@ export default function AQISection() {
 
               {/* Input row - real functional input */}
               <motion.div
-                className="flex items-center gap-2 mx-4 mb-4 px-3 py-2"
+                className="flex items-center gap-3 mx-5 mb-5 px-4 py-3"
                 animate={
                   inputPulse
                     ? {
@@ -481,12 +509,12 @@ export default function AQISection() {
                         boxShadow: "0 0 10px rgba(240,62,158,0.12)",
                       }
                     : {
-                        borderColor: "rgba(240,62,158,0.08)",
+                        borderColor: "rgba(240,62,158,0.12)",
                         boxShadow: "none",
                       }
                 }
                 transition={{ duration: 0.3 }}
-                style={{ border: "1px solid rgba(240,62,158,0.08)" }}
+                style={{ border: "1px solid rgba(240,62,158,0.12)" }}
               >
                 <input
                   type="text"
@@ -494,18 +522,18 @@ export default function AQISection() {
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") handleSubmit(); }}
                   placeholder="Ask AQI anything…"
-                  className="flex-1 bg-transparent outline-none text-[11px] min-w-0"
-                  style={{ color: query ? CREAM : `color-mix(in oklab, var(--hm-text) 19%, transparent)`, caretColor: MAGENTA }}
+                  className="flex-1 bg-transparent outline-none text-[13px] min-w-0"
+                  style={{ color: query ? CREAM : FAINT, caretColor: MAGENTA }}
                 />
                 <motion.button
                   onClick={handleSubmit}
                   aria-label="Send question to AQI"
-                  className="w-6 h-6 flex items-center justify-center shrink-0"
+                  className="w-8 h-8 flex items-center justify-center shrink-0"
                   style={{ background: `linear-gradient(135deg, ${DEEP}, ${MAGENTA})` }}
                   whileHover={{ scale: 1.08 }}
                   whileTap={{ scale: 0.93 }}
                 >
-                  <ArrowRight className="w-3 h-3 text-white" />
+                  <ArrowRight className="w-4 h-4 text-white" />
                 </motion.button>
               </motion.div>
             </motion.div>

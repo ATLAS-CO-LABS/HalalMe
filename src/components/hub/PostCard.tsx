@@ -26,7 +26,7 @@ import { useAuthGate } from "@/hooks/useAuthGate";
 import ReportModal from "@/components/common/ReportModal";
 import Avatar from "./Avatar";
 import { getFlairTheme } from "@/lib/flairTheme";
-import { profileHref } from "@/lib/profileHref";
+import ProfileLink from "./ProfileLink";
 
 const BG = "var(--hub-bg)";
 const BG2 = "var(--hub-bg2)";
@@ -113,11 +113,11 @@ export default function PostCard({
     >
       {/* User Info */}
       <div className="p-4 md:p-5 flex items-center gap-3">
-        <Link href={profileHref(post.user_id, post.profiles?.username)} className="shrink-0">
+        <ProfileLink userId={post.user_id} username={post.profiles?.username} className="shrink-0">
           <Avatar src={avatarUrl} alt={displayName} size="lg" flair={authorFlair} />
-        </Link>
+        </ProfileLink>
 
-        <Link href={profileHref(post.user_id, post.profiles?.username)} className="flex-1 min-w-0">
+        <ProfileLink userId={post.user_id} username={post.profiles?.username} className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 flex-wrap">
             <h3
               className="font-extrabold text-base hover:text-(--flair-accent) transition-colors truncate"
@@ -151,7 +151,7 @@ export default function PostCard({
               </span>
             )}
           </div>
-        </Link>
+        </ProfileLink>
 
         {/* Three-dot menu — own posts: edit/delete · others: report */}
         <div className="relative shrink-0">
