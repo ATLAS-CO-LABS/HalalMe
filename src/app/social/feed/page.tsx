@@ -98,6 +98,12 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
   const [page, setPage]                 = useState(1);
   const [hasMore, setHasMore]           = useState(false);
 
+  // Deleting a post removes it from view immediately but holds the actual
+  // API call for a few seconds so it can be undone.
+  const [pendingDelete, setPendingDelete] = useState<{ post: Post; index: number } | null>(null);
+  const pendingTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  useEffect(() => () => { pendingTimersRef.current.forEach(clearTimeout); }, []);
+
   // Search state (server-side)
   const [searchQuery, setSearchQuery]       = useState("");
   const [searchResults, setSearchResults]   = useState<Post[]>([]);
@@ -488,17 +494,46 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
     setEditingPost(null);
   };
 
+  const UNDO_WINDOW_MS = 5000;
+
+  // Side effects (setPendingDelete, the timer, the ref mutation) must stay
+  // outside the setPosts updater — React's Strict Mode double-invokes
+  // updater functions to verify they're pure, which was silently duplicating
+  // the timer and the restored post when nested inside one.
   const handleDeletePost = useCallback(
-    async (postId: string) => {
+    (postId: string) => {
+      const index = posts.findIndex((p) => p.id === postId);
+      if (index === -1) return;
+      const post = posts[index];
       setPosts((prev) => prev.filter((p) => p.id !== postId));
-      try {
-        await hubService.deletePost(postId);
-      } catch {
-        loadFeed(activeTab, 1, false);
-      }
+      setPendingDelete({ post, index });
+      const timer = setTimeout(async () => {
+        pendingTimersRef.current.delete(postId);
+        setPendingDelete((cur) => (cur?.post.id === postId ? null : cur));
+        try {
+          await hubService.deletePost(postId);
+        } catch {
+          loadFeed(activeTab, 1, false);
+        }
+      }, UNDO_WINDOW_MS);
+      pendingTimersRef.current.set(postId, timer);
     },
-    [activeTab, loadFeed]
+    [posts, activeTab, loadFeed]
   );
+
+  const undoDeletePost = useCallback(() => {
+    if (!pendingDelete) return;
+    const { post, index } = pendingDelete;
+    const timer = pendingTimersRef.current.get(post.id);
+    if (timer) { clearTimeout(timer); pendingTimersRef.current.delete(post.id); }
+    setPendingDelete(null);
+    setPosts((prev) => {
+      if (prev.some((p) => p.id === post.id)) return prev;
+      const next = [...prev];
+      next.splice(Math.min(index, next.length), 0, post);
+      return next;
+    });
+  }, [pendingDelete]);
 
 
   // Following/Saved need an account (you can't follow people or save posts
@@ -871,6 +906,29 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
           currentUser={user}
         />
       )}
+
+      {/* Undo-delete toast */}
+      <AnimatePresence>
+        {pendingDelete && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 16 }}
+            transition={{ duration: 0.2 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 px-5 py-3 shadow-xl"
+            style={{ backgroundColor: BG2, border: `1px solid color-mix(in oklab, var(--hm-text) 10%, transparent)` }}
+          >
+            <span className="text-sm font-medium" style={{ color: CREAM }}>Post deleted</span>
+            <button
+              onClick={undoDeletePost}
+              className="text-sm font-extrabold uppercase tracking-wide transition-opacity hover:opacity-75"
+              style={{ color: AMBER }}
+            >
+              Undo
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

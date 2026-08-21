@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, type CSSProperties } from "react";
+import { useState, useEffect, type CSSProperties } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
@@ -16,10 +17,11 @@ import {
   Edit2,
   Check,
   Trash2,
-  X,
   Flag,
   Star,
+  HelpCircle,
 } from "lucide-react";
+import type { ComponentType } from "react";
 import type { Post } from "@/types";
 import { formatRelativeTime } from "@/lib/relativeTime";
 import { useAuthGate } from "@/hooks/useAuthGate";
@@ -61,10 +63,10 @@ export default function PostCard({
   const isOwnPost = !!currentUserId && currentUserId === post.user_id;
   const isRecipePost = post.post_type === "recipe";
 
-  const TYPE_BADGE: Record<string, { emoji: string; label: string; color: string }> = {
-    recipe:   { emoji: "🍽️", label: "Recipe",   color: "#F59E0B" },
-    question: { emoji: "❓", label: "Question", color: "#60A5FA" },
-    review:   { emoji: "⭐", label: "Review",   color: "#4ADE80" },
+  const TYPE_BADGE: Record<string, { icon: ComponentType<{ className?: string }>; label: string; color: string }> = {
+    recipe:   { icon: ChefHat,     label: "Recipe",   color: "#F59E0B" },
+    question: { icon: HelpCircle,  label: "Question", color: "#60A5FA" },
+    review:   { icon: Star,        label: "Review",   color: "#4ADE80" },
   };
   const typeBadge = post.post_type && post.post_type !== "general" ? TYPE_BADGE[post.post_type] : null;
   const displayName = post.profiles?.full_name ?? post.profiles?.username ?? "Unknown";
@@ -147,7 +149,7 @@ export default function PostCard({
                 className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide border"
                 style={{ color: typeBadge.color, borderColor: `${typeBadge.color}40`, backgroundColor: `${typeBadge.color}15` }}
               >
-                {typeBadge.emoji} {typeBadge.label}
+                <typeBadge.icon className="w-2.5 h-2.5" /> {typeBadge.label}
               </span>
             )}
           </div>
@@ -181,55 +183,30 @@ export default function PostCard({
                 style={{ backgroundColor: BG3, borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)` }}
               >
                 {isOwnPost ? (
-                  !confirmingDelete ? (
-                    <>
-                      <button
-                        onClick={() => {
-                          onEdit?.(post);
-                          setMenuOpen(false);
-                        }}
-                        className="flex items-center gap-3 w-full px-4 py-3 text-left transition-colors"
-                        style={{ color: CREAM }}
-                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `color-mix(in oklab, var(--hm-text) 3%, transparent)`)}
-                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
-                      >
-                        <Edit2 className="w-4 h-4" />
-                        <span className="text-sm font-semibold">Edit Post</span>
-                      </button>
-                      <button
-                        onClick={() => setConfirmingDelete(true)}
-                        className="flex items-center gap-3 w-full px-4 py-3 text-left text-red-500 transition-colors"
-                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `color-mix(in oklab, var(--hm-text) 3%, transparent)`)}
-                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        <span className="text-sm font-semibold">Delete Post</span>
-                      </button>
-                    </>
-                  ) : (
-                    <div className="p-4">
-                      <p className="text-sm font-semibold mb-3" style={{ color: CREAM }}>
-                        Delete this post?
-                      </p>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => setConfirmingDelete(false)}
-                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-semibold transition-colors border"
-                          style={{ backgroundColor: BG, color: MUTED, borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)` }}
-                        >
-                          <X className="w-3.5 h-3.5" />
-                          Cancel
-                        </button>
-                        <button
-                          onClick={handleDeleteConfirm}
-                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition-colors"
-                        >
-                          <Check className="w-3.5 h-3.5" />
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  )
+                  <>
+                    <button
+                      onClick={() => {
+                        onEdit?.(post);
+                        setMenuOpen(false);
+                      }}
+                      className="flex items-center gap-3 w-full px-4 py-3 text-left transition-colors"
+                      style={{ color: CREAM }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `color-mix(in oklab, var(--hm-text) 3%, transparent)`)}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                    >
+                      <Edit2 className="w-4 h-4" />
+                      <span className="text-sm font-semibold">Edit Post</span>
+                    </button>
+                    <button
+                      onClick={() => { setMenuOpen(false); setConfirmingDelete(true); }}
+                      className="flex items-center gap-3 w-full px-4 py-3 text-left text-red-500 transition-colors"
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `color-mix(in oklab, var(--hm-text) 3%, transparent)`)}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      <span className="text-sm font-semibold">Delete Post</span>
+                    </button>
+                  </>
                 ) : (
                   <button
                     onClick={() => {
@@ -256,6 +233,12 @@ export default function PostCard({
         contentType="post"
         contentId={post.id}
         contentLabel="post"
+      />
+
+      <DeletePostConfirm
+        open={confirmingDelete}
+        onCancel={() => setConfirmingDelete(false)}
+        onConfirm={handleDeleteConfirm}
       />
 
       {/* Post Content */}
@@ -408,5 +391,65 @@ export default function PostCard({
         )}
       </div>
     </motion.div>
+  );
+}
+
+// Standalone centered dialog (not the cramped inline swap that used to live
+// inside the 208px-wide three-dot menu). Portalled to document.body for the
+// same reason as ReportModal: PostCard gains an inline `transform` on hover,
+// which traps `position: fixed` descendants inside its own box.
+function DeletePostConfirm({ open, onCancel, onConfirm }: { open: boolean; onCancel: () => void; onConfirm: () => void }) {
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onCancel(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, onCancel]);
+
+  if (!open) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-80 bg-black/70 flex items-center justify-center p-4" onClick={onCancel}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="delete-post-title"
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-sm border shadow-2xl overflow-hidden"
+        style={{ backgroundColor: BG3, borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)` }}
+      >
+        <div className="px-5 py-5 flex items-start gap-3">
+          <span className="w-9 h-9 flex items-center justify-center shrink-0" style={{ backgroundColor: "rgba(239,68,68,0.15)" }}>
+            <Trash2 className="w-4 h-4 text-red-400" />
+          </span>
+          <div>
+            <h2 id="delete-post-title" className="font-extrabold text-base" style={{ color: CREAM, fontFamily: "var(--font-headline)" }}>
+              Delete this post?
+            </h2>
+            <p className="text-sm mt-1" style={{ color: SUBTLE }}>
+              You can undo this for a few seconds after.
+            </p>
+          </div>
+        </div>
+        <div className="px-5 py-4 border-t flex items-center justify-end gap-2" style={{ borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)` }}>
+          <button
+            onClick={onCancel}
+            className="px-4 py-2.5 text-sm font-semibold transition-colors"
+            style={{ color: MUTED }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = CREAM)}
+            onMouseLeave={(e) => (e.currentTarget.style.color = MUTED)}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition-colors"
+          >
+            <Trash2 className="w-4 h-4" /> Delete
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
   );
 }

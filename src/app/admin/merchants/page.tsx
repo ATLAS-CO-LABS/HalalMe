@@ -27,6 +27,8 @@ import {
   Clock,
   ArrowRight,
   Plus,
+  AlertTriangle,
+  CheckCircle2,
 } from "lucide-react";
 
 interface Merchant {
@@ -250,7 +252,7 @@ function MerchantCard({ m, onClick, selected, onSelect, canManage }: {
             )}
             <span className={`text-xs font-semibold ${critical ? "text-red-600" : urgent ? "text-amber-600" : "text-gray-400"}`}>{days}d ago</span>
             {(m.assigned_rep_name ?? m.assigned_rep) && <span className="text-xs text-gray-500">Rep: {m.assigned_rep_name ?? m.assigned_rep}</span>}
-            {m.hyperzod_sync_failed && <span className="text-xs text-amber-600 font-medium">⚠ Sync failed</span>}
+            {m.hyperzod_sync_failed && <span className="text-xs text-amber-600 font-medium inline-flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Sync failed</span>}
           </div>
         </div>
       </div>
@@ -665,8 +667,9 @@ export default function MerchantPipelinePage() {
             {/* Success banner */}
             {bulkResult && (
               <div className="bg-green-50 border-y border-green-100 px-4 sm:px-5 py-3 flex items-center justify-between">
-                <p className="text-sm text-green-700 font-medium">
-                  ✓ {bulkResult.count} merchant{bulkResult.count !== 1 ? "s" : ""}{" "}
+                <p className="text-sm text-green-700 font-medium inline-flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                  {bulkResult.count} merchant{bulkResult.count !== 1 ? "s" : ""}{" "}
                   {bulkResult.action === "invite" ? "marked as invited — Email #2 sent to each."
                     : bulkResult.action === "reject" ? "rejected." : "updated."}
                 </p>
@@ -685,7 +688,7 @@ export default function MerchantPipelinePage() {
               <div className="flex flex-col items-center justify-center py-20 text-center px-6">
                 <div className="w-14 h-14 bg-gray-100 rounded-none flex items-center justify-center mb-4"><Store size={22} className="text-gray-400" /></div>
                 <p className="text-base font-semibold text-gray-700">
-                  {attentionOnly ? "Nothing needs attention 🎉" : (search || statusFilter !== "all") ? "No results" : "No merchants yet"}
+                  {attentionOnly ? "Nothing needs attention" : (search || statusFilter !== "all") ? "No results" : "No merchants yet"}
                 </p>
                 <p className="text-sm text-gray-400 mt-1 max-w-xs">
                   {attentionOnly ? "Every merchant is on track right now."
@@ -751,10 +754,10 @@ export default function MerchantPipelinePage() {
                                   {isNew && <span className="text-[9px] font-bold uppercase tracking-wide text-green-700 bg-green-50 px-1.5 py-0.5 rounded-full shrink-0">New</span>}
                                 </div>
                                 {followUp
-                                  ? <p className={`text-[10px] font-semibold mt-0.5 ${followUp.severity === "urgent" ? "text-red-600" : "text-amber-600"}`}>⚠ {followUp.label} · {followUp.days}d</p>
+                                  ? <p className={`text-[10px] font-semibold mt-0.5 inline-flex items-center gap-1 ${followUp.severity === "urgent" ? "text-red-600" : "text-amber-600"}`}><AlertTriangle className="w-2.5 h-2.5" /> {followUp.label} · {followUp.days}d</p>
                                   : m.owner_name
                                   ? <p className="text-xs text-gray-400 truncate">{m.owner_name}</p>
-                                  : m.hyperzod_sync_failed && <p className="text-[10px] text-amber-600 font-medium">⚠ Sync failed</p>}
+                                  : m.hyperzod_sync_failed && <p className="text-[10px] text-amber-600 font-medium inline-flex items-center gap-1"><AlertTriangle className="w-2.5 h-2.5" /> Sync failed</p>}
                               </div>
                             </div>
                           </td>

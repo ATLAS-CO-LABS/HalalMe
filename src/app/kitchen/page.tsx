@@ -13,6 +13,8 @@ import {
   Sparkles,
   ArrowRight,
   Upload,
+  Star,
+  Check,
 } from "lucide-react";
 import AQISection from "./AQISection";
 import { recipeService } from "@/services/recipeService";
@@ -768,7 +770,7 @@ export default function KitchenLandingPage() {
                                 className="text-xs font-bold shrink-0 group-hover:text-black/60! transition-colors"
                                 style={{ color: `color-mix(in oklab, var(--hm-text) 46%, var(--hm-lm-anchor))` }}
                               >
-                                ★ {Number(recipe.avg_rating).toFixed(1)}
+                                <Star className="inline w-3 h-3 -mt-0.5 fill-current" /> {Number(recipe.avg_rating).toFixed(1)}
                               </span>
                             ) : null}
                           </div>
@@ -899,7 +901,7 @@ export default function KitchenLandingPage() {
                       border: `1px dashed color-mix(in oklab, var(--hm-text) 13%, transparent)`,
                     }}
                   >
-                    <span className="text-2xl">📷</span>
+                    <Upload className="w-5 h-5" style={{ color: `color-mix(in oklab, var(--hm-text) 40%, var(--hm-lm-anchor))` }} />
                     <span className="text-xs" style={{ color: `color-mix(in oklab, var(--hm-text) 31%, var(--hm-lm-anchor))` }}>
                       Click to upload image
                     </span>
@@ -1006,12 +1008,10 @@ export default function KitchenLandingPage() {
                     className="flex items-start gap-3 text-sm"
                     style={{ color: `color-mix(in oklab, var(--hm-text) 46%, var(--hm-lm-anchor))` }}
                   >
-                    <span
+                    <Check
                       style={{ color: MAGENTA }}
-                      className="font-bold mt-0.5"
-                    >
-                      ✓
-                    </span>
+                      className="w-4 h-4 mt-0.5 shrink-0"
+                    />
                     {item}
                   </div>
                 ))}

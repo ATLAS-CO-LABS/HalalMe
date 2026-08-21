@@ -1241,8 +1241,8 @@ export default function MerchantDetailPage() {
                                   </button>
                                 )
                               ) : (
-                                <p className="text-xs text-green-700 bg-green-50 rounded-none px-3 py-2 font-medium">
-                                  ✓ Ready — complete the checklist below to go live.
+                                <p className="text-xs text-green-700 bg-green-50 rounded-none px-3 py-2 font-medium inline-flex items-center gap-1.5">
+                                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> Ready — complete the checklist below to go live.
                                 </p>
                               )}
                               {i > 0 && canManage && (

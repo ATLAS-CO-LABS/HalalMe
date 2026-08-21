@@ -330,11 +330,12 @@ export default function AQISection() {
                 style={{ borderBottom: "1px solid rgba(240,62,158,0.12)" }}
               >
                 <Image
-                  src="/logo/aqi.png"
+                  src="/logo/aqi-white.png"
                   alt=""
                   width={26}
                   height={26}
-                  className="object-contain rounded-full bg-white p-1"
+                  className="object-contain rounded-full p-1"
+                  style={{ background: `linear-gradient(135deg, ${DEEP}, ${MAGENTA})` }}
                 />
                 <span
                   className="text-xs font-black uppercase"
@@ -408,11 +409,12 @@ export default function AQISection() {
                     >
                       <div className="flex items-center gap-2 mb-1.5">
                         <Image
-                          src="/logo/aqi.png"
+                          src="/logo/aqi-white.png"
                           alt=""
                           width={16}
                           height={16}
-                          className="object-contain rounded-full bg-white p-0.5"
+                          className="object-contain rounded-full p-0.5"
+                          style={{ background: `linear-gradient(135deg, ${DEEP}, ${MAGENTA})` }}
                         />
                         <span
                           className="text-[10px] font-black uppercase"
@@ -466,11 +468,12 @@ export default function AQISection() {
                       <div className="max-w-[85%]">
                         <div className="flex items-center gap-2 mb-2">
                           <Image
-                            src="/logo/aqi.png"
+                            src="/logo/aqi-white.png"
                             alt=""
                             width={16}
                             height={16}
-                            className="object-contain rounded-full bg-white p-0.5"
+                            className="object-contain rounded-full p-0.5"
+                            style={{ background: `linear-gradient(135deg, ${DEEP}, ${MAGENTA})` }}
                           />
                           <span
                             className="text-[10px] font-black uppercase"

@@ -387,7 +387,7 @@ export async function sendMerchantLiveEmail({
   const { error } = await resend.emails.send({
     from: FROM,
     to,
-    subject: `🎉 You're live on HalalMe - ${restaurantName}`,
+    subject: `You're live on HalalMe - ${restaurantName}`,
     html,
   });
 

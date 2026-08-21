@@ -6,6 +6,7 @@ import {
   Send, Plus, MessageSquare,
   Menu, X, RotateCcw, Sparkles, Loader2,
   BookmarkPlus, Check, Copy, Trash2, Clock, Users, Flame,
+  Drumstick, Salad, EggFried, PartyPopper, ShoppingCart, Zap,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -44,10 +45,10 @@ type Conv = { id: string; title: string; group: string };
 
 // ── Suggestion cards ──────────────────────────────────────────────────
 const SUGGESTIONS = [
-  { emoji: "🍗", title: "What can I cook",    sub: "with chicken & rice?",      grad: "from-violet-900/40 to-purple-900/20" },
-  { emoji: "🥗", title: "Healthy meal ideas", sub: "for the whole family",      grad: "from-emerald-900/30 to-teal-900/20"  },
-  { emoji: "🍳", title: "Quick breakfast",     sub: "ready in 15 minutes",       grad: "from-amber-900/30 to-orange-900/20"  },
-  { emoji: "🎉", title: "Special occasion",    sub: "impress your guests",       grad: "from-rose-900/30 to-pink-900/20"     },
+  { icon: Drumstick,    title: "What can I cook",    sub: "with chicken & rice?",      grad: "from-violet-900/40 to-purple-900/20" },
+  { icon: Salad,        title: "Healthy meal ideas", sub: "for the whole family",      grad: "from-emerald-900/30 to-teal-900/20"  },
+  { icon: EggFried,     title: "Quick breakfast",     sub: "ready in 15 minutes",       grad: "from-amber-900/30 to-orange-900/20"  },
+  { icon: PartyPopper,  title: "Special occasion",    sub: "impress your guests",       grad: "from-rose-900/30 to-pink-900/20"     },
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────
@@ -203,6 +204,7 @@ type SidebarProps = {
 function SidebarContent({ convs, activeConv, onConvClick, onNewChat, onDelete, userName, userInitial, onClose }: SidebarProps) {
   const groups = ["Today", "Yesterday", "This Week", "This Month", "Older"];
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   return (
     <>
@@ -212,7 +214,7 @@ function SidebarContent({ convs, activeConv, onConvClick, onNewChat, onDelete, u
       {/* Logo header */}
       <div className="shrink-0 px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Image src="/logo/aqi.png" alt="AQI" width={32} height={32} className="object-contain rounded-full bg-white p-1.5" />
+          <Image src="/logo/aqi-white.png" alt="AQI" width={44} height={44} className="object-contain rounded-full p-2" style={{ background: `linear-gradient(135deg, ${FUCHSIA}, ${VIOLET})` }} />
           <div>
             <span className="text-sm font-black uppercase" style={{ color: CREAM, letterSpacing: "0.22em" }}>AQI</span>
             <div className="text-[8px] font-bold uppercase" style={{ color: `color-mix(in oklab, var(--hm-text) 21%, var(--hm-lm-anchor))`, letterSpacing: "0.2em" }}>by HalalMe</div>
@@ -271,31 +273,57 @@ function SidebarContent({ convs, activeConv, onConvClick, onNewChat, onDelete, u
                       borderLeft: `2px solid ${active ? VIOLET : "transparent"}`,
                     }}
                     onMouseEnter={() => setHoveredId(conv.id)}
-                    onMouseLeave={() => setHoveredId(null)}
+                    onMouseLeave={() => { setHoveredId(null); if (confirmDeleteId === conv.id) setConfirmDeleteId(null); }}
                   >
-                    <button
-                      onClick={() => onConvClick(conv.id)}
-                      className="flex-1 text-left px-2.5 py-2 flex items-center gap-2 min-w-0"
-                    >
-                      <MessageSquare className="w-3 h-3 shrink-0" strokeWidth={active ? 2 : 1.5}
-                        style={{ color: active ? VIOLET : `color-mix(in oklab, var(--hm-text) 15%, transparent)` }} />
-                      <span className="text-xs truncate" style={{
-                        color: active ? CREAM : `color-mix(in oklab, var(--hm-text) 27%, transparent)`,
-                        fontWeight: active ? 700 : 400,
-                      }}>
-                        {conv.title}
-                      </span>
-                    </button>
-                    {hovered && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); onDelete(conv.id); }}
-                        className="shrink-0 p-1.5 mr-1 transition-colors"
-                        style={{ color: `color-mix(in oklab, var(--hm-text) 15%, var(--hm-lm-anchor))` }}
-                        onMouseEnter={(e) => (e.currentTarget.style.color = "#f87171")}
-                        onMouseLeave={(e) => (e.currentTarget.style.color = `color-mix(in oklab, var(--hm-text) 15%, transparent)`)}
-                      >
-                        <Trash2 className="w-3 h-3" strokeWidth={1.75} />
-                      </button>
+                    {confirmDeleteId === conv.id ? (
+                      <div className="flex-1 flex items-center gap-1.5 px-2.5 py-2 min-w-0">
+                        <span className="text-[10px] flex-1 truncate" style={{ color: `color-mix(in oklab, var(--hm-text) 55%, var(--hm-lm-anchor))` }}>
+                          Delete this chat?
+                        </span>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(null); }}
+                          className="shrink-0 p-1 transition-colors"
+                          style={{ color: `color-mix(in oklab, var(--hm-text) 30%, var(--hm-lm-anchor))` }}
+                          aria-label="Cancel"
+                        >
+                          <X className="w-3 h-3" strokeWidth={2} />
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onDelete(conv.id); setConfirmDeleteId(null); }}
+                          className="shrink-0 p-1 transition-colors"
+                          style={{ color: "#f87171" }}
+                          aria-label="Confirm delete"
+                        >
+                          <Check className="w-3 h-3" strokeWidth={2.5} />
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => onConvClick(conv.id)}
+                          className="flex-1 text-left px-2.5 py-2 flex items-center gap-2 min-w-0"
+                        >
+                          <MessageSquare className="w-3 h-3 shrink-0" strokeWidth={active ? 2 : 1.5}
+                            style={{ color: active ? VIOLET : `color-mix(in oklab, var(--hm-text) 15%, transparent)` }} />
+                          <span className="text-xs truncate" style={{
+                            color: active ? CREAM : `color-mix(in oklab, var(--hm-text) 27%, transparent)`,
+                            fontWeight: active ? 700 : 400,
+                          }}>
+                            {conv.title}
+                          </span>
+                        </button>
+                        {hovered && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(conv.id); }}
+                            className="shrink-0 p-1.5 mr-1 transition-colors"
+                            style={{ color: `color-mix(in oklab, var(--hm-text) 15%, var(--hm-lm-anchor))` }}
+                            onMouseEnter={(e) => (e.currentTarget.style.color = "#f87171")}
+                            onMouseLeave={(e) => (e.currentTarget.style.color = `color-mix(in oklab, var(--hm-text) 15%, transparent)`)}
+                          >
+                            <Trash2 className="w-3 h-3" strokeWidth={1.75} />
+                          </button>
+                        )}
+                      </>
                     )}
                   </div>
                 );
@@ -347,7 +375,7 @@ const CHAT_STORAGE_KEY = "kitchen-ai-chat";
 const WELCOME: Message = {
   id: "init",
   role: "assistant",
-  content: "Salam! I'm AQI - your halal cooking companion 👨‍🍳\n\nTell me what's in your fridge, ask about a dish, or just say hi. I'll suggest ideas, answer cooking questions, and generate a full recipe whenever you're ready.\n\nWhat are we cooking today?",
+  content: "Salam! I'm AQI - your halal cooking companion.\n\nTell me what's in your fridge, ask about a dish, or just say hi. I'll suggest ideas, answer cooking questions, and generate a full recipe whenever you're ready.\n\nWhat are we cooking today?",
   ts: new Date(),
   responseType: "chat",
 };
@@ -380,6 +408,20 @@ export default function AIAssistantPage() {
   const bottomRef      = useRef<HTMLDivElement>(null);
   const textareaRef    = useRef<HTMLTextAreaElement>(null);
   const hasRestoredRef = useRef(false);
+  const isNearBottomRef = useRef(true);
+
+  // Only auto-scroll while the reader is already near the bottom, so
+  // scrolling up to reread earlier messages doesn't get yanked back down.
+  useEffect(() => {
+    const el = chatRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      isNearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+    };
+    onScroll();
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => { return () => { abortRef.current?.abort(); }; }, []);
 
@@ -422,10 +464,15 @@ export default function AIAssistantPage() {
     return () => clearTimeout(t);
   }, [user, authLoading]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const scrollDown = useCallback(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollDown = useCallback((smooth: boolean) => {
+    if (!isNearBottomRef.current) return;
+    bottomRef.current?.scrollIntoView({ behavior: smooth ? "smooth" : "auto" });
   }, []);
-  useEffect(() => { scrollDown(); }, [messages, streamingContent, scrollDown]);
+  // Discrete events (a new message lands) get a smooth scroll; the rapid
+  // per-token updates while a reply is streaming jump instantly instead —
+  // stacking smooth scrolls on every token is what caused the stutter.
+  useEffect(() => { scrollDown(true); }, [messages, scrollDown]);
+  useEffect(() => { scrollDown(false); }, [streamingContent, scrollDown]);
 
   useEffect(() => {
     if (authLoading || hasRestoredRef.current) return;
@@ -607,7 +654,13 @@ export default function AIAssistantPage() {
   };
 
   const onKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); }
+    if (e.key !== "Enter" || e.shiftKey) return;
+    // Touch devices have no convenient Shift+Enter, so Enter behaves like a
+    // normal mobile keyboard return key (newline) — sending stays on the
+    // explicit Send button there. Desktop keeps Enter-to-send.
+    if (typeof window !== "undefined" && window.matchMedia?.("(pointer: coarse)").matches) return;
+    e.preventDefault();
+    submit();
   };
 
   const hasUser = messages.some((m) => m.role === "user");
@@ -620,7 +673,7 @@ export default function AIAssistantPage() {
           transition={{ duration: 1.5, repeat: Infinity }}
           className="flex items-center gap-3"
         >
-          <Image src="/logo/aqi.png" alt="AQI" width={24} height={24} className="object-contain rounded-full bg-white p-1 opacity-50" />
+          <Image src="/logo/aqi-white.png" alt="AQI" width={24} height={24} className="object-contain rounded-full p-1 opacity-50" style={{ background: `linear-gradient(135deg, ${FUCHSIA}, ${VIOLET})` }} />
           <span className="text-[10px] font-black uppercase" style={{ color: `color-mix(in oklab, var(--hm-text) 25%, var(--hm-lm-anchor))`, letterSpacing: "0.3em" }}>
             Loading
           </span>
@@ -678,22 +731,6 @@ export default function AIAssistantPage() {
               style={{ color: `color-mix(in oklab, var(--hm-text) 25%, var(--hm-lm-anchor))` }} onClick={() => setSidebarOpen(true)}>
               <Menu className="w-5 h-5" strokeWidth={1.75} />
             </button>
-            <div className="flex items-center gap-2.5">
-              <Image src="/logo/aqi.png" alt="AQI" width={26} height={26} className="object-contain shrink-0 rounded-full bg-white p-1" />
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-black uppercase" style={{ color: CREAM, letterSpacing: "0.16em" }}>AQI</span>
-                  <span className="hidden sm:inline-block text-[8px] px-1.5 py-0.5 font-black uppercase"
-                    style={{ background: "rgba(240,62,158,0.12)", color: VIOLET, border: "1px solid rgba(240,62,158,0.2)", letterSpacing: "0.12em" }}>
-                    Halal AI
-                  </span>
-                </div>
-                <div className="flex items-center gap-1 mt-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: "#4ade80" }} />
-                  <span className="text-[8px] font-bold uppercase" style={{ color: "#4ade8080", letterSpacing: "0.14em" }}>Online</span>
-                </div>
-              </div>
-            </div>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
@@ -749,7 +786,7 @@ export default function AIAssistantPage() {
         </header>
 
         {/* Chat area */}
-        <div ref={chatRef} className="flex-1 min-h-0 overflow-y-auto relative">
+        <div ref={chatRef} className="flex-1 min-h-0 overflow-y-auto relative aqi-chat-scroll">
 
           {/* Ambient background wash */}
           <div className="pointer-events-none fixed inset-0 overflow-hidden" style={{ zIndex: 0 }}>
@@ -760,28 +797,30 @@ export default function AIAssistantPage() {
           <AnimatePresence>
             {!hasUser && (
               <motion.div
-                className="relative z-10 flex flex-col items-center justify-center min-h-full px-4 py-16"
+                className="relative z-10 flex flex-col items-center justify-start min-h-full px-4 py-8 sm:py-16"
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.98 }}
               >
-                {/* Logo with glow rings */}
+                {/* Logo + wordmark */}
                 <motion.div
                   initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.05, type: "spring", stiffness: 200 }}
-                  className="relative mb-10"
+                  className="relative mb-6 sm:mb-10"
                 >
-                  <div className="aqi-logo-ring-1" />
-                  <div className="relative z-10 w-20 h-20 rounded-full flex items-center justify-center"
-                    style={{ background: "rgba(240,62,158,0.06)", border: "1px solid rgba(240,62,158,0.16)" }}>
-                    <Image src="/logo/aqi.png" alt="AQI" width={52} height={52} className="object-contain rounded-full bg-white p-2" />
+                  <div className="relative z-10 w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto"
+                    style={{ background: `linear-gradient(135deg, ${FUCHSIA}, ${VIOLET})` }}>
+                    <Image src="/logo/aqi-white.png" alt="AQI" width={84} height={84} className="object-contain w-9 h-9 sm:w-10 sm:h-10" />
+                  </div>
+                  <div className="text-center mt-2.5">
+                    <span className="text-sm font-black uppercase" style={{ color: CREAM, letterSpacing: "0.32em" }}>AQI</span>
                   </div>
                 </motion.div>
 
                 {/* Headline */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.15 }} className="text-center mb-3"
+                  transition={{ delay: 0.15 }} className="text-center mb-2 sm:mb-3"
                 >
-                  <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tighter leading-none aqi-gradient-text">
+                  <h1 className="text-2xl sm:text-4xl font-black uppercase tracking-tighter leading-none aqi-gradient-text">
                     What would you
                     <br />like to cook?
                   </h1>
@@ -789,7 +828,7 @@ export default function AIAssistantPage() {
 
                 <motion.div
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }}
-                  className="text-center mb-10"
+                  className="text-center mb-5 sm:mb-10"
                 >
                   <p className="text-sm" style={{ color: `color-mix(in oklab, var(--hm-text) 25%, var(--hm-lm-anchor))` }}>
                     Halal recipes, ingredient ideas, cooking guidance - all in one place
@@ -811,13 +850,13 @@ export default function AIAssistantPage() {
                 {/* Suggestion cards */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-                  className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-md"
+                  className="grid grid-cols-2 gap-2 sm:gap-3 w-full max-w-md"
                 >
                   {SUGGESTIONS.map((s, i) => (
                     <motion.button
                       key={i}
                       onClick={() => { setInput(`${s.title} ${s.sub}`); textareaRef.current?.focus(); }}
-                      className="text-left p-4 transition-all group relative overflow-hidden"
+                      className="text-left p-2.5 sm:p-4 transition-all group relative overflow-hidden"
                       style={{
                         background: "rgba(255,255,255,0.02)",
                         border: "1px solid rgba(240,62,158,0.14)",
@@ -829,11 +868,13 @@ export default function AIAssistantPage() {
                       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
                         style={{ background: "linear-gradient(135deg, rgba(240,62,158,0.06), transparent)" }} />
                       <div className="relative z-10">
-                        <div className="text-2xl mb-2">{s.emoji}</div>
-                        <div className="text-xs font-black uppercase tracking-tight leading-tight" style={{ color: CREAM }}>
+                        <div className="mb-1 sm:mb-2">
+                          <s.icon className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: `color-mix(in oklab, var(--hm-text) 65%, var(--hm-lm-anchor))` }} />
+                        </div>
+                        <div className="text-[11px] sm:text-xs font-black uppercase tracking-tight leading-tight" style={{ color: CREAM }}>
                           {s.title}
                         </div>
-                        <div className="text-[10px] mt-1" style={{ color: `color-mix(in oklab, var(--hm-text) 25%, var(--hm-lm-anchor))` }}>{s.sub}</div>
+                        <div className="text-[9px] sm:text-[10px] mt-1" style={{ color: `color-mix(in oklab, var(--hm-text) 25%, var(--hm-lm-anchor))` }}>{s.sub}</div>
                       </div>
                     </motion.button>
                   ))}
@@ -855,7 +896,7 @@ export default function AIAssistantPage() {
                     {isFirstInGroup && (
                       <div className={`flex items-center gap-2 mb-2 ${isUser ? "justify-end" : "justify-start"}`}>
                         {!isUser && (
-                          <Image src="/logo/aqi.png" alt="AQI" width={18} height={18} className="object-contain rounded-full bg-white p-1" />
+                          <Image src="/logo/aqi-white.png" alt="AQI" width={18} height={18} className="object-contain rounded-full p-1" style={{ background: `linear-gradient(135deg, ${FUCHSIA}, ${VIOLET})` }} />
                         )}
                         <span className="text-[9px] font-black uppercase"
                           style={{ color: isUser ? `color-mix(in oklab, var(--hm-text) 16%, transparent)` : `color-mix(in oklab, var(--hm-magenta) 56%, transparent)`, letterSpacing: "0.16em" }}>
@@ -985,18 +1026,18 @@ export default function AIAssistantPage() {
                             {msg.responseType === "recipe" && msg.recipe && (
                               <div className="flex flex-wrap gap-1">
                                 {[
-                                  { label: "🛒 Shopping list", prompt: `Give me a complete shopping list for ${msg.recipe.title}, grouped by store section (Produce, Pantry, Dairy, Meat & Seafood, Spices). Include quantities for each item.` },
-                                  { label: "🌶 Spicier",       prompt: `Make a spicier version of ${msg.recipe.title}` },
-                                  { label: "🥗 Healthier",     prompt: `Make a healthier version of ${msg.recipe.title}` },
-                                  { label: "⚡ Simpler",       prompt: `Make an easier, simpler version of ${msg.recipe.title}` },
-                                  { label: "👥 For 2",         prompt: `Adjust ${msg.recipe.title} for 2 people` },
-                                  { label: "👥 For 6",         prompt: `Adjust ${msg.recipe.title} for 6 people` },
-                                ].map(({ label, prompt }) => (
+                                  { label: "Shopping list", icon: ShoppingCart, prompt: `Give me a complete shopping list for ${msg.recipe.title}, grouped by store section (Produce, Pantry, Dairy, Meat & Seafood, Spices). Include quantities for each item.` },
+                                  { label: "Spicier",       icon: Flame,        prompt: `Make a spicier version of ${msg.recipe.title}` },
+                                  { label: "Healthier",     icon: Salad,        prompt: `Make a healthier version of ${msg.recipe.title}` },
+                                  { label: "Simpler",       icon: Zap,          prompt: `Make an easier, simpler version of ${msg.recipe.title}` },
+                                  { label: "For 2",         icon: Users,        prompt: `Adjust ${msg.recipe.title} for 2 people` },
+                                  { label: "For 6",         icon: Users,        prompt: `Adjust ${msg.recipe.title} for 6 people` },
+                                ].map(({ label, icon: Icon, prompt }) => (
                                   <motion.button
                                     key={label}
                                     onClick={() => { if (!isLoading) doSubmit(prompt); }}
                                     disabled={isLoading}
-                                    className="px-2 py-1 text-[9px] font-bold uppercase transition-all"
+                                    className="flex items-center gap-1 px-2 py-1 text-[9px] font-bold uppercase transition-all"
                                     style={{
                                       color: `color-mix(in oklab, var(--hm-text) 19%, var(--hm-lm-anchor))`,
                                       border: "1px solid color-mix(in oklab, var(--hm-text) 7%, transparent)",
@@ -1006,6 +1047,7 @@ export default function AIAssistantPage() {
                                     whileHover={!isLoading ? { color: CREAM, borderColor: "rgba(240,62,158,0.35)" } as never : {}}
                                     whileTap={!isLoading ? { scale: 0.95 } as never : {}}
                                   >
+                                    <Icon className="w-2.5 h-2.5" />
                                     {label}
                                   </motion.button>
                                 ))}
@@ -1023,7 +1065,7 @@ export default function AIAssistantPage() {
               {streamingContent !== null && (
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                   <div className="flex items-center gap-2 mb-2">
-                    <Image src="/logo/aqi.png" alt="AQI" width={18} height={18} className="object-contain rounded-full bg-white p-1" />
+                    <Image src="/logo/aqi-white.png" alt="AQI" width={18} height={18} className="object-contain rounded-full p-1" style={{ background: `linear-gradient(135deg, ${FUCHSIA}, ${VIOLET})` }} />
                     <span className="text-[9px] font-black uppercase" style={{ color: `color-mix(in oklab, var(--hm-magenta) 56%, var(--hm-lm-anchor))`, letterSpacing: "0.18em" }}>AQI</span>
                   </div>
                   <div className="flex justify-start">
@@ -1050,7 +1092,7 @@ export default function AIAssistantPage() {
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
                     <div className="flex items-center gap-2 mb-2">
                       <div className="relative w-5 h-5 flex items-center justify-center">
-                        <Image src="/logo/aqi.png" alt="AQI" width={18} height={18} className="object-contain rounded-full bg-white p-1" />
+                        <Image src="/logo/aqi-white.png" alt="AQI" width={18} height={18} className="object-contain rounded-full p-1" style={{ background: `linear-gradient(135deg, ${FUCHSIA}, ${VIOLET})` }} />
                         <Loader2 className="absolute inset-0 w-5 h-5 text-violet-400/40 animate-spin" strokeWidth={1.5} />
                       </div>
                       <span className="text-[9px] font-black uppercase" style={{ color: `color-mix(in oklab, var(--hm-magenta) 44%, var(--hm-lm-anchor))`, letterSpacing: "0.18em" }}>AQI</span>
@@ -1132,11 +1174,8 @@ export default function AIAssistantPage() {
               </motion.button>
             </div>
 
-            <div className="flex items-center justify-between mt-2 px-1">
-              <span className="hidden sm:inline text-[8px] font-semibold uppercase" style={{ color: `color-mix(in oklab, var(--hm-text) 8%, var(--hm-lm-anchor))`, letterSpacing: "0.12em" }}>
-                Enter to send · Shift+Enter for new line
-              </span>
-              <span className="flex items-center gap-1 text-[8px] font-semibold uppercase ml-auto" style={{ color: `color-mix(in oklab, var(--hm-text) 8%, var(--hm-lm-anchor))`, letterSpacing: "0.12em" }}>
+            <div className="flex items-center justify-end mt-2 px-1">
+              <span className="flex items-center gap-1 text-[8px] font-semibold uppercase" style={{ color: `color-mix(in oklab, var(--hm-text) 8%, var(--hm-lm-anchor))`, letterSpacing: "0.12em" }}>
                 <Sparkles className="w-2.5 h-2.5" />
                 Always verify halal
               </span>
@@ -1151,6 +1190,20 @@ export default function AIAssistantPage() {
         textarea::placeholder { color: color-mix(in oklab, var(--hm-text) 20%, transparent); }
         textarea::-webkit-scrollbar { display: none; }
         nav::-webkit-scrollbar { display: none; }
+
+        .aqi-chat-scroll { scrollbar-width: thin; scrollbar-color: rgba(240,62,158,0.3) transparent; }
+        .aqi-chat-scroll::-webkit-scrollbar { width: 8px; }
+        .aqi-chat-scroll::-webkit-scrollbar-track { background: transparent; }
+        .aqi-chat-scroll::-webkit-scrollbar-thumb {
+          background-color: rgba(240,62,158,0.3);
+          border-radius: 8px;
+          border: 2px solid transparent;
+          background-clip: padding-box;
+        }
+        .aqi-chat-scroll::-webkit-scrollbar-thumb:hover {
+          background-color: rgba(240,62,158,0.5);
+          background-clip: padding-box;
+        }
 
         .aqi-gradient-text {
           background: linear-gradient(135deg, ${CREAM} 0%, rgba(240,62,158,0.9) 50%, ${CREAM} 100%);
@@ -1180,18 +1233,6 @@ export default function AIAssistantPage() {
           pointer-events: none;
         }
 
-        /* Welcome logo glow ring */
-        .aqi-logo-ring-1 {
-          position: absolute;
-          inset: 0;
-          border-radius: 50%;
-          border: 1px solid rgba(240,62,158,0.2);
-          animation: aqi-ring 2.5s ease-out infinite;
-        }
-        @keyframes aqi-ring {
-          0%   { transform: scale(1);    opacity: 0.7; }
-          100% { transform: scale(1.6);  opacity: 0;   }
-        }
       `}</style>
     </div>
   );

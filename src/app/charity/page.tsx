@@ -21,6 +21,7 @@ import {
   Lock,
   Search,
   Users,
+  Check,
 } from "lucide-react";
 
 /* ─── Charity design tokens - dark emerald ────────────────── */
@@ -244,7 +245,7 @@ function DonationFlowDemo() {
                         color: active ? "#fff" : done ? TEAL : `${CREAM}35`,
                       }}
                     >
-                      {done ? "✓" : `0${i + 1}`}
+                      {done ? <Check className="w-3.5 h-3.5" /> : `0${i + 1}`}
                     </span>
                     <div>
                       <p

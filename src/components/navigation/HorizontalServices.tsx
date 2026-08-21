@@ -405,8 +405,8 @@ function SocialPreview({ accent }: { accent: string }) {
           AR
         </div>
         <div className="min-w-0">
-          <p className="text-[10px] font-extrabold tracking-tight truncate" style={{ color: CREAM }}>
-            Aisha Rahman <span style={{ color: accent }}>✓</span>
+          <p className="text-[10px] font-extrabold tracking-tight truncate flex items-center gap-1" style={{ color: CREAM }}>
+            Aisha Rahman <CheckCircle2 className="w-2.5 h-2.5 shrink-0" style={{ color: accent }} />
           </p>
           <p className="text-[8px] uppercase tracking-[0.14em]" style={{ color: `${CREAM}30` }}>
             @aisha_cooks · 2h

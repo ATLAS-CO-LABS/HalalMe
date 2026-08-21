@@ -21,6 +21,7 @@ import {
   ScrollText,
   Settings,
   Search,
+  Lock,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { isStaffRole } from "@/lib/adminRoles";
@@ -272,7 +273,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="flex items-center justify-center min-h-screen bg-[#F3E9D6]">
         <div className="text-center max-w-sm px-6">
           <div className="w-16 h-16 bg-red-50 border border-red-100 rounded-none flex items-center justify-center mx-auto mb-5">
-            <span className="text-2xl">🔒</span>
+            <Lock className="w-7 h-7 text-red-400" />
           </div>
           <h1 className="text-xl font-bold text-gray-900">Access Denied</h1>
           <p className="text-gray-500 mt-2 text-sm leading-relaxed">

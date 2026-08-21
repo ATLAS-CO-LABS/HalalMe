@@ -105,8 +105,8 @@ function RecipeCard({
                 </span>
               )}
               {recipe.is_halal_verified && (
-                <span className="text-white text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 bg-emerald-600/90">
-                  ✓ Halal
+                <span className="flex items-center gap-1 text-white text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 bg-emerald-600/90">
+                  <BadgeCheck className="w-2.5 h-2.5" /> Halal
                 </span>
               )}
             </div>

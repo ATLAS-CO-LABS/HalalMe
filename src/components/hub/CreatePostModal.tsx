@@ -2,8 +2,9 @@
 
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Image as ImageIcon, Loader2 } from "lucide-react";
+import { X, Image as ImageIcon, Loader2, MessageSquare, ChefHat, HelpCircle, Star } from "lucide-react";
 import Image from "next/image";
+import type { ComponentType } from "react";
 import type { PostType, Profile } from "@/types";
 import { withTimeout } from "@/lib/withTimeout";
 import { friendlyError } from "@/lib/friendlyError";
@@ -29,11 +30,11 @@ interface CreatePostModalProps {
   currentUser: Profile | null;
 }
 
-const POST_TYPES: { value: PostType; label: string; emoji: string }[] = [
-  { value: "general",  label: "Post",     emoji: "💬" },
-  { value: "recipe",   label: "Recipe",   emoji: "🍽️" },
-  { value: "question", label: "Question", emoji: "❓" },
-  { value: "review",   label: "Review",   emoji: "⭐" },
+const POST_TYPES: { value: PostType; label: string; icon: ComponentType<{ className?: string }> }[] = [
+  { value: "general",  label: "Post",     icon: MessageSquare },
+  { value: "recipe",   label: "Recipe",   icon: ChefHat },
+  { value: "question", label: "Question", icon: HelpCircle },
+  { value: "review",   label: "Review",   icon: Star },
 ];
 
 const PLACEHOLDERS: Record<PostType, string> = {
@@ -202,7 +203,7 @@ export default function CreatePostModal({
                           : { backgroundColor: "transparent", color: `color-mix(in oklab, var(--hm-text) 33%, var(--hm-lm-anchor))`, borderColor: `color-mix(in oklab, var(--hm-text) 8%, transparent)` }
                       }
                     >
-                      <span>{pt.emoji}</span>
+                      <pt.icon className="w-3 h-3" />
                       {pt.label}
                     </button>
                   );

@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import LoginForm from "@/components/auth/LoginForm";
+import BackLink from "@/components/ui/BackLink";
 
 export default function LoginPage() {
   // "Continue browsing without signing in" always lands on home. The
@@ -54,12 +55,7 @@ export default function LoginPage() {
           </Link>
         </p>
         <p className="text-center text-xs">
-          <Link
-            href={backHref}
-            className="text-[#F7E7CE]/25 hover:text-[#F7E7CE]/50 transition-colors"
-          >
-            ← Continue browsing without signing in
-          </Link>
+          <BackLink href={backHref}>Continue browsing without signing in</BackLink>
         </p>
       </div>
     </div>

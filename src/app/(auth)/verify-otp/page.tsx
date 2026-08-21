@@ -9,6 +9,7 @@ import { startCooldown, getCooldownRemaining, COOLDOWN_SECONDS } from "@/lib/otp
 import { minDelay } from "@/lib/minDelay";
 import { resolvePostLoginDestination } from "@/lib/postLoginRedirect";
 import OtpForm from "@/components/auth/OtpForm";
+import BackLink from "@/components/ui/BackLink";
 
 // ── Email masking ─────────────────────────────────────────────────────────────
 
@@ -196,13 +197,7 @@ function VerifyOtpContent() {
           {" "}· Check your spam folder
         </p>
         <p className="text-center text-xs">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="text-[#F7E7CE]/25 hover:text-[#F7E7CE]/50 transition-colors"
-          >
-            ← Go back
-          </button>
+          <BackLink onClick={() => router.back()}>Go back</BackLink>
         </p>
       </div>
     </div>

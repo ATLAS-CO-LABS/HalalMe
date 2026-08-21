@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Eye, EyeOff, ChefHat, ArrowRight, Loader2 } from "lucide-react";
+import { X, Eye, EyeOff, ChefHat, ArrowRight, Loader2, Mail } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import type { AuthGateModalProps } from "@/hooks/useAuthGate";
 import { track } from "@vercel/analytics";
@@ -191,7 +191,7 @@ function SignupForm({ onSuccess }: { onSuccess: () => void }) {
       <div className="py-4 text-center space-y-3">
         <div className="w-10 h-10 mx-auto flex items-center justify-center"
           style={{ backgroundColor: `${TEAL}`, border: `1px solid ${CREAM}20` }}>
-          <span className="text-xl">📧</span>
+          <Mail className="w-4.5 h-4.5" style={{ color: CREAM }} />
         </div>
         <p className="text-sm font-bold" style={{ color: CREAM }}>Check your email</p>
         <p className="text-xs" style={{ color: `${CREAM}55` }}>

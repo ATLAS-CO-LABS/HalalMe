@@ -26,6 +26,8 @@ import {
   Flag,
   Lock,
   ImagePlus,
+  CookingPot,
+  UtensilsCrossed,
 } from "lucide-react";
 import { recipeService } from "@/services/recipeService";
 import { useAuth } from "@/hooks/useAuth";
@@ -1090,7 +1092,7 @@ export default function RecipeDetailClient({ id, initialRecipe, initialReviews }
                 className="text-2xl font-extrabold uppercase tracking-tighter mb-6 flex items-center gap-3"
                 style={{ color: CREAM }}
               >
-                <span className="text-3xl">🥘</span> Ingredients
+                <CookingPot className="w-7 h-7" /> Ingredients
               </h2>
               {ingredients.length === 0 ? (
                 <p className="text-sm" style={{ color: `color-mix(in oklab, var(--hm-text) 25%, var(--hm-lm-anchor))` }}>
@@ -1167,7 +1169,7 @@ export default function RecipeDetailClient({ id, initialRecipe, initialReviews }
                 className="text-2xl font-extrabold uppercase tracking-tighter mb-6 flex items-center gap-3"
                 style={{ color: CREAM }}
               >
-                <span className="text-3xl">👨‍🍳</span> Instructions
+                <ChefHat className="w-7 h-7" /> Instructions
               </h2>
               {steps.length === 0 ? (
                 <p className="text-sm" style={{ color: `color-mix(in oklab, var(--hm-text) 25%, var(--hm-lm-anchor))` }}>
@@ -1252,7 +1254,7 @@ export default function RecipeDetailClient({ id, initialRecipe, initialReviews }
                 className="text-2xl font-extrabold uppercase tracking-tighter flex items-center gap-3"
                 style={{ color: CREAM }}
               >
-                <span className="text-3xl">⭐</span>
+                <Star className="w-7 h-7 fill-yellow-400 text-yellow-400" />
                 Reviews
                 {reviews.length > 0 && (
                   <span
@@ -1403,7 +1405,7 @@ export default function RecipeDetailClient({ id, initialRecipe, initialReviews }
               className="text-2xl font-extrabold uppercase tracking-tighter mb-6 flex items-center gap-3"
               style={{ color: CREAM }}
             >
-              <span className="text-3xl">🍽️</span> You Might Also Like
+              <UtensilsCrossed className="w-7 h-7" /> You Might Also Like
             </h2>
             {relatedLoading ? (
               <div className="flex items-center justify-center py-8">

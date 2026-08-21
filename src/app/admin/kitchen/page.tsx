@@ -62,7 +62,7 @@ const PUBLISHED_FILTERS = [
 ];
 const HALAL_FILTERS = [
   { key: "all", label: "All" },
-  { key: "verified", label: "Halal ✓" },
+  { key: "verified", label: "Halal" },
   { key: "unverified", label: "Unverified" },
 ];
 const SOURCE_FILTERS = [
@@ -345,7 +345,7 @@ export default function KitchenPage() {
                     <>
                       <button onClick={() => runBulk("publish")} disabled={!!bulkBusy} className="flex items-center gap-1.5 px-3 py-2 bg-white/10 text-white rounded-none text-sm font-semibold hover:bg-white/20 transition-colors disabled:opacity-50"><Eye size={14} /> Publish</button>
                       <button onClick={() => runBulk("unpublish")} disabled={!!bulkBusy} className="flex items-center gap-1.5 px-3 py-2 bg-white/10 text-white rounded-none text-sm font-semibold hover:bg-white/20 transition-colors disabled:opacity-50"><EyeOff size={14} /> Hide</button>
-                      <button onClick={() => runBulk("verify")} disabled={!!bulkBusy} className="flex items-center gap-1.5 px-3 py-2 bg-white/10 text-white rounded-none text-sm font-semibold hover:bg-white/20 transition-colors disabled:opacity-50"><BadgeCheck size={14} /> Halal ✓</button>
+                      <button onClick={() => runBulk("verify")} disabled={!!bulkBusy} className="flex items-center gap-1.5 px-3 py-2 bg-white/10 text-white rounded-none text-sm font-semibold hover:bg-white/20 transition-colors disabled:opacity-50"><BadgeCheck size={14} /> Halal</button>
                       <button onClick={() => runBulk("feature")} disabled={!!bulkBusy} className="flex items-center gap-1.5 px-3 py-2 bg-white/10 text-white rounded-none text-sm font-semibold hover:bg-white/20 transition-colors disabled:opacity-50"><Star size={14} /> Feature</button>
                       <button onClick={() => setBulkDelete((v) => !v)} disabled={!!bulkBusy} className="flex items-center gap-1.5 px-3 py-2 bg-red-500/20 text-white rounded-none text-sm font-semibold hover:bg-red-500/30 transition-colors disabled:opacity-50"><Trash2 size={14} /> Delete</button>
                     </>
@@ -397,10 +397,10 @@ export default function KitchenPage() {
                             {r.cuisine ?? "—"}{r.difficulty ? ` · ${r.difficulty}` : ""} · {authorName}
                           </p>
                           <div className="flex items-center gap-1 flex-wrap mt-2">
-                            {r.is_halal_verified ? <Badge label="Halal ✓" tone="green" /> : <Badge label="Unverified" tone="amber" />}
+                            {r.is_halal_verified ? <Badge label="Halal" tone="green" /> : <Badge label="Unverified" tone="amber" />}
                             {r.is_ai_generated && <Badge label="AI" tone="purple" />}
                             {!r.is_published && <Badge label="Hidden" tone="gray" />}
-                            {r.review_count > 0 && <span className="text-[10px] text-gray-600">★ {Number(r.avg_rating).toFixed(1)} ({r.review_count})</span>}
+                            {r.review_count > 0 && <span className="text-[10px] text-gray-600 inline-flex items-center gap-0.5"><Star className="w-2.5 h-2.5 fill-current" /> {Number(r.avg_rating).toFixed(1)} ({r.review_count})</span>}
                           </div>
                         </div>
                         {canManage && (
@@ -460,7 +460,7 @@ export default function KitchenPage() {
                         <td className="px-4 py-3.5 hidden lg:table-cell text-gray-700 truncate max-w-40" title={authorName}>{authorName}</td>
                         <td className="px-4 py-3.5">
                           <div className="flex items-center gap-1 flex-wrap">
-                            {r.is_halal_verified ? <Badge label="Halal ✓" tone="green" /> : <Badge label="Unverified" tone="amber" />}
+                            {r.is_halal_verified ? <Badge label="Halal" tone="green" /> : <Badge label="Unverified" tone="amber" />}
                             {r.is_ai_generated && <Badge label="AI" tone="purple" />}
                             {!r.is_published && <Badge label="Hidden" tone="gray" />}
                           </div>
@@ -543,7 +543,7 @@ export default function KitchenPage() {
               </button>
               <button onClick={() => toggle(menu.recipe, "is_halal_verified", menu.recipe.is_halal_verified ? "Halal verification removed." : "Marked halal-verified.")}
                 className="w-full flex items-center gap-2.5 px-3 py-2 text-gray-700 hover:bg-gray-50 transition-colors">
-                <BadgeCheck size={14} className="text-gray-500" /> {menu.recipe.is_halal_verified ? "Remove halal ✓" : "Mark halal ✓"}
+                <BadgeCheck size={14} className="text-gray-500" /> {menu.recipe.is_halal_verified ? "Remove halal" : "Mark halal"}
               </button>
               <button onClick={() => toggle(menu.recipe, "is_featured", menu.recipe.is_featured ? "Removed from featured." : "Added to featured.")}
                 className="w-full flex items-center gap-2.5 px-3 py-2 text-gray-700 hover:bg-gray-50 transition-colors">
@@ -595,7 +595,7 @@ export default function KitchenPage() {
                   <div className="sticky top-0 bg-white border-b border-[#102C26]/10 px-6 py-4 flex items-start justify-between gap-4">
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                        {preview.is_halal_verified ? <Badge label="Halal ✓" tone="green" /> : <Badge label="Unverified" tone="amber" />}
+                        {preview.is_halal_verified ? <Badge label="Halal" tone="green" /> : <Badge label="Unverified" tone="amber" />}
                         {preview.is_ai_generated && <Badge label="AI" tone="purple" />}
                         {preview.is_featured && <Badge label="Featured" tone="purple" />}
                         {!preview.is_published && <Badge label="Hidden" tone="gray" />}

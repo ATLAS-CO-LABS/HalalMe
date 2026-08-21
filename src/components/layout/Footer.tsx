@@ -39,6 +39,25 @@ const colVariants = {
   },
 };
 
+/* Crescent-and-star mark for the trust badge — rendered as a proper vector
+   icon (matching the lucide stroke style used elsewhere) instead of a
+   Unicode glyph, which varies wildly across platform emoji fonts. */
+function HalalMark({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <path
+        d="M11 3a7 7 0 1 0 8 11.9A9 9 0 0 1 11 3Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M19 2.5l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1L17 5.5l2.1-.9L19 2.5Z" fill="currentColor" />
+    </svg>
+  );
+}
+
 /* ─── Giant wordmark - letters rise out of the page edge ───── */
 function FooterWordmark() {
   const reduce = useReducedMotion();
@@ -153,7 +172,7 @@ export default function Footer() {
             </p>
             {/* Trust badge */}
             <div className="inline-flex items-center gap-2 bg-[#F7E7CE]/6 border border-[#F7E7CE]/12 px-4 py-2 w-fit">
-              <span className="text-[#F7E7CE]/60 text-xs">☪</span>
+              <HalalMark className="w-3.5 h-3.5 text-[#F7E7CE]/60" />
               <span className="text-[#F7E7CE]/60 text-xs font-semibold uppercase tracking-wide">
                 Halal-Focused Platform
               </span>

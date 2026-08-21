@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   Search, AlertCircle, MessageSquare, FileText, MessagesSquare, Users,
   Image as ImageIcon, EyeOff, Eye, MoreVertical, Trash2, Loader2, TrendingUp,
-  CheckSquare, X, Crown, Flag, RotateCcw, RefreshCw,
+  CheckSquare, X, Crown, Flag, RotateCcw, RefreshCw, Heart, MessageCircle,
 } from "lucide-react";
 import { display } from "../_fonts";
 import {
@@ -387,7 +387,12 @@ function PostsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "ok" 
                         <div className="flex items-center gap-1 flex-wrap mt-2">
                           <Badge label={p.post_type} tone={POST_TYPE_TONE[p.post_type] ?? "gray"} />
                           {!p.is_published && <Badge label="Hidden" tone="gray" />}
-                          <span className="text-[10px] text-gray-600">{authorName} · {p.like_count} ♥ · {p.comment_count} 💬</span>
+                          <span className="text-[10px] text-gray-600 inline-flex items-center gap-1">
+                            <span>{authorName} ·</span>
+                            <span className="inline-flex items-center gap-0.5"><Heart className="w-2.5 h-2.5" />{p.like_count}</span>
+                            <span>·</span>
+                            <span className="inline-flex items-center gap-0.5"><MessageCircle className="w-2.5 h-2.5" />{p.comment_count}</span>
+                          </span>
                         </div>
                       </div>
                       {canManage && (
@@ -448,7 +453,11 @@ function PostsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "ok" 
                           {!p.is_published && <Badge label="Hidden" tone="gray" />}
                         </div>
                       </td>
-                      <td className="px-4 py-3.5 text-right hidden md:table-cell tabular-nums text-gray-600 whitespace-nowrap">{p.like_count} ♥ · {p.comment_count} 💬</td>
+                      <td className="px-4 py-3.5 text-right hidden md:table-cell tabular-nums text-gray-600 whitespace-nowrap">
+                        <span className="inline-flex items-center gap-0.5"><Heart className="w-2.5 h-2.5" />{p.like_count}</span>
+                        {" · "}
+                        <span className="inline-flex items-center gap-0.5"><MessageCircle className="w-2.5 h-2.5" />{p.comment_count}</span>
+                      </td>
                       <td className="px-4 py-3.5 hidden xl:table-cell text-gray-600 whitespace-nowrap">{fmtDateTime(p.created_at)}</td>
                       <td className="px-4 lg:px-5 py-3.5 text-right">
                         {canManage && (
@@ -530,7 +539,13 @@ function PostsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "ok" 
                         {!preview.post.is_published && <Badge label="Hidden" tone="gray" />}
                       </div>
                       <h3 className={`${display.className} text-base font-bold text-[#102C26]`}>{a?.full_name ?? (a?.username ? `@${a.username}` : "Unknown")}</h3>
-                      <p className="text-xs text-gray-600">{fmtDateTime(preview.post.created_at)} · {preview.post.like_count} ♥ · {preview.post.comment_count} 💬 · {preview.post.view_count} views</p>
+                      <p className="text-xs text-gray-600 inline-flex items-center gap-1 flex-wrap">
+                        <span>{fmtDateTime(preview.post.created_at)} ·</span>
+                        <span className="inline-flex items-center gap-0.5"><Heart className="w-3 h-3" />{preview.post.like_count}</span>
+                        <span>·</span>
+                        <span className="inline-flex items-center gap-0.5"><MessageCircle className="w-3 h-3" />{preview.post.comment_count}</span>
+                        <span>· {preview.post.view_count} views</span>
+                      </p>
                     </div>
                     <button onClick={() => setPreview(null)} className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-none shrink-0"><X size={18} /></button>
                   </div>
@@ -753,7 +768,11 @@ function CommentsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "o
                         <p className="text-gray-900 line-clamp-2 text-[15px]">{c.content}</p>
                         <div className="flex items-center gap-1.5 flex-wrap mt-2">
                           {c.parent_id && <Badge label="Reply" tone="gray" />}
-                          <span className="text-[10px] text-gray-600">{authorName} · {c.like_count} ♥ · {fmtDateTime(c.created_at)}</span>
+                          <span className="text-[10px] text-gray-600 inline-flex items-center gap-1">
+                            <span>{authorName} ·</span>
+                            <span className="inline-flex items-center gap-0.5"><Heart className="w-2.5 h-2.5" />{c.like_count}</span>
+                            <span>· {fmtDateTime(c.created_at)}</span>
+                          </span>
                         </div>
                       </div>
                       {canManage && (

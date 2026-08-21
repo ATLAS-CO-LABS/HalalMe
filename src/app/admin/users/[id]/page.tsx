@@ -27,6 +27,7 @@ import {
   FileText,
   ChefHat,
   LifeBuoy,
+  MessageCircle,
 } from "lucide-react";
 import ThemedSelect from "@/components/admin/ThemedSelect";
 import RecordNav from "@/components/admin/RecordNav";
@@ -380,7 +381,11 @@ export default function UserDetailPage() {
           <ListCard title="Recent Posts" empty="No posts">
             {activity.posts.recent.map((p) => (
               <Row key={p.id} left={p.content?.trim() || "(no text)"} sub={fmtDate(p.created_at)}
-                right={<span className="text-[11px] text-gray-400 whitespace-nowrap">♥ {p.like_count} · 💬 {p.comment_count}</span>} />
+                right={<span className="text-[11px] text-gray-400 whitespace-nowrap inline-flex items-center gap-1">
+                  <span className="inline-flex items-center gap-0.5"><Heart className="w-2.5 h-2.5" />{p.like_count}</span>
+                  <span>·</span>
+                  <span className="inline-flex items-center gap-0.5"><MessageCircle className="w-2.5 h-2.5" />{p.comment_count}</span>
+                </span>} />
             ))}
           </ListCard>
 

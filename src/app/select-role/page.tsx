@@ -16,6 +16,7 @@ import {
   Check,
   HandHeart,
 } from "lucide-react";
+import BackLink from "@/components/ui/BackLink";
 
 export default function SelectRolePage() {
   const router = useRouter();
@@ -320,12 +321,7 @@ export default function SelectRolePage() {
               </Link>
             </p>
             <p>
-              <Link
-                href="/"
-                className="text-xs text-[#F7E7CE]/25 hover:text-[#F7E7CE]/50 transition-colors"
-              >
-                ← Back to Home
-              </Link>
+              <BackLink href="/">Back to Home</BackLink>
             </p>
           </motion.div>
         </div>
