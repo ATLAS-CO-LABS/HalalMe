@@ -6,7 +6,7 @@ import {
   Send, Plus, MessageSquare,
   Menu, X, RotateCcw, Sparkles, Loader2,
   BookmarkPlus, Check, Copy, Trash2, Clock, Users, Flame,
-  Drumstick, Salad, EggFried, PartyPopper, ShoppingCart, Zap,
+  Drumstick, Salad, EggFried, PartyPopper, ShoppingCart, Zap, ImagePlus,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { recipeService, AIRequestError } from "@/services/recipeService";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthGate } from "@/hooks/useAuthGate";
+import { resizeImage } from "@/lib/resizeImage";
 import type { AIAssistantResponse, AIMessage } from "@/types";
 
 // ── Palette ───────────────────────────────────────────────────────────
@@ -40,6 +41,7 @@ type Message = {
   aiMessage?: string;
   isError?: boolean;
   retryPrompt?: string;
+  imageBase64?: string;
 };
 type Conv = { id: string; title: string; group: string };
 
@@ -153,29 +155,38 @@ function RecipeContent({ recipe }: { recipe: NonNullable<AIAssistantResponse["re
         </ol>
       </div>
 
-      {/* Nutrition */}
-      {recipe.nutrition && (
-        <div className="px-4 py-3">
-          <div className="flex items-center gap-2 mb-2">
-            <Flame className="w-3 h-3" style={{ color: GOLD }} />
-            <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: GOLD }}>Nutrition</span>
+      {/* Nutrition — only the figures the model actually estimated. A missing
+          value used to arrive as 0 and render as "0 kcal", which reads as a
+          measurement rather than a gap. Nothing estimated, nothing shown. */}
+      {(() => {
+        const n = recipe.nutrition;
+        if (!n) return null;
+        const stats = [
+          { label: "Cal",     val: n.calories, unit: "kcal" },
+          { label: "Protein", val: n.protein,  unit: "g"    },
+          { label: "Carbs",   val: n.carbs,    unit: "g"    },
+          { label: "Fat",     val: n.fat,      unit: "g"    },
+        ].filter((s) => s.val !== null && s.val !== undefined);
+        if (stats.length === 0) return null;
+        return (
+          <div className="px-4 py-3">
+            <div className="flex items-center gap-2 mb-2">
+              <Flame className="w-3 h-3" style={{ color: GOLD }} />
+              <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: GOLD }}>Nutrition</span>
+              <span className="text-[8px] font-bold uppercase" style={{ color: `${GOLD}55`, letterSpacing: "0.1em" }}>Estimate, per serving</span>
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {stats.map(({ label, val, unit }) => (
+                <div key={label} className="text-center py-1.5 px-1"
+                  style={{ background: "rgba(201,151,58,0.06)", border: "1px solid rgba(201,151,58,0.12)" }}>
+                  <div className="text-xs font-black" style={{ color: CREAM }}>{val}<span className="text-[8px] font-bold ml-0.5" style={{ color: `${GOLD}99` }}>{unit}</span></div>
+                  <div className="text-[8px] font-bold uppercase" style={{ color: `${GOLD}80`, letterSpacing: "0.1em" }}>{label}</div>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="grid grid-cols-4 gap-2">
-            {[
-              { label: "Cal",     val: recipe.nutrition.calories, unit: "kcal" },
-              { label: "Protein", val: recipe.nutrition.protein,  unit: "g"    },
-              { label: "Carbs",   val: recipe.nutrition.carbs,    unit: "g"    },
-              { label: "Fat",     val: recipe.nutrition.fat,      unit: "g"    },
-            ].map(({ label, val, unit }) => (
-              <div key={label} className="text-center py-1.5 px-1"
-                style={{ background: "rgba(201,151,58,0.06)", border: "1px solid rgba(201,151,58,0.12)" }}>
-                <div className="text-xs font-black" style={{ color: CREAM }}>{val}</div>
-                <div className="text-[8px] font-bold uppercase" style={{ color: `${GOLD}80`, letterSpacing: "0.1em" }}>{label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
@@ -380,6 +391,29 @@ const WELCOME: Message = {
   responseType: "chat",
 };
 
+/**
+ * What the waiting indicator says at a given number of seconds.
+ *
+ * Deliberately vague about which stage the server is actually in — the request
+ * is a single blocking call, so claiming "writing the recipe" at a precise
+ * moment would be a guess dressed as progress. What these do honestly convey is
+ * that time is passing and the request is still alive, which is the thing three
+ * static dots fail to say.
+ */
+const WAITING_STAGES: { after: number; label: string }[] = [
+  { after: 0,  label: "Reading your message" },
+  { after: 4,  label: "Thinking it through" },
+  { after: 10, label: "Writing it out" },
+  { after: 20, label: "Almost there" },
+  { after: 33, label: "Still going, hang tight" },
+];
+
+function waitingStage(secs: number): string {
+  let label = WAITING_STAGES[0].label;
+  for (const s of WAITING_STAGES) if (secs >= s.after) label = s.label;
+  return label;
+}
+
 // ═══════════════════════════════════════════════════════════════════════
 export default function AIAssistantPage() {
   const router              = useRouter();
@@ -397,16 +431,22 @@ export default function AIAssistantPage() {
   // never hardcode "30" here, the whole point of the tiered limit + boost is
   // that it varies per user.
   const [requestsLimit, setRequestsLimit] = useState<number>(10);
-  const [savedIds, setSavedIds]         = useState<Set<string>>(new Set());
+  const [savingId, setSavingId]         = useState<string | null>(null);
+  const [saveFailedId, setSaveFailedId] = useState<string | null>(null);
   const [sessionId, setSessionId]       = useState<string | null>(null);
   const [copiedId, setCopiedId]         = useState<string | null>(null);
   const [inputFocused, setInputFocused] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isResizingImage, setIsResizingImage] = useState(false);
 
-  const [streamingContent, setStreamingContent] = useState<string | null>(null);
+  // Seconds since the current request started, so the waiting indicator can say
+  // something true instead of bouncing identically at second 2 and second 45.
+  const [waitedSecs, setWaitedSecs] = useState(0);
   const abortRef       = useRef<AbortController | null>(null);
   const chatRef        = useRef<HTMLDivElement>(null);
   const bottomRef      = useRef<HTMLDivElement>(null);
   const textareaRef    = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef   = useRef<HTMLInputElement>(null);
   const hasRestoredRef = useRef(false);
   const isNearBottomRef = useRef(true);
 
@@ -472,7 +512,15 @@ export default function AIAssistantPage() {
   // per-token updates while a reply is streaming jump instantly instead —
   // stacking smooth scrolls on every token is what caused the stutter.
   useEffect(() => { scrollDown(true); }, [messages, scrollDown]);
-  useEffect(() => { scrollDown(false); }, [streamingContent, scrollDown]);
+
+  // Drives the staged waiting copy below. Runs only while a request is open, so
+  // there is no timer ticking on an idle page.
+  useEffect(() => {
+    if (!isLoading) { setWaitedSecs(0); return; }
+    const started = Date.now();
+    const id = setInterval(() => setWaitedSecs(Math.floor((Date.now() - started) / 1000)), 1000);
+    return () => clearInterval(id);
+  }, [isLoading]);
 
   useEffect(() => {
     if (authLoading || hasRestoredRef.current) return;
@@ -504,7 +552,6 @@ export default function AIAssistantPage() {
     abortRef.current?.abort();
     abortRef.current = null;
     sessionStorage.removeItem(CHAT_STORAGE_KEY);
-    setStreamingContent(null);
     setMessages([{ ...WELCOME, id: Date.now().toString(), ts: new Date() }]);
     setInput("");
     setIsLoading(false);
@@ -514,10 +561,28 @@ export default function AIAssistantPage() {
     setSessionId(null);
   };
 
+  /**
+   * Save, then view. The edge function used to write every generated recipe to
+   * the user's collection before they had seen it, so this button could only
+   * ever be a link to something already saved. Now generating and keeping are
+   * separate: first press saves, and the button becomes the link afterwards.
+   */
   const handleSaveRecipe = async (msg: Message) => {
-    if (!msg.recipeId || savedIds.has(msg.id)) return;
-    setSavedIds((prev) => new Set(prev).add(msg.id));
-    router.push(`/kitchen/recipes/${msg.recipeId}`);
+    if (msg.recipeId) { router.push(`/kitchen/recipes/${msg.recipeId}`); return; }
+    if (!msg.recipe || !user || savingId) return;
+
+    setSavingId(msg.id);
+    setSaveFailedId(null);
+    try {
+      const saved = await recipeService.saveAIRecipe(msg.recipe, user.id);
+      // Written back onto the message so it survives the sessionStorage
+      // round-trip and the button stays a link after a reload.
+      setMessages((p) => p.map((m) => (m.id === msg.id ? { ...m, recipeId: saved.id } : m)));
+    } catch {
+      setSaveFailedId(msg.id);
+    } finally {
+      setSavingId(null);
+    }
   };
 
   const handleRetry = (msg: Message) => {
@@ -554,7 +619,6 @@ export default function AIAssistantPage() {
       if (loaded.length > 0) {
         abortRef.current?.abort();
         abortRef.current = null;
-        setStreamingContent(null);
         setIsLoading(false);
         setMessages(loaded);
         setSessionId(sid);
@@ -576,12 +640,13 @@ export default function AIAssistantPage() {
     const controller = new AbortController();
     abortRef.current = controller;
 
-    const userMsg: Message = { id: Date.now().toString(), role: "user", content: text, ts: new Date() };
+    const imageToSend = selectedImage ?? undefined;
+    const userMsg: Message = { id: Date.now().toString(), role: "user", content: text, ts: new Date(), imageBase64: imageToSend };
     setMessages((p) => [...p, userMsg]);
     setInput("");
+    setSelectedImage(null);
     if (textareaRef.current) textareaRef.current.style.height = "auto";
     setIsLoading(true);
-    setStreamingContent(null);
 
     try {
       const history = messages
@@ -590,15 +655,10 @@ export default function AIAssistantPage() {
         .map((m) => ({
           role: m.role as "user" | "assistant",
           content: m.role === "assistant" ? (m.aiMessage ?? m.content) : m.content,
+          image: m.imageBase64,
         }));
 
-      const result = await recipeService.streamAIResponse(
-        text, history,
-        (chunk) => { if (!controller.signal.aborted) setStreamingContent((p) => p === null ? chunk : p + chunk); },
-        controller.signal,
-        () => setStreamingContent(null),
-        sessionId,
-      );
+      const result = await recipeService.sendAIMessage(text, history, controller.signal, sessionId, imageToSend);
 
       if (controller.signal.aborted) return;
 
@@ -623,19 +683,21 @@ export default function AIAssistantPage() {
           : result.message,
       };
       setMessages((p) => [...p, assistantMsg]);
-      setStreamingContent(null);
     } catch (err) {
       if (controller.signal.aborted) return;
       const code = err instanceof AIRequestError ? err.code : "upstream";
       const errText = err instanceof Error ? err.message : "Something went wrong";
-      setStreamingContent(null);
-      const canRetry = code !== "rate_limit" && code !== "auth";
+      // No retry offered on a halal refusal: the server already tried twice,
+      // and a third identical request spends another of the user's allowance
+      // for the same answer.
+      const canRetry = code !== "rate_limit" && code !== "auth" && code !== "halal";
       setMessages((p) => [...p, {
         id: (Date.now() + 1).toString(),
         role: "assistant",
         responseType: "chat" as const,
         content:
           code === "rate_limit" ? errText
+          : code === "halal"    ? errText
           : code === "auth"     ? "Your sign-in session has expired. Please sign out and back in, then try again."
           :                       `Sorry, I ran into an issue. ${errText}`,
         ts: new Date(),
@@ -929,6 +991,9 @@ export default function AIAssistantPage() {
                             padding: "12px 16px",
                           }}
                         >
+                          {isUser && msg.imageBase64 && (
+                            <img src={msg.imageBase64} alt="user attachment" className="max-w-full h-auto rounded mb-2" style={{ maxHeight: 200 }} />
+                          )}
                           {!isUser && msg.responseType === "recipe" && msg.recipe ? (
                             <div>
                               {msg.content && (
@@ -1003,21 +1068,28 @@ export default function AIAssistantPage() {
                                   : <><Copy className="w-2.5 h-2.5" strokeWidth={2} /> Copy</>}
                               </motion.button>
 
-                              {msg.responseType === "recipe" && msg.recipeId && (
+                              {msg.responseType === "recipe" && msg.recipe && (
                                 <motion.button
                                   onClick={() => handleSaveRecipe(msg)}
+                                  disabled={savingId === msg.id}
                                   className="flex items-center gap-1 px-2 py-1 text-[9px] font-bold uppercase transition-all"
                                   style={{
-                                    color: savedIds.has(msg.id) ? "#4ade80" : `color-mix(in oklab, var(--hm-magenta) 50%, transparent)`,
-                                    border: `1px solid ${savedIds.has(msg.id) ? "rgba(74,222,128,0.2)" : "rgba(240,62,158,0.2)"}`,
+                                    color: saveFailedId === msg.id ? "#f87171"
+                                      : msg.recipeId ? "#4ade80"
+                                      : `color-mix(in oklab, var(--hm-magenta) 50%, transparent)`,
+                                    border: `1px solid ${saveFailedId === msg.id ? "rgba(248,113,113,0.25)" : msg.recipeId ? "rgba(74,222,128,0.2)" : "rgba(240,62,158,0.2)"}`,
                                     letterSpacing: "0.12em",
                                   }}
                                   whileHover={{ scale: 1.03 } as never}
                                   whileTap={{ scale: 0.97 }}
                                 >
-                                  {savedIds.has(msg.id)
-                                    ? <><Check className="w-2.5 h-2.5" strokeWidth={2.5} /> Saved</>
-                                    : <><BookmarkPlus className="w-2.5 h-2.5" strokeWidth={2} /> View Recipe</>}
+                                  {savingId === msg.id
+                                    ? <><Loader2 className="w-2.5 h-2.5 animate-spin" strokeWidth={2} /> Saving</>
+                                    : msg.recipeId
+                                      ? <><Check className="w-2.5 h-2.5" strokeWidth={2.5} /> View Recipe</>
+                                      : saveFailedId === msg.id
+                                        ? <><BookmarkPlus className="w-2.5 h-2.5" strokeWidth={2} /> Retry Save</>
+                                        : <><BookmarkPlus className="w-2.5 h-2.5" strokeWidth={2} /> Save Recipe</>}
                                 </motion.button>
                               )}
                             </div>
@@ -1061,34 +1133,13 @@ export default function AIAssistantPage() {
                 );
               })}
 
-              {/* Streaming message */}
-              {streamingContent !== null && (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Image src="/logo/aqi-white.png" alt="AQI" width={18} height={18} className="object-contain rounded-full p-1" style={{ background: `linear-gradient(135deg, ${FUCHSIA}, ${VIOLET})` }} />
-                    <span className="text-[9px] font-black uppercase" style={{ color: `color-mix(in oklab, var(--hm-magenta) 56%, var(--hm-lm-anchor))`, letterSpacing: "0.18em" }}>AQI</span>
-                  </div>
-                  <div className="flex justify-start">
-                    <div className="max-w-[88%]">
-                      <div style={{
-                        background: "var(--kitchen-bubble-bg)",
-                        borderRadius: 3,
-                        padding: "12px 16px",
-                      }}>
-                        <div className="whitespace-pre-wrap text-sm leading-[1.8]" style={{ color: `color-mix(in oklab, var(--hm-text) 80%, var(--hm-lm-anchor))` }}>
-                          {streamingContent
-                            ? <>{md(streamingContent)}<span className="aqi-cursor">▊</span></>
-                            : <span className="aqi-cursor">▊</span>}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Thinking indicator */}
+              {/* Waiting indicator. The old version was three bouncing dots and
+                  nothing else — identical at second 2 and second 45, on a request
+                  that routinely takes 25 seconds and can reach 50 when the server
+                  retries. Reading as broken is not only a feel-bad: every
+                  abandoned generation is still billed in full. */}
               <AnimatePresence>
-                {isLoading && streamingContent === null && (
+                {isLoading && (
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
                     <div className="flex items-center gap-2 mb-2">
                       <div className="relative w-5 h-5 flex items-center justify-center">
@@ -1097,17 +1148,32 @@ export default function AIAssistantPage() {
                       </div>
                       <span className="text-[9px] font-black uppercase" style={{ color: `color-mix(in oklab, var(--hm-magenta) 44%, var(--hm-lm-anchor))`, letterSpacing: "0.18em" }}>AQI</span>
                     </div>
-                    <div className="inline-flex items-center gap-1.5 px-4 py-3"
+                    <div className="inline-flex items-center gap-2.5 px-4 py-3"
                       style={{
                         background: "var(--kitchen-bubble-bg)",
                         borderRadius: 3,
                       }}>
-                      {[0, 1, 2].map((i) => (
-                        <motion.span key={i} className="block w-1.5 h-1.5"
-                          style={{ background: `linear-gradient(${FUCHSIA}, ${VIOLET})` }}
-                          animate={{ opacity: [0.2, 1, 0.2], scaleY: [0.5, 1, 0.5] }}
-                          transition={{ duration: 0.9, repeat: Infinity, delay: i * 0.18 }} />
-                      ))}
+                      <div className="inline-flex items-center gap-1.5">
+                        {[0, 1, 2].map((i) => (
+                          <motion.span key={i} className="block w-1.5 h-1.5"
+                            style={{ background: `linear-gradient(${FUCHSIA}, ${VIOLET})` }}
+                            animate={{ opacity: [0.2, 1, 0.2], scaleY: [0.5, 1, 0.5] }}
+                            transition={{ duration: 0.9, repeat: Infinity, delay: i * 0.18 }} />
+                        ))}
+                      </div>
+                      <AnimatePresence mode="wait">
+                        <motion.span
+                          key={waitingStage(waitedSecs)}
+                          initial={{ opacity: 0, y: 3 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -3 }}
+                          transition={{ duration: 0.25 }}
+                          className="text-[9px] font-bold uppercase"
+                          style={{ color: `color-mix(in oklab, var(--hm-text) 34%, var(--hm-lm-anchor))`, letterSpacing: "0.14em" }}
+                        >
+                          {waitingStage(waitedSecs)}
+                        </motion.span>
+                      </AnimatePresence>
                     </div>
                   </motion.div>
                 )}
@@ -1125,6 +1191,20 @@ export default function AIAssistantPage() {
             backdropFilter: "blur(12px)",
           }}>
           <div className="max-w-2xl mx-auto">
+            {selectedImage && (
+              <div className="mb-2 flex items-center gap-2 px-3 py-2 bg-color-mix(in oklab, var(--hm-magenta) 8%, transparent)" style={{ borderRadius: 8 }}>
+                <img src={selectedImage} alt="attached" className="w-12 h-12 object-cover rounded" style={{ border: "1px solid rgba(240,62,158,0.3)" }} />
+                <span className="text-xs" style={{ color: `color-mix(in oklab, var(--hm-text) 60%, var(--hm-lm-anchor))` }}>Photo attached</span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedImage(null)}
+                  className="ml-auto p-1 hover:opacity-70 transition-opacity"
+                  style={{ color: `color-mix(in oklab, var(--hm-text) 40%, var(--hm-lm-anchor))` }}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
             <div
               className="relative transition-all duration-200"
               style={{
@@ -1146,8 +1226,8 @@ export default function AIAssistantPage() {
                 onFocus={() => setInputFocused(true)}
                 onBlur={() => setInputFocused(false)}
                 placeholder={hasUser ? "Continue the conversation…" : "Say hi, ask what's in your fridge, or name a dish…"}
-                disabled={isLoading}
-                className="w-full resize-none text-base outline-none px-4 py-3.5 pr-14"
+                disabled={isLoading || isResizingImage}
+                className="w-full resize-none text-base outline-none px-4 py-3.5 pl-14"
                 style={{
                   backgroundColor: "transparent",
                   color: CREAM,
@@ -1156,19 +1236,54 @@ export default function AIAssistantPage() {
                   lineHeight: 1.65,
                   overflowY: "auto",
                   scrollbarWidth: "none",
+                  paddingRight: 56,
                 }}
+              />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  setIsResizingImage(true);
+                  try {
+                    const resized = await resizeImage(file);
+                    setSelectedImage(resized);
+                  } catch (err) {
+                    console.error("Image resize failed:", err);
+                  } finally {
+                    setIsResizingImage(false);
+                    e.target.value = "";
+                  }
+                }}
+                className="hidden"
               />
               <motion.button
                 type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isLoading || isResizingImage}
+                className="absolute left-2.5 bottom-2.5 w-9 h-9 flex items-center justify-center transition-all"
+                style={{
+                  background: selectedImage ? `rgba(240,62,158,0.2)` : "color-mix(in oklab, var(--hm-text) 4%, transparent)",
+                  color: selectedImage ? VIOLET : `color-mix(in oklab, var(--hm-text) 9%, var(--hm-lm-anchor))`,
+                }}
+                whileHover={!isLoading && !isResizingImage ? { scale: 1.08 } as never : {}}
+                whileTap={!isLoading && !isResizingImage ? { scale: 0.92 } as never : {}}
+              >
+                {isResizingImage ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImagePlus className="w-4 h-4" strokeWidth={2} />}
+              </motion.button>
+              <motion.button
+                type="button"
                 onClick={submit}
-                disabled={!input.trim() || isLoading}
+                disabled={!input.trim() || isLoading || isResizingImage}
                 className="absolute right-2.5 bottom-2.5 w-9 h-9 flex items-center justify-center transition-all"
-                style={input.trim() && !isLoading
+                style={input.trim() && !isLoading && !isResizingImage
                   ? { background: `linear-gradient(135deg, ${FUCHSIA}, ${VIOLET})`, color: "#fff" }
                   : { background: "color-mix(in oklab, var(--hm-text) 4%, transparent)", color: `color-mix(in oklab, var(--hm-text) 9%, var(--hm-lm-anchor))` }
                 }
-                whileHover={input.trim() && !isLoading ? { scale: 1.08, boxShadow: "0 0 12px rgba(240,62,158,0.4)" } as never : {}}
-                whileTap={input.trim() && !isLoading ? { scale: 0.92 } as never : {}}
+                whileHover={input.trim() && !isLoading && !isResizingImage ? { scale: 1.08, boxShadow: "0 0 12px rgba(240,62,158,0.4)" } as never : {}}
+                whileTap={input.trim() && !isLoading && !isResizingImage ? { scale: 0.92 } as never : {}}
               >
                 <Send className="w-4 h-4" strokeWidth={2} />
               </motion.button>
@@ -1211,16 +1326,6 @@ export default function AIAssistantPage() {
           -webkit-text-fill-color: transparent;
           background-clip: text;
         }
-
-        .aqi-cursor {
-          display: inline-block;
-          color: ${VIOLET};
-          font-size: 0.7em;
-          line-height: 1;
-          vertical-align: middle;
-          animation: aqi-blink 0.65s step-end infinite;
-        }
-        @keyframes aqi-blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
 
         /* Ambient background wash — a single static gradient, no animation */
         .aqi-orb-1 {

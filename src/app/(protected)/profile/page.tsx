@@ -12,7 +12,6 @@ import {
   Loader2,
   User,
   AtSign,
-  FileText,
   MapPin,
   Lock,
   Trash2,
@@ -144,7 +143,7 @@ function TextInput({
 }
 
 export default function ProfilePage() {
-  const { user, isLoading: authLoading, refreshUser } = useAuth();
+  const { user, isLoading: authLoading, refreshUser, logout } = useAuth();
   const router = useRouter();
 
   /* ── profile fields ── */
@@ -169,6 +168,39 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  /* ── account deletion ── */
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirm !== "DELETE") return;
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      const res = await fetch("/api/account/delete", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirm: "DELETE" }),
+      });
+      if (!res.ok) {
+        const { error } = await res.json().catch(() => ({ error: null }));
+        setDeleteError(error ?? "Could not delete your account. Please try again.");
+        setDeleting(false);
+        return;
+      }
+      // The account is gone, so the cached session now points at nothing. Clear
+      // it before navigating, or the app briefly renders as a signed-in user
+      // whose profile no longer exists.
+      await logout();
+      router.replace("/?deleted=1");
+    } catch {
+      setDeleteError("Could not reach the server. Please try again.");
+      setDeleting(false);
+    }
+  };
 
   /* ── seed form from current user ── */
   useEffect(() => {
@@ -545,17 +577,64 @@ export default function ProfilePage() {
             </h2>
           </div>
           <div className="px-5 py-5">
-            <p className="text-xs text-[#F7E7CE]/55 mb-4">
-              Permanently delete your account and all associated data. This
-              action cannot be undone.
-            </p>
-            <button
-              type="button"
-              className="flex items-center gap-2 rounded-md border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-400 hover:bg-red-500/20 transition-colors"
-            >
-              <Trash2 className="h-4 w-4" />
-              Delete Account
-            </button>
+            {!deleteOpen ? (
+              <>
+                <p className="text-xs text-[#F7E7CE]/55 mb-4">
+                  Permanently delete your account and everything on it. This
+                  cannot be undone.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => { setDeleteOpen(true); setDeleteError(null); }}
+                  className="inline-flex items-center gap-2 rounded-md border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-400 hover:bg-red-500/20 transition-colors"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete Account
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="text-xs text-[#F7E7CE]/55 mb-2">
+                  This deletes your profile, recipes, posts, comments and uploaded
+                  images for good. Donation records are kept without your name
+                  attached, because UK tax law requires us to hold them for six
+                  years.
+                </p>
+                <p className="text-xs text-[#F7E7CE]/70 mb-3">
+                  Type <span className="font-bold text-red-400">DELETE</span> to confirm.
+                </p>
+                <input
+                  value={deleteConfirm}
+                  onChange={(e) => setDeleteConfirm(e.target.value)}
+                  disabled={deleting}
+                  autoComplete="off"
+                  aria-label="Type DELETE to confirm"
+                  className="w-full max-w-56 rounded-md border border-red-900/50 bg-[#0A1C19] px-3 py-2 text-sm text-[#F7E7CE] outline-none focus:border-red-500/60 mb-3 disabled:opacity-50"
+                />
+                {deleteError && (
+                  <p className="text-xs text-red-400 mb-3">{deleteError}</p>
+                )}
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleDeleteAccount}
+                    disabled={deleting || deleteConfirm !== "DELETE"}
+                    className="inline-flex items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    {deleting ? "Deleting..." : "Delete my account"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setDeleteOpen(false); setDeleteConfirm(""); setDeleteError(null); }}
+                    disabled={deleting}
+                    className="rounded-md border border-[#F7E7CE]/15 px-4 py-2 text-sm font-semibold text-[#F7E7CE]/60 hover:text-[#F7E7CE] disabled:opacity-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
 

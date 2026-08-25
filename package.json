@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "email": "email dev --dir ./src/emails --port 3001",
+    "test:halal": "tsc scripts/aqi-regression/halal.cases.ts --module commonjs --target es2020 --lib es2020 --skipLibCheck --outDir node_modules/.cache/aqi-regression && node node_modules/.cache/aqi-regression/scripts/aqi-regression/halal.cases.js",
+    "test:aqi": "node scripts/aqi-regression/run-live.mjs",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui"
   },

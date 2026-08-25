@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
 import { logAdminAction } from "@/lib/adminAudit";
+import { collectPostAssets, queueAssets, flushAssets, type PendingAsset } from "@/lib/assetCleanup";
 
 // PATCH /api/admin/hub/posts/bulk
 //   { action: "publish"|"unpublish"|"delete"|"restore"|"purge", ids: string[] }
@@ -27,6 +28,15 @@ export async function PATCH(req: NextRequest) {
   }
 
   if (["delete", "restore", "purge"].includes(action)) {
+    // Only "purge" is permanent. "delete" is the Trash and is restorable, so
+    // its media must survive. Collected before the rows go, since
+    // media_public_ids lives on them.
+    let assets: PendingAsset[] = [];
+    if (action === "purge") {
+      assets = await collectPostAssets(serviceClient, ids);
+      await queueAssets(serviceClient, assets, "admin_post_bulk_purge");
+    }
+
     let q;
     if (action === "delete") {
       q = serviceClient.from("posts")
@@ -41,6 +51,14 @@ export async function PATCH(req: NextRequest) {
     if (error) {
       console.error(`[api/admin/hub/posts/bulk] ${action} error`, error);
       return NextResponse.json({ error: "Bulk action failed" }, { status: 500 });
+    }
+
+    if (assets.length) {
+      try {
+        await flushAssets(serviceClient, assets);
+      } catch (err) {
+        console.error("[api/admin/hub/posts/bulk] asset flush failed", err);
+      }
     }
     const updated = data?.length ?? 0;
     const verb = action === "delete" ? "moved to Trash" : action === "restore" ? "restored" : "permanently deleted";

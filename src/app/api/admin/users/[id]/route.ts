@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin, type AdminModule } from "@/lib/adminAuth";
 import { isSuperAdmin } from "@/lib/adminRoles";
 import { logAdminAction } from "@/lib/adminAudit";
+import { collectUserAssets, queueAssets, flushAssets } from "@/lib/assetCleanup";
 
 const MODULES: AdminModule[] = ["merchants", "users", "kitchen", "hub", "rewards", "analytics", "support"];
 
@@ -362,16 +363,48 @@ export async function DELETE(
     );
   }
 
+  // Collect and park the user's Cloudinary ids BEFORE the cascade. The rows
+  // holding those ids are about to be deleted, and once they are gone the files
+  // can never be located again. See lib/assetCleanup.ts.
+  let assets: Awaited<ReturnType<typeof collectUserAssets>> = [];
+  try {
+    assets = await collectUserAssets(serviceClient, id);
+    await queueAssets(serviceClient, assets, "admin_user_delete");
+  } catch (err) {
+    console.error("[api/admin/users/[id]] asset collection failed", err);
+    return NextResponse.json(
+      { error: "Could not prepare the account's files for deletion. Nothing was removed." },
+      { status: 500 },
+    );
+  }
+
+  // donations.user_id is SET NULL from migration 073 so the transaction is kept
+  // for the 6-year UK tax obligation. Clear the two directly identifying
+  // columns that would otherwise ride along with that retained record.
+  await serviceClient
+    .from("donations")
+    .update({ ip_address: null, user_agent: null })
+    .eq("user_id", id);
+
   // Removing the auth user cascades to profiles and all owned content (FKs).
   const { error } = await serviceClient.auth.admin.deleteUser(id);
   if (error) {
     console.error("[api/admin/users/[id]] delete error", error);
     // Surface the underlying reason. GoTrue collapses cascade failures into a
     // flat "Database error deleting user", which is impossible to act on.
+    // Migration 073 removed the twelve FKs that used to cause exactly that.
     return NextResponse.json(
       { error: `Failed to delete user: ${error.message}` },
       { status: 500 },
     );
+  }
+
+  // Best effort past this point: the account is already gone, so a Cloudinary
+  // failure leaves the ids queued for the sweeper rather than failing the call.
+  try {
+    await flushAssets(serviceClient, assets);
+  } catch (err) {
+    console.error("[api/admin/users/[id]] asset flush failed", err);
   }
 
   logAdminAction(gate, {

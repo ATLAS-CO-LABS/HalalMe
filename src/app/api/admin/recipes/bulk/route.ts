@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
 import { logAdminAction } from "@/lib/adminAudit";
+import { collectRecipeAssets, queueAssets, flushAssets, type PendingAsset } from "@/lib/assetCleanup";
 
 // PATCH /api/admin/recipes/bulk
 //   { action: "publish"|"unpublish"|"feature"|"unfeature"|"verify"
@@ -38,6 +39,15 @@ export async function PATCH(req: NextRequest) {
   }
 
   if (lifecycle.includes(action)) {
+    // Only "purge" is permanent. "delete" is the Trash and is restorable, so
+    // its images must survive. Collected before the rows go, since
+    // image_public_id lives on them.
+    let assets: PendingAsset[] = [];
+    if (action === "purge") {
+      assets = await collectRecipeAssets(serviceClient, ids);
+      await queueAssets(serviceClient, assets, "admin_recipe_bulk_purge");
+    }
+
     let q;
     if (action === "delete") {
       q = serviceClient.from("recipes")
@@ -52,6 +62,14 @@ export async function PATCH(req: NextRequest) {
     if (error) {
       console.error(`[api/admin/recipes/bulk] ${action} error`, error);
       return NextResponse.json({ error: "Bulk action failed" }, { status: 500 });
+    }
+
+    if (assets.length) {
+      try {
+        await flushAssets(serviceClient, assets);
+      } catch (err) {
+        console.error("[api/admin/recipes/bulk] asset flush failed", err);
+      }
     }
     const updated = data?.length ?? 0;
     const verb = action === "delete" ? "moved to Trash" : action === "restore" ? "restored" : "permanently deleted";

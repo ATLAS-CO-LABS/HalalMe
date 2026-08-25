@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
 import { logAdminAction } from "@/lib/adminAudit";
 import { pingIndexNow } from "@/lib/indexNow";
+import { collectPostAssets, queueAssets, flushAssets } from "@/lib/assetCleanup";
 
 // GET /api/admin/hub/posts/[id] — full post + author + a sample of recent
 // comments, via service role so admins can preview even hidden posts.
@@ -111,10 +112,22 @@ export async function DELETE(
   if (!gate.ok) return NextResponse.json({ error: gate.error }, { status: gate.status });
 
   if (hard) {
+    // Purge is permanent, so the media goes too. Queued before the delete since
+    // media_public_ids lives on the row. The soft-delete path below leaves the
+    // media in place because Trash is restorable.
+    const assets = await collectPostAssets(gate.serviceClient, [id]);
+    await queueAssets(gate.serviceClient, assets, "admin_post_purge");
+
     const { error } = await gate.serviceClient.from("posts").delete().eq("id", id);
     if (error) {
       console.error("[api/admin/hub/posts/[id]] purge error", error);
       return NextResponse.json({ error: "Failed to delete post" }, { status: 500 });
+    }
+
+    try {
+      await flushAssets(gate.serviceClient, assets);
+    } catch (err) {
+      console.error("[api/admin/hub/posts/[id]] asset flush failed", err);
     }
     logAdminAction(gate, {
       action: "post.purge", module: "hub", targetType: "post", targetId: id,

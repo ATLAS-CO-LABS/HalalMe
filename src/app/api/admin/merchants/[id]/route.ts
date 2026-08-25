@@ -7,6 +7,7 @@ import {
   sendMerchantCommissionInviteEmail,
 } from "@/services/emailService";
 import { deleteHyperzodMerchant } from "@/services/hyperzodService";
+import { collectMerchantAssets, queueAssets, flushAssets } from "@/lib/assetCleanup";
 import * as Sentry from "@sentry/nextjs";
 
 async function getAdminServiceClient(level: AccessLevel) {
@@ -230,6 +231,28 @@ export async function DELETE(
     }
   }
 
+  // Compliance documents are private "authenticated" Cloudinary assets holding
+  // IDs, registration papers and halal certification. Deleting the merchant row
+  // cascades merchant_documents away, taking the public_ids with it and
+  // orphaning those files in storage forever — so collect and park them first.
+  // This is a retention problem as much as a tidiness one: they are exactly the
+  // documents that should not outlive the merchant record.
+  let docAssets: Awaited<ReturnType<typeof collectMerchantAssets>> = [];
+  try {
+    docAssets = await collectMerchantAssets(serviceClient, id);
+    await queueAssets(serviceClient, docAssets, "merchant_delete");
+  } catch (err) {
+    console.error("[api/admin/merchants/[id]] doc collection failed", err);
+    Sentry.captureException(err);
+    return NextResponse.json(
+      {
+        error: "doc_collection_failed",
+        message: "Could not prepare the merchant's documents for deletion. Nothing was removed from HalalMe.",
+      },
+      { status: 500 }
+    );
+  }
+
   // Then remove from HalalMe
   const { error: deleteError } = await serviceClient
     .from("merchants")
@@ -245,6 +268,15 @@ export async function DELETE(
       },
       { status: 500 }
     );
+  }
+
+  // Merchant is gone, so Cloudinary failures stay queued for the sweeper
+  // rather than failing a delete that already succeeded.
+  try {
+    await flushAssets(serviceClient, docAssets);
+  } catch (err) {
+    console.error("[api/admin/merchants/[id]] doc flush failed", err);
+    Sentry.captureException(err);
   }
 
   if (gate) {

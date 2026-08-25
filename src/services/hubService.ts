@@ -234,7 +234,17 @@ export const hubService = {
   },
 
   /**
-   * Uploads a media file directly to Cloudinary (unsigned preset).
+   * Uploads post media to Cloudinary using a server-issued signature.
+   *
+   * The bytes still go browser → Cloudinary directly, because Vercel caps a
+   * function body at 4.5 MB and video here can reach 50 MB. What changed is that
+   * the upload is now authorised: /api/upload/sign checks the session and builds
+   * the destination folder from the session user id, so an upload cannot be made
+   * anonymously or aimed at another user's folder.
+   *
+   * The `userId` argument is kept for call-site readability only — the folder
+   * that actually takes effect is the signed one returned by the server.
+   *
    * Returns { url, public_id } — store both on the post for later deletion
    * and transformation support.
    */
@@ -244,6 +254,8 @@ export const hubService = {
     file: File,
     onProgress?: (percent: number) => void
   ): Promise<{ url: string; public_id: string }> {
+    void userId;
+
     // video/quicktime (.mov) is how iPhones record video and Live Photos, and
     // image/heic/heif is the default iPhone photo format — Cloudinary transcodes
     // all of these on delivery, so they're safe to accept.
@@ -253,19 +265,37 @@ export const hubService = {
     ];
     const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 
+    // Client-side gate: fast feedback for honest callers, not a security
+    // control. Real enforcement is the signed folder plus the account-level
+    // limits on the Cloudinary side.
     if (file.size > MAX_FILE_SIZE) throw new Error("File size exceeds the 50 MB limit.");
     if (!ALLOWED_MIME.includes(file.type)) {
       throw new Error(`File type "${file.type}" is not allowed. Use JPEG, PNG, WebP, GIF, MP4, or MOV.`);
     }
 
-    const cloudName    = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+    const signRes = await fetch("/api/upload/sign", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ post_id: postId }),
+    });
+    if (!signRes.ok) {
+      const { error } = await signRes.json().catch(() => ({ error: null }));
+      throw new Error(error ?? "Could not authorise the upload. Please try again.");
+    }
+    const { signature, timestamp, folder, apiKey, cloudName } = await signRes.json() as {
+      signature: string; timestamp: number; folder: string; apiKey: string; cloudName: string;
+    };
+
     const resourceType = file.type.startsWith("video/") ? "video" : "image";
 
+    // Every signed param must be sent back exactly as signed, or Cloudinary
+    // rejects the upload.
     const form = new FormData();
     form.append("file", file);
-    form.append("upload_preset", uploadPreset!);
-    form.append("folder", `halalme/posts/${userId}/${postId}`);
+    form.append("api_key", apiKey);
+    form.append("timestamp", String(timestamp));
+    form.append("signature", signature);
+    form.append("folder", folder);
 
     const data = await uploadWithProgress<{ secure_url?: string; public_id?: string; error?: { message?: string } }>(
       `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`,

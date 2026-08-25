@@ -1,10 +1,19 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { buildHalalRetryPrompt, findHalalViolations, type HalalViolation } from "./halal.ts";
 
-const RATE_LIMIT_REQUESTS_PER_HOUR_DEFAULT = 10;
 const OPENAI_TIMEOUT_MS = 25000;
 const FUNCTION_TIMEOUT_MS = 30000;
 const MAX_HISTORY_ITEMS = 10;
+
+// gpt-4o-mini is a generation behind and needed a lot of the prompt scaffolding
+// below to behave. Same budget tier, current generation.
+const MODEL = "gpt-5.6-luna";
+
+// USD per 1M tokens, for the cost figures written to ai_usage_log. Update these
+// together with MODEL or the spend ceiling silently measures the wrong thing.
+const COST_PER_1M_INPUT = 0.20;
+const COST_PER_1M_OUTPUT = 1.20;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,145 +26,77 @@ const json = (body: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
+// Rewritten for gpt-5.6-luna. The previous version was ~2050 tokens of
+// scaffolding that gpt-4o-mini needed — the same instruction repeated three
+// ways, a 45-line worked example of a shopping list, and a hard contradiction
+// (chat replies "2-5 sentences, never a wall of text" versus shopping lists
+// "minimum 300 words"). The contradiction is resolved by making length depend
+// on what was asked rather than stating one global rule and then overriding it.
+//
+// The halal section is written to line up with the deny-list in halal.ts: it
+// names the same substitutions the validator will accept, and tells the model
+// to write "halal beef bacon" rather than "bacon", so first-attempt compliance
+// is high and the retry rarely fires. Prompt and validator are one mechanism.
 const SYSTEM_PROMPT = `You are KitchenAI - a halal cooking assistant for HalalMe. Be warm and conversational, like a knowledgeable chef friend.
 
-HALAL RULE (non-negotiable): Every recipe must be 100% halal. Never include pork, alcohol (wine, beer, spirits, mirin, cooking wine, vanilla extract with alcohol), lard, non-halal gelatin, or blood. Substitute freely (halal beef bacon, grape juice for wine, halal-certified stocks).
+HALAL RULE (non-negotiable). Every recipe must be 100% halal.
+Never use: pork in any form (bacon, ham, gammon, pancetta, prosciutto, chorizo, salami, pepperoni, lard); alcohol in any form (wine, beer, cider, spirits, liqueurs, mirin, sake, shaoxing wine, alcohol-based vanilla extract); blood or blood sausage; gelatine or rennet of unstated origin; suet or tallow of unstated origin.
+Substitute silently, never mention the substitution: halal beef or turkey bacon, grape or pomegranate juice for wine, apple juice with a splash of vinegar for cider, alcohol-free vanilla, halal beef or fish gelatine, microbial rennet, halal-certified stock.
+Vinegars are fine and always allowed: red wine vinegar, cider vinegar, balsamic, malt vinegar.
+When a word could go either way, write the halal form in full: "halal beef bacon", not "bacon"; "beef suet", not "suet".
+
+VISION RULES (when analyzing food photos):
+When the user shares a photo, identify what's visible and suggest dishes using those ingredients. If you see meat you cannot identify (it's too blurry, or the cut is unclear), ask which meat it is — never assume a halal slaughter. Always ask, never declare: "That looks like beef — is it halal-certified?" not "Here's a beef recipe."
+If the photo is blurry or doesn't clearly show food, say so and ask the user to try again or describe it in text.
+Never identify or serve recipes with pork, alcohol, or other haram ingredients based on a photo. If you can see haram content, refuse: "I can see pork in that photo — I can't build recipes using it."
 
 RESPONSE FORMAT - always return valid JSON:
 {"type":"chat"|"recipe","message":string,"recipe":null|{...}}
 
-WHEN TO USE "chat" (recipe=null):
-- Greetings, small talk, off-topic
-- Vague requests needing clarification - ask ONE focused question, don't guess
-- User lists ingredients without asking for a recipe - suggest 2-3 numbered options and ask which to make
-- Cooking technique or substitution questions
-- Shopping lists / grocery lists / ingredient breakdowns (see SHOPPING LIST MODE below — these get LONG message fields, not short ones)
+USE "recipe" WHEN the user names a dish, says recipe/make/cook/prepare, says "I want / feel like / craving X", picks an option you listed ("the second one", "option 2"), says yes/sure/ok/go ahead after you offered options, says "surprise me" / "your choice" / "leave it to you", or asks to change a dish (spicier, healthier, simpler, vegan, without dairy, for 6 people). A change is always a NEW recipe with the change applied.
 
-WHEN TO USE "recipe" - ALL must be true:
-A) A clear recipe signal is present: user says "recipe", "make", "cook", "prepare"; names a specific dish; says "I want/feel like/crave [dish]"; picks a numbered option ("the first one", "option 2"); or says "yes"/"go ahead"/"sure"/"ok" AFTER options were listed. "leave it to you"/"surprise me"/"your choice" always counts as a recipe request. Modification requests like "make it spicier/healthier/easier/simpler" or "adjust for X people" also trigger recipe mode.
-B) The user is NOT asking to regenerate the exact same dish already made (check [RECIPE GENERATED] markers). A variation, modification, or different dish is always a fresh recipe.
-When genuinely unsure: default to recipe.
+USE "chat" (recipe=null) for greetings and small talk; technique and substitution questions; vague requests, where you ask ONE focused question rather than guessing; a bare list of ingredients, where you offer 2-3 numbered options and ask which to make; shopping and grocery lists; and a short thanks after a recipe ("perfect", "great") which is satisfaction, not a new request.
 
-CONTEXT RULES:
-- [RECIPE GENERATED] markers show what has already been made this session. Never regenerate the exact same dish — but variations and new dishes are always fair game.
-- Modification requests ("spicier", "healthier", "easier", "for X people", "vegan version", "without dairy") -> generate a NEW recipe with those changes applied.
-- Short positive after a recipe ("perfect", "thanks", "great") = satisfaction -> chat mode. Don't auto-generate unless asked.
-- "your choice"/"surprise me" -> always generate a recipe (pick something different from what's already been made).
-- Numbered selection: if you listed "1. Biryani 2. Fried Rice" and user says "the second one", generate Fried Rice.
+[RECIPE GENERATED] markers in the history show what has already been made. Never repeat an identical dish; variations and new dishes are always fine. If you listed "1. Biryani 2. Fried Rice" and the user says "the second one", make Fried Rice. Genuinely unsure: make the recipe.
 
-ABSOLUTE NO-EMPTY-PROMISE RULE (highest priority — overrides everything else):
+THE "message" FIELD - deliver, never announce.
+The user sees only this field, and there is no follow-up message. Anything you promise must be inside the same message.
+Never end on a colon, an ellipsis, or an offer of content you have not written. "Here's your shopping list!" without the list is a failure, as is "Let me adjust that for you." without the adjustment. If you are about to introduce content, write the content instead.
+If the user confirms an offer ("yes", "go ahead"), do the thing in that same reply. If the user asks "is this enough" or "anything missing", answer yes or no and then list what is missing.
 
-Every message MUST be self-contained. If you promise content (a list, recipes, items, an adjustment), that content MUST appear in the same message. There is NO "next message" — the user cannot see a follow-up; they can only see the message you send right now.
+LENGTH depends on what was asked - there is no single limit:
+- Alongside a recipe: exactly one short sentence. Never put ingredients or steps here, they are in the recipe object.
+- Ordinary chat: 2-5 sentences.
+- A list the user asked for (shopping list, recipe ideas, what is missing): as long as it needs to be. Completeness beats brevity here.
+Never abbreviate a list with "etc", "and more", "...", "as needed" or "to taste".
 
-FORBIDDEN message endings (these are FAILURES):
-  - Ending with a colon ":" and nothing after — the content the colon introduces is missing.
-  - Ending with "..." or "…" suggesting more is coming.
-  - Any sentence that announces, offers, or promises content without delivering it in the same message.
+MARKDOWN: the only formatting that renders is **bold**, blank-line paragraph breaks, "- " bullets and "1. " numbering. Never use #/## headings, *italics*, backticks, links or tables - they show up as raw characters. A heading is written as a bold line: **Produce**, never ## Produce.
 
-FORBIDDEN patterns (all are FAILURES, regardless of exact wording):
-  - "Here's your shopping list!" (without the list)
-  - "Here are some recipes you can make:" (without the recipes)
-  - "Let me adjust that for you." (without the adjustment)
-  - "I'll provide the updated list." (without the list)
-  - "Here are some additional items you might want to consider:" (without the items)
-  - "The following items would help:" (without the items)
-  - Any variant where the message ANNOUNCES content but doesn't INCLUDE it.
+FORMATTING a chat reply that covers more than one distinct point (e.g. a question that touches food choices, calorie balance, AND exercise, AND when to be careful): break it into short paragraphs separated by a blank line, each opening with a bolded 2-4 word label, like:
+**Protein sources:** rotate in halal fish, eggs, beans, lentils, lean beef, and yogurt alongside the chicken.
 
-POSITIVE RULE — when the user asks a question or requests an action, the response must CONTAIN the answer or perform the action. Do not announce. Do not tee up. Just deliver.
+**Weight loss:** a sustainable calorie deficit matters more than eating once a day.
+A genuinely single-topic reply (a greeting, a yes/no, one technique question, a short thanks) stays as plain prose with no label - do not invent parts that aren't there.
 
-Specific triggers — execute IMMEDIATELY in the same response:
-  - User confirms an offer ("yes", "sure", "please", "go ahead", "ok") after you asked "would you like me to…?" → DO the thing.
-  - User modifies a previous list/recipe ("without meat", "make it vegan", "less spicy") → output the REVISED full version, not an intro about revising.
-  - User asks "is this enough" / "do I need more" / "anything missing" → give a direct yes/no assessment, then list any missing items in the SAME message.
-  - User asks "what recipes can I make" / "give me ideas" / "what should I cook" → numbered list of 4-6 dishes with one-line descriptions, ending with "Which one should I make for you?".
+"What can I make" / "give me ideas" -> 4-6 numbered dishes, one line each, ending with "Which one should I make for you?"
 
-If you find yourself about to end a message with a colon, ellipsis, or unfulfilled promise — STOP and write the actual content instead.
-
-BEHAVIOR:
-- Chat responses: usually 2-5 sentences, never a wall of text
-- Suggesting options: always number them and end with "Which one should I make for you?"
-- Personalize every reply - reference what the user said
-- Use full conversation history: remember ingredients, track numbered suggestions, never repeat a question
-
-SHOPPING LIST MODE — HARD OVERRIDE OF THE 2-5 SENTENCE RULE:
-Trigger words: "shopping list", "grocery list", "ingredient breakdown", "prep checklist", "what to buy", "what do I need", or any similar phrasing.
-
-When triggered:
-1. If the user hasn't said what the list is FOR: ask ONE clarifying question ("Is this for a specific dish or the whole Eid spread?") and STOP. Do not generate the list yet.
-2. Once the user answers (e.g. "whole Eid", "biryani", "iftar for 10"): IMMEDIATELY return type "chat" with the FULL list inside the "message" field — minimum 30 items across 4+ sections.
-
-CRITICAL — DO NOT BE LAZY:
-- A response of "Here's your shopping list!" without the actual list is WRONG and unusable. The user cannot see anything except the "message" field. If the list isn't in "message", the list doesn't exist.
-- The message field for a shopping list MUST start with "**" (a markdown section header like "**Produce**"). Never start with "Here's…" or "Sure!…" — go straight to the list.
-- Minimum length: 300 words. A shopping list under 30 items is a failure.
-
-Exact format for the "message" field (literal newlines, markdown headers, hyphen bullets):
+SHOPPING AND GROCERY LISTS:
+If you do not know what the list is for, ask one question ("Is this for one dish or the whole Eid spread?") and stop.
+Once you know, put the entire list in "message", starting directly with a markdown section header - never with "Here's" or "Sure!". Group by store section, skip empty sections, give every item a quantity with a unit. For an occasion (Eid, iftar, dinner party) plan 3-5 dishes and expect 30+ items. Close with one short line outside the bullets. Format:
 **Produce**
 - 3 kg onions
-- 2 kg tomatoes
 - 1 bunch fresh coriander
-- 1 bunch mint
-- 6 lemons
-- 4 green chillies
-- 1 head garlic
-- 2 inches ginger
 
 **Pantry**
 - 3 kg basmati rice
-- 1 kg chickpea flour (besan)
 - 500 ml ghee
-- 1 L vegetable oil
-- 500 g sugar
-- 200 g pistachios
-- 200 g almonds
-- 100 g raisins
 
-**Dairy**
-- 2 L whole milk
-- 500 g plain yogurt
-- 250 g unsalted butter
-- 200 g paneer
+RECIPES must be complete and usable: the full ingredient list, every step, nothing summarised, nothing left out.
+Schema (only when type="recipe"):
+{"title":string,"description":string,"cuisine":string,"difficulty":"easy"|"medium"|"hard","prep_time_mins":number,"cook_time_mins":number,"servings":number,"ingredients":[{"name":string,"amount":string,"unit":string}],"instructions":[{"step":number,"text":string}],"tags":string[],"nutrition":{"calories":number,"protein":number,"carbs":number,"fat":number}|null}
+nutrition is per serving and must be your genuine estimate. If you cannot estimate it, use null for the whole object. Never send zeros.
 
-**Meat & Seafood**
-- 3 kg lamb shoulder (bone-in, for biryani & curry)
-- 2 kg lamb leg (for kebabs)
-- 1 whole chicken (1.5 kg)
-
-**Spices**
-- 50 g garam masala
-- 30 g cumin seeds
-- 30 g coriander seeds
-- 20 g cardamom pods
-- 10 g saffron
-- 10 g cinnamon sticks
-- 50 g chilli powder
-- 30 g turmeric
-
-**Bakery**
-- 2 packs naan or roti (12 pieces)
-
-(End the list with one short closing line outside the bullets, e.g. "That covers biryani, kebabs, sheer khurma, and tea for the day.")
-
-Rules:
-- Always include quantities with units (kg, g, L, ml, pieces, bunches, packs)
-- Group by store section, skip sections with nothing in them
-- For occasions (Eid, iftar, dinner party): plan for 3-5 typical dishes (biryani, curry, kebabs, dessert, drinks)
-- NEVER summarize. NEVER use "etc", "...", "and more", "as needed", "to taste"
-
-CRITICAL RULES:
-- NEVER summarize recipes.
-- NEVER use phrases like: "and more", "...", "remaining", "etc"
-- ALWAYS include FULL ingredients list.
-- ALWAYS include ALL steps.
-- Do NOT shorten responses under any condition.
-- The recipe JSON must always be COMPLETE and fully usable.
-
-MESSAGE RULE:
-- For recipe responses, "message" must be 1 short sentence only.
-- Do NOT include ingredients or steps in "message".
-
-RECIPE SCHEMA (only when type="recipe"):
-{"title":string,"description":string,"cuisine":string,"difficulty":"easy"|"medium"|"hard","prep_time_mins":number,"cook_time_mins":number,"servings":number,"ingredients":[{"name":string,"amount":string,"unit":string}],"instructions":[{"step":number,"text":string}],"tags":string[],"nutrition":{"calories":number,"protein":number,"carbs":number,"fat":number}}`;
+Personalise every reply: reference what the user actually said, remember ingredients they mentioned, and never ask the same question twice.`;
 
 interface ValidatedRecipe {
   title: string;
@@ -168,13 +109,56 @@ interface ValidatedRecipe {
   ingredients: { name: string; amount: string; unit: string }[];
   instructions: { step: number; text: string }[];
   tags: string[];
-  nutrition: { calories: number; protein: number; carbs: number; fat: number };
+  /**
+   * Null when the model gave no usable figures. It used to coerce every
+   * missing value to 0 and ship "0 kcal, 0g protein" as though it were a
+   * measurement — invented data presented with the same confidence as real
+   * data, on a page people may make dietary decisions from.
+   */
+  nutrition: NutritionFacts | null;
+}
+
+interface NutritionFacts {
+  calories: number | null;
+  protein: number | null;
+  carbs: number | null;
+  fat: number | null;
 }
 
 interface AIEnvelope {
   type: "chat" | "recipe";
   message: string;
   recipe: Record<string, unknown> | null;
+}
+
+/** Billed tokens for one OpenAI call, accumulated across retries. */
+interface TokenUsage {
+  prompt: number;
+  completion: number;
+}
+
+/**
+ * A nutrition figure, or null. Zero is treated as absent on purpose: no real
+ * dish has 0 calories, so a 0 here is the model declining to answer, and
+ * passing that through as a number is what produced the fake "0 kcal" panels.
+ */
+function nutritionValue(raw: unknown): number | null {
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+function parseNutrition(raw: unknown): NutritionFacts | null {
+  if (!raw || typeof raw !== "object") return null;
+  const src = raw as Record<string, unknown>;
+  const facts: NutritionFacts = {
+    calories: nutritionValue(src.calories),
+    protein: nutritionValue(src.protein),
+    carbs: nutritionValue(src.carbs),
+    fat: nutritionValue(src.fat),
+  };
+  // Nothing usable in there at all — send null rather than an object of nulls,
+  // so the UI has one thing to check instead of four.
+  return Object.values(facts).some((v) => v !== null) ? facts : null;
 }
 
 function validateRecipe(raw: Record<string, unknown>): ValidatedRecipe | string {
@@ -184,7 +168,6 @@ function validateRecipe(raw: Record<string, unknown>): ValidatedRecipe | string 
 
   const difficulty = raw.difficulty as string;
   const validDiffs = ["easy", "medium", "hard"];
-  const nutrition = raw.nutrition as Record<string, unknown> | null;
 
   const recipe: ValidatedRecipe = {
     title: String(raw.title).trim(),
@@ -204,12 +187,7 @@ function validateRecipe(raw: Record<string, unknown>): ValidatedRecipe | string 
       text: String(s.text ?? ""),
     })),
     tags: Array.isArray(raw.tags) ? (raw.tags as unknown[]).map(String) : [],
-    nutrition: {
-      calories: Number(nutrition?.calories) || 0,
-      protein: Number(nutrition?.protein) || 0,
-      carbs: Number(nutrition?.carbs) || 0,
-      fat: Number(nutrition?.fat) || 0,
-    },
+    nutrition: parseNutrition(raw.nutrition),
   };
 
   if (recipe.ingredients.length < 2) return "recipe has fewer than 2 ingredients";
@@ -254,7 +232,15 @@ async function fetchOpenAIEnvelope(
   userMessage: string,
   signal: AbortSignal,
   retryPrompt?: string,
-): Promise<AIEnvelope> {
+  imageBase64?: string,
+): Promise<{ envelope: AIEnvelope; tokens: TokenUsage; imageTokens?: number }> {
+  const userContent = imageBase64
+    ? [
+        { type: "text" as const, text: userMessage },
+        { type: "image_url" as const, image_url: { url: imageBase64, detail: "high" as const } },
+      ]
+    : userMessage;
+
   const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -262,16 +248,18 @@ async function fetchOpenAIEnvelope(
       Authorization: `Bearer ${openaiApiKey}`,
     },
     body: JSON.stringify({
-      model: "gpt-4o-mini",
+      model: MODEL,
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
-        ...history,
-        { role: "user", content: userMessage },
+        ...history.map((m) => ({
+          role: m.role,
+          content: m.role === "assistant" ? m.content : [{ type: "text", text: m.content }],
+        })),
+        { role: "user", content: userContent },
         ...(retryPrompt ? [{ role: "user", content: retryPrompt }] : []),
       ],
       response_format: { type: "json_object" },
-      temperature: 0.75,
-      max_tokens: 2000,
+      max_completion_tokens: 2000,
       stream: false,
     }),
     signal,
@@ -289,17 +277,62 @@ async function fetchOpenAIEnvelope(
     );
   }
 
+  let payload: Record<string, unknown>;
   try {
-    const payload = await openaiRes.json();
-    const content = payload.choices?.[0]?.message?.content;
-    if (typeof content !== "string" || !content.trim()) {
-      throw new Error("Failed to parse AI response");
-    }
-
-    return parseEnvelope(JSON.parse(content));
+    payload = await openaiRes.json();
   } catch {
     throw new Error("Failed to parse AI response");
   }
+
+  // Usage is captured even when the envelope turns out to be unparseable: the
+  // tokens were billed either way, and a cost record with holes in it is worse
+  // than useless for the spend ceiling that reads from it.
+  const usage = (payload.usage ?? {}) as Record<string, number>;
+  const tokens: TokenUsage = {
+    prompt: Number(usage.prompt_tokens ?? 0),
+    completion: Number(usage.completion_tokens ?? 0),
+  };
+  const imageTokens = Number(usage.prompt_tokens_details?.image_tokens ?? 0) || undefined;
+
+  try {
+    const choices = payload.choices as Array<{ message?: { content?: unknown } }> | undefined;
+    const content = choices?.[0]?.message?.content;
+    if (typeof content !== "string" || !content.trim()) {
+      throw new Error("Failed to parse AI response");
+    }
+    return { envelope: parseEnvelope(JSON.parse(content)), tokens, imageTokens };
+  } catch {
+    const err = new Error("Failed to parse AI response") as Error & { tokens?: TokenUsage };
+    err.tokens = tokens;
+    throw err;
+  }
+}
+
+/**
+ * Records what a request actually cost.
+ *
+ * Two things depend on this existing: the global daily spend ceiling in
+ * consume_ai_request reads sum(cost_usd) for the day, and without per-request
+ * figures there is no way to answer which users cost most or whether a model
+ * change helped. Never throws — a logging failure must not fail a request the
+ * user has already been served.
+ */
+// deno-lint-ignore no-explicit-any
+async function logUsage(db: any, userId: string, tokens: TokenUsage, hadImage: boolean, imageTokens?: number) {
+  const cost =
+    (tokens.prompt / 1_000_000) * COST_PER_1M_INPUT +
+    (tokens.completion / 1_000_000) * COST_PER_1M_OUTPUT;
+
+  const { error } = await db.from("ai_usage_log").insert({
+    user_id: userId,
+    model: MODEL,
+    prompt_tokens: tokens.prompt,
+    completion_tokens: tokens.completion,
+    image_tokens: imageTokens ?? null,
+    had_image: hadImage,
+    cost_usd: Number(cost.toFixed(6)),
+  });
+  if (error) console.error("[usage-log] insert failed:", error.message);
 }
 
 async function generateEnvelopeWithRetry(
@@ -307,35 +340,90 @@ async function generateEnvelopeWithRetry(
   history: { role: "user" | "assistant"; content: string }[],
   userMessage: string,
   signal: AbortSignal,
-): Promise<{ envelope: AIEnvelope; recipe: ValidatedRecipe | null }> {
+  imageBase64?: string,
+): Promise<{ envelope: AIEnvelope; recipe: ValidatedRecipe | null; tokens: TokenUsage; imageTokens?: number }> {
   let lastRecipeError: string | null = null;
+  let nextRetryPrompt: string | null = null;
+  let lastViolations: HalalViolation[] = [];
+  const total: TokenUsage = { prompt: 0, completion: 0 };
+  let totalImageTokens = 0;
+
+  const add = (t?: TokenUsage, imgT?: number) => {
+    if (!t) return;
+    total.prompt += t.prompt;
+    total.completion += t.completion;
+    if (imgT) totalImageTokens += imgT;
+  };
 
   for (let attempt = 0; attempt < 2; attempt++) {
-    const retryPrompt = attempt === 0
-      ? undefined
-      : "Generate full complete recipe with all steps and ingredients. Do not summarize anything.";
+    const retryPrompt = attempt === 0 ? undefined : (nextRetryPrompt ?? undefined);
 
-    const envelope = await fetchOpenAIEnvelope(openaiApiKey, history, userMessage, signal, retryPrompt);
+    let envelope: AIEnvelope;
+    try {
+      const res = await fetchOpenAIEnvelope(openaiApiKey, history, userMessage, signal, retryPrompt, imageBase64);
+      add(res.tokens, res.imageTokens);
+      envelope = res.envelope;
+    } catch (err) {
+      add((err as { tokens?: TokenUsage }).tokens);
+      (err as { tokens?: TokenUsage }).tokens = total;
+      throw err;
+    }
 
     if (envelope.type !== "recipe") {
-      return { envelope, recipe: null };
+      return { envelope, recipe: null, tokens: total, imageTokens: totalImageTokens || undefined };
     }
+
+    const incomplete = "Generate full complete recipe with all steps and ingredients. Do not summarize anything.";
 
     if (!envelope.recipe) {
       lastRecipeError = "recipe envelope missing recipe object";
+      nextRetryPrompt = incomplete;
       continue;
     }
 
     const validatedOrError = validateRecipe(envelope.recipe);
     if (typeof validatedOrError === "string") {
       lastRecipeError = validatedOrError;
+      nextRetryPrompt = incomplete;
       continue;
     }
 
-    return { envelope, recipe: validatedOrError };
+    // The halal promise, enforced rather than requested. This runs before the
+    // recipe is returned or saved, so a violating recipe can never reach a user
+    // or the recipes table — the prompt asks, this decides.
+    const violations = findHalalViolations(validatedOrError);
+    if (violations.length > 0) {
+      lastViolations = violations;
+      lastRecipeError = "halal violation";
+      nextRetryPrompt = buildHalalRetryPrompt(violations);
+      console.warn(
+        "[halal] attempt", attempt + 1, "rejected:",
+        violations.map((v) => `${v.rule}="${v.term}" (${v.where})`).join(", "),
+      );
+      continue;
+    }
+
+    return { envelope, recipe: validatedOrError, tokens: total, imageTokens: totalImageTokens || undefined };
   }
 
-  throw new Error(lastRecipeError ?? "AI returned an incomplete recipe. Please try again.");
+  // Both attempts failed. A halal failure is reported differently on purpose:
+  // "try rephrasing" is misleading advice when the model has twice insisted on
+  // an ingredient the platform will not serve, and quietly returning the
+  // recipe anyway is the one outcome that is not acceptable.
+  if (lastViolations.length > 0) {
+    console.error(
+      "[halal] both attempts rejected, refusing to serve:",
+      lastViolations.map((v) => v.term).join(", "),
+    );
+  }
+
+  const err = new Error(
+    lastViolations.length > 0
+      ? "halal violation"
+      : lastRecipeError ?? "AI returned an incomplete recipe. Please try again.",
+  ) as Error & { tokens?: TokenUsage };
+  err.tokens = total;
+  throw err;
 }
 
 async function handle(req: Request, signal: AbortSignal): Promise<Response> {
@@ -372,63 +460,21 @@ async function handle(req: Request, signal: AbortSignal): Promise<Response> {
   console.log("[auth] user ok:", user.id);
   if (signal.aborted) return json({ error: "Request cancelled" }, 499);
 
-  // Base limit comes from the user's tier (Bronze 10 / Silver 20 / Gold 30 /
-  // Platinum 50 — reward_tiers.ai_requests_per_hour). Redeeming "AI power-up"
-  // adds a temporary bonus on TOP of that (see redeem_reward / ai_limit_boosts,
-  // 051-053) — it's never a downgrade for higher tiers.
-  const { data: profileRow } = await supabaseAdmin
-    .from("profiles")
-    .select("reward_tier")
-    .eq("id", user.id)
-    .single();
-
-  const { data: tierRow } = await supabaseAdmin
-    .from("reward_tiers")
-    .select("ai_requests_per_hour")
-    .eq("name", profileRow?.reward_tier ?? "bronze")
-    .maybeSingle();
-
-  let rateLimitForUser = tierRow?.ai_requests_per_hour ?? RATE_LIMIT_REQUESTS_PER_HOUR_DEFAULT;
-
-  const { data: boostRow } = await supabaseAdmin
-    .from("ai_limit_boosts")
-    .select("boosted_limit")
-    .eq("user_id", user.id)
-    .gt("expires_at", new Date().toISOString())
-    .maybeSingle();
-  if (boostRow?.boosted_limit) rateLimitForUser += boostRow.boosted_limit;
-
-  const windowStart = new Date();
-  windowStart.setMinutes(0, 0, 0);
-
-  const { data: rateRow, error: rateReadError } = await supabaseAdmin
-    .from("ai_request_counts")
-    .select("request_count")
-    .eq("user_id", user.id)
-    .eq("window_start", windowStart.toISOString())
-    .single();
-
-  if (!rateReadError && rateRow && rateRow.request_count >= rateLimitForUser) {
-    return json({
-      error: "Rate limit exceeded",
-      message: `You can make up to ${rateLimitForUser} AI requests per hour.`,
-      retry_after: "1 hour",
-      requests_remaining: 0,
-      rate_limit: rateLimitForUser,
-    }, 429);
-  }
-  if (signal.aborted) return json({ error: "Request cancelled" }, 499);
+  // Quota is checked and reserved further down, after the body is parsed, since
+  // the image flag is part of the request and image requests have their own cap.
 
   let userMessage: string;
   let saveToRecipes: boolean;
   let sessionId: string | null;
+  let imageBase64: string | null;
   let history: { role: "user" | "assistant"; content: string }[];
 
   try {
     const body = await req.json();
     userMessage = String(body.message ?? "").trim();
-    saveToRecipes = body.save_to_recipes ?? true;
+    saveToRecipes = body.save_to_recipes === true;
     sessionId = typeof body.session_id === "string" && body.session_id ? body.session_id : null;
+    imageBase64 = typeof body.image === "string" && body.image ? body.image : null;
     const rawHistory = Array.isArray(body.history) ? body.history : [];
     history = rawHistory
       .filter((m: unknown) =>
@@ -454,12 +500,95 @@ async function handle(req: Request, signal: AbortSignal): Promise<Response> {
     }, 400);
   }
 
+  const hasImage = imageBase64 !== null;
+
+  // Reserve quota BEFORE calling OpenAI. Two problems this fixes at once: the
+  // old code read the counter at the start and wrote count+1 at the end, so
+  // concurrent requests all read the same value and the limit was bypassable;
+  // and it only incremented after a success, so failed calls were billed by
+  // OpenAI while costing the user nothing. consume_ai_request does the check
+  // and the increment in one advisory-locked call (migration 074).
+  const { data: quota, error: quotaError } = await supabaseAdmin
+    .rpc("consume_ai_request", { p_user_id: user.id, p_is_image: hasImage });
+
+  if (quotaError) {
+    console.error("[rate-limit] consume_ai_request failed:", quotaError.message);
+    return json({ error: "Could not verify your usage allowance. Please try again." }, 503);
+  }
+
+  if (!quota?.allowed) {
+    const reason = quota?.reason ?? "hourly";
+    // Deliberately distinct copy per reason: "try again in an hour" is wrong
+    // and frustrating when the real block is a monthly cap or a platform pause.
+    const message =
+      reason === "disabled"         ? "AQI is paused for maintenance right now. Please try again shortly."
+      : reason === "global_spend_cap" ? "AQI has hit today's usage ceiling. It'll be back tomorrow."
+      : reason === "monthly"        ? `You've used all ${quota.limit} of your AI requests this month.`
+      : reason === "daily"          ? `You've used all ${quota.limit} of your AI requests today. Your allowance resets tomorrow.`
+      : reason === "image_daily"    ? `You've used all ${quota.limit} of your photo requests today.`
+      : `You can make up to ${quota.limit} AI requests per hour.`;
+
+    return json({
+      error: "Rate limit exceeded",
+      message,
+      reason,
+      retry_after: reason === "hourly" ? "1 hour" : "later",
+      requests_remaining: 0,
+      rate_limit: quota?.limit ?? null,
+    }, 429);
+  }
+
+  if (signal.aborted) {
+    await supabaseAdmin.rpc("refund_ai_request", { p_user_id: user.id, p_is_image: hasImage });
+    return json({ error: "Request cancelled" }, 499);
+  }
+
+  // Moderation check on image BEFORE calling OpenAI. Fails fast without burning quota.
+  if (imageBase64) {
+    try {
+      const moderationReq = await fetch("https://api.openai.com/v1/moderations", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${openaiApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "omni-moderation-latest",
+          input: [
+            {
+              type: "image_url",
+              image_url: { url: imageBase64, detail: "low" },
+            },
+          ],
+        }),
+        signal: AbortSignal.timeout(10000),
+      });
+
+      if (!moderationReq.ok) throw new Error(`Moderation API error: ${moderationReq.status}`);
+
+      const modResult = await moderationReq.json() as { results: Array<{ flagged: boolean }> };
+      if (modResult.results?.[0]?.flagged) {
+        await supabaseAdmin.rpc("refund_ai_request", { p_user_id: user.id, p_is_image: hasImage });
+        return json({
+          error: "Image flagged by safety check. Please upload a different image.",
+          message: "That image contains content I can't analyze. Please try a different photo.",
+        }, 400);
+      }
+    } catch (modErr) {
+      console.error("Moderation check failed:", modErr instanceof Error ? modErr.message : String(modErr));
+      await supabaseAdmin.rpc("refund_ai_request", { p_user_id: user.id, p_is_image: hasImage });
+      return json({ error: "Image validation failed. Please try again." }, 503);
+    }
+  }
+
   const openaiController = new AbortController();
   const openaiTimeout = setTimeout(() => openaiController.abort(), OPENAI_TIMEOUT_MS);
   signal.addEventListener("abort", () => openaiController.abort(), { once: true });
 
   let envelope: AIEnvelope;
   let recipe: ValidatedRecipe | null;
+  let tokens: TokenUsage = { prompt: 0, completion: 0 };
+  let imageTokens: number | undefined;
 
   try {
     const result = await generateEnvelopeWithRetry(
@@ -467,14 +596,42 @@ async function handle(req: Request, signal: AbortSignal): Promise<Response> {
       history,
       userMessage,
       openaiController.signal,
+      imageBase64,
     );
     envelope = result.envelope;
     recipe = result.recipe;
+    tokens = result.tokens;
+    imageTokens = result.imageTokens;
   } catch (error) {
     clearTimeout(openaiTimeout);
     const msg = error instanceof Error ? error.message : String(error);
     const timedOut = msg.toLowerCase().includes("abort");
     console.error("OpenAI request failed:", msg);
+
+    // Anything OpenAI actually billed still gets recorded, even on failure, so
+    // the spend ceiling sees real spend rather than only successful spend.
+    const failedTokens = (error as { tokens?: TokenUsage }).tokens;
+    if (failedTokens && (failedTokens.prompt || failedTokens.completion)) {
+      await logUsage(supabaseAdmin, user.id, failedTokens, hasImage, imageTokens);
+    } else {
+      // Nothing was billed, so the reserved quota is handed back rather than
+      // charged for a request the user never got an answer to.
+      await supabaseAdmin.rpc("refund_ai_request", { p_user_id: user.id, p_is_image: hasImage });
+    }
+
+    // `reason` lets the client tell a halal refusal apart from a generic
+    // upstream failure, so it can show the sentence as written instead of
+    // wrapping it in "Sorry, I ran into an issue", and can leave off the retry
+    // button — retrying the same prompt costs another request for an answer the
+    // validator has already refused twice.
+    if (!timedOut && msg === "halal violation") {
+      return json({
+        error: "halal violation",
+        reason: "halal",
+        message: "I couldn't put that dish together in a halal way. Ask me for something else and I'll get straight to it.",
+      }, 503);
+    }
+
     return json({
       error: timedOut
         ? "AI request timed out. Please try again."
@@ -486,20 +643,10 @@ async function handle(req: Request, signal: AbortSignal): Promise<Response> {
     clearTimeout(openaiTimeout);
   }
 
-  try {
-    await supabaseAdmin.from("ai_request_counts").upsert(
-      {
-        user_id: user.id,
-        window_start: windowStart.toISOString(),
-        request_count: (rateRow?.request_count ?? 0) + 1,
-      },
-      { onConflict: "user_id,window_start" },
-    );
-  } catch (e) {
-    console.error("[rate-limit] upsert failed:", e);
-  }
+  await logUsage(supabaseAdmin, user.id, tokens, hasImage, imageTokens);
 
-  const requestsRemaining = rateLimitForUser - ((rateRow?.request_count ?? 0) + 1);
+  const requestsRemaining = Number(quota.requests_remaining ?? 0);
+  const rateLimitForUser = Number(quota.rate_limit ?? 0);
 
   if (envelope.type === "chat" || !recipe) {
     const newMessages = [

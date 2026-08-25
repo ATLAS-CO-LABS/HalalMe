@@ -1799,7 +1799,16 @@ export interface AIAssistantResponse {
     ingredients:    { name: string; amount: string; unit: string }[];
     instructions:   { step: number; text: string }[];
     tags:           string[];
-    nutrition:      { calories: number; protein: number; carbs: number; fat: number };
+    /**
+     * Null when the model had no real figures. Individual fields are nullable
+     * too: a partial estimate is still worth showing, a fabricated zero is not.
+     */
+    nutrition:      {
+      calories: number | null;
+      protein:  number | null;
+      carbs:    number | null;
+      fat:      number | null;
+    } | null;
   } | null;
   recipe_id?:          string | null;
   is_saved?:           boolean;

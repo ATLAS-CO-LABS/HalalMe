@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
 import { logAdminAction } from "@/lib/adminAudit";
 import { pingIndexNow } from "@/lib/indexNow";
+import { collectRecipeAssets, queueAssets, flushAssets } from "@/lib/assetCleanup";
 
 const BOOL_FLAGS = ["is_published", "is_halal_verified", "is_featured"] as const;
 
@@ -111,10 +112,23 @@ export async function DELETE(
   const { data: recipe } = await gate.serviceClient.from("recipes").select("title").eq("id", id).single();
 
   if (hard) {
+    // Purge is permanent, so the image goes too. Collected and queued before
+    // the row is removed, because image_public_id lives on that row and is
+    // unrecoverable once it is gone. The soft-delete path below deliberately
+    // leaves the image alone: that is the Trash and it can be restored.
+    const assets = await collectRecipeAssets(gate.serviceClient, [id]);
+    await queueAssets(gate.serviceClient, assets, "admin_recipe_purge");
+
     const { error } = await gate.serviceClient.from("recipes").delete().eq("id", id);
     if (error) {
       console.error("[api/admin/recipes/[id]] purge error", error);
       return NextResponse.json({ error: "Failed to delete recipe" }, { status: 500 });
+    }
+
+    try {
+      await flushAssets(gate.serviceClient, assets);
+    } catch (err) {
+      console.error("[api/admin/recipes/[id]] asset flush failed", err);
     }
     logAdminAction(gate, {
       action: "recipe.purge", module: "kitchen", targetType: "recipe", targetId: id,
