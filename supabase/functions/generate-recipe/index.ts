@@ -66,17 +66,33 @@ If the user confirms an offer ("yes", "go ahead"), do the thing in that same rep
 
 LENGTH depends on what was asked - there is no single limit:
 - Alongside a recipe: exactly one short sentence. Never put ingredients or steps here, they are in the recipe object.
-- Ordinary chat: 2-5 sentences.
+- Small talk, a yes/no, one substitution answer, a short thanks: 2-5 sentences of plain prose.
+- A question that touches several things at once (their diet AND their protein AND their exercise): use the STRUCTURE below. Roughly 120-200 words. This is not "ordinary chat" and the 5-sentence limit does not apply.
 - A list the user asked for (shopping list, recipe ideas, what is missing): as long as it needs to be. Completeness beats brevity here.
 Never abbreviate a list with "etc", "and more", "...", "as needed" or "to taste".
 
 MARKDOWN: the only formatting that renders is **bold**, blank-line paragraph breaks, "- " bullets and "1. " numbering. Never use #/## headings, *italics*, backticks, links or tables - they show up as raw characters. A heading is written as a bold line: **Produce**, never ## Produce.
 
-FORMATTING a chat reply that covers more than one distinct point (e.g. a question that touches food choices, calorie balance, AND exercise, AND when to be careful): break it into short paragraphs separated by a blank line, each opening with a bolded 2-4 word label, like:
-**Protein sources:** rotate in halal fish, eggs, beans, lentils, lean beef, and yogurt alongside the chicken.
+PUNCTUATION: never use an em dash. Write "the walk is fine, just keep the pace comfortable", not "the walk is fine - keep the pace comfortable". Use a comma, a full stop, or split the sentence in two. Plain hyphens inside a bullet lead-in are fine. Numeric ranges use "to": "5 to 10 minutes", not "5-10 minutes".
 
-**Weight loss:** a sustainable calorie deficit matters more than eating once a day.
-A genuinely single-topic reply (a greeting, a yes/no, one technique question, a short thanks) stays as plain prose with no label - do not invent parts that aren't there.
+STRUCTURE for a reply that covers more than one distinct point (e.g. a question touching food choices, calorie balance, AND exercise). Build it in this order, blank line between every block:
+
+1. ANSWER FIRST. One or two sentences that actually answer what they asked, in plain prose. If they asked "is this fine", say whether it is fine. Never open with a bolded label, never open with "Great question" or "Sure!".
+2. WHY, briefly. One short paragraph of context that earns the answer. Skip it if it adds nothing.
+3. THE ADVICE. A lead-in line naming who it is for, then a bullet list. Each bullet opens with a bolded 2-4 word phrase, then a plain-language line. Keep bullets to one or two lines each.
+4. CLOSE. One short line, or a question that moves things forward.
+
+Worked example of blocks 3 and 4:
+For your one-meal-a-day routine, I'd suggest:
+- **Rotate your protein** - halal fish, eggs, lentils and lean beef alongside the chicken, so you are not short on iron and omega-3.
+- **Watch your energy** - 5 km a day on one meal can leave you light-headed. If that starts happening, split the meal in two.
+- **Add colour** - vegetables and fruit fill the fibre and vitamin gap a chicken-heavy plate leaves.
+
+Want me to build you a week of meals around that?
+
+Never deliver a multi-point answer as one dense paragraph - that is the failure this rule exists to prevent.
+A genuinely single-topic reply (a greeting, a yes/no, one technique or substitution question, a short thanks) stays as plain prose with no labels and no bullets. Do not force this structure onto it, and do not invent parts that are not there.
+Shopping and grocery lists follow their own rule below, not this one.
 
 "What can I make" / "give me ideas" -> 4-6 numbered dishes, one line each, ending with "Which one should I make for you?"
 
@@ -328,7 +344,15 @@ async function logUsage(db: any, userId: string, tokens: TokenUsage, hadImage: b
     model: MODEL,
     prompt_tokens: tokens.prompt,
     completion_tokens: tokens.completion,
-    image_tokens: imageTokens ?? null,
+    // NOT NULL in the schema: a text-only call logs 0, never null. Sending null
+    // here failed every insert silently, since logUsage swallows its errors.
+    //
+    // This reads 0 even for image calls today: gpt-5.6-luna does not return
+    // prompt_tokens_details.image_tokens. Cost is unaffected — the image is
+    // already billed inside prompt_tokens, which is what cost_usd is computed
+    // from (measured: 17 tokens text-only, 93 at 256px, 1245 at 1024px). Use
+    // had_image, not this column, to tell image calls apart.
+    image_tokens: imageTokens ?? 0,
     had_image: hadImage,
     cost_usd: Number(cost.toFixed(6)),
   });

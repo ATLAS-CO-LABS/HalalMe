@@ -146,6 +146,44 @@ function renderableMarkdown(b) {
   return null;
 }
 
+/**
+ * Bolded lead-in phrases, counted in either shape the prompt allows: a bold
+ * label opening a paragraph (**Protein sources:** ...) or a bold phrase opening
+ * a bullet (- **Rotate your protein** - ...). Both scan the same way on screen,
+ * so asserting on the count rather than on one exact template keeps the check
+ * stable across the model's natural variation.
+ */
+function boldLeadIns(m = "") {
+  return (m.match(/^\s*(?:[-*]\s*)?\*\*[^*\n]{2,40}\*\*/gm) ?? []).length;
+}
+
+/**
+ * The reply must answer before it labels. Opening on a bold heading is the old
+ * dense-report shape; a real assistant leads with the answer and only then
+ * breaks the advice out. This is the one crisp difference between the two
+ * styles, so it is the thing worth asserting.
+ */
+function answersBeforeLabelling(b) {
+  const first = (b.message ?? "").trimStart();
+  if (/^\*\*/.test(first)) return `opened on a bold label instead of answering first: "${first.slice(0, 80)}"`;
+  if (/^(great question|sure!|absolutely!|of course!)/i.test(first)) return `opened with filler: "${first.slice(0, 60)}"`;
+  return null;
+}
+
+/**
+ * House style bans the em dash outright, in app copy and in AQI output alike.
+ * An en dash is only allowed between digits (a numeric range); used as sentence
+ * punctuation it is the same mistake wearing a narrower glyph.
+ */
+function noEmDash(b) {
+  const m = b.message ?? "";
+  const em = m.match(/[^\n]{0,30}—[^\n]{0,30}/);
+  if (em) return `used an em dash: "...${em[0].trim()}..."`;
+  const en = m.match(/(?<!\d\s?)–(?!\s?\d)/) && m.match(/[^\n]{0,30}(?<!\d\s?)–(?!\s?\d)[^\n]{0,30}/);
+  if (en) return `used an en dash as punctuation: "...${en[0].trim()}..."`;
+  return null;
+}
+
 /** The failure the old prompt spent 30 lines trying to prevent. */
 function noEmptyPromise(b) {
   const m = (b.message ?? "").trimEnd();
@@ -195,13 +233,13 @@ const RECIPE_MADE = "[RECIPE GENERATED]\nTitle: Chicken Biryani\nA full recipe h
 
 const cases = [
   { name: "greeting stays chat", message: "hey there",
-    check: all(isChat, noEmptyPromise, renderableMarkdown, (b) => sentences(b.message) > 6 ? "greeting ran long" : null) },
+    check: all(isChat, noEmptyPromise, renderableMarkdown, noEmDash, (b) => sentences(b.message) > 6 ? "greeting ran long" : null) },
 
   { name: "named dish makes a recipe", message: "chicken biryani recipe",
     check: all(isRecipe, terseMessage, halalClean, nutritionHonest) },
 
   { name: "bare ingredients offer options", message: "i have chicken, rice, onions and yogurt",
-    check: all(isChat, noEmptyPromise, renderableMarkdown, (b) => numbered(b.message) < 2 ? "no numbered options offered" : null) },
+    check: all(isChat, noEmptyPromise, renderableMarkdown, noEmDash, (b) => numbered(b.message) < 2 ? "no numbered options offered" : null) },
 
   { name: "picking an option makes that recipe", message: "the second one",
     history: [
@@ -226,10 +264,10 @@ const cases = [
       { role: "user", content: "chicken biryani recipe" },
       { role: "assistant", content: RECIPE_MADE },
     ],
-    check: all(isChat, noEmptyPromise, renderableMarkdown) },
+    check: all(isChat, noEmptyPromise, renderableMarkdown, noEmDash) },
 
   { name: "vague shopping list asks one question", message: "can you give me a shopping list",
-    check: all(isChat, noEmptyPromise, renderableMarkdown,
+    check: all(isChat, noEmptyPromise, renderableMarkdown, noEmDash,
       (b) => b.message.includes("?") ? null : "did not ask what the list is for",
       (b) => bullets(b.message) > 3 ? "produced a list before knowing what it was for" : null) },
 
@@ -238,27 +276,28 @@ const cases = [
       { role: "user", content: "can you give me a shopping list" },
       { role: "assistant", content: "Happy to. Is this for one specific dish or the whole Eid spread?" },
     ],
-    check: all(isChat, noEmptyPromise, renderableMarkdown,
+    check: all(isChat, noEmptyPromise, renderableMarkdown, noEmDash,
       (b) => bullets(b.message) >= 25 ? null : `only ${bullets(b.message)} items`,
       (b) => words(b.message) >= 200 ? null : `only ${words(b.message)} words`,
       (b) => /^\*\*/.test(b.message.trim()) ? null : `did not open with a section header: "${b.message.slice(0, 60)}"`) },
 
   { name: "ideas request lists dishes", message: "what can i make with chicken and rice?",
-    check: all(isChat, noEmptyPromise, renderableMarkdown,
+    check: all(isChat, noEmptyPromise, renderableMarkdown, noEmDash,
       (b) => numbered(b.message) >= 4 ? null : `only ${numbered(b.message)} numbered ideas`) },
 
   { name: "technique question stays chat", message: "what can i use instead of buttermilk?",
-    check: all(isChat, noEmptyPromise, renderableMarkdown,
+    check: all(isChat, noEmptyPromise, renderableMarkdown, noEmDash,
       (b) => sentences(b.message) <= 8 ? null : "technique answer ran long",
       // Single-topic answer — must NOT get the bold-label paragraph treatment
       // meant for multi-point replies.
       (b) => /^\*\*[^*]{2,40}:\*\*/m.test(b.message) ? `single-topic answer got a bold label anyway: "${b.message.slice(0, 80)}"` : null) },
 
   { name: "multi-topic health question gets structured", message: "so im eating one meal a day bc im losing weight so mostly im eating chicken alot, so is it fine or should i explore other options too and im doing 5km walk per day",
-    check: all(isChat, noEmptyPromise, renderableMarkdown,
-      (b) => /^\*\*[^*]{2,40}:\*\*/m.test(b.message) ? null : `no bold-label paragraph found: "${b.message.slice(0, 150)}"`,
+    check: all(isChat, noEmptyPromise, renderableMarkdown, noEmDash,
+      answersBeforeLabelling,
+      (b) => boldLeadIns(b.message) >= 2 ? null : `only ${boldLeadIns(b.message)} bold lead-ins — the advice is not scannable: "${b.message.slice(0, 150)}"`,
       (b) => (b.message.match(/\n\n/g) ?? []).length >= 2 ? null : "fewer than 2 paragraph breaks — read as one dense block",
-      (b) => /dizz|weak|faint|exhaust|doctor|healthcare|professional/i.test(b.message) ? null : "dropped the safety-warning point entirely") },
+      (b) => /dizz|weak|faint|light[- ]?head|energy|tired|exhaust|doctor|healthcare|professional/i.test(b.message) ? null : "dropped the safety-warning point entirely") },
 
   // --- the halal cases: dishes defined by a haram ingredient ---
   { name: "carbonara comes back halal", message: "carbonara recipe",
