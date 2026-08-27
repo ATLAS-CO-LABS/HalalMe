@@ -1,12 +1,13 @@
 "use client";
+import { adminRequest, errorMessage } from "../_fetch";
 
 import { useEffect, useRef, useState } from "react";
 import {
-  Search, RefreshCw, AlertCircle, Receipt, CheckCircle2, RotateCcw, Banknote, ShieldAlert, Coins,
+  Search, RefreshCw, Receipt, CheckCircle2, RotateCcw, Banknote, ShieldAlert, Coins,
 } from "lucide-react";
 import ThemedSelect from "@/components/admin/ThemedSelect";
 import {
-  fmtDateTime, fmtMoney, useToast, ToastView, StatCard, TableSkeleton, EmptyState, Pagination, FilterPills, Badge, DateRange,
+  fmtDateTime, fmtMoney, useToast, ToastView, StatCard, TableSkeleton, EmptyState, Pagination, FilterPills, Badge, DateRange, LoadError,
 } from "../_ui";
 
 type Joined = { id: string; full_name?: string; email?: string; name?: string } | { id: string; full_name?: string; email?: string; name?: string }[] | null;
@@ -66,13 +67,13 @@ export default function DonationsTab() {
       if (q) params.set("search", q);
       if (dateFrom) params.set("dateFrom", dateFrom);
       if (dateTo) params.set("dateTo", dateTo);
-      const res = await fetch(`/api/admin/donations?${params}`);
+      const res = await adminRequest(`/api/admin/donations?${params}`);
       if (!res.ok) throw new Error();
       const json = await res.json();
       setRows(json.donations); setStats(json.stats); setTotal(json.total);
       setPageSize(json.pageSize); setCharities(json.charities ?? []);
-    } catch {
-      setError("Could not load donations. Try refreshing.");
+    } catch (err) {
+      setError(errorMessage(err, "Could not load donations. Try refreshing."));
     } finally {
       setLoading(false);
     }
@@ -127,7 +128,7 @@ export default function DonationsTab() {
         </div>
 
         {error ? (
-          <div className="flex items-center gap-3 m-4 px-4 py-4 bg-red-50 border border-red-100 rounded-none text-red-700 text-sm font-medium"><AlertCircle size={16} /> {error}</div>
+          <LoadError message={error} onRetry={() => fetchRows(page, status, charity, search)} compact />
         ) : loading ? <TableSkeleton /> : rows.length === 0 ? (
           <EmptyState icon={Receipt} title="No donations found" hint="Donations made through the platform will appear here." />
         ) : (

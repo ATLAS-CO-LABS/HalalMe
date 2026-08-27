@@ -1,12 +1,13 @@
 "use client";
+import { adminRequest, errorMessage } from "../_fetch";
 
 import { useEffect, useRef, useState } from "react";
 import {
-  Search, RefreshCw, AlertCircle, ScrollText, ShieldAlert,
+  Search, RefreshCw, ScrollText, ShieldAlert,
 } from "lucide-react";
 import { display } from "../_fonts";
 import {
-  fmtDateTime, TableSkeleton, EmptyState, Pagination, FilterPills, Badge,
+  fmtDateTime, TableSkeleton, EmptyState, Pagination, FilterPills, Badge, LoadError,
 } from "../_ui";
 
 interface Entry {
@@ -59,13 +60,13 @@ export default function AuditPage() {
       const params = new URLSearchParams({ page: String(p), pageSize: String(pageSize) });
       if (mod !== "all") params.set("module", mod);
       if (q) params.set("search", q);
-      const res = await fetch(`/api/admin/audit?${params}`);
+      const res = await adminRequest(`/api/admin/audit?${params}`);
       if (res.status === 403) { setForbidden(true); return; }
       if (!res.ok) throw new Error();
       const json = await res.json();
       setRows(json.entries); setTotal(json.total); setPageSize(json.pageSize);
-    } catch {
-      setError("Could not load the audit log. Try refreshing.");
+    } catch (err) {
+      setError(errorMessage(err, "Could not load the audit log. Try refreshing."));
     } finally {
       setLoading(false);
     }
@@ -130,7 +131,7 @@ export default function AuditPage() {
           </div>
 
           {error ? (
-            <div className="flex items-center gap-3 m-4 px-4 py-4 bg-red-50 border border-red-100 rounded-none text-red-700 text-sm font-medium"><AlertCircle size={16} /> {error}</div>
+            <LoadError message={error} onRetry={() => fetchRows(page, moduleFilter, search)} compact />
           ) : loading ? <TableSkeleton /> : rows.length === 0 ? (
             <EmptyState icon={ScrollText} title="No activity yet" hint="Admin actions like deletes, status changes and approvals will be recorded here." />
           ) : (

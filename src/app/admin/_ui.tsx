@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { CheckCircle2, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { CheckCircle2, AlertCircle, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
 import { display } from "./_fonts";
 
 // Shared admin UI primitives — used across the Rewards, Kitchen and Hub modules
@@ -134,6 +134,40 @@ export function EmptyState({ icon: Icon, title, hint }: { icon: React.ElementTyp
       <div className="w-14 h-14 bg-gray-100 rounded-none flex items-center justify-center mb-4"><Icon size={22} className="text-gray-500" /></div>
       <p className="text-base font-semibold text-gray-800">{title}</p>
       <p className="text-sm text-gray-500 mt-1 max-w-xs">{hint}</p>
+    </div>
+  );
+}
+
+// ─── Load error ───────────────────────────────────────────────────────────────
+// Shown when a loader fails or times out. Every admin list/panel renders this
+// instead of sitting on a skeleton forever — see `_fetch.ts` for why that used
+// to happen. Always give the admin a way back: `onRetry` re-runs the loader.
+export function LoadError({ message, onRetry, compact = false }: {
+  message: string;
+  onRetry?: () => void;
+  /** Tighter padding, for errors inside a card or panel rather than a full page. */
+  compact?: boolean;
+}) {
+  return (
+    <div
+      role="alert"
+      className={`flex flex-col items-center justify-center text-center px-6 ${compact ? "py-8" : "py-20"}`}
+    >
+      <div className={`bg-red-50 border border-red-100 rounded-none flex items-center justify-center mb-3 ${compact ? "w-10 h-10" : "w-14 h-14"}`}>
+        <AlertCircle size={compact ? 18 : 22} className="text-red-500" />
+      </div>
+      <p className={`font-semibold text-gray-800 ${compact ? "text-sm" : "text-base"}`}>
+        Couldn&apos;t load this
+      </p>
+      <p className="text-sm text-gray-500 mt-1 max-w-xs">{message}</p>
+      {onRetry && (
+        <button
+          onClick={onRetry}
+          className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold uppercase tracking-wide text-[#F7E7CE] bg-[#102C26] rounded-none hover:bg-[#102C26]/90 transition-colors"
+        >
+          <RefreshCw size={13} /> Retry
+        </button>
+      )}
     </div>
   );
 }

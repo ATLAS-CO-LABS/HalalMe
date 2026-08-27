@@ -1,11 +1,12 @@
 "use client";
+import { adminRequest, errorMessage } from "../_fetch";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { display } from "../_fonts";
-import { useToast, ToastView } from "../_ui";
+import { useToast, ToastView, LoadError } from "../_ui";
 import {
-  ShieldCheck, Crown, AlertCircle, Loader2, RefreshCw, Save, UserMinus, Lock, Users,
+  ShieldCheck, Crown, Loader2, RefreshCw, Save, UserMinus, Lock, Users,
 } from "lucide-react";
 
 type Access = "none" | "view" | "manage";
@@ -52,13 +53,13 @@ export default function PermissionsPage() {
   async function load() {
     setLoading(true); setError(null);
     try {
-      const res = await fetch("/api/admin/permissions");
+      const res = await adminRequest("/api/admin/permissions");
       if (res.status === 403) { setForbidden(true); return; }
       if (!res.ok) throw new Error();
       const json = await res.json();
       setTeam(json.team); setModules(json.modules); setViewerId(json.viewerId);
-    } catch {
-      setError("Could not load the team. Try refreshing.");
+    } catch (err) {
+      setError(errorMessage(err, "Could not load the team. Try refreshing."));
     } finally {
       setLoading(false);
     }
@@ -117,7 +118,7 @@ export default function PermissionsPage() {
         </div>
 
         {error ? (
-          <div className="flex items-center gap-3 px-4 py-4 bg-red-50 border border-red-100 rounded-none text-red-700 text-sm font-medium"><AlertCircle size={16} /> {error}</div>
+          <LoadError message={error} onRetry={() => load()} compact />
         ) : loading ? (
           <div className="animate-pulse space-y-4">
             {Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-44 bg-white border border-[#102C26]/10 rounded-none" />)}
@@ -201,7 +202,7 @@ function MemberCard({
   async function save() {
     setSaving(true);
     try {
-      const res = await fetch(`/api/admin/users/${member.id}`, {
+      const res = await adminRequest(`/api/admin/users/${member.id}`, {
         method: "PATCH", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ permissions: draft }),
       });
@@ -218,7 +219,7 @@ function MemberCard({
   async function demote() {
     setDemoting(true);
     try {
-      const res = await fetch(`/api/admin/users/${member.id}`, {
+      const res = await adminRequest(`/api/admin/users/${member.id}`, {
         method: "PATCH", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ role: "user" }),
       });

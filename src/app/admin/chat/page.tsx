@@ -1,14 +1,15 @@
 "use client";
+import { adminRequest, errorMessage } from "../_fetch";
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
-  RefreshCw, AlertCircle, LifeBuoy, Inbox, Store, User as UserIcon,
+  RefreshCw, LifeBuoy, Inbox, Store, User as UserIcon,
   Clock, MessageCircle, UserCheck, Search,
 } from "lucide-react";
 import { display } from "../_fonts";
 import {
-  useToast, ToastView, StatCard, TableSkeleton, EmptyState, Pagination, FilterPills, Badge,
+  useToast, ToastView, StatCard, TableSkeleton, EmptyState, Pagination, FilterPills, Badge, LoadError,
 } from "../_ui";
 import { rememberList } from "@/lib/adminRecordNav";
 
@@ -96,13 +97,13 @@ export default function AdminChatPage() {
       if (sr !== "all") params.set("source", sr);
       if (asg !== "all") params.set("assigned", asg);
       if (q) params.set("search", q);
-      const res = await fetch(`/api/admin/support/conversations?${params}`);
+      const res = await adminRequest(`/api/admin/support/conversations?${params}`);
       if (!res.ok) throw new Error();
       const json = await res.json();
       setRows(json.conversations); setStats(json.stats); setTotal(json.total); setPageSize(json.pageSize);
       rememberList("support", (json.conversations as Conversation[]).map((c) => c.id));
-    } catch {
-      setError("Could not load conversations. Try refreshing.");
+    } catch (err) {
+      setError(errorMessage(err, "Could not load conversations. Try refreshing."));
     } finally {
       setLoading(false);
     }
@@ -177,7 +178,7 @@ export default function AdminChatPage() {
           </div>
 
           {error ? (
-            <div className="flex items-center gap-3 m-4 px-4 py-4 bg-red-50 border border-red-100 rounded-none text-red-700 text-sm font-medium"><AlertCircle size={16} /> {error}</div>
+            <LoadError message={error} onRetry={() => fetchRows(page, status, source, assigned, search)} compact />
           ) : loading ? <TableSkeleton /> : rows.length === 0 ? (
             <EmptyState icon={LifeBuoy} title="No conversations" hint="Support messages from users and merchants will appear here." />
           ) : (

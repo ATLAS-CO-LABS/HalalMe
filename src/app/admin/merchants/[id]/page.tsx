@@ -1,4 +1,5 @@
 "use client";
+import { adminRequest } from "../../_fetch";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -349,7 +350,7 @@ export default function MerchantDetailPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/merchants/${id}`);
+      const res = await adminRequest(`/api/admin/merchants/${id}`);
       if (res.status === 404) { setNotFound(true); return; }
       if (!res.ok) throw new Error();
       const { merchant: m } = await res.json() as { merchant: Merchant };
@@ -368,7 +369,7 @@ export default function MerchantDetailPage() {
 
   const loadDocuments = useCallback(async () => {
     try {
-      const res = await fetch(`/api/admin/merchants/${id}/documents`);
+      const res = await adminRequest(`/api/admin/merchants/${id}/documents`);
       if (!res.ok) return;
       const { documents: docs } = await res.json() as { documents: AdminDocument[] };
       setDocuments(docs);
@@ -385,7 +386,7 @@ export default function MerchantDetailPage() {
     if (!canManage) return;
     setReviewingId(docId);
     try {
-      const res = await fetch(`/api/admin/merchants/${id}/documents/${docId}`, {
+      const res = await adminRequest(`/api/admin/merchants/${id}/documents/${docId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action, reason }),
@@ -411,7 +412,7 @@ export default function MerchantDetailPage() {
     setSaving(true);
     setSaveResult("idle");
     try {
-      const res = await fetch(`/api/admin/merchants/${id}`, {
+      const res = await adminRequest(`/api/admin/merchants/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -446,7 +447,7 @@ export default function MerchantDetailPage() {
     setDeleting(true);
     setDeleteError(null);
     try {
-      const res = await fetch(`/api/admin/merchants/${id}`, { method: "DELETE" });
+      const res = await adminRequest(`/api/admin/merchants/${id}`, { method: "DELETE" });
       if (!res.ok) {
         const json = await res.json().catch(() => ({})) as { message?: string };
         setDeleteError(json.message ?? "Could not delete this merchant. Please try again.");
@@ -488,7 +489,7 @@ export default function MerchantDetailPage() {
     setSavingEdit(true);
     setEditError(null);
     try {
-      const res = await fetch(`/api/admin/merchants/${id}/info`, {
+      const res = await adminRequest(`/api/admin/merchants/${id}/info`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(editForm),
@@ -516,7 +517,7 @@ export default function MerchantDetailPage() {
     if (!canManage) return;
     setTransitioning(true);
     try {
-      const res = await fetch(`/api/admin/merchants/${id}`, {
+      const res = await adminRequest(`/api/admin/merchants/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
@@ -537,7 +538,7 @@ export default function MerchantDetailPage() {
     if (!canManage) return;
     setDeactivating(true);
     try {
-      const res = await fetch(`/api/admin/merchants/${id}/deactivate`, { method: "POST" });
+      const res = await adminRequest(`/api/admin/merchants/${id}/deactivate`, { method: "POST" });
       const json = await res.json() as { merchant?: Merchant; message?: string };
       if (!res.ok) {
         flash("err", json.message ?? "Couldn't deactivate. Please try again.");
@@ -558,7 +559,7 @@ export default function MerchantDetailPage() {
     const next = { ...checklist, [key]: !checklist[key] };
     setChecklist(next); // optimistic
     try {
-      const res = await fetch(`/api/admin/merchants/${id}`, {
+      const res = await adminRequest(`/api/admin/merchants/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ readiness_checklist: next }),
@@ -577,7 +578,7 @@ export default function MerchantDetailPage() {
     if (!note.trim()) return;
     setAddingNote(true);
     try {
-      const res = await fetch(`/api/admin/merchants/${id}`, {
+      const res = await adminRequest(`/api/admin/merchants/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ note: note.trim() }),
@@ -598,7 +599,7 @@ export default function MerchantDetailPage() {
     setPublishing(true);
     setPublishError(null);
     try {
-      const res = await fetch(`/api/admin/merchants/${id}/publish`, {
+      const res = await adminRequest(`/api/admin/merchants/${id}/publish`, {
         method: "POST",
       });
       const json = await res.json() as { merchant?: Merchant; error?: string; message?: string };

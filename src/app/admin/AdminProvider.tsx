@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { adminFetch, errorMessage, isAbortError } from "./_fetch";
 
 // Single source of truth for the current admin's identity, permissions, badge
 // counts and the staff/team roster. Previously each page re-fetched
@@ -20,10 +21,19 @@ interface AdminContextValue {
   counts: Record<string, number>;
   team: TeamMember[];
   isSuper: boolean;
+  /** True once identity has loaded successfully at least once. */
   loaded: boolean;
+  /** Set when the last identity load failed. Null while healthy. */
+  error: string | null;
   /** view-or-better by default; pass "manage" to require manage. */
   can: (module: AdminModule, level?: Access) => boolean;
   refresh: () => void;
+}
+
+interface MePayload {
+  role?: string;
+  permissions?: Permissions;
+  counts?: Record<string, number>;
 }
 
 const AdminContext = createContext<AdminContextValue | null>(null);
@@ -40,39 +50,63 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [team, setTeam] = useState<TeamMember[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const loadMe = useCallback(() => {
-    if (typeof document !== "undefined" && document.hidden) return;
-    fetch("/api/admin/me")
-      .then((r) => (r.ok ? r.json() : null))
+  /**
+   * `background: true` marks the 30s poll and the on-resume refresh — those skip
+   * while the tab is hidden, because polling a backgrounded tab is waste.
+   *
+   * The first load must NOT skip. It previously bailed out whenever
+   * `document.hidden` was true, which on mobile is common at mount time (a tab
+   * restored in the background, a link opened into a background tab). The panel
+   * then had no identity and nothing reliable to retry it — `window.focus` does
+   * not fire dependably on mobile tab restore, and background `setInterval` is
+   * throttled or frozen. `visibilitychange` below is the signal that does fire.
+   */
+  const loadMe = useCallback((background = false) => {
+    if (background && typeof document !== "undefined" && document.hidden) return;
+    adminFetch<MePayload>("/api/admin/me")
       .then((d) => {
-        if (!d) return;
         if (d.role) setRole(d.role);
         if (d.permissions) setPermissions(d.permissions);
         setCounts(d.counts ?? {});
         setLoaded(true);
+        setError(null);
       })
-      .catch(() => {});
+      .catch((err) => {
+        if (isAbortError(err)) return;
+        setError(errorMessage(err, "Couldn't load your admin profile."));
+      });
   }, []);
 
-  // Identity + counts: load now, poll every 30s, refresh on tab focus.
+  const loadTeam = useCallback(() => {
+    adminFetch<{ team?: TeamMember[] }>("/api/admin/team")
+      .then((d) => { if (d.team) setTeam(d.team); })
+      .catch(() => {
+        // Non-blocking: the roster only feeds assignee dropdowns. adminFetch has
+        // already reported it if it was a real failure.
+      });
+  }, []);
+
+  const refresh = useCallback(() => {
+    loadMe();
+    loadTeam();
+  }, [loadMe, loadTeam]);
+
+  // Identity + counts: load now, poll every 30s, refresh when the tab comes back.
   useEffect(() => {
     loadMe();
-    const interval = setInterval(loadMe, 30000);
-    window.addEventListener("focus", loadMe);
+    const interval = setInterval(() => loadMe(true), 30000);
+    const onVisible = () => { if (!document.hidden) loadMe(true); };
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
       clearInterval(interval);
-      window.removeEventListener("focus", loadMe);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, [loadMe]);
 
   // Team roster: load once (changes rarely).
-  useEffect(() => {
-    fetch("/api/admin/team")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => { if (d?.team) setTeam(d.team); })
-      .catch(() => {});
-  }, []);
+  useEffect(() => { loadTeam(); }, [loadTeam]);
 
   const isSuper = role === "super_admin";
 
@@ -86,7 +120,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <AdminContext.Provider value={{ role, permissions, counts, team, isSuper, loaded, can, refresh: loadMe }}>
+    <AdminContext.Provider value={{ role, permissions, counts, team, isSuper, loaded, error, can, refresh }}>
       {children}
     </AdminContext.Provider>
   );

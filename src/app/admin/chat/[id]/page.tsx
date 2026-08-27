@@ -1,4 +1,5 @@
 "use client";
+import { adminRequest } from "../../_fetch";
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -85,7 +86,7 @@ export default function AdminThreadPage() {
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch(`/api/admin/support/conversations/${id}`);
+      const res = await adminRequest(`/api/admin/support/conversations/${id}`);
       if (res.status === 404) { setNotFound(true); return; }
       if (!res.ok) throw new Error();
       const data = await res.json();
@@ -121,7 +122,7 @@ export default function AdminThreadPage() {
   async function patch(body: Record<string, unknown>, field: string) {
     setSavingField(field);
     try {
-      const res = await fetch(`/api/admin/support/conversations/${id}`, {
+      const res = await adminRequest(`/api/admin/support/conversations/${id}`, {
         method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
       });
       if (!res.ok) { const j = await res.json().catch(() => null); flash("err", j?.error ?? "Update failed."); return; }
@@ -135,7 +136,7 @@ export default function AdminThreadPage() {
   async function deleteConversation() {
     setDeleting(true);
     try {
-      const res = await fetch(`/api/admin/support/conversations/${id}`, { method: "DELETE" });
+      const res = await adminRequest(`/api/admin/support/conversations/${id}`, { method: "DELETE" });
       if (!res.ok) {
         const j = await res.json().catch(() => null);
         flash("err", j?.error ?? "Could not delete conversation.");
@@ -153,7 +154,7 @@ export default function AdminThreadPage() {
     if (!m) return;
     setSending(true);
     try {
-      const res = await fetch(`/api/admin/support/conversations/${id}/messages`, {
+      const res = await adminRequest(`/api/admin/support/conversations/${id}/messages`, {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: m, internal: replyInternal }),
       });
       if (!res.ok) { const j = await res.json().catch(() => null); flash("err", j?.error ?? "Could not send reply."); return; }

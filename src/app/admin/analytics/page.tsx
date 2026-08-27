@@ -1,12 +1,13 @@
 "use client";
+import { adminRequest, errorMessage } from "../_fetch";
 
 import { useEffect, useState } from "react";
 import {
-  RefreshCw, AlertCircle, Store, Users, Gift, ChefHat, MessageSquare,
+  RefreshCw, Store, Users, Gift, ChefHat, MessageSquare,
   TrendingUp, BadgeCheck, Star, Bot, Heart, MessageCircle, Timer, Download,
 } from "lucide-react";
 import { display } from "../_fonts";
-import { StatCard, FilterPills, fmtMoney, DateRange } from "../_ui";
+import { StatCard, FilterPills, fmtMoney, DateRange, LoadError } from "../_ui";
 import { ChartCard, TimeSeries, BarSeries, BarList, Donut, Funnel, CHART_COLORS, ORDINAL_GREEN } from "./_charts";
 
 type Point = { label: string; value: number };
@@ -72,11 +73,11 @@ export default function AnalyticsPage() {
         if (from) params.set("from", from);
         if (to) params.set("to", to);
       }
-      const res = await fetch(`/api/admin/analytics?${params}`);
+      const res = await adminRequest(`/api/admin/analytics?${params}`);
       if (!res.ok) throw new Error();
       setData(await res.json());
-    } catch {
-      setError("Could not load analytics. Try refreshing.");
+    } catch (err) {
+      setError(errorMessage(err, "Could not load analytics. Try refreshing."));
     } finally {
       setLoading(false);
     }
@@ -113,7 +114,7 @@ export default function AnalyticsPage() {
     a.click();
     URL.revokeObjectURL(url);
     // Record the export in the audit log — fire-and-forget.
-    fetch("/api/admin/exports", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ resource: "analytics", scope: `${section} · ${range}` }) }).catch(() => {});
+    adminRequest("/api/admin/exports", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ resource: "analytics", scope: `${section} · ${range}` }) }).catch(() => {});
   }
 
   return (
@@ -153,7 +154,7 @@ export default function AnalyticsPage() {
 
       <div className="px-4 sm:px-8 py-5 space-y-5">
         {error ? (
-          <div className="flex items-center gap-3 px-4 py-4 bg-red-50 border border-red-100 rounded-none text-red-700 text-sm font-medium"><AlertCircle size={16} /> {error}</div>
+          <LoadError message={error} onRetry={() => load(section, range, customFrom, customTo)} compact />
         ) : loading ? (
           <div className="animate-pulse space-y-5">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">{Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-24 bg-white border border-[#102C26]/10 rounded-none" />)}</div>

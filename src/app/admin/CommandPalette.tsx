@@ -1,4 +1,5 @@
 "use client";
+import { adminRequest } from "./_fetch";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -65,7 +66,9 @@ export default function CommandPalette() {
     debounce.current = setTimeout(async () => {
       const id = ++reqId.current;
       try {
-        const res = await fetch(`/api/admin/search?q=${encodeURIComponent(term)}`);
+        // Shorter deadline than the 15s default: this is an interactive search box,
+        // and a stale result is discarded by the reqId guard below anyway.
+        const res = await adminRequest(`/api/admin/search?q=${encodeURIComponent(term)}`, { timeoutMs: 8000 });
         const json = await res.json();
         if (id === reqId.current) { setHits(res.ok ? (json.results ?? []) : []); setActive(0); }
       } catch {

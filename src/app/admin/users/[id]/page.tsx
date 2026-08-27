@@ -1,4 +1,5 @@
 "use client";
+import { adminRequest, errorMessage } from "../../_fetch";
 
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -31,7 +32,7 @@ import {
 } from "lucide-react";
 import ThemedSelect from "@/components/admin/ThemedSelect";
 import RecordNav from "@/components/admin/RecordNav";
-import { Modal } from "../../_ui";
+import { Modal, LoadError } from "../../_ui";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 type Access = "none" | "view" | "manage";
@@ -123,14 +124,14 @@ export default function UserDetailPage() {
   const load = useCallback(async () => {
     setLoading(true); setError(null);
     try {
-      const res = await fetch(`/api/admin/users/${id}`);
+      const res = await adminRequest(`/api/admin/users/${id}`);
       if (!res.ok) throw new Error();
       const json: DetailResponse = await res.json();
       setData(json);
       setRoleDraft(json.user.role === "admin" ? "admin" : "user");
       setPermDraft(json.permissions);
-    } catch {
-      setError("Could not load this user.");
+    } catch (err) {
+      setError(errorMessage(err, "Could not load this user."));
     } finally {
       setLoading(false);
     }
@@ -139,7 +140,7 @@ export default function UserDetailPage() {
   useEffect(() => { load(); }, [load]);
 
   async function patch(body: Record<string, unknown>): Promise<boolean> {
-    const res = await fetch(`/api/admin/users/${id}`, {
+    const res = await adminRequest(`/api/admin/users/${id}`, {
       method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
     });
     if (!res.ok) { const j = await res.json().catch(() => null); flash("err", j?.error ?? "Update failed."); return false; }
@@ -192,7 +193,7 @@ export default function UserDetailPage() {
   }
   async function doDelete() {
     setDeleting(true);
-    const res = await fetch(`/api/admin/users/${id}`, { method: "DELETE" });
+    const res = await adminRequest(`/api/admin/users/${id}`, { method: "DELETE" });
     setDeleting(false);
     if (res.ok) { router.push("/admin/users"); }
     else { const j = await res.json().catch(() => null); flash("err", j?.error ?? "Delete failed."); setShowDelete(false); }
@@ -214,9 +215,7 @@ export default function UserDetailPage() {
     return (
       <div className="bg-[#F3E9D6] min-h-full p-8">
         <Link href="/admin/users" className="inline-flex items-center gap-2 text-sm text-[#102C26] font-semibold hover:underline mb-6"><ArrowLeft size={14} /> Back to Users</Link>
-        <div className="flex items-center gap-3 px-4 py-4 bg-red-50 border border-red-100 rounded-none text-red-700 text-sm font-medium max-w-md">
-          <AlertCircle size={16} className="shrink-0" /> {error ?? "User not found."}
-        </div>
+        <LoadError message={error ?? "User not found."} onRetry={load} />
       </div>
     );
   }

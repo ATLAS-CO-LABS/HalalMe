@@ -1,4 +1,5 @@
 "use client";
+import { adminRequest, errorMessage } from "../../_fetch";
 
 import { useCallback, useEffect, useState } from "react";
 import { display } from "../../_fonts";
@@ -71,7 +72,7 @@ export default function AdminCommissionCard({
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch(`/api/admin/merchants/${merchantId}/commission`);
+      const res = await adminRequest(`/api/admin/merchants/${merchantId}/commission`);
       if (!res.ok) return;
       const { commission } = await res.json() as { commission: AdminCommission | null };
       setRow(commission);
@@ -87,7 +88,7 @@ export default function AdminCommissionCard({
     setBusy(action);
     setError(null);
     try {
-      const res = await fetch(`/api/admin/merchants/${merchantId}/commission`, {
+      const res = await adminRequest(`/api/admin/merchants/${merchantId}/commission`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action, commission }),
@@ -101,8 +102,8 @@ export default function AdminCommissionCard({
       setCounter("");
       await load();
       onDecision(); // refresh the merchant (status may have moved to "agreed")
-    } catch {
-      setError("Something went wrong. Please try again.");
+    } catch (err) {
+      setError(errorMessage(err, "Something went wrong. Please try again."));
     } finally {
       setBusy(null);
     }

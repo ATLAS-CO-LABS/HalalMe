@@ -1,4 +1,5 @@
 "use client";
+import { adminRequest, errorMessage } from "../_fetch";
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -6,7 +7,7 @@ import { display } from "../_fonts";
 import AddMerchantModal from "@/components/admin/AddMerchantModal";
 import { getFollowUp } from "@/lib/followUps";
 import ThemedSelect from "@/components/admin/ThemedSelect";
-import { Pagination, useToast, ToastView, StatCard } from "../_ui";
+import { Pagination, useToast, ToastView, StatCard, LoadError } from "../_ui";
 import { rememberList } from "@/lib/adminRecordNav";
 import { useAdmin } from "../AdminProvider";
 import {
@@ -314,15 +315,15 @@ export default function MerchantPipelinePage() {
         params.set("page", String(pageNum));
         params.set("pageSize", String(pageSize));
       }
-      const res = await fetch(`/api/admin/merchants?${params}`);
+      const res = await adminRequest(`/api/admin/merchants?${params}`);
       if (!res.ok) throw new Error();
       const json = await res.json() as { merchants: Merchant[]; total: number; pageSize: number };
       setMerchants(json.merchants);
       setTotal(json.total);
       setPageSize(json.pageSize);
       rememberList("merchants", json.merchants.map((m) => m.id));
-    } catch {
-      setError("Could not load merchants. Try refreshing.");
+    } catch (err) {
+      setError(errorMessage(err, "Could not load merchants. Try refreshing."));
     } finally {
       setLoading(false);
     }
@@ -330,7 +331,7 @@ export default function MerchantPipelinePage() {
 
   async function fetchStats(mine: boolean) {
     try {
-      const res = await fetch(`/api/admin/merchants/stats${mine ? "?mine=1" : ""}`);
+      const res = await adminRequest(`/api/admin/merchants/stats${mine ? "?mine=1" : ""}`);
       if (!res.ok) return;
       setStats(await res.json() as PipelineStats);
     } catch {
@@ -417,7 +418,7 @@ export default function MerchantPipelinePage() {
       const body = action === "invite"
         ? { ids: Array.from(selectedIds) }
         : { action, ids: Array.from(selectedIds), ...extra };
-      const res = await fetch(url, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const res = await adminRequest(url, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       if (!res.ok) throw new Error();
       const json = await res.json() as { updated: number };
       setBulkResult({ action, count: json.updated });
@@ -449,7 +450,7 @@ export default function MerchantPipelinePage() {
     URL.revokeObjectURL(url);
     // Record the export (PII) in the audit log — fire-and-forget.
     const scope = [attentionOnly && "needs-attention", reviewOnly && "commission-review", mineOnly && "mine", statusFilter !== "all" && `status=${statusFilter}`, search && "search"].filter(Boolean).join(", ") || "all merchants";
-    fetch("/api/admin/exports", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ resource: "merchants", count: displayed.length, scope }) }).catch(() => {});
+    adminRequest("/api/admin/exports", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ resource: "merchants", count: displayed.length, scope }) }).catch(() => {});
   }
 
   function getCount(key: string) {
@@ -679,9 +680,11 @@ export default function MerchantPipelinePage() {
 
             {/* Table / states */}
             {error ? (
-              <div className="flex items-center gap-3 m-4 px-4 py-4 bg-red-50 border border-red-100 rounded-none text-red-700 text-sm font-medium">
-                <AlertCircle size={16} className="shrink-0" /> {error}
-              </div>
+              <LoadError
+                message={error}
+                onRetry={() => fetchMerchants(statusFilter, search, mineOnly, page, attentionOnly, reviewOnly, stats)}
+                compact
+              />
             ) : loading ? (
               <TableSkeleton />
             ) : displayed.length === 0 ? (

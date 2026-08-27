@@ -1,13 +1,14 @@
 "use client";
+import { adminRequest, errorMessage } from "../_fetch";
 
 import { useEffect, useRef, useState } from "react";
 import {
-  Search, RefreshCw, AlertCircle, Inbox, Clock, CheckCircle2, XCircle, FileText,
+  Search, RefreshCw, Inbox, Clock, CheckCircle2, XCircle, FileText,
   ChevronRight, ExternalLink, Loader2, X, ShieldCheck,
 } from "lucide-react";
 import { display } from "../_fonts";
 import {
-  fmtDate, useToast, ToastView, StatCard, TableSkeleton, EmptyState, Pagination, FilterPills, Badge, Modal,
+  fmtDate, useToast, ToastView, StatCard, TableSkeleton, EmptyState, Pagination, FilterPills, Badge, Modal, LoadError,
 } from "../_ui";
 
 interface AppRow {
@@ -75,13 +76,13 @@ export default function ApplicationsTab() {
       const params = new URLSearchParams({ page: String(p), pageSize: String(pageSize) });
       if (s !== "all") params.set("status", s);
       if (q) params.set("search", q);
-      const res = await fetch(`/api/admin/charity-applications?${params}`);
+      const res = await adminRequest(`/api/admin/charity-applications?${params}`);
       if (!res.ok) throw new Error();
       const json = await res.json();
       setRows(json.applications); setStats(json.stats); setTotal(json.total);
       setPageSize(json.pageSize);
-    } catch {
-      setError("Could not load applications. Try refreshing.");
+    } catch (err) {
+      setError(errorMessage(err, "Could not load applications. Try refreshing."));
     } finally {
       setLoading(false);
     }
@@ -102,7 +103,7 @@ export default function ApplicationsTab() {
   async function openDetail(id: string) {
     setDetailLoading(true); setNotes(""); setLevel(2);
     try {
-      const res = await fetch(`/api/admin/charity-applications/${id}`);
+      const res = await adminRequest(`/api/admin/charity-applications/${id}`);
       if (!res.ok) throw new Error();
       setDetail(await res.json());
     } catch {
@@ -117,7 +118,7 @@ export default function ApplicationsTab() {
     if (action === "reject" && !notes.trim()) { flash("err", "A reason is required to reject."); return; }
     setBusy(action);
     try {
-      const res = await fetch(`/api/admin/charity-applications/${detail.application.id}`, {
+      const res = await adminRequest(`/api/admin/charity-applications/${detail.application.id}`, {
         method: "PATCH", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action, notes: notes.trim() || undefined, verification_level: action === "approve" ? level : undefined }),
       });
@@ -162,7 +163,7 @@ export default function ApplicationsTab() {
         </div>
 
         {error ? (
-          <div className="flex items-center gap-3 m-4 px-4 py-4 bg-red-50 border border-red-100 rounded-none text-red-700 text-sm font-medium"><AlertCircle size={16} /> {error}</div>
+          <LoadError message={error} onRetry={() => fetchRows(page, status, search)} compact />
         ) : loading ? <TableSkeleton /> : rows.length === 0 ? (
           <EmptyState icon={Inbox} title="No applications found" hint="Charity applications submitted by users will appear here for review." />
         ) : (

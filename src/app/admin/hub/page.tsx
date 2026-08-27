@@ -1,14 +1,15 @@
 "use client";
+import { adminRequest, errorMessage } from "../_fetch";
 
 import { useEffect, useRef, useState } from "react";
 import {
-  Search, AlertCircle, MessageSquare, FileText, MessagesSquare, Users,
+  Search, MessageSquare, FileText, MessagesSquare, Users,
   Image as ImageIcon, EyeOff, Eye, MoreVertical, Trash2, Loader2, TrendingUp,
   CheckSquare, X, Crown, Flag, RotateCcw, RefreshCw, Heart, MessageCircle,
 } from "lucide-react";
 import { display } from "../_fonts";
 import {
-  fmtDateTime, useToast, ToastView, StatCard, TableSkeleton, EmptyState, Pagination, FilterPills, Badge, Modal,
+  fmtDateTime, useToast, ToastView, StatCard, TableSkeleton, EmptyState, Pagination, FilterPills, Badge, Modal, LoadError,
 } from "../_ui";
 import ReportsQueue from "../_ReportsQueue";
 
@@ -147,7 +148,7 @@ function PostsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "ok" 
     setMenu(null);
     setPreviewLoading(true);
     try {
-      const res = await fetch(`/api/admin/hub/posts/${id}`);
+      const res = await adminRequest(`/api/admin/hub/posts/${id}`);
       if (!res.ok) throw new Error();
       setPreview(await res.json());
     } catch {
@@ -165,7 +166,7 @@ function PostsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "ok" 
       if (t !== "all") params.set("type", t);
       if (pub !== "all") params.set("published", pub);
       if (q) params.set("search", q);
-      const res = await fetch(`/api/admin/hub/posts?${params}`);
+      const res = await adminRequest(`/api/admin/hub/posts?${params}`);
       if (!res.ok) throw new Error();
       const json = await res.json();
       setRows(json.posts); setStats(json.stats); setTotal(json.total);
@@ -173,8 +174,8 @@ function PostsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "ok" 
       setTopPosters(json.topPosters ?? []);
       // Canonical, complete type list from the API (mirrors the DB constraint).
       if (json.postTypes) setTypes(json.postTypes);
-    } catch {
-      setError("Could not load posts. Try refreshing.");
+    } catch (err) {
+      setError(errorMessage(err, "Could not load posts. Try refreshing."));
     } finally {
       setLoading(false);
     }
@@ -201,7 +202,7 @@ function PostsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "ok" 
     if (ids.length === 0) return;
     setBulkBusy(action);
     try {
-      const res = await fetch("/api/admin/hub/posts/bulk", {
+      const res = await adminRequest("/api/admin/hub/posts/bulk", {
         method: "PATCH", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action, ids }),
       });
@@ -220,7 +221,7 @@ function PostsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "ok" 
 
   async function restoreOne(p: PostRow) {
     setMenu(null);
-    const res = await fetch(`/api/admin/hub/posts/${p.id}`, {
+    const res = await adminRequest(`/api/admin/hub/posts/${p.id}`, {
       method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ restore: true }),
     });
     if (res.ok) { flash("ok", "Post restored."); fetchRows(page, type, published, search); }
@@ -248,7 +249,7 @@ function PostsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "ok" 
 
   async function togglePublish(p: PostRow) {
     setMenu(null);
-    const res = await fetch(`/api/admin/hub/posts/${p.id}`, {
+    const res = await adminRequest(`/api/admin/hub/posts/${p.id}`, {
       method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ is_published: !p.is_published }),
     });
     if (res.ok) { flash("ok", p.is_published ? "Post hidden." : "Post published."); fetchRows(page, type, published, search); }
@@ -259,7 +260,7 @@ function PostsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "ok" 
     if (!modal) return;
     setModalBusy(true);
     try {
-      const res = await fetch(`/api/admin/hub/posts/${modal.id}${deleted ? "?hard=1" : ""}`, { method: "DELETE" });
+      const res = await adminRequest(`/api/admin/hub/posts/${modal.id}${deleted ? "?hard=1" : ""}`, { method: "DELETE" });
       if (res.ok) { flash("ok", deleted ? "Post permanently deleted." : "Post moved to Trash."); setModal(null); fetchRows(page, type, published, search); }
       else { const j = await res.json().catch(() => null); flash("err", j?.error ?? "Delete failed."); }
     } finally {
@@ -359,7 +360,7 @@ function PostsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "ok" 
         )}
 
         {error ? (
-          <div className="flex items-center gap-3 m-4 px-4 py-4 bg-red-50 border border-red-100 rounded-none text-red-700 text-sm font-medium"><AlertCircle size={16} /> {error}</div>
+          <LoadError message={error} onRetry={() => fetchRows(page, type, published, search)} compact />
         ) : loading ? <TableSkeleton /> : rows.length === 0 ? (
           <EmptyState icon={MessageSquare} title="No posts found" hint="Posts from the community feed will appear here for moderation." />
         ) : (
@@ -619,13 +620,13 @@ function CommentsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "o
       const params = new URLSearchParams({ page: String(p), pageSize: String(pageSize) });
       if (deleted) params.set("deleted", "1");
       if (q) params.set("search", q);
-      const res = await fetch(`/api/admin/hub/comments?${params}`);
+      const res = await adminRequest(`/api/admin/hub/comments?${params}`);
       if (!res.ok) throw new Error();
       const json = await res.json();
       setRows(json.comments); setTotal(json.total); setTotalComments(json.totalComments);
       setPageSize(json.pageSize); setCanManage(!!json.canManage);
-    } catch {
-      setError("Could not load comments. Try refreshing.");
+    } catch (err) {
+      setError(errorMessage(err, "Could not load comments. Try refreshing."));
     } finally {
       setLoading(false);
     }
@@ -657,7 +658,7 @@ function CommentsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "o
     if (ids.length === 0) return;
     setBulkBusy(true);
     try {
-      const res = await fetch("/api/admin/hub/comments/bulk", {
+      const res = await adminRequest("/api/admin/hub/comments/bulk", {
         method: "PATCH", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action, ids }),
       });
@@ -675,7 +676,7 @@ function CommentsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "o
   }
 
   async function restoreOne(c: CommentRow) {
-    const res = await fetch(`/api/admin/hub/comments/${c.id}`, {
+    const res = await adminRequest(`/api/admin/hub/comments/${c.id}`, {
       method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ restore: true }),
     });
     if (res.ok) { flash("ok", "Comment restored."); fetchRows(page, search); }
@@ -686,7 +687,7 @@ function CommentsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "o
     if (!modal) return;
     setModalBusy(true);
     try {
-      const res = await fetch(`/api/admin/hub/comments/${modal.id}${deleted ? "?hard=1" : ""}`, { method: "DELETE" });
+      const res = await adminRequest(`/api/admin/hub/comments/${modal.id}${deleted ? "?hard=1" : ""}`, { method: "DELETE" });
       if (res.ok) { flash("ok", deleted ? "Comment permanently deleted." : "Comment moved to Trash."); setModal(null); fetchRows(page, search); }
       else { const j = await res.json().catch(() => null); flash("err", j?.error ?? "Delete failed."); }
     } finally {
@@ -745,7 +746,7 @@ function CommentsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "o
         )}
 
         {error ? (
-          <div className="flex items-center gap-3 m-4 px-4 py-4 bg-red-50 border border-red-100 rounded-none text-red-700 text-sm font-medium"><AlertCircle size={16} /> {error}</div>
+          <LoadError message={error} onRetry={() => fetchRows(page, search)} compact />
         ) : loading ? <TableSkeleton /> : rows.length === 0 ? (
           <EmptyState icon={MessagesSquare} title="No comments found" hint="Comments left on posts will appear here for moderation." />
         ) : (

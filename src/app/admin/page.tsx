@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Users, Store, ChefHat, Gift, LifeBuoy, ShieldAlert, AlertTriangle,
   UserPlus, Heart, ArrowRight, Clock, CheckCircle2, MessageSquare, RotateCcw, ShieldCheck,
 } from "lucide-react";
 import { display } from "./_fonts";
-import { StatCard, fmtMoney } from "./_ui";
+import { StatCard, LoadError, fmtMoney } from "./_ui";
+import { adminFetch, errorMessage, isAbortError } from "./_fetch";
 
 interface Overview {
   name: string | null;
@@ -53,14 +54,28 @@ const FALLBACK_STYLE = { icon: Clock, cls: "bg-[#102C26]/6 text-[#102C26]/60" };
 export default function AdminOverviewPage() {
   const [data, setData] = useState<Overview | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetch("/api/admin/overview")
-      .then((r) => (r.ok ? r.json() : null))
+  // Split so the mount effect never calls setState synchronously: `loading`
+  // already starts true and `error` starts null, so the first run only needs to
+  // fire the request. `load` adds the state reset the Retry button needs.
+  const run = useCallback(() => {
+    adminFetch<Overview>("/api/admin/overview")
       .then((d) => setData(d))
-      .catch(() => {})
+      .catch((err) => {
+        if (isAbortError(err)) return;
+        setError(errorMessage(err, "Couldn't load the dashboard."));
+      })
       .finally(() => setLoading(false));
   }, []);
+
+  const load = useCallback(() => {
+    setLoading(true);
+    setError(null);
+    run();
+  }, [run]);
+
+  useEffect(() => { run(); }, [run]);
 
   const s = data?.stats ?? {};
 
@@ -83,6 +98,8 @@ export default function AdminOverviewPage() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">{Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-24 bg-white border border-[#102C26]/10 rounded-none" />)}</div>
           <div className="grid lg:grid-cols-2 gap-5">{Array.from({ length: 2 }).map((_, i) => <div key={i} className="h-64 bg-white border border-[#102C26]/10 rounded-none" />)}</div>
         </div>
+      ) : error ? (
+        <LoadError message={error} onRetry={load} />
       ) : (
         <div className="px-4 sm:px-8 py-5 space-y-5">
           {/* KPI row */}

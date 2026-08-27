@@ -1,13 +1,14 @@
 "use client";
+import { adminRequest, errorMessage } from "../_fetch";
 
 import { useEffect, useRef, useState } from "react";
 import {
-  Search, RefreshCw, AlertCircle, ChefHat, BadgeCheck, Sparkles, Star, EyeOff, Eye,
+  Search, RefreshCw, ChefHat, BadgeCheck, Sparkles, Star, EyeOff, Eye,
   MoreVertical, Trash2, Loader2, Bot, Users, TrendingUp, CheckSquare, X, FileText, Clock, Flag, RotateCcw,
 } from "lucide-react";
 import { display } from "../_fonts";
 import {
-  fmtDate, useToast, ToastView, StatCard, TableSkeleton, EmptyState, Pagination, FilterPills, Badge, Modal,
+  fmtDate, useToast, ToastView, StatCard, TableSkeleton, EmptyState, Pagination, FilterPills, Badge, Modal, LoadError,
 } from "../_ui";
 import ReportsQueue from "../_ReportsQueue";
 
@@ -108,7 +109,7 @@ export default function KitchenPage() {
     setMenu(null);
     setPreviewLoading(true);
     try {
-      const res = await fetch(`/api/admin/recipes/${id}`);
+      const res = await adminRequest(`/api/admin/recipes/${id}`);
       if (!res.ok) throw new Error();
       const json = await res.json();
       setPreview(json.recipe);
@@ -128,13 +129,13 @@ export default function KitchenPage() {
       if (hal !== "all") params.set("halal", hal);
       if (src !== "all") params.set("source", src);
       if (q) params.set("search", q);
-      const res = await fetch(`/api/admin/recipes?${params}`);
+      const res = await adminRequest(`/api/admin/recipes?${params}`);
       if (!res.ok) throw new Error();
       const json = await res.json();
       setRows(json.recipes); setStats(json.stats); setTotal(json.total);
       setPageSize(json.pageSize); setCanManage(!!json.canManage);
-    } catch {
-      setError("Could not load recipes. Try refreshing.");
+    } catch (err) {
+      setError(errorMessage(err, "Could not load recipes. Try refreshing."));
     } finally {
       setLoading(false);
     }
@@ -149,7 +150,7 @@ export default function KitchenPage() {
 
   // AI usage panel — loaded once.
   useEffect(() => {
-    fetch("/api/admin/kitchen/ai-usage")
+    adminRequest("/api/admin/kitchen/ai-usage")
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => { if (d) setAi(d); })
       .catch(() => {});
@@ -176,7 +177,7 @@ export default function KitchenPage() {
   }
 
   async function patch(id: string, body: Record<string, boolean>): Promise<boolean> {
-    const res = await fetch(`/api/admin/recipes/${id}`, {
+    const res = await adminRequest(`/api/admin/recipes/${id}`, {
       method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
     });
     if (!res.ok) { const j = await res.json().catch(() => null); flash("err", j?.error ?? "Update failed."); return false; }
@@ -194,7 +195,7 @@ export default function KitchenPage() {
     setModalBusy(true);
     try {
       // In the Trash, deleting is permanent (?hard=1); elsewhere it soft-deletes.
-      const res = await fetch(`/api/admin/recipes/${modal.id}${deletedMode ? "?hard=1" : ""}`, { method: "DELETE" });
+      const res = await adminRequest(`/api/admin/recipes/${modal.id}${deletedMode ? "?hard=1" : ""}`, { method: "DELETE" });
       if (res.ok) { flash("ok", deletedMode ? "Recipe permanently deleted." : "Recipe moved to Trash."); setModal(null); fetchRows(page, published, halal, source, search); }
       else { const j = await res.json().catch(() => null); flash("err", j?.error ?? "Delete failed."); }
     } finally {
@@ -224,7 +225,7 @@ export default function KitchenPage() {
     if (ids.length === 0) return;
     setBulkBusy(action);
     try {
-      const res = await fetch("/api/admin/recipes/bulk", {
+      const res = await adminRequest("/api/admin/recipes/bulk", {
         method: "PATCH", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action, ids }),
       });
@@ -245,7 +246,7 @@ export default function KitchenPage() {
   // Restore a single recipe from the Trash.
   async function restoreOne(r: RecipeRow) {
     setMenu(null);
-    const res = await fetch(`/api/admin/recipes/${r.id}`, {
+    const res = await adminRequest(`/api/admin/recipes/${r.id}`, {
       method: "PATCH", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ restore: true }),
     });
@@ -369,7 +370,7 @@ export default function KitchenPage() {
           )}
 
           {error ? (
-            <div className="flex items-center gap-3 m-4 px-4 py-4 bg-red-50 border border-red-100 rounded-none text-red-700 text-sm font-medium"><AlertCircle size={16} /> {error}</div>
+            <LoadError message={error} onRetry={() => fetchRows(page, published, halal, source, search)} compact />
           ) : loading ? <TableSkeleton /> : rows.length === 0 ? (
             <EmptyState icon={ChefHat} title="No recipes found" hint="Recipes created by users or the AI chat will appear here for moderation." />
           ) : (

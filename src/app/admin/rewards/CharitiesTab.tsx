@@ -1,13 +1,14 @@
 "use client";
+import { adminRequest, errorMessage } from "../_fetch";
 
 import { useEffect, useRef, useState } from "react";
 import {
-  Search, RefreshCw, AlertCircle, Heart, CheckCircle2, Star, Banknote,
+  Search, RefreshCw, Heart, CheckCircle2, Star, Banknote,
   ChevronRight, Loader2, X, Plus, Ban, RotateCcw, Save, Send, Trash2,
 } from "lucide-react";
 import { display } from "../_fonts";
 import {
-  fmtMoney, useToast, ToastView, StatCard, TableSkeleton, EmptyState, Pagination, FilterPills, Badge, Modal,
+  fmtMoney, useToast, ToastView, StatCard, TableSkeleton, EmptyState, Pagination, FilterPills, Badge, Modal, LoadError,
 } from "../_ui";
 
 interface CharityRow {
@@ -89,13 +90,13 @@ export default function CharitiesTab() {
       const params = new URLSearchParams({ page: String(p), pageSize: String(pageSize) });
       if (s !== "all") params.set("status", s);
       if (q) params.set("search", q);
-      const res = await fetch(`/api/admin/charities?${params}`);
+      const res = await adminRequest(`/api/admin/charities?${params}`);
       if (!res.ok) throw new Error();
       const json = await res.json();
       setRows(json.charities); setStats(json.stats); setTotal(json.total);
       setPageSize(json.pageSize); setCanManage(!!json.canManage);
-    } catch {
-      setError("Could not load charities. Try refreshing.");
+    } catch (err) {
+      setError(errorMessage(err, "Could not load charities. Try refreshing."));
     } finally {
       setLoading(false);
     }
@@ -116,7 +117,7 @@ export default function CharitiesTab() {
   async function openEdit(id: string) {
     setEditLoading(true);
     try {
-      const res = await fetch(`/api/admin/charities/${id}`);
+      const res = await adminRequest(`/api/admin/charities/${id}`);
       if (!res.ok) throw new Error();
       const json = await res.json();
       setEdit(json.charity);
@@ -131,7 +132,7 @@ export default function CharitiesTab() {
     if (!edit) return;
     setBusy(true);
     try {
-      const res = await fetch(`/api/admin/charities/${edit.id}`, {
+      const res = await adminRequest(`/api/admin/charities/${edit.id}`, {
         method: "PATCH", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           goal_amount: edit.goal_amount, minimum_donation: edit.minimum_donation,
@@ -158,7 +159,7 @@ export default function CharitiesTab() {
     const suspending = edit.verification_status !== "suspended";
     setBusy(true);
     try {
-      const res = await fetch(`/api/admin/charities/${edit.id}`, {
+      const res = await adminRequest(`/api/admin/charities/${edit.id}`, {
         method: "PATCH", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: suspending ? "suspend" : "reinstate" }),
       });
@@ -176,7 +177,7 @@ export default function CharitiesTab() {
     if (!edit) return;
     setDeleting(true);
     try {
-      const res = await fetch(`/api/admin/charities/${edit.id}`, { method: "DELETE" });
+      const res = await adminRequest(`/api/admin/charities/${edit.id}`, { method: "DELETE" });
       const json = await res.json().catch(() => null);
       if (!res.ok) { flash("err", json?.error ?? "Could not delete charity."); return; }
       flash("ok", "Charity deleted.");
@@ -192,7 +193,7 @@ export default function CharitiesTab() {
     if (!edit) return;
     setBusy(true);
     try {
-      const res = await fetch(`/api/admin/charities/${edit.id}/connect`, { method: "POST" });
+      const res = await adminRequest(`/api/admin/charities/${edit.id}/connect`, { method: "POST" });
       const json = await res.json().catch(() => null);
       if (!res.ok) { flash("err", json?.error ?? "Could not send onboarding link."); return; }
       if (json?.emailed === false) {
@@ -243,7 +244,7 @@ export default function CharitiesTab() {
         </div>
 
         {error ? (
-          <div className="flex items-center gap-3 m-4 px-4 py-4 bg-red-50 border border-red-100 rounded-none text-red-700 text-sm font-medium"><AlertCircle size={16} /> {error}</div>
+          <LoadError message={error} onRetry={() => fetchRows(page, status, search)} compact />
         ) : loading ? <TableSkeleton /> : rows.length === 0 ? (
           <EmptyState icon={Heart} title="No charities found" hint="Approve an application or add a charity directly to seed the directory." />
         ) : (
@@ -465,7 +466,7 @@ function AddCharityModal({ onClose, onCreated, onError }: { onClose: () => void;
   async function submit() {
     setBusy(true);
     try {
-      const res = await fetch("/api/admin/charities", {
+      const res = await adminRequest("/api/admin/charities", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...form, goal_amount: Number(form.goal_amount) }),
       });

@@ -1,9 +1,10 @@
 "use client";
+import { adminRequest, errorMessage } from "../_fetch";
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { display } from "../_fonts";
-import { Modal, StatCard, Pagination, DateRange } from "../_ui";
+import { Modal, StatCard, Pagination, DateRange, LoadError } from "../_ui";
 import { rememberList } from "@/lib/adminRecordNav";
 import {
   Search,
@@ -164,13 +165,13 @@ export default function UsersPage() {
       if (q) params.set("search", q);
       if (dateFrom) params.set("dateFrom", dateFrom);
       if (dateTo) params.set("dateTo", dateTo);
-      const res = await fetch(`/api/admin/users?${params}`);
+      const res = await adminRequest(`/api/admin/users?${params}`);
       if (!res.ok) throw new Error();
       const json = await res.json();
       setUsers(json.users); setStats(json.stats); setTotal(json.total); setCanManage(!!json.canManage);
       rememberList("users", (json.users as UserRow[]).map((u) => u.id));
-    } catch {
-      setError("Could not load users. Try refreshing.");
+    } catch (err) {
+      setError(errorMessage(err, "Could not load users. Try refreshing."));
     } finally {
       setLoading(false);
     }
@@ -216,7 +217,7 @@ export default function UsersPage() {
   function clearSelection() { setSelectedIds(new Set()); setShowBulkSuspend(false); setBulkReason(""); }
 
   async function patch(id: string, body: Record<string, unknown>): Promise<boolean> {
-    const res = await fetch(`/api/admin/users/${id}`, {
+    const res = await adminRequest(`/api/admin/users/${id}`, {
       method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
     });
     if (!res.ok) { const j = await res.json().catch(() => null); flash("err", j?.error ?? "Update failed."); return false; }
@@ -228,7 +229,7 @@ export default function UsersPage() {
     if (action === "suspend" && !bulkReason.trim()) { flash("err", "A reason is required."); return; }
     setBulkBusy(action);
     try {
-      const res = await fetch("/api/admin/users/bulk", {
+      const res = await adminRequest("/api/admin/users/bulk", {
         method: "PATCH", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action, ids: Array.from(selectedIds), reason: bulkReason.trim() || undefined }),
       });
@@ -259,7 +260,7 @@ export default function UsersPage() {
     try {
       let ok = false;
       if (modal.kind === "delete") {
-        const res = await fetch(`/api/admin/users/${modal.user.id}`, { method: "DELETE" });
+        const res = await adminRequest(`/api/admin/users/${modal.user.id}`, { method: "DELETE" });
         if (res.ok) ok = true;
         else { const j = await res.json().catch(() => null); flash("err", j?.error ?? "Delete failed."); }
       } else {
@@ -285,7 +286,7 @@ export default function UsersPage() {
       if (search) params.set("search", search);
       if (dateFrom) params.set("dateFrom", dateFrom);
       if (dateTo) params.set("dateTo", dateTo);
-      const res = await fetch(`/api/admin/users?${params}`);
+      const res = await adminRequest(`/api/admin/users?${params}`);
       if (!res.ok) throw new Error();
       const json = await res.json() as { users: UserRow[] };
       const header = ["Name", "Username", "Email", "Role", "Status", "Verified", "Tier", "Points", "Joined"];
@@ -302,7 +303,7 @@ export default function UsersPage() {
       URL.revokeObjectURL(url);
       // Record the export (PII) in the audit log — fire-and-forget.
       const scope = [roleFilter !== "all" && `role=${roleFilter}`, statusFilter !== "all" && `status=${statusFilter}`, search && "search", (dateFrom || dateTo) && "date-range"].filter(Boolean).join(", ") || "all users";
-      fetch("/api/admin/exports", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ resource: "users", count: json.users.length, scope }) }).catch(() => {});
+      adminRequest("/api/admin/exports", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ resource: "users", count: json.users.length, scope }) }).catch(() => {});
     } catch {
       flash("err", "Export failed.");
     } finally {
@@ -424,9 +425,11 @@ export default function UsersPage() {
 
           {/* Table / states */}
           {error ? (
-            <div className="flex items-center gap-3 m-4 px-4 py-4 bg-red-50 border border-red-100 rounded-none text-red-700 text-sm font-medium">
-              <AlertCircle size={16} className="shrink-0" /> {error}
-            </div>
+            <LoadError
+              message={error}
+              onRetry={() => fetchUsers(page, roleFilter, statusFilter, search)}
+              compact
+            />
           ) : loading ? (
             <TableSkeleton />
           ) : users.length === 0 ? (

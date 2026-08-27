@@ -1,8 +1,9 @@
 "use client";
+import { adminRequest, errorMessage } from "./_fetch";
 
 import { useCallback, useEffect, useState } from "react";
-import { RefreshCw, AlertCircle, Flag, EyeOff, Trash2, Check, Loader2, ShieldCheck } from "lucide-react";
-import { fmtDateTime, useToast, ToastView, TableSkeleton, EmptyState, Badge } from "./_ui";
+import { RefreshCw, Flag, EyeOff, Trash2, Check, Loader2, ShieldCheck } from "lucide-react";
+import { fmtDateTime, useToast, ToastView, TableSkeleton, EmptyState, Badge, LoadError } from "./_ui";
 
 type ContentType = "post" | "comment" | "recipe";
 
@@ -38,12 +39,12 @@ export default function ReportsQueue({ type }: { type: ContentType }) {
   const fetchItems = useCallback(async () => {
     setLoading(true); setError(null);
     try {
-      const res = await fetch(`/api/admin/reports?type=${type}&status=open`);
+      const res = await adminRequest(`/api/admin/reports?type=${type}&status=open`);
       if (!res.ok) throw new Error();
       const json = await res.json();
       setItems(json.items); setCanManage(!!json.canManage);
-    } catch {
-      setError("Could not load the report queue. Try refreshing.");
+    } catch (err) {
+      setError(errorMessage(err, "Could not load the report queue. Try refreshing."));
     } finally {
       setLoading(false);
     }
@@ -59,7 +60,7 @@ export default function ReportsQueue({ type }: { type: ContentType }) {
   }
 
   async function resolveReports(contentId: string, action: "dismiss" | "reviewed") {
-    await fetch("/api/admin/reports", {
+    await adminRequest("/api/admin/reports", {
       method: "PATCH", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ contentType: type, contentId, action }),
     });
@@ -72,13 +73,13 @@ export default function ReportsQueue({ type }: { type: ContentType }) {
         await resolveReports(item.contentId, "dismiss");
         flash("ok", "Reports dismissed.");
       } else if (kind === "delete") {
-        const res = await fetch(contentEndpoint(item.contentId), { method: "DELETE" });
+        const res = await adminRequest(contentEndpoint(item.contentId), { method: "DELETE" });
         if (!res.ok) throw new Error();
         await resolveReports(item.contentId, "reviewed");
         flash("ok", `${noun[0].toUpperCase()}${noun.slice(1)} deleted.`);
       } else {
         // hide = unpublish (posts & recipes only)
-        const res = await fetch(contentEndpoint(item.contentId), {
+        const res = await adminRequest(contentEndpoint(item.contentId), {
           method: "PATCH", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ is_published: false }),
         });
@@ -110,7 +111,7 @@ export default function ReportsQueue({ type }: { type: ContentType }) {
         </div>
 
         {error ? (
-          <div className="flex items-center gap-3 m-4 px-4 py-4 bg-red-50 border border-red-100 rounded-none text-red-700 text-sm font-medium"><AlertCircle size={16} /> {error}</div>
+          <LoadError message={error} onRetry={() => fetchItems()} compact />
         ) : loading ? <TableSkeleton /> : items.length === 0 ? (
           <EmptyState icon={ShieldCheck} title="Nothing reported" hint={`User reports about ${noun}s will appear here for review.`} />
         ) : (

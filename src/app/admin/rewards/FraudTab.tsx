@@ -1,12 +1,13 @@
 "use client";
+import { adminRequest, errorMessage } from "../_fetch";
 
 import { useEffect, useState } from "react";
 import {
-  RefreshCw, AlertCircle, ShieldAlert, ShieldCheck, ShieldX, ChevronRight, Loader2, X, Banknote,
+  RefreshCw, ShieldAlert, ShieldCheck, ShieldX, ChevronRight, Loader2, X, Banknote,
 } from "lucide-react";
 import { display } from "../_fonts";
 import {
-  fmtDateTime, fmtMoney, useToast, ToastView, StatCard, TableSkeleton, EmptyState, Pagination, FilterPills, Badge, Modal,
+  fmtDateTime, fmtMoney, useToast, ToastView, StatCard, TableSkeleton, EmptyState, Pagination, FilterPills, Badge, Modal, LoadError,
 } from "../_ui";
 
 type JoinedObj = {
@@ -70,13 +71,13 @@ export default function FraudTab() {
     setLoading(true); setError(null);
     try {
       const params = new URLSearchParams({ page: String(p), pageSize: String(pageSize), status: s });
-      const res = await fetch(`/api/admin/donation-flags?${params}`);
+      const res = await adminRequest(`/api/admin/donation-flags?${params}`);
       if (!res.ok) throw new Error();
       const json = await res.json();
       setRows(json.flags); setStats(json.stats); setTotal(json.total);
       setPageSize(json.pageSize); setCanManage(!!json.canManage);
-    } catch {
-      setError("Could not load fraud flags. Try refreshing.");
+    } catch (err) {
+      setError(errorMessage(err, "Could not load fraud flags. Try refreshing."));
     } finally {
       setLoading(false);
     }
@@ -89,7 +90,7 @@ export default function FraudTab() {
     if (!detail) return;
     setBusy(action);
     try {
-      const res = await fetch(`/api/admin/donation-flags/${detail.id}`, {
+      const res = await adminRequest(`/api/admin/donation-flags/${detail.id}`, {
         method: "PATCH", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action, notes: notes.trim() || undefined }),
       });
@@ -123,7 +124,7 @@ export default function FraudTab() {
         </div>
 
         {error ? (
-          <div className="flex items-center gap-3 m-4 px-4 py-4 bg-red-50 border border-red-100 rounded-none text-red-700 text-sm font-medium"><AlertCircle size={16} /> {error}</div>
+          <LoadError message={error} onRetry={() => fetchRows(page, status)} compact />
         ) : loading ? <TableSkeleton /> : rows.length === 0 ? (
           <EmptyState icon={ShieldCheck} title="No flags here" hint="Donations that trip the risk rules land in this queue for manual review." />
         ) : (

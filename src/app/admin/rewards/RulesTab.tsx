@@ -1,10 +1,11 @@
 "use client";
+import { adminRequest, errorMessage } from "../_fetch";
 
 import { useEffect, useState } from "react";
-import { RefreshCw, AlertCircle, Coins, Loader2, Save, X, Pencil } from "lucide-react";
+import { RefreshCw, Coins, Loader2, Save, X, Pencil } from "lucide-react";
 import ThemedSelect from "@/components/admin/ThemedSelect";
 import { display } from "../_fonts";
-import { fmtDate, useToast, ToastView, TableSkeleton, EmptyState, Badge } from "../_ui";
+import { fmtDate, useToast, ToastView, TableSkeleton, EmptyState, Badge, LoadError } from "../_ui";
 
 interface Rule {
   id: string;
@@ -34,12 +35,12 @@ export default function RulesTab() {
   async function fetchRules() {
     setLoading(true); setError(null);
     try {
-      const res = await fetch("/api/admin/reward-rules");
+      const res = await adminRequest("/api/admin/reward-rules");
       if (!res.ok) throw new Error();
       const json = await res.json();
       setRules(json.rules); setCanManage(!!json.canManage);
-    } catch {
-      setError("Could not load reward rules. Try refreshing.");
+    } catch (err) {
+      setError(errorMessage(err, "Could not load reward rules. Try refreshing."));
     } finally {
       setLoading(false);
     }
@@ -54,7 +55,7 @@ export default function RulesTab() {
     if (!draft) return;
     setBusy(true);
     try {
-      const res = await fetch("/api/admin/reward-rules", {
+      const res = await adminRequest("/api/admin/reward-rules", {
         method: "PATCH", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: draft.id, label: draft.label, points_per_unit: draft.points_per_unit,
@@ -89,7 +90,7 @@ export default function RulesTab() {
         </div>
 
         {error ? (
-          <div className="flex items-center gap-3 m-4 px-4 py-4 bg-red-50 border border-red-100 rounded-none text-red-700 text-sm font-medium"><AlertCircle size={16} /> {error}</div>
+          <LoadError message={error} onRetry={() => fetchRules()} compact />
         ) : loading ? <TableSkeleton /> : rules.length === 0 ? (
           <EmptyState icon={Coins} title="No reward rules" hint="Reward rules define point awards for donations, reviews and more." />
         ) : (
