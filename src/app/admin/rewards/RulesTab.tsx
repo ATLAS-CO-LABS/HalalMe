@@ -1,7 +1,9 @@
 "use client";
-import { adminRequest, errorMessage } from "../_fetch";
+import { adminFetch, adminRequest, errorMessage } from "../_fetch";
+import { adminKeys } from "../_query";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { RefreshCw, Coins, Loader2, Save, X, Pencil } from "lucide-react";
 import ThemedSelect from "@/components/admin/ThemedSelect";
 import { display } from "../_fonts";
@@ -21,32 +23,24 @@ interface Rule {
   updated_at: string;
 }
 
+const NO_RULES: Rule[] = [];
+
 export default function RulesTab() {
   const { toast, flash } = useToast();
-  const [rules, setRules] = useState<Rule[]>([]);
-  const [canManage, setCanManage] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const query = useQuery({
+    queryKey: adminKeys.module("reward-rules"),
+    queryFn: () => adminFetch<{ rules: Rule[]; canManage: boolean }>("/api/admin/reward-rules"),
+  });
+  const rules = query.data?.rules ?? NO_RULES;
+  // Server-authoritative, read off this response on purpose.
+  const canManage = !!query.data?.canManage;
+  const loading = query.isLoading;
+  const error = query.isError ? errorMessage(query.error, "Could not load reward rules. Try refreshing.") : null;
 
   const [editId, setEditId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Rule | null>(null);
   const [busy, setBusy] = useState(false);
-
-  async function fetchRules() {
-    setLoading(true); setError(null);
-    try {
-      const res = await adminRequest("/api/admin/reward-rules");
-      if (!res.ok) throw new Error();
-      const json = await res.json();
-      setRules(json.rules); setCanManage(!!json.canManage);
-    } catch (err) {
-      setError(errorMessage(err, "Could not load reward rules. Try refreshing."));
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => { fetchRules(); }, []);
 
   function startEdit(r: Rule) { setEditId(r.id); setDraft({ ...r }); }
   function cancelEdit() { setEditId(null); setDraft(null); }
@@ -67,7 +61,7 @@ export default function RulesTab() {
       if (!res.ok) { flash("err", json?.error ?? "Save failed."); return; }
       flash("ok", "Rule updated.");
       cancelEdit();
-      fetchRules();
+      void queryClient.invalidateQueries({ queryKey: adminKeys.module("reward-rules") });
     } finally {
       setBusy(false);
     }
@@ -83,14 +77,14 @@ export default function RulesTab() {
             <h3 className={`${display.className} text-sm font-bold text-[#102C26]`}>Reward Rules</h3>
             <p className="text-xs text-gray-600 mt-0.5">How many points each action awards. Changes apply immediately — no deploy.</p>
           </div>
-          <button onClick={fetchRules}
+          <button onClick={() => void query.refetch()}
             className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#102C26]/80 bg-[#102C26]/5 border border-[#102C26]/15 rounded-none hover:bg-[#102C26]/10 transition-colors" title="Refresh">
-            <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
+            <RefreshCw size={13} className={query.isFetching ? "animate-spin" : ""} />
           </button>
         </div>
 
         {error ? (
-          <LoadError message={error} onRetry={() => fetchRules()} compact />
+          <LoadError message={error} onRetry={() => void query.refetch()} compact />
         ) : loading ? <TableSkeleton /> : rules.length === 0 ? (
           <EmptyState icon={Coins} title="No reward rules" hint="Reward rules define point awards for donations, reviews and more." />
         ) : (

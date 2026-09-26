@@ -158,7 +158,7 @@ export default function CompleteProfilePage() {
           Hey, {firstName}.
         </h1>
         <p className="mt-2 text-[#F7E7CE]/45 text-sm leading-relaxed">
-          Before you dive in - let's set up how the community sees you.
+          Before you dive in - let&apos;s set up how the community sees you.
         </p>
       </div>
 
@@ -173,7 +173,7 @@ export default function CompleteProfilePage() {
             Add a profile picture
           </h2>
           <p className="text-xs text-[#F7E7CE]/35 mb-5">
-            Faces build trust. Put a photo so people know who they're cooking with.
+            Faces build trust. Put a photo so people know who they&apos;re cooking with.
           </p>
 
           <div className="flex items-center gap-5">
@@ -332,12 +332,12 @@ export default function CompleteProfilePage() {
             )}
             {!usernameError && availState === "taken" && (
               <p className="text-xs text-red-400">
-                That one's taken - try something a bit different.
+                That one&apos;s taken - try something a bit different.
               </p>
             )}
             {!usernameError && availState === "available" && (
               <p className="text-xs text-emerald-400">
-                That's yours if you want it!
+                That&apos;s yours if you want it!
               </p>
             )}
             {!usernameError && (availState === "idle" || availState === "error") && (

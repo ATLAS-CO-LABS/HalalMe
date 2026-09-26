@@ -1,7 +1,9 @@
 "use client";
-import { adminRequest, errorMessage } from "../_fetch";
+import { adminFetch, adminRequest, errorMessage } from "../_fetch";
+import { adminKeys } from "../_query";
 
 import { useEffect, useRef, useState } from "react";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Search, RefreshCw, Heart, CheckCircle2, Star, Banknote,
   ChevronRight, Loader2, X, Plus, Ban, RotateCcw, Save, Send, Trash2,
@@ -63,19 +65,54 @@ const STATUS_TONE: Record<string, "green" | "red" | "amber" | "gray"> = {
 };
 const LEVEL_LABEL = ["Unverified", "Docs", "Verified", "External"];
 
+interface CharitiesPayload {
+  charities: CharityRow[];
+  stats: { total: number; active: number; featured: number; totalRaised: number };
+  total: number;
+  pageSize: number;
+  canManage: boolean;
+}
+const NO_CHARITY_ROWS: CharityRow[] = [];
+
 export default function CharitiesTab() {
   const { toast, flash } = useToast();
-  const [rows, setRows] = useState<CharityRow[]>([]);
-  const [stats, setStats] = useState<{ total: number; active: number; featured: number; totalRaised: number } | null>(null);
-  const [total, setTotal] = useState(0);
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(0);
+  // Requested size; the server's clamped value is read back for display only.
   const [pageSize, setPageSize] = useState(25);
-  const [canManage, setCanManage] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState("all");
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => { if (searchTimer.current) clearTimeout(searchTimer.current); }, []);
+
+  const query = useQuery({
+    queryKey: adminKeys.list("charities", { page, pageSize, status, search: debouncedSearch }),
+    queryFn: () => {
+      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+      if (status !== "all") params.set("status", status);
+      if (debouncedSearch) params.set("search", debouncedSearch);
+      return adminFetch<CharitiesPayload>(`/api/admin/charities?${params}`);
+    },
+    placeholderData: keepPreviousData,
+  });
+
+  const rows = query.data?.charities ?? NO_CHARITY_ROWS;
+  const stats = query.data?.stats ?? null;
+  const total = query.data?.total ?? 0;
+  const effectivePageSize = query.data?.pageSize ?? pageSize;
+  const canManage = !!query.data?.canManage;
+  const loading = query.isLoading;
+  const error = query.isError ? errorMessage(query.error, "Could not load charities. Try refreshing.") : null;
+
+  // Charity edits move the directory and the overview's "Total Raised" card.
+  function invalidateCharities() {
+    void queryClient.invalidateQueries({ queryKey: adminKeys.module("charities") });
+    void queryClient.invalidateQueries({ queryKey: adminKeys.module("overview") });
+  }
+
+  const changeStatus = (v: string) => { setStatus(v); setPage(0); };
 
   const [edit, setEdit] = useState<FullCharity | null>(null);
   const [editLoading, setEditLoading] = useState(false);
@@ -84,34 +121,10 @@ export default function CharitiesTab() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  async function fetchRows(p: number, s: string, q: string) {
-    setLoading(true); setError(null);
-    try {
-      const params = new URLSearchParams({ page: String(p), pageSize: String(pageSize) });
-      if (s !== "all") params.set("status", s);
-      if (q) params.set("search", q);
-      const res = await adminRequest(`/api/admin/charities?${params}`);
-      if (!res.ok) throw new Error();
-      const json = await res.json();
-      setRows(json.charities); setStats(json.stats); setTotal(json.total);
-      setPageSize(json.pageSize); setCanManage(!!json.canManage);
-    } catch (err) {
-      setError(errorMessage(err, "Could not load charities. Try refreshing."));
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    fetchRows(page, status, search);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize, status]);
-  useEffect(() => { setPage(0); }, [status]);
-
   function handleSearch(val: string) {
     setSearch(val);
     if (searchTimer.current) clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => { setPage(0); fetchRows(0, status, val); }, 300);
+    searchTimer.current = setTimeout(() => { setPage(0); setDebouncedSearch(val); }, 300);
   }
 
   async function openEdit(id: string) {
@@ -148,7 +161,7 @@ export default function CharitiesTab() {
       if (!res.ok) { flash("err", json?.error ?? "Save failed."); return; }
       flash("ok", "Charity updated.");
       setEdit(null);
-      fetchRows(page, status, search);
+      invalidateCharities();
     } finally {
       setBusy(false);
     }
@@ -167,7 +180,7 @@ export default function CharitiesTab() {
       if (!res.ok) { flash("err", json?.error ?? "Failed."); return; }
       flash("ok", suspending ? "Charity suspended." : "Charity reinstated.");
       setEdit(null);
-      fetchRows(page, status, search);
+      invalidateCharities();
     } finally {
       setBusy(false);
     }
@@ -183,7 +196,7 @@ export default function CharitiesTab() {
       flash("ok", "Charity deleted.");
       setShowDeleteConfirm(false);
       setEdit(null);
-      fetchRows(page, status, search);
+      invalidateCharities();
     } finally {
       setDeleting(false);
     }
@@ -221,7 +234,7 @@ export default function CharitiesTab() {
       <div className="bg-white rounded-none border border-[#102C26]/12 overflow-hidden">
         <div className="px-4 sm:px-5 pt-3 pb-3 border-b border-[#102C26]/8 space-y-2.5">
           <div className="flex items-center justify-between gap-2 flex-wrap">
-            <FilterPills options={STATUS_FILTERS} value={status} onChange={setStatus} />
+            <FilterPills options={STATUS_FILTERS} value={status} onChange={changeStatus} />
             <div className="flex items-center gap-2">
               {canManage && (
                 <button onClick={() => setCreating(true)}
@@ -229,9 +242,9 @@ export default function CharitiesTab() {
                   <Plus size={14} /> <span className="hidden sm:inline">Add charity</span>
                 </button>
               )}
-              <button onClick={() => fetchRows(page, status, search)}
+              <button onClick={() => void query.refetch()}
                 className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#102C26]/80 bg-[#102C26]/5 border border-[#102C26]/15 rounded-none hover:bg-[#102C26]/10 transition-colors" title="Refresh">
-                <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
+                <RefreshCw size={13} className={query.isFetching ? "animate-spin" : ""} />
               </button>
             </div>
           </div>
@@ -244,7 +257,7 @@ export default function CharitiesTab() {
         </div>
 
         {error ? (
-          <LoadError message={error} onRetry={() => fetchRows(page, status, search)} compact />
+          <LoadError message={error} onRetry={() => void query.refetch()} compact />
         ) : loading ? <TableSkeleton /> : rows.length === 0 ? (
           <EmptyState icon={Heart} title="No charities found" hint="Approve an application or add a charity directly to seed the directory." />
         ) : (
@@ -322,7 +335,7 @@ export default function CharitiesTab() {
                 })}
               </tbody>
             </table>
-            <Pagination page={page} pageSize={pageSize} total={total} noun="charity" onPrev={() => setPage((p) => Math.max(0, p - 1))} onNext={() => setPage((p) => p + 1)} onPageSize={(s) => { setPageSize(s); setPage(0); }} onJump={(p) => setPage(p)} />
+            <Pagination page={page} pageSize={effectivePageSize} total={total} noun="charity" onPrev={() => setPage((p) => Math.max(0, p - 1))} onNext={() => setPage((p) => p + 1)} onPageSize={(s) => { setPageSize(s); setPage(0); }} onJump={(p) => setPage(p)} />
           </>
         )}
       </div>
@@ -449,7 +462,7 @@ export default function CharitiesTab() {
       )}
 
       {/* Add charity modal */}
-      {creating && <AddCharityModal onClose={() => setCreating(false)} onCreated={() => { setCreating(false); fetchRows(0, status, search); flash("ok", "Charity created."); }} onError={(m) => flash("err", m)} />}
+      {creating && <AddCharityModal onClose={() => setCreating(false)} onCreated={() => { setCreating(false); setPage(0); invalidateCharities(); flash("ok", "Charity created."); }} onError={(m) => flash("err", m)} />}
     </>
   );
 }

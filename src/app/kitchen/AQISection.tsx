@@ -60,15 +60,20 @@ export default function AQISection() {
   const [inputPulse, setInputPulse] = useState(false);
   const [query, setQuery] = useState("");
 
-  useEffect(() => {
-    pausedRef.current = query.length > 0;
-    if (query.length > 0) {
+  // `query` only ever changes from the input at the bottom of this file, so the
+  // pause + reset belongs in that handler rather than in an effect reacting to
+  // it afterwards (React docs: "you might not need an effect"). Same behaviour,
+  // one render instead of two, and the demo loop stops fighting the user typing.
+  function handleQueryChange(value: string) {
+    setQuery(value);
+    pausedRef.current = value.length > 0;
+    if (value.length > 0) {
       setUserVisible(false);
       setTyping(false);
       setAiqVisible(false);
       setInputPulse(false);
     }
-  }, [query]);
+  }
 
   useEffect(() => {
     if (!inView) return;
@@ -522,7 +527,7 @@ export default function AQISection() {
                 <input
                   type="text"
                   value={query}
-                  onChange={(e) => setQuery(e.target.value)}
+                  onChange={(e) => handleQueryChange(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") handleSubmit(); }}
                   placeholder="Ask AQI anything…"
                   className="flex-1 bg-transparent outline-none text-[13px] min-w-0"

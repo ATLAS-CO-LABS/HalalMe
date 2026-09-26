@@ -1,7 +1,9 @@
 "use client";
-import { adminRequest, errorMessage } from "../_fetch";
+import { adminFetch, adminRequest, errorMessage } from "../_fetch";
+import { adminKeys } from "../_query";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   RefreshCw, Store, Users, Gift, ChefHat, MessageSquare,
   TrendingUp, BadgeCheck, Star, Bot, Heart, MessageCircle, Timer, Download,
@@ -61,29 +63,26 @@ export default function AnalyticsPage() {
   const [range, setRange] = useState("30d");
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
-  const [data, setData] = useState<Data | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Custom dates only matter when the range is "custom"; keeping them out of the
+  // key otherwise stops a half-typed date from refetching the 30d view.
+  const from = range === "custom" ? customFrom : "";
+  const to = range === "custom" ? customTo : "";
 
-  async function load(sec: string, rng: string, from = "", to = "") {
-    setLoading(true); setError(null);
-    try {
-      const params = new URLSearchParams({ section: sec, range: rng });
-      if (rng === "custom") {
-        if (from) params.set("from", from);
-        if (to) params.set("to", to);
-      }
-      const res = await adminRequest(`/api/admin/analytics?${params}`);
-      if (!res.ok) throw new Error();
-      setData(await res.json());
-    } catch (err) {
-      setError(errorMessage(err, "Could not load analytics. Try refreshing."));
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => { load(section, range, customFrom, customTo); }, [section, range, customFrom, customTo]);
+  // Deliberately NO keepPreviousData here: each section returns a different
+  // shape, so showing the previous section's data under the new tab would render
+  // the wrong charts. A section switch shows the skeleton, as it always did.
+  const query = useQuery({
+    queryKey: adminKeys.list("analytics", { section, range, from, to }),
+    queryFn: () => {
+      const params = new URLSearchParams({ section, range });
+      if (from) params.set("from", from);
+      if (to) params.set("to", to);
+      return adminFetch<Data>(`/api/admin/analytics?${params}`);
+    },
+  });
+  const data = query.data ?? null;
+  const loading = query.isLoading;
+  const error = query.isError ? errorMessage(query.error, "Could not load analytics. Try refreshing.") : null;
 
   const s = data?.stats ?? {};
   const comparable = range !== "all"; // all-time has no comparable prior window
@@ -134,9 +133,9 @@ export default function AnalyticsPage() {
             className="flex items-center gap-2 px-3 sm:px-4 py-2 text-xs font-bold uppercase tracking-wide text-[#102C26]/80 bg-[#102C26]/5 border border-[#102C26]/15 rounded-none hover:bg-[#102C26]/10 transition-colors disabled:opacity-50">
             <Download size={14} /> <span className="hidden sm:inline">Export</span>
           </button>
-          <button onClick={() => load(section, range, customFrom, customTo)}
+          <button onClick={() => void query.refetch()}
             className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#102C26]/80 bg-[#102C26]/5 border border-[#102C26]/15 rounded-none hover:bg-[#102C26]/10 transition-colors" title="Refresh">
-            <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
+            <RefreshCw size={13} className={query.isFetching ? "animate-spin" : ""} />
           </button>
         </div>
       </div>
@@ -154,7 +153,7 @@ export default function AnalyticsPage() {
 
       <div className="px-4 sm:px-8 py-5 space-y-5">
         {error ? (
-          <LoadError message={error} onRetry={() => load(section, range, customFrom, customTo)} compact />
+          <LoadError message={error} onRetry={() => void query.refetch()} compact />
         ) : loading ? (
           <div className="animate-pulse space-y-5">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">{Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-24 bg-white border border-[#102C26]/10 rounded-none" />)}</div>

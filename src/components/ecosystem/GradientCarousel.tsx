@@ -35,6 +35,10 @@ export default function GradientCarousel({ items }: GradientCarouselProps) {
 
   useEffect(() => {
     if (!emblaApi) return;
+    // Seeds React state from Embla's current slide, then subscribes. This is the
+    // "subscribe to an external system" case effects exist for: emblaApi does not
+    // exist on the first render, so there is no earlier point at which to read it.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     onSelect();
     emblaApi.on('select', onSelect);
     return () => {

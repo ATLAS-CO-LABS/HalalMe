@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Eye, EyeOff, ChefHat, ArrowRight, Loader2, Mail } from "lucide-react";
+import { X, Eye, EyeOff, ChefHat, ArrowRight, Mail } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import type { AuthGateModalProps } from "@/hooks/useAuthGate";
 import { track } from "@vercel/analytics";

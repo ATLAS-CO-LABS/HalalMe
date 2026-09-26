@@ -1,7 +1,9 @@
 "use client";
-import { adminRequest } from "../../_fetch";
+import { AdminFetchError, adminFetch, adminRequest } from "../../_fetch";
+import { adminKeys } from "../../_query";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -57,6 +59,15 @@ const PRIORITY_OPTIONS = [
   { value: "high", label: "High priority" },
 ];
 
+interface ThreadPayload {
+  conversation: Conversation;
+  messages: Message[];
+  canManage: boolean;
+  evermileUrl: string | null;
+}
+
+const NO_MESSAGES: Message[] = [];
+
 function fmtTime(iso: string): string {
   return new Date(iso).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 }
@@ -67,107 +78,122 @@ export default function AdminThreadPage() {
   const { toast, flash } = useToast();
 
   const { team } = useAdmin();
-  const [conversation, setConversation] = useState<Conversation | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [canManage, setCanManage] = useState(false);
-  const [evermileUrl, setEvermileUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
+    queryKey: adminKeys.detail("support", id),
+    queryFn: () => adminFetch<ThreadPayload>(`/api/admin/support/conversations/${id}`),
+    // Near-live thread. Replaces the old 20s setInterval + focus listener.
+    refetchInterval: 20_000,
+  });
+
+  const conversation = query.data?.conversation ?? null;
+  const messages = query.data?.messages ?? NO_MESSAGES;
+  const canManage = !!query.data?.canManage;
+  const evermileUrl = query.data?.evermileUrl ?? null;
+  const loading = query.isLoading;
+  // A deleted or mistyped id comes back as a 404 from the route handler, which
+  // adminFetch turns into an AdminFetchError carrying the status.
+  const notFound =
+    query.isError && query.error instanceof AdminFetchError && query.error.status === 404;
+
+  // Any write here can change the inbox row and the sidebar's open-ticket badge,
+  // so invalidate the whole support module plus the identity query that carries
+  // the badge counts.
+  function invalidateThread() {
+    void queryClient.invalidateQueries({ queryKey: adminKeys.module("support") });
+    void queryClient.invalidateQueries({ queryKey: adminKeys.module("me") });
+  }
 
   const [reply, setReply] = useState("");
   const [replyInternal, setReplyInternal] = useState(false);
-  const [sending, setSending] = useState(false);
   const [savingField, setSavingField] = useState<string | null>(null);
   const [deliveryRef, setDeliveryRef] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deleting, setDeleting] = useState(false);
 
   const bottomRef = useRef<HTMLDivElement>(null);
-
-  const load = useCallback(async () => {
-    try {
-      const res = await adminRequest(`/api/admin/support/conversations/${id}`);
-      if (res.status === 404) { setNotFound(true); return; }
-      if (!res.ok) throw new Error();
-      const data = await res.json();
-      setConversation(data.conversation);
-      setMessages(data.messages ?? []);
-      setCanManage(!!data.canManage);
-      setEvermileUrl(data.evermileUrl ?? null);
-    } catch {
-      flash("err", "Could not load conversation.");
-    } finally {
-      setLoading(false);
-    }
-  }, [id, flash]);
-
-  useEffect(() => { load(); }, [load]);
 
   // Keep the delivery-reference input in sync with the saved value (won't clobber
   // local typing, since this only fires when the persisted value changes).
   useEffect(() => {
+    // Seeding an editable input from a value that arrives asynchronously. Keyed
+    // on the persisted value alone so a background refetch never overwrites what
+    // the admin is currently typing.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDeliveryRef(conversation?.delivery_reference ?? "");
   }, [conversation?.delivery_reference]);
 
-  // Near-live thread: silent refetch every 20s and on tab focus.
-  useEffect(() => {
-    const tick = () => { if (!document.hidden) load(); };
-    const interval = setInterval(tick, 20000);
-    window.addEventListener("focus", tick);
-    return () => { clearInterval(interval); window.removeEventListener("focus", tick); };
-  }, [load]);
-
   useEffect(() => { bottomRef.current?.scrollIntoView(); }, [messages]);
 
-  async function patch(body: Record<string, unknown>, field: string) {
-    setSavingField(field);
-    try {
+  // Reads the route handler's own { error } message out of a failed response so
+  // the toast says what actually went wrong.
+  async function failure(res: Response, fallback: string): Promise<Error> {
+    const j = (await res.json().catch(() => null)) as { error?: string } | null;
+    return new Error(j?.error ?? fallback);
+  }
+
+  const patchMutation = useMutation({
+    mutationFn: async ({ body }: { body: Record<string, unknown>; field: string }) => {
       const res = await adminRequest(`/api/admin/support/conversations/${id}`, {
         method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
       });
-      if (!res.ok) { const j = await res.json().catch(() => null); flash("err", j?.error ?? "Update failed."); return; }
-      flash("ok", "Updated.");
-      await load();
-    } finally {
-      setSavingField(null);
-    }
+      if (!res.ok) throw await failure(res, "Update failed.");
+    },
+    onMutate: ({ field }) => { setSavingField(field); },
+    onSuccess: () => { flash("ok", "Updated."); invalidateThread(); },
+    onError: (err: Error) => flash("err", err.message),
+    onSettled: () => setSavingField(null),
+  });
+
+  // Same signature the four call sites already use — only the body changed.
+  function patch(body: Record<string, unknown>, field: string) {
+    patchMutation.mutate({ body, field });
   }
 
-  async function deleteConversation() {
-    setDeleting(true);
-    try {
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
       const res = await adminRequest(`/api/admin/support/conversations/${id}`, { method: "DELETE" });
-      if (!res.ok) {
-        const j = await res.json().catch(() => null);
-        flash("err", j?.error ?? "Could not delete conversation.");
-        return;
-      }
+      if (!res.ok) throw await failure(res, "Could not delete conversation.");
+    },
+    onSuccess: () => {
+      invalidateThread();
       router.push("/admin/chat");
-    } finally {
-      setDeleting(false);
-    }
-  }
+    },
+    onError: (err: Error) => flash("err", err.message),
+  });
 
-  async function handleSend(e: React.FormEvent) {
+  const sendMutation = useMutation({
+    mutationFn: async (message: string) => {
+      const res = await adminRequest(`/api/admin/support/conversations/${id}/messages`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message, internal: replyInternal }),
+      });
+      if (!res.ok) throw await failure(res, "Could not send reply.");
+      return (await res.json()) as { message?: Message };
+    },
+    onSuccess: (data) => {
+      setReply("");
+      flash("ok", replyInternal ? "Internal note added." : "Reply sent.");
+      // Append straight into the cache so the message appears immediately rather
+      // than after a round trip. The invalidate below still refreshes it to pick
+      // up the sender name and any status change the server made.
+      if (data.message) {
+        queryClient.setQueryData<ThreadPayload>(adminKeys.detail("support", id), (prev) =>
+          prev ? { ...prev, messages: [...prev.messages, data.message!] } : prev,
+        );
+      }
+      invalidateThread();
+    },
+    onError: (err: Error) => flash("err", err.message),
+  });
+
+  const sending = sendMutation.isPending;
+  const deleting = deleteMutation.isPending;
+
+  function handleSend(e: React.FormEvent) {
     e.preventDefault();
     const m = reply.trim();
     if (!m) return;
-    setSending(true);
-    try {
-      const res = await adminRequest(`/api/admin/support/conversations/${id}/messages`, {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: m, internal: replyInternal }),
-      });
-      if (!res.ok) { const j = await res.json().catch(() => null); flash("err", j?.error ?? "Could not send reply."); return; }
-      const data = await res.json();
-      setReply("");
-      flash("ok", replyInternal ? "Internal note added." : "Reply sent.");
-      // Show it immediately rather than waiting on a full reload — the reply
-      // notification email is sent in the background on the server now too.
-      if (data.message) setMessages((prev) => [...prev, data.message]);
-      load(); // background refresh, e.g. to pick up sender name / status change
-    } finally {
-      setSending(false);
-    }
+    sendMutation.mutate(m);
   }
 
   function handleReplyKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -415,7 +441,7 @@ export default function AdminThreadPage() {
           </div>
           <div className="mt-5 flex items-center justify-end gap-2">
             <button onClick={() => setShowDeleteConfirm(false)} disabled={deleting} className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">Cancel</button>
-            <button onClick={deleteConversation} disabled={deleting}
+            <button onClick={() => deleteMutation.mutate()} disabled={deleting}
               className="inline-flex items-center gap-2 px-4 py-2 text-sm font-bold uppercase tracking-tight text-white rounded-none disabled:opacity-50 bg-red-600 hover:bg-red-700 transition-colors">
               {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />} Delete forever
             </button>

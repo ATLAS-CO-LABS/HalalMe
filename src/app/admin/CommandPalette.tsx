@@ -1,7 +1,9 @@
 "use client";
-import { adminRequest } from "./_fetch";
+import { adminFetch } from "./_fetch";
+import { adminKeys } from "./_query";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Search, Loader2, Users, Store, LifeBuoy, Heart, CornerDownLeft } from "lucide-react";
 import { Z } from "./_ui";
@@ -15,6 +17,7 @@ const TYPE_META: Record<Hit["type"], { icon: React.ElementType; label: string }>
   charity: { icon: Heart, label: "Charities" },
 };
 const TYPE_ORDER: Hit["type"][] = ["user", "merchant", "ticket", "charity"];
+const NO_HITS: Hit[] = [];
 
 // Global ⌘K / Ctrl-K command palette: cross-module record search (users,
 // merchants, tickets, charities) that jumps straight to a record's page.
@@ -23,12 +26,11 @@ export default function CommandPalette() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
-  const [hits, setHits] = useState<Hit[]>([]);
-  const [loading, setLoading] = useState(false);
+  // What the input shows vs. what the query key searches for. The key is the
+  // dependency now, so the debounce gates the key rather than a fetch call.
+  const [term, setTerm] = useState("");
   const [active, setActive] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
-  const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const reqId = useRef(0);
 
   // Open on ⌘K / Ctrl-K (and "/" when not typing); toggle.
   useEffect(() => {
@@ -51,34 +53,33 @@ export default function CommandPalette() {
   // Reset + focus when opened/closed.
   useEffect(() => {
     if (open) {
-      setQ(""); setHits([]); setActive(0);
+      setQ(""); setTerm(""); setActive(0);
       requestAnimationFrame(() => inputRef.current?.focus());
     }
   }, [open]);
 
-  // Debounced search.
+  // Debounce: settle the key 200ms after typing stops.
   useEffect(() => {
-    if (!open) return;
-    const term = q.trim();
-    if (debounce.current) clearTimeout(debounce.current);
-    if (term.length < 2) { setHits([]); setLoading(false); return; }
-    setLoading(true);
-    debounce.current = setTimeout(async () => {
-      const id = ++reqId.current;
-      try {
-        // Shorter deadline than the 15s default: this is an interactive search box,
-        // and a stale result is discarded by the reqId guard below anyway.
-        const res = await adminRequest(`/api/admin/search?q=${encodeURIComponent(term)}`, { timeoutMs: 8000 });
-        const json = await res.json();
-        if (id === reqId.current) { setHits(res.ok ? (json.results ?? []) : []); setActive(0); }
-      } catch {
-        if (id === reqId.current) setHits([]);
-      } finally {
-        if (id === reqId.current) setLoading(false);
-      }
-    }, 200);
-    return () => { if (debounce.current) clearTimeout(debounce.current); };
-  }, [q, open]);
+    const t = setTimeout(() => { setTerm(q.trim()); setActive(0); }, 200);
+    return () => clearTimeout(t);
+  }, [q]);
+
+  // TanStack cancels a superseded search through `signal`, which replaces the
+  // old reqId guard: a stale response can no longer land on top of a newer one.
+  // Keeps the shorter 8s deadline — this is an interactive box.
+  const query = useQuery({
+    queryKey: [...adminKeys.module("search"), term] as const,
+    queryFn: ({ signal }) =>
+      adminFetch<{ results?: Hit[] }>(`/api/admin/search?q=${encodeURIComponent(term)}`, { signal, timeoutMs: 8000 }),
+    enabled: open && term.length >= 2,
+    staleTime: 10_000,
+  });
+
+  const searchable = open && term.length >= 2;
+  const hits = searchable ? (query.data?.results ?? NO_HITS) : NO_HITS;
+  // Show the spinner while the debounce is still pending too, as before.
+  const pending = q.trim().length >= 2 && q.trim() !== term;
+  const loading = pending || (searchable && query.isFetching);
 
   const go = useCallback((hit: Hit) => {
     setOpen(false);

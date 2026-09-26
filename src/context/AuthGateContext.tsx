@@ -123,7 +123,6 @@ export function AuthGateProvider({ children }: { children: React.ReactNode }) {
     }
     // Intentionally omitting `message` from deps - messageRef.current is used
     // instead to avoid spurious re-runs if message changes for other reasons.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [replayPending, user]);
 
   // ── requireAuth ───────────────────────────────────────────────────

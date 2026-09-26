@@ -1,7 +1,9 @@
 "use client";
-import { adminRequest, errorMessage } from "./_fetch";
+import { adminFetch, adminRequest, errorMessage } from "./_fetch";
+import { adminKeys } from "./_query";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { RefreshCw, Flag, EyeOff, Trash2, Check, Loader2, ShieldCheck } from "lucide-react";
 import { fmtDateTime, useToast, ToastView, TableSkeleton, EmptyState, Badge, LoadError } from "./_ui";
 
@@ -18,6 +20,13 @@ interface ReportItem {
   deleted: boolean;
 }
 
+interface ReportsPayload {
+  items: ReportItem[];
+  canManage: boolean;
+}
+
+const NO_ITEMS: ReportItem[] = [];
+
 const REASON_LABEL: Record<string, string> = {
   spam: "Spam", offensive: "Offensive", not_halal: "Not halal",
   misinformation: "Misinfo", harassment: "Harassment", other: "Other",
@@ -28,29 +37,31 @@ const REASON_LABEL: Record<string, string> = {
 // resolved so the item leaves the open queue.
 export default function ReportsQueue({ type }: { type: ContentType }) {
   const { toast, flash } = useToast();
-  const [items, setItems] = useState<ReportItem[]>([]);
-  const [canManage, setCanManage] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   const [busyId, setBusyId] = useState<string | null>(null);
 
   const noun = type === "recipe" ? "recipe" : type;
 
-  const fetchItems = useCallback(async () => {
-    setLoading(true); setError(null);
-    try {
-      const res = await adminRequest(`/api/admin/reports?type=${type}&status=open`);
-      if (!res.ok) throw new Error();
-      const json = await res.json();
-      setItems(json.items); setCanManage(!!json.canManage);
-    } catch (err) {
-      setError(errorMessage(err, "Could not load the report queue. Try refreshing."));
-    } finally {
-      setLoading(false);
-    }
-  }, [type]);
+  // Mounted twice on the Social page (posts + comments) and once on Kitchen.
+  // Keying by `type` keeps those independent instead of fighting over one cache
+  // entry, while the shared ['admin','reports'] prefix lets the page-level
+  // Refresh button invalidate all of them at once.
+  const query = useQuery({
+    queryKey: [...adminKeys.module("reports"), type] as const,
+    queryFn: () => adminFetch<ReportsPayload>(`/api/admin/reports?type=${type}&status=open`),
+  });
 
-  useEffect(() => { fetchItems(); }, [fetchItems]);
+  const items = query.data?.items ?? NO_ITEMS;
+  const canManage = !!query.data?.canManage;
+  const loading = query.isLoading;
+  const error = query.isError ? errorMessage(query.error, "Could not load the report queue. Try refreshing.") : null;
+
+  // A moderation action here changes the underlying post/comment/recipe too, so
+  // refresh the owning module alongside the queue.
+  function invalidateAfterAction() {
+    void queryClient.invalidateQueries({ queryKey: adminKeys.module("reports") });
+    void queryClient.invalidateQueries({ queryKey: adminKeys.module(type === "recipe" ? "kitchen" : "hub") });
+  }
 
   // Endpoints for the actual content action, per type.
   function contentEndpoint(id: string) {
@@ -87,7 +98,7 @@ export default function ReportsQueue({ type }: { type: ContentType }) {
         await resolveReports(item.contentId, "reviewed");
         flash("ok", "Hidden from the public.");
       }
-      fetchItems();
+      invalidateAfterAction();
     } catch {
       flash("err", "Action failed. Please try again.");
     } finally {
@@ -104,14 +115,14 @@ export default function ReportsQueue({ type }: { type: ContentType }) {
             <Flag size={15} className="text-red-500" /> Reported {noun}s
             {items.length > 0 && <span className="text-xs font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full">{items.length}</span>}
           </p>
-          <button onClick={fetchItems} title="Refresh"
+          <button onClick={() => void query.refetch()} title="Refresh"
             className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#102C26]/80 bg-[#102C26]/5 border border-[#102C26]/15 rounded-none hover:bg-[#102C26]/10 transition-colors">
-            <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
+            <RefreshCw size={13} className={query.isFetching ? "animate-spin" : ""} />
           </button>
         </div>
 
         {error ? (
-          <LoadError message={error} onRetry={() => fetchItems()} compact />
+          <LoadError message={error} onRetry={() => void query.refetch()} compact />
         ) : loading ? <TableSkeleton /> : items.length === 0 ? (
           <EmptyState icon={ShieldCheck} title="Nothing reported" hint={`User reports about ${noun}s will appear here for review.`} />
         ) : (

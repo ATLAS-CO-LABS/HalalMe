@@ -13,6 +13,27 @@ function RouteProgressBarInner() {
   const tickRef = useRef<number | null>(null);
   const isFirstRender = useRef(true);
 
+  function start() {
+    if (tickRef.current) window.clearInterval(tickRef.current);
+    setVisible(true);
+    setProgress(12);
+    tickRef.current = window.setInterval(() => {
+      setProgress((p) => (p < 88 ? p + (88 - p) * 0.12 : p));
+    }, 180);
+  }
+
+  function finish() {
+    if (tickRef.current) {
+      window.clearInterval(tickRef.current);
+      tickRef.current = null;
+    }
+    setProgress(100);
+    window.setTimeout(() => {
+      setVisible(false);
+      setProgress(0);
+    }, 250);
+  }
+
   useEffect(() => {
     function onClick(e: MouseEvent) {
       if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
@@ -38,32 +59,15 @@ function RouteProgressBarInner() {
     return () => document.removeEventListener("click", onClick);
   }, []);
 
-  function start() {
-    if (tickRef.current) window.clearInterval(tickRef.current);
-    setVisible(true);
-    setProgress(12);
-    tickRef.current = window.setInterval(() => {
-      setProgress((p) => (p < 88 ? p + (88 - p) * 0.12 : p));
-    }, 180);
-  }
-
-  function finish() {
-    if (tickRef.current) {
-      window.clearInterval(tickRef.current);
-      tickRef.current = null;
-    }
-    setProgress(100);
-    window.setTimeout(() => {
-      setVisible(false);
-      setProgress(0);
-    }, 250);
-  }
-
+  // Route change completed -> run the bar out. Reacting to pathname/searchParams
+  // is the whole point of this component; there is no earlier place to notice a
+  // navigation finished, so the setState here is the intended behaviour.
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     finish();
   }, [pathname, searchParams]);
 

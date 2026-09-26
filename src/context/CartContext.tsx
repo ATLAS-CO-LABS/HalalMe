@@ -26,7 +26,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Load cart from localStorage on mount
+  // Load cart from localStorage on mount.
+  //
+  // This has to stay an effect. The usual fix for set-state-in-effect is a lazy
+  // useState initialiser, but that would run during SSR where localStorage does
+  // not exist, and seeding different values on server and client is a hydration
+  // mismatch. Reading after mount is the correct pattern here, and the extra
+  // render it costs is unavoidable, not accidental.
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     const storedCart = localStorage.getItem(CART_STORAGE_KEY);
     if (storedCart) {
@@ -38,6 +45,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
     setIsInitialized(true);
   }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Save cart to localStorage whenever it changes
   useEffect(() => {

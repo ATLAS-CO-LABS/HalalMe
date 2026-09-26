@@ -33,6 +33,7 @@ export function useAppResume(onReconnect?: () => void | Promise<void>): void {
   // Stable ref — callback can change on every render without re-registering
   // the event listeners.
   const callbackRef = useRef(onReconnect);
+  // eslint-disable-next-line react-hooks/refs
   callbackRef.current = onReconnect;
 
   useEffect(() => {
@@ -41,6 +42,5 @@ export function useAppResume(onReconnect?: () => void | Promise<void>): void {
     });
     return cleanup;
     // Empty deps: listeners are registered once for the component's lifetime.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }

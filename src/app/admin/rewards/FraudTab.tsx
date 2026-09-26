@@ -1,7 +1,9 @@
 "use client";
-import { adminRequest, errorMessage } from "../_fetch";
+import { adminFetch, adminRequest, errorMessage } from "../_fetch";
+import { adminKeys } from "../_query";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   RefreshCw, ShieldAlert, ShieldCheck, ShieldX, ChevronRight, Loader2, X, Banknote,
 } from "lucide-react";
@@ -51,40 +53,45 @@ const STATUS_LABEL: Record<string, string> = {
   pending_review: "Pending", reviewed_safe: "Cleared", reviewed_blocked: "Blocked", auto_cleared: "Auto-cleared",
 };
 
+interface FlagsPayload {
+  flags: FlagRow[];
+  stats: { pending: number; safe: number; blocked: number };
+  total: number;
+  pageSize: number;
+  canManage: boolean;
+}
+const NO_FLAGS: FlagRow[] = [];
+
 export default function FraudTab() {
   const { toast, flash } = useToast();
-  const [rows, setRows] = useState<FlagRow[]>([]);
-  const [stats, setStats] = useState<{ pending: number; safe: number; blocked: number } | null>(null);
-  const [total, setTotal] = useState(0);
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(0);
+  // Requested size; the server's clamped value is read back for display only.
   const [pageSize, setPageSize] = useState(25);
-  const [canManage, setCanManage] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState("pending_review");
+
+  const query = useQuery({
+    queryKey: adminKeys.list("donation-flags", { page, pageSize, status }),
+    queryFn: () => {
+      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize), status });
+      return adminFetch<FlagsPayload>(`/api/admin/donation-flags?${params}`);
+    },
+    placeholderData: keepPreviousData,
+  });
+
+  const rows = query.data?.flags ?? NO_FLAGS;
+  const stats = query.data?.stats ?? null;
+  const total = query.data?.total ?? 0;
+  const effectivePageSize = query.data?.pageSize ?? pageSize;
+  const canManage = !!query.data?.canManage;
+  const loading = query.isLoading;
+  const error = query.isError ? errorMessage(query.error, "Could not load fraud flags. Try refreshing.") : null;
+
+  const changeStatus = (v: string) => { setStatus(v); setPage(0); };
 
   const [detail, setDetail] = useState<FlagRow | null>(null);
   const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
-
-  async function fetchRows(p: number, s: string) {
-    setLoading(true); setError(null);
-    try {
-      const params = new URLSearchParams({ page: String(p), pageSize: String(pageSize), status: s });
-      const res = await adminRequest(`/api/admin/donation-flags?${params}`);
-      if (!res.ok) throw new Error();
-      const json = await res.json();
-      setRows(json.flags); setStats(json.stats); setTotal(json.total);
-      setPageSize(json.pageSize); setCanManage(!!json.canManage);
-    } catch (err) {
-      setError(errorMessage(err, "Could not load fraud flags. Try refreshing."));
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => { fetchRows(page, status); }, [page, pageSize, status]);
-  useEffect(() => { setPage(0); }, [status]);
 
   async function review(action: "safe" | "blocked") {
     if (!detail) return;
@@ -98,7 +105,11 @@ export default function FraudTab() {
       if (!res.ok) { flash("err", json?.error ?? "Action failed."); return; }
       flash("ok", action === "safe" ? "Marked safe — rewards released." : "Blocked — refund initiated.");
       setDetail(null); setNotes("");
-      fetchRows(page, status);
+      // "Safe" releases withheld rewards and "blocked" refunds the donation, so
+      // the donations ledger and the overview's fraud card change too.
+      void queryClient.invalidateQueries({ queryKey: adminKeys.module("donation-flags") });
+      void queryClient.invalidateQueries({ queryKey: adminKeys.module("donations") });
+      void queryClient.invalidateQueries({ queryKey: adminKeys.module("overview") });
     } finally {
       setBusy(null);
     }
@@ -116,15 +127,15 @@ export default function FraudTab() {
 
       <div className="bg-white rounded-none border border-[#102C26]/12 overflow-hidden">
         <div className="px-4 sm:px-5 pt-3 pb-3 border-b border-[#102C26]/8 flex items-center justify-between gap-2 flex-wrap">
-          <FilterPills options={STATUS_FILTERS} value={status} onChange={setStatus} />
-          <button onClick={() => fetchRows(page, status)}
+          <FilterPills options={STATUS_FILTERS} value={status} onChange={changeStatus} />
+          <button onClick={() => void query.refetch()}
             className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#102C26]/80 bg-[#102C26]/5 border border-[#102C26]/15 rounded-none hover:bg-[#102C26]/10 transition-colors" title="Refresh">
-            <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
+            <RefreshCw size={13} className={query.isFetching ? "animate-spin" : ""} />
           </button>
         </div>
 
         {error ? (
-          <LoadError message={error} onRetry={() => fetchRows(page, status)} compact />
+          <LoadError message={error} onRetry={() => void query.refetch()} compact />
         ) : loading ? <TableSkeleton /> : rows.length === 0 ? (
           <EmptyState icon={ShieldCheck} title="No flags here" hint="Donations that trip the risk rules land in this queue for manual review." />
         ) : (
@@ -186,7 +197,7 @@ export default function FraudTab() {
                 })}
               </tbody>
             </table>
-            <Pagination page={page} pageSize={pageSize} total={total} noun="flag" onPrev={() => setPage((p) => Math.max(0, p - 1))} onNext={() => setPage((p) => p + 1)} onPageSize={(s) => { setPageSize(s); setPage(0); }} onJump={(p) => setPage(p)} />
+            <Pagination page={page} pageSize={effectivePageSize} total={total} noun="flag" onPrev={() => setPage((p) => Math.max(0, p - 1))} onNext={() => setPage((p) => p + 1)} onPageSize={(s) => { setPageSize(s); setPage(0); }} onJump={(p) => setPage(p)} />
           </>
         )}
       </div>

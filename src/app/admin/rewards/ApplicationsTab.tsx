@@ -1,7 +1,9 @@
 "use client";
-import { adminRequest, errorMessage } from "../_fetch";
+import { adminFetch, adminRequest, errorMessage } from "../_fetch";
+import { adminKeys } from "../_query";
 
 import { useEffect, useRef, useState } from "react";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Search, RefreshCw, Inbox, Clock, CheckCircle2, XCircle, FileText,
   ChevronRight, ExternalLink, Loader2, X, ShieldCheck,
@@ -51,18 +53,45 @@ const CHECK_TONE: Record<string, "green" | "red" | "gray" | "amber"> = {
   matched: "green", not_found: "red", error: "red", pending: "amber", not_checked: "gray",
 };
 
+const NO_APPS: AppRow[] = [];
+
 export default function ApplicationsTab() {
   const { toast, flash } = useToast();
-  const [rows, setRows] = useState<AppRow[]>([]);
-  const [stats, setStats] = useState<{ pending: number; underReview: number; approved: number; rejected: number } | null>(null);
-  const [total, setTotal] = useState(0);
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(0);
+  // Requested size; the server's clamped value is read back for display only.
   const [pageSize, setPageSize] = useState(25);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState("pending");
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => { if (searchTimer.current) clearTimeout(searchTimer.current); }, []);
+
+  const query = useQuery({
+    queryKey: adminKeys.list("charity-apps", { page, pageSize, status, search: debouncedSearch }),
+    queryFn: () => {
+      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+      if (status !== "all") params.set("status", status);
+      if (debouncedSearch) params.set("search", debouncedSearch);
+      return adminFetch<{
+        applications: AppRow[];
+        stats: { pending: number; underReview: number; approved: number; rejected: number };
+        total: number;
+        pageSize: number;
+      }>(`/api/admin/charity-applications?${params}`);
+    },
+    placeholderData: keepPreviousData,
+  });
+
+  const rows = query.data?.applications ?? NO_APPS;
+  const stats = query.data?.stats ?? null;
+  const total = query.data?.total ?? 0;
+  const effectivePageSize = query.data?.pageSize ?? pageSize;
+  const loading = query.isLoading;
+  const error = query.isError ? errorMessage(query.error, "Could not load applications. Try refreshing.") : null;
+
+  const changeStatus = (v: string) => { setStatus(v); setPage(0); };
 
   const [detail, setDetail] = useState<Detail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -70,34 +99,10 @@ export default function ApplicationsTab() {
   const [notes, setNotes] = useState("");
   const [level, setLevel] = useState<1 | 2>(2);
 
-  async function fetchRows(p: number, s: string, q: string) {
-    setLoading(true); setError(null);
-    try {
-      const params = new URLSearchParams({ page: String(p), pageSize: String(pageSize) });
-      if (s !== "all") params.set("status", s);
-      if (q) params.set("search", q);
-      const res = await adminRequest(`/api/admin/charity-applications?${params}`);
-      if (!res.ok) throw new Error();
-      const json = await res.json();
-      setRows(json.applications); setStats(json.stats); setTotal(json.total);
-      setPageSize(json.pageSize);
-    } catch (err) {
-      setError(errorMessage(err, "Could not load applications. Try refreshing."));
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    fetchRows(page, status, search);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize, status]);
-  useEffect(() => { setPage(0); }, [status]);
-
   function handleSearch(val: string) {
     setSearch(val);
     if (searchTimer.current) clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => { setPage(0); fetchRows(0, status, val); }, 300);
+    searchTimer.current = setTimeout(() => { setPage(0); setDebouncedSearch(val); }, 300);
   }
 
   async function openDetail(id: string) {
@@ -126,7 +131,10 @@ export default function ApplicationsTab() {
       if (!res.ok) { flash("err", json?.error ?? "Action failed."); return; }
       flash("ok", action === "approve" ? "Charity approved and added to the directory." : action === "reject" ? "Application rejected." : "Marked under review.");
       setDetail(null);
-      fetchRows(page, status, search);
+      // Approving adds the charity to the directory, so that list changes too.
+      void queryClient.invalidateQueries({ queryKey: adminKeys.module("charity-apps") });
+      void queryClient.invalidateQueries({ queryKey: adminKeys.module("charities") });
+      void queryClient.invalidateQueries({ queryKey: adminKeys.module("overview") });
     } finally {
       setBusy(null);
     }
@@ -148,10 +156,10 @@ export default function ApplicationsTab() {
         {/* Filters */}
         <div className="px-4 sm:px-5 pt-3 pb-3 border-b border-[#102C26]/8 space-y-2.5">
           <div className="flex items-center justify-between gap-2 flex-wrap">
-            <FilterPills options={STATUS_FILTERS} value={status} onChange={setStatus} />
-            <button onClick={() => fetchRows(page, status, search)}
+            <FilterPills options={STATUS_FILTERS} value={status} onChange={changeStatus} />
+            <button onClick={() => void query.refetch()}
               className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#102C26]/80 bg-[#102C26]/5 border border-[#102C26]/15 rounded-none hover:bg-[#102C26]/10 transition-colors" title="Refresh">
-              <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
+              <RefreshCw size={13} className={query.isFetching ? "animate-spin" : ""} />
             </button>
           </div>
           <div className="relative">
@@ -163,7 +171,7 @@ export default function ApplicationsTab() {
         </div>
 
         {error ? (
-          <LoadError message={error} onRetry={() => fetchRows(page, status, search)} compact />
+          <LoadError message={error} onRetry={() => void query.refetch()} compact />
         ) : loading ? <TableSkeleton /> : rows.length === 0 ? (
           <EmptyState icon={Inbox} title="No applications found" hint="Charity applications submitted by users will appear here for review." />
         ) : (
@@ -218,7 +226,7 @@ export default function ApplicationsTab() {
                 </tbody>
               </table>
             </div>
-            <Pagination page={page} pageSize={pageSize} total={total} noun="application" onPrev={() => setPage((p) => Math.max(0, p - 1))} onNext={() => setPage((p) => p + 1)} onPageSize={(s) => { setPageSize(s); setPage(0); }} onJump={(p) => setPage(p)} />
+            <Pagination page={page} pageSize={effectivePageSize} total={total} noun="application" onPrev={() => setPage((p) => Math.max(0, p - 1))} onNext={() => setPage((p) => p + 1)} onPageSize={(s) => { setPageSize(s); setPage(0); }} onJump={(p) => setPage(p)} />
           </>
         )}
       </div>

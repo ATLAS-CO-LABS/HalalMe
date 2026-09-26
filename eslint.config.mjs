@@ -12,6 +12,12 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Installed agent skills — third-party example code, not ours to fix.
+    ".agents/**",
+    // Deno edge functions: different runtime, different tsconfig, and they
+    // already carry their own `deno-lint-ignore` directives. Lint them with
+    // `deno lint`, not with the Next.js config.
+    "supabase/functions/**",
   ]),
 ]);
 

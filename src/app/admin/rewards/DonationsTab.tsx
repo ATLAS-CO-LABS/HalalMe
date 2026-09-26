@@ -1,7 +1,9 @@
 "use client";
-import { adminRequest, errorMessage } from "../_fetch";
+import { adminFetch, errorMessage } from "../_fetch";
+import { adminKeys } from "../_query";
 
 import { useEffect, useRef, useState } from "react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import {
   Search, RefreshCw, Receipt, CheckCircle2, RotateCcw, Banknote, ShieldAlert, Coins,
 } from "lucide-react";
@@ -41,54 +43,64 @@ const STATUS_TONE: Record<string, "green" | "amber" | "red" | "gray"> = {
   completed: "green", pending: "amber", failed: "red", refunded: "gray",
 };
 
+interface DonationStats { total: number; completed: number; refunded: number; totalRaised: number; platformFees: number }
+interface DonationsPayload {
+  donations: DonationRow[];
+  stats: DonationStats;
+  total: number;
+  pageSize: number;
+  charities?: { id: string; name: string }[];
+}
+const NO_DONATIONS: DonationRow[] = [];
+const NO_CHARITIES: { id: string; name: string }[] = [];
+
 export default function DonationsTab() {
   const { toast } = useToast();
-  const [rows, setRows] = useState<DonationRow[]>([]);
-  const [stats, setStats] = useState<{ total: number; completed: number; refunded: number; totalRaised: number; platformFees: number } | null>(null);
-  const [charities, setCharities] = useState<{ id: string; name: string }[]>([]);
-  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
+  // Requested size; the server's clamped value is read back for display only.
   const [pageSize, setPageSize] = useState(25);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [charity, setCharity] = useState("all");
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  async function fetchRows(p: number, s: string, c: string, q: string) {
-    setLoading(true); setError(null);
-    try {
-      const params = new URLSearchParams({ page: String(p), pageSize: String(pageSize) });
-      if (s !== "all") params.set("status", s);
-      if (c !== "all") params.set("charity", c);
-      if (q) params.set("search", q);
+  useEffect(() => () => { if (searchTimer.current) clearTimeout(searchTimer.current); }, []);
+
+  // Read-only ledger: no mutations here, so nothing to invalidate.
+  const query = useQuery({
+    queryKey: adminKeys.list("donations", { page, pageSize, status, charity, dateFrom, dateTo, search: debouncedSearch }),
+    queryFn: () => {
+      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+      if (status !== "all") params.set("status", status);
+      if (charity !== "all") params.set("charity", charity);
+      if (debouncedSearch) params.set("search", debouncedSearch);
       if (dateFrom) params.set("dateFrom", dateFrom);
       if (dateTo) params.set("dateTo", dateTo);
-      const res = await adminRequest(`/api/admin/donations?${params}`);
-      if (!res.ok) throw new Error();
-      const json = await res.json();
-      setRows(json.donations); setStats(json.stats); setTotal(json.total);
-      setPageSize(json.pageSize); setCharities(json.charities ?? []);
-    } catch (err) {
-      setError(errorMessage(err, "Could not load donations. Try refreshing."));
-    } finally {
-      setLoading(false);
-    }
-  }
+      return adminFetch<DonationsPayload>(`/api/admin/donations?${params}`);
+    },
+    placeholderData: keepPreviousData,
+  });
 
-  useEffect(() => {
-    fetchRows(page, status, charity, search);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize, status, charity, dateFrom, dateTo]);
-  useEffect(() => { setPage(0); }, [status, charity, dateFrom, dateTo]);
+  const rows = query.data?.donations ?? NO_DONATIONS;
+  const stats = query.data?.stats ?? null;
+  const charities = query.data?.charities ?? NO_CHARITIES;
+  const total = query.data?.total ?? 0;
+  const effectivePageSize = query.data?.pageSize ?? pageSize;
+  const loading = query.isLoading;
+  const error = query.isError ? errorMessage(query.error, "Could not load donations. Try refreshing.") : null;
+
+  // Filter changes reset to page 1 in the handler, not an effect watching them.
+  const changeStatus = (v: string) => { setStatus(v); setPage(0); };
+  const changeCharity = (v: string) => { setCharity(v); setPage(0); };
+  const changeDates = (f: string, t: string) => { setDateFrom(f); setDateTo(t); setPage(0); };
 
   function handleSearch(val: string) {
     setSearch(val);
     if (searchTimer.current) clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => { setPage(0); fetchRows(0, status, charity, val); }, 300);
+    searchTimer.current = setTimeout(() => { setPage(0); setDebouncedSearch(val); }, 300);
   }
 
   return (
@@ -106,16 +118,16 @@ export default function DonationsTab() {
       <div className="bg-white rounded-none border border-[#102C26]/12 overflow-hidden">
         <div className="px-4 sm:px-5 pt-3 pb-3 border-b border-[#102C26]/8 space-y-2.5">
           <div className="flex items-center justify-between gap-2 flex-wrap">
-            <FilterPills options={STATUS_FILTERS} value={status} onChange={setStatus} />
+            <FilterPills options={STATUS_FILTERS} value={status} onChange={changeStatus} />
             <div className="flex items-center gap-2 flex-wrap">
-              <DateRange from={dateFrom} to={dateTo} onChange={(f, t) => { setDateFrom(f); setDateTo(t); }} label="Donated" />
+              <DateRange from={dateFrom} to={dateTo} onChange={changeDates} label="Donated" />
               <div className="w-44">
-                <ThemedSelect value={charity} onChange={setCharity}
+                <ThemedSelect value={charity} onChange={changeCharity}
                   options={[{ value: "all", label: "All charities" }, ...charities.map((c) => ({ value: c.id, label: c.name }))]} />
               </div>
-              <button onClick={() => fetchRows(page, status, charity, search)}
+              <button onClick={() => void query.refetch()}
                 className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#102C26]/80 bg-[#102C26]/5 border border-[#102C26]/15 rounded-none hover:bg-[#102C26]/10 transition-colors" title="Refresh">
-                <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
+                <RefreshCw size={13} className={query.isFetching ? "animate-spin" : ""} />
               </button>
             </div>
           </div>
@@ -128,7 +140,7 @@ export default function DonationsTab() {
         </div>
 
         {error ? (
-          <LoadError message={error} onRetry={() => fetchRows(page, status, charity, search)} compact />
+          <LoadError message={error} onRetry={() => void query.refetch()} compact />
         ) : loading ? <TableSkeleton /> : rows.length === 0 ? (
           <EmptyState icon={Receipt} title="No donations found" hint="Donations made through the platform will appear here." />
         ) : (
@@ -203,7 +215,7 @@ export default function DonationsTab() {
                 </tbody>
               </table>
             </div>
-            <Pagination page={page} pageSize={pageSize} total={total} noun="donation" onPrev={() => setPage((p) => Math.max(0, p - 1))} onNext={() => setPage((p) => p + 1)} onPageSize={(s) => { setPageSize(s); setPage(0); }} onJump={(p) => setPage(p)} />
+            <Pagination page={page} pageSize={effectivePageSize} total={total} noun="donation" onPrev={() => setPage((p) => Math.max(0, p - 1))} onNext={() => setPage((p) => p + 1)} onPageSize={(s) => { setPageSize(s); setPage(0); }} onJump={(p) => setPage(p)} />
           </>
         )}
       </div>

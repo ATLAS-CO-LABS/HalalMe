@@ -1,7 +1,9 @@
 "use client";
-import { adminRequest, errorMessage } from "../_fetch";
+import { adminFetch, errorMessage } from "../_fetch";
+import { adminKeys } from "../_query";
 
 import { useEffect, useRef, useState } from "react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import {
   RefreshCw, LifeBuoy, Inbox, Store, User as UserIcon,
@@ -35,6 +37,15 @@ interface Conversation {
   merchant: MerchantRef | MerchantRef[] | null;
 }
 interface Stats { open: number; pending: number; unassigned: number; }
+
+interface ConversationsPayload {
+  conversations: Conversation[];
+  stats: Stats;
+  total: number;
+  pageSize: number;
+}
+
+const NO_ROWS: Conversation[] = [];
 
 const STATUS_FILTERS = [
   { key: "all", label: "All" },
@@ -75,58 +86,69 @@ function relativeTime(iso: string): string {
 
 export default function AdminChatPage() {
   const { toast } = useToast();
-  const [rows, setRows] = useState<Conversation[]>([]);
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
+  // The size we ASK for. The server may clamp it; its answer is read back out of
+  // the query data below for display only, and never written here — writing it
+  // back would change the query key on every fetch and loop forever.
   const [pageSize, setPageSize] = useState(25);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const [status, setStatus] = useState("all");
   const [source, setSource] = useState("all");
   const [assigned, setAssigned] = useState("all");
   const [search, setSearch] = useState("");
+  // `search` is what the input shows; `debouncedSearch` is what the query key
+  // uses. The key is the dependency now, so the debounce has to gate the key
+  // rather than gate a fetch call.
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  async function fetchRows(p: number, st: string, sr: string, asg: string, q: string, silent = false) {
-    if (!silent) { setLoading(true); setError(null); }
-    try {
-      const params = new URLSearchParams({ page: String(p), pageSize: String(pageSize) });
-      if (st !== "all") params.set("status", st);
-      if (sr !== "all") params.set("source", sr);
-      if (asg !== "all") params.set("assigned", asg);
-      if (q) params.set("search", q);
-      const res = await adminRequest(`/api/admin/support/conversations?${params}`);
-      if (!res.ok) throw new Error();
-      const json = await res.json();
-      setRows(json.conversations); setStats(json.stats); setTotal(json.total); setPageSize(json.pageSize);
-      rememberList("support", (json.conversations as Conversation[]).map((c) => c.id));
-    } catch (err) {
-      setError(errorMessage(err, "Could not load conversations. Try refreshing."));
-    } finally {
-      setLoading(false);
-    }
-  }
+  const query = useQuery({
+    queryKey: adminKeys.list("support", { page, pageSize, status, source, assigned, search: debouncedSearch }),
+    queryFn: () => {
+      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+      if (status !== "all") params.set("status", status);
+      if (source !== "all") params.set("source", source);
+      if (assigned !== "all") params.set("assigned", assigned);
+      if (debouncedSearch) params.set("search", debouncedSearch);
+      return adminFetch<ConversationsPayload>(`/api/admin/support/conversations?${params}`);
+    },
+    // Near-live inbox. Replaces the old 25s setInterval plus focus listener:
+    // TanStack pauses this while the tab is hidden, and the global
+    // refetchOnWindowFocus covers the come-back-to-the-tab case.
+    refetchInterval: 25_000,
+    // Paging should not blank the table back to a skeleton.
+    placeholderData: keepPreviousData,
+  });
 
+  const rows = query.data?.conversations ?? NO_ROWS;
+  const stats = query.data?.stats ?? null;
+  const total = query.data?.total ?? 0;
+  const effectivePageSize = query.data?.pageSize ?? pageSize;
+  // isLoading is the first load only, so background refetches no longer flash
+  // the skeleton — that is what the old `silent` flag was hand-rolling.
+  const loading = query.isLoading;
+  const error = query.isError ? errorMessage(query.error, "Could not load conversations. Try refreshing.") : null;
+
+  // Changing a filter resets to page 1. Done in the handlers rather than an
+  // effect watching the filters: the reset is a consequence of the click, not
+  // something to discover on a later render.
+  const changeStatus = (v: string) => { setStatus(v); setPage(0); };
+  const changeSource = (v: string) => { setSource(v); setPage(0); };
+  const changeAssigned = (v: string) => { setAssigned(v); setPage(0); };
+
+  // Feeds the prev/next stepper on the thread page. v5 removed onSuccess from
+  // useQuery, so this side effect lives in an effect on the data instead.
   useEffect(() => {
-    fetchRows(page, status, source, assigned, search);
-  }, [page, pageSize, status, source, assigned]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { setPage(0); }, [status, source, assigned]);
+    if (query.data?.conversations) {
+      rememberList("support", query.data.conversations.map((c) => c.id));
+    }
+  }, [query.data]);
 
   function handleSearchChange(val: string) {
     setSearch(val);
     if (searchTimer.current) clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => { setPage(0); fetchRows(0, status, source, assigned, val); }, 300);
+    searchTimer.current = setTimeout(() => { setPage(0); setDebouncedSearch(val); }, 300);
   }
-
-  // Near-live inbox: silent refetch every 25s and when the tab regains focus.
-  useEffect(() => {
-    const tick = () => { if (!document.hidden) fetchRows(page, status, source, assigned, search, true); };
-    const interval = setInterval(tick, 25000);
-    window.addEventListener("focus", tick);
-    return () => { clearInterval(interval); window.removeEventListener("focus", tick); };
-  }, [page, pageSize, status, source, assigned, search]);
 
   return (
     <div className="bg-[#F3E9D6] min-h-full">
@@ -142,9 +164,9 @@ export default function AdminChatPage() {
           <h1 className={`${display.className} text-xl sm:text-2xl font-extrabold uppercase tracking-tighter text-[#102C26] leading-none`}>Support</h1>
           <p className="text-xs sm:text-sm text-gray-600 mt-1">Respond to user and merchant support conversations</p>
         </div>
-        <button onClick={() => fetchRows(page, status, source, assigned, search)}
+        <button onClick={() => void query.refetch()}
           className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#102C26]/80 bg-[#102C26]/5 border border-[#102C26]/15 rounded-none hover:bg-[#102C26]/10 transition-colors" title="Refresh">
-          <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
+          <RefreshCw size={13} className={query.isFetching ? "animate-spin" : ""} />
         </button>
       </div>
 
@@ -163,11 +185,11 @@ export default function AdminChatPage() {
           {/* Filters */}
           <div className="px-4 sm:px-5 pt-3 pb-3 border-b border-[#102C26]/8 space-y-2.5">
             <div className="flex items-center gap-2 flex-wrap">
-              <FilterPills options={STATUS_FILTERS} value={status} onChange={setStatus} />
+              <FilterPills options={STATUS_FILTERS} value={status} onChange={changeStatus} />
               <div className="w-px h-5 bg-gray-200 mx-1 hidden sm:block" />
-              <FilterPills options={SOURCE_FILTERS} value={source} onChange={setSource} />
+              <FilterPills options={SOURCE_FILTERS} value={source} onChange={changeSource} />
               <div className="w-px h-5 bg-gray-200 mx-1 hidden sm:block" />
-              <FilterPills options={ASSIGNED_FILTERS} value={assigned} onChange={setAssigned} />
+              <FilterPills options={ASSIGNED_FILTERS} value={assigned} onChange={changeAssigned} />
             </div>
             <div className="relative">
               <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
@@ -178,7 +200,7 @@ export default function AdminChatPage() {
           </div>
 
           {error ? (
-            <LoadError message={error} onRetry={() => fetchRows(page, status, source, assigned, search)} compact />
+            <LoadError message={error} onRetry={() => void query.refetch()} compact />
           ) : loading ? <TableSkeleton /> : rows.length === 0 ? (
             <EmptyState icon={LifeBuoy} title="No conversations" hint="Support messages from users and merchants will appear here." />
           ) : (
@@ -220,7 +242,7 @@ export default function AdminChatPage() {
                   );
                 })}
               </div>
-              <Pagination page={page} pageSize={pageSize} total={total} noun="conversation" onPrev={() => setPage((p) => Math.max(0, p - 1))} onNext={() => setPage((p) => p + 1)} onPageSize={(s) => { setPageSize(s); setPage(0); }} onJump={(p) => setPage(p)} />
+              <Pagination page={page} pageSize={effectivePageSize} total={total} noun="conversation" onPrev={() => setPage((p) => Math.max(0, p - 1))} onNext={() => setPage((p) => p + 1)} onPageSize={(s) => { setPageSize(s); setPage(0); }} onJump={(p) => setPage(p)} />
             </>
           )}
         </div>

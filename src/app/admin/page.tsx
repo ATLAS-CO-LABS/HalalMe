@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import {
   Users, Store, ChefHat, Gift, LifeBuoy, ShieldAlert, AlertTriangle,
@@ -8,7 +8,8 @@ import {
 } from "lucide-react";
 import { display } from "./_fonts";
 import { StatCard, LoadError, fmtMoney } from "./_ui";
-import { adminFetch, errorMessage, isAbortError } from "./_fetch";
+import { adminFetch, errorMessage } from "./_fetch";
+import { adminKeys } from "./_query";
 
 interface Overview {
   name: string | null;
@@ -52,30 +53,16 @@ const ACTIVITY_STYLE: Record<string, { icon: React.ElementType; cls: string }> =
 const FALLBACK_STYLE = { icon: Clock, cls: "bg-[#102C26]/6 text-[#102C26]/60" };
 
 export default function AdminOverviewPage() {
-  const [data, setData] = useState<Overview | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Split so the mount effect never calls setState synchronously: `loading`
-  // already starts true and `error` starts null, so the first run only needs to
-  // fire the request. `load` adds the state reset the Retry button needs.
-  const run = useCallback(() => {
-    adminFetch<Overview>("/api/admin/overview")
-      .then((d) => setData(d))
-      .catch((err) => {
-        if (isAbortError(err)) return;
-        setError(errorMessage(err, "Couldn't load the dashboard."));
-      })
-      .finally(() => setLoading(false));
-  }, []);
-
-  const load = useCallback(() => {
-    setLoading(true);
-    setError(null);
-    run();
-  }, [run]);
-
-  useEffect(() => { run(); }, [run]);
+  // The Stage 1 run/load split (to dodge the setState-in-effect lint rule) is
+  // gone: useQuery has no effect for the rule to fire on.
+  const query = useQuery({
+    queryKey: adminKeys.module("overview"),
+    queryFn: () => adminFetch<Overview>("/api/admin/overview"),
+  });
+  const data = query.data ?? null;
+  const loading = query.isLoading;
+  const error = query.isError ? errorMessage(query.error, "Couldn't load the dashboard.") : null;
+  const load = () => void query.refetch();
 
   const s = data?.stats ?? {};
 

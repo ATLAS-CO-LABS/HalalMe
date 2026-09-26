@@ -1,7 +1,9 @@
 "use client";
-import { adminRequest, errorMessage } from "../_fetch";
+import { adminFetch, adminRequest, errorMessage } from "../_fetch";
+import { adminKeys } from "../_query";
 
 import { useEffect, useRef, useState } from "react";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Search, MessageSquare, FileText, MessagesSquare, Users,
   Image as ImageIcon, EyeOff, Eye, MoreVertical, Trash2, Loader2, TrendingUp,
@@ -45,6 +47,30 @@ interface CommentRow {
 }
 interface PostStats { total: number; published: number; today: number; follows: number; }
 
+interface PostsPayload {
+  posts: PostRow[];
+  stats: PostStats;
+  total: number;
+  pageSize: number;
+  canManage: boolean;
+  topPosters?: { id: string; name: string; posts: number }[];
+  postTypes?: string[];
+}
+interface CommentsPayload {
+  comments: CommentRow[];
+  total: number;
+  pageSize: number;
+  canManage: boolean;
+}
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+interface PostPreview { post: any; comments: any[] }
+
+// Stable empty references so consumers don't see a new array each render.
+const NO_POSTS: PostRow[] = [];
+const NO_COMMENTS: CommentRow[] = [];
+const NO_POSTERS: { id: string; name: string; posts: number }[] = [];
+const NO_TYPES: string[] = [];
+
 const PUBLISHED_FILTERS = [
   { key: "all", label: "All" },
   { key: "published", label: "Published" },
@@ -57,8 +83,16 @@ const POST_TYPE_TONE: Record<string, "blue" | "purple" | "amber" | "gray" | "gre
 export default function HubPage() {
   const { toast, flash } = useToast();
   const [view, setView] = useState<"posts" | "comments" | "reported" | "deleted">("posts");
-  // Bumping this tells the active sub-view to refetch (the header Refresh button).
-  const [reloadKey, setReloadKey] = useState(0);
+  const queryClient = useQueryClient();
+
+  // Refresh used to be a counter passed down as a prop that each sub-view had to
+  // thread into its effect deps. Invalidating the module key does the same job
+  // for whichever views happen to be mounted, including both halves of the Trash
+  // tab, without any prop at all.
+  function refreshAll() {
+    void queryClient.invalidateQueries({ queryKey: adminKeys.module("hub") });
+    void queryClient.invalidateQueries({ queryKey: adminKeys.module("reports") });
+  }
 
   return (
     <div className="bg-[#F3E9D6] min-h-full">
@@ -75,7 +109,7 @@ export default function HubPage() {
             <h1 className={`${display.className} text-xl sm:text-2xl font-extrabold uppercase tracking-tighter text-[#102C26] leading-none`}>Social</h1>
             <p className="text-xs sm:text-sm text-gray-600 mt-1">Moderate the community feed — posts and comments</p>
           </div>
-          <button onClick={() => setReloadKey((k) => k + 1)} title="Refresh"
+          <button onClick={refreshAll} title="Refresh"
             className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#102C26]/80 bg-[#102C26]/5 border border-[#102C26]/15 rounded-none hover:bg-[#102C26]/10 transition-colors shrink-0">
             <RefreshCw size={13} />
           </button>
@@ -95,17 +129,17 @@ export default function HubPage() {
       </div>
 
       <div className="px-4 sm:px-8 py-5">
-        {view === "posts" ? <PostsView flash={flash} reloadKey={reloadKey} />
-          : view === "comments" ? <CommentsView flash={flash} reloadKey={reloadKey} />
+        {view === "posts" ? <PostsView flash={flash} />
+          : view === "comments" ? <CommentsView flash={flash} />
           : view === "deleted" ? (
             <div className="space-y-8">
               <div>
                 <h2 className={`${display.className} text-sm font-bold uppercase tracking-wide text-[#102C26]/70 mb-3`}>Deleted posts</h2>
-                <PostsView flash={flash} deleted reloadKey={reloadKey} />
+                <PostsView flash={flash} deleted />
               </div>
               <div>
                 <h2 className={`${display.className} text-sm font-bold uppercase tracking-wide text-[#102C26]/70 mb-3`}>Deleted comments</h2>
-                <CommentsView flash={flash} deleted reloadKey={reloadKey} />
+                <CommentsView flash={flash} deleted />
               </div>
             </div>
           )
@@ -116,21 +150,17 @@ export default function HubPage() {
 }
 
 // ─── Posts ────────────────────────────────────────────────────────────────────
-function PostsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "ok" | "err", m: string) => void; deleted?: boolean; reloadKey?: number }) {
-  const [rows, setRows] = useState<PostRow[]>([]);
-  const [stats, setStats] = useState<PostStats | null>(null);
-  const [types, setTypes] = useState<string[]>([]);
-  const [total, setTotal] = useState(0);
+function PostsView({ flash, deleted = false }: { flash: (k: "ok" | "err", m: string) => void; deleted?: boolean }) {
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(0);
+  // Requested size. The server's clamped value is read back from the response
+  // for display only — writing it here would change the key and loop.
   const [pageSize, setPageSize] = useState(25);
-  const [canManage, setCanManage] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [type, setType] = useState("all");
   const [published, setPublished] = useState("all");
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [topPosters, setTopPosters] = useState<{ id: string; name: string; posts: number }[]>([]);
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState<string | null>(null);
@@ -140,53 +170,63 @@ function PostsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "ok" 
   const [modal, setModal] = useState<PostRow | null>(null);
   const [modalBusy, setModalBusy] = useState(false);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [preview, setPreview] = useState<{ post: any; comments: any[] } | null>(null);
-  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewId, setPreviewId] = useState<string | null>(null);
 
-  async function openPreview(id: string) {
-    setMenu(null);
-    setPreviewLoading(true);
-    try {
-      const res = await adminRequest(`/api/admin/hub/posts/${id}`);
-      if (!res.ok) throw new Error();
-      setPreview(await res.json());
-    } catch {
-      flash("err", "Could not load post.");
-    } finally {
-      setPreviewLoading(false);
-    }
-  }
-
-  async function fetchRows(p: number, t: string, pub: string, q: string) {
-    setLoading(true); setError(null);
-    try {
-      const params = new URLSearchParams({ page: String(p), pageSize: String(pageSize) });
+  const query = useQuery({
+    queryKey: adminKeys.list("hub", { view: "posts", deleted, page, pageSize, type, published, search: debouncedSearch }),
+    queryFn: () => {
+      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
       if (deleted) params.set("deleted", "1");
-      if (t !== "all") params.set("type", t);
-      if (pub !== "all") params.set("published", pub);
-      if (q) params.set("search", q);
-      const res = await adminRequest(`/api/admin/hub/posts?${params}`);
-      if (!res.ok) throw new Error();
-      const json = await res.json();
-      setRows(json.posts); setStats(json.stats); setTotal(json.total);
-      setPageSize(json.pageSize); setCanManage(!!json.canManage);
-      setTopPosters(json.topPosters ?? []);
-      // Canonical, complete type list from the API (mirrors the DB constraint).
-      if (json.postTypes) setTypes(json.postTypes);
-    } catch (err) {
-      setError(errorMessage(err, "Could not load posts. Try refreshing."));
-    } finally {
-      setLoading(false);
-    }
+      if (type !== "all") params.set("type", type);
+      if (published !== "all") params.set("published", published);
+      if (debouncedSearch) params.set("search", debouncedSearch);
+      return adminFetch<PostsPayload>(`/api/admin/hub/posts?${params}`);
+    },
+    placeholderData: keepPreviousData,
+  });
+
+  const rows = query.data?.posts ?? NO_POSTS;
+  const stats = query.data?.stats ?? null;
+  const total = query.data?.total ?? 0;
+  const effectivePageSize = query.data?.pageSize ?? pageSize;
+  // Server-authoritative, and deliberately read off the LIST response rather
+  // than from AdminProvider. Do not "tidy" this into the permissions context.
+  const canManage = !!query.data?.canManage;
+  const topPosters = query.data?.topPosters ?? NO_POSTERS;
+  // Canonical, complete type list from the API (mirrors the DB constraint).
+  const types = query.data?.postTypes ?? NO_TYPES;
+  const loading = query.isLoading;
+  const error = query.isError ? errorMessage(query.error, "Could not load posts. Try refreshing.") : null;
+
+  // Detail-on-demand: only runs once a row has been clicked.
+  const previewQuery = useQuery({
+    queryKey: adminKeys.detail("hub-post", previewId ?? ""),
+    queryFn: () => adminFetch<PostPreview>(`/api/admin/hub/posts/${previewId}`),
+    enabled: !!previewId,
+  });
+  const preview = previewId ? previewQuery.data ?? null : null;
+  const previewLoading = previewQuery.isLoading && !!previewId;
+  const previewError = !!previewId && previewQuery.isError;
+
+  function openPreview(id: string) {
+    setMenu(null);
+    setPreviewId(id);
   }
 
-  useEffect(() => {
-    fetchRows(page, type, published, search);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize, type, published, deleted, reloadKey]);
-  useEffect(() => { setPage(0); }, [type, published]);
-  useEffect(() => { setSelectedIds(new Set()); setBulkDelete(false); }, [page, type, published, search]);
+  // Refetch this view (and its sibling in the Trash tab) after a write.
+  function invalidateHub() {
+    void queryClient.invalidateQueries({ queryKey: adminKeys.module("hub") });
+  }
+
+  // Page/filter/search changes clear the selection and close the bulk-delete
+  // confirm. Done in the handlers below rather than an effect watching them.
+  function resetSelection() {
+    setSelectedIds(new Set());
+    setBulkDelete(false);
+  }
+  function changePage(p: number) { setPage(p); resetSelection(); }
+  function changeType(v: string) { setType(v); setPage(0); resetSelection(); }
+  function changePublished(v: string) { setPublished(v); setPage(0); resetSelection(); }
 
   function toggleSelect(id: string) {
     setSelectedIds((prev) => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; });
@@ -211,7 +251,7 @@ function PostsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "ok" 
       const verb = action === "delete" ? "moved to Trash" : action === "restore" ? "restored" : action === "purge" ? "permanently deleted" : "updated";
       flash("ok", `${json.updated} post${json.updated !== 1 ? "s" : ""} ${verb}.`);
       setSelectedIds(new Set()); setBulkDelete(false);
-      fetchRows(page, type, published, search);
+      invalidateHub();
     } catch {
       flash("err", "Bulk action failed.");
     } finally {
@@ -224,7 +264,7 @@ function PostsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "ok" 
     const res = await adminRequest(`/api/admin/hub/posts/${p.id}`, {
       method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ restore: true }),
     });
-    if (res.ok) { flash("ok", "Post restored."); fetchRows(page, type, published, search); }
+    if (res.ok) { flash("ok", "Post restored."); invalidateHub(); }
     else flash("err", "Restore failed.");
   }
 
@@ -244,7 +284,7 @@ function PostsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "ok" 
   function handleSearch(val: string) {
     setSearch(val);
     if (searchTimer.current) clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => { setPage(0); fetchRows(0, type, published, val); }, 300);
+    searchTimer.current = setTimeout(() => { setPage(0); resetSelection(); setDebouncedSearch(val); }, 300);
   }
 
   async function togglePublish(p: PostRow) {
@@ -252,7 +292,7 @@ function PostsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "ok" 
     const res = await adminRequest(`/api/admin/hub/posts/${p.id}`, {
       method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ is_published: !p.is_published }),
     });
-    if (res.ok) { flash("ok", p.is_published ? "Post hidden." : "Post published."); fetchRows(page, type, published, search); }
+    if (res.ok) { flash("ok", p.is_published ? "Post hidden." : "Post published."); invalidateHub(); }
     else { const j = await res.json().catch(() => null); flash("err", j?.error ?? "Update failed."); }
   }
 
@@ -261,7 +301,7 @@ function PostsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "ok" 
     setModalBusy(true);
     try {
       const res = await adminRequest(`/api/admin/hub/posts/${modal.id}${deleted ? "?hard=1" : ""}`, { method: "DELETE" });
-      if (res.ok) { flash("ok", deleted ? "Post permanently deleted." : "Post moved to Trash."); setModal(null); fetchRows(page, type, published, search); }
+      if (res.ok) { flash("ok", deleted ? "Post permanently deleted." : "Post moved to Trash."); setModal(null); invalidateHub(); }
       else { const j = await res.json().catch(() => null); flash("err", j?.error ?? "Delete failed."); }
     } finally {
       setModalBusy(false);
@@ -308,8 +348,8 @@ function PostsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "ok" 
       <div className="bg-white rounded-none border border-[#102C26]/12 overflow-hidden">
         <div className="px-4 sm:px-5 pt-3 pb-3 border-b border-[#102C26]/8 space-y-2.5">
           <div className="flex items-center gap-2 flex-wrap">
-            <FilterPills options={PUBLISHED_FILTERS} value={published} onChange={setPublished} />
-            {types.length > 0 && <><div className="w-px h-5 bg-gray-200 mx-1 hidden sm:block" /><FilterPills options={typeFilters} value={type} onChange={setType} /></>}
+            <FilterPills options={PUBLISHED_FILTERS} value={published} onChange={changePublished} />
+            {types.length > 0 && <><div className="w-px h-5 bg-gray-200 mx-1 hidden sm:block" /><FilterPills options={typeFilters} value={type} onChange={changeType} /></>}
           </div>
           <div className="relative">
             <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
@@ -360,7 +400,7 @@ function PostsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "ok" 
         )}
 
         {error ? (
-          <LoadError message={error} onRetry={() => fetchRows(page, type, published, search)} compact />
+          <LoadError message={error} onRetry={() => void query.refetch()} compact />
         ) : loading ? <TableSkeleton /> : rows.length === 0 ? (
           <EmptyState icon={MessageSquare} title="No posts found" hint="Posts from the community feed will appear here for moderation." />
         ) : (
@@ -472,7 +512,7 @@ function PostsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "ok" 
               </tbody>
             </table>
             </div>
-            <Pagination page={page} pageSize={pageSize} total={total} noun="post" onPrev={() => setPage((p) => Math.max(0, p - 1))} onNext={() => setPage((p) => p + 1)} onPageSize={(s) => { setPageSize(s); setPage(0); }} onJump={(p) => setPage(p)} />
+            <Pagination page={page} pageSize={effectivePageSize} total={total} noun="post" onPrev={() => changePage(Math.max(0, page - 1))} onNext={() => changePage(page + 1)} onPageSize={(s) => { setPageSize(s); changePage(0); }} onJump={changePage} />
           </>
         )}
       </div>
@@ -524,9 +564,11 @@ function PostsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "ok" 
       )}
 
       {/* Post preview */}
-      {(preview || previewLoading) && (
-        <Modal open onClose={() => setPreview(null)} maxWidth="max-w-lg" className="max-h-[90vh] overflow-y-auto">
-            {previewLoading || !preview ? (
+      {previewId && (
+        <Modal open onClose={() => setPreviewId(null)} maxWidth="max-w-lg" className="max-h-[90vh] overflow-y-auto">
+            {previewError ? (
+              <LoadError message={errorMessage(previewQuery.error, "Could not load post.")} onRetry={() => void previewQuery.refetch()} compact />
+            ) : previewLoading || !preview ? (
               <div className="flex items-center justify-center py-24"><Loader2 size={26} className="animate-spin text-[#102C26]/40" /></div>
             ) : (() => {
               const a = oneAuthor(preview.post.author);
@@ -548,7 +590,7 @@ function PostsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "ok" 
                         <span>· {preview.post.view_count} views</span>
                       </p>
                     </div>
-                    <button onClick={() => setPreview(null)} className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-none shrink-0"><X size={18} /></button>
+                    <button onClick={() => setPreviewId(null)} className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-none shrink-0"><X size={18} /></button>
                   </div>
 
                   <div className="px-6 py-5 space-y-4">
@@ -595,16 +637,12 @@ function PostsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "ok" 
 }
 
 // ─── Comments ───────────────────────────────────────────────────────────────
-function CommentsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "ok" | "err", m: string) => void; deleted?: boolean; reloadKey?: number }) {
-  const [rows, setRows] = useState<CommentRow[]>([]);
-  const [totalComments, setTotalComments] = useState(0);
-  const [total, setTotal] = useState(0);
+function CommentsView({ flash, deleted = false }: { flash: (k: "ok" | "err", m: string) => void; deleted?: boolean }) {
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(25);
-  const [canManage, setCanManage] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -614,34 +652,39 @@ function CommentsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "o
   const [modal, setModal] = useState<CommentRow | null>(null);
   const [modalBusy, setModalBusy] = useState(false);
 
-  async function fetchRows(p: number, q: string) {
-    setLoading(true); setError(null);
-    try {
-      const params = new URLSearchParams({ page: String(p), pageSize: String(pageSize) });
+  const query = useQuery({
+    queryKey: adminKeys.list("hub", { view: "comments", deleted, page, pageSize, search: debouncedSearch }),
+    queryFn: () => {
+      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
       if (deleted) params.set("deleted", "1");
-      if (q) params.set("search", q);
-      const res = await adminRequest(`/api/admin/hub/comments?${params}`);
-      if (!res.ok) throw new Error();
-      const json = await res.json();
-      setRows(json.comments); setTotal(json.total); setTotalComments(json.totalComments);
-      setPageSize(json.pageSize); setCanManage(!!json.canManage);
-    } catch (err) {
-      setError(errorMessage(err, "Could not load comments. Try refreshing."));
-    } finally {
-      setLoading(false);
-    }
+      if (debouncedSearch) params.set("search", debouncedSearch);
+      return adminFetch<CommentsPayload & { totalComments?: number }>(`/api/admin/hub/comments?${params}`);
+    },
+    placeholderData: keepPreviousData,
+  });
+
+  const rows = query.data?.comments ?? NO_COMMENTS;
+  const total = query.data?.total ?? 0;
+  const totalComments = query.data?.totalComments ?? 0;
+  const effectivePageSize = query.data?.pageSize ?? pageSize;
+  const canManage = !!query.data?.canManage;
+  const loading = query.isLoading;
+  const error = query.isError ? errorMessage(query.error, "Could not load comments. Try refreshing.") : null;
+
+  function invalidateHub() {
+    void queryClient.invalidateQueries({ queryKey: adminKeys.module("hub") });
   }
 
-  useEffect(() => {
-    fetchRows(page, search);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize, deleted, reloadKey]);
-  useEffect(() => { setSelectedIds(new Set()); setBulkDelete(false); }, [page, search]);
+  function resetSelection() {
+    setSelectedIds(new Set());
+    setBulkDelete(false);
+  }
+  function changePage(p: number) { setPage(p); resetSelection(); }
 
   function handleSearch(val: string) {
     setSearch(val);
     if (searchTimer.current) clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => { setPage(0); fetchRows(0, val); }, 300);
+    searchTimer.current = setTimeout(() => { setPage(0); resetSelection(); setDebouncedSearch(val); }, 300);
   }
 
   function toggleSelect(id: string) {
@@ -666,8 +709,8 @@ function CommentsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "o
       const json = await res.json() as { updated: number };
       const verb = action === "delete" ? "moved to Trash" : action === "restore" ? "restored" : "permanently deleted";
       flash("ok", `${json.updated} comment${json.updated !== 1 ? "s" : ""} ${verb}.`);
-      setSelectedIds(new Set()); setBulkDelete(false);
-      fetchRows(page, search);
+      resetSelection();
+      invalidateHub();
     } catch {
       flash("err", "Bulk action failed.");
     } finally {
@@ -679,7 +722,7 @@ function CommentsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "o
     const res = await adminRequest(`/api/admin/hub/comments/${c.id}`, {
       method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ restore: true }),
     });
-    if (res.ok) { flash("ok", "Comment restored."); fetchRows(page, search); }
+    if (res.ok) { flash("ok", "Comment restored."); invalidateHub(); }
     else flash("err", "Restore failed.");
   }
 
@@ -688,7 +731,7 @@ function CommentsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "o
     setModalBusy(true);
     try {
       const res = await adminRequest(`/api/admin/hub/comments/${modal.id}${deleted ? "?hard=1" : ""}`, { method: "DELETE" });
-      if (res.ok) { flash("ok", deleted ? "Comment permanently deleted." : "Comment moved to Trash."); setModal(null); fetchRows(page, search); }
+      if (res.ok) { flash("ok", deleted ? "Comment permanently deleted." : "Comment moved to Trash."); setModal(null); invalidateHub(); }
       else { const j = await res.json().catch(() => null); flash("err", j?.error ?? "Delete failed."); }
     } finally {
       setModalBusy(false);
@@ -746,7 +789,7 @@ function CommentsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "o
         )}
 
         {error ? (
-          <LoadError message={error} onRetry={() => fetchRows(page, search)} compact />
+          <LoadError message={error} onRetry={() => void query.refetch()} compact />
         ) : loading ? <TableSkeleton /> : rows.length === 0 ? (
           <EmptyState icon={MessagesSquare} title="No comments found" hint="Comments left on posts will appear here for moderation." />
         ) : (
@@ -849,7 +892,7 @@ function CommentsView({ flash, deleted = false, reloadKey = 0 }: { flash: (k: "o
               </tbody>
             </table>
             </div>
-            <Pagination page={page} pageSize={pageSize} total={total} noun="comment" onPrev={() => setPage((p) => Math.max(0, p - 1))} onNext={() => setPage((p) => p + 1)} onPageSize={(s) => { setPageSize(s); setPage(0); }} onJump={(p) => setPage(p)} />
+            <Pagination page={page} pageSize={effectivePageSize} total={total} noun="comment" onPrev={() => changePage(Math.max(0, page - 1))} onNext={() => changePage(page + 1)} onPageSize={(s) => { setPageSize(s); changePage(0); }} onJump={changePage} />
           </>
         )}
       </div>

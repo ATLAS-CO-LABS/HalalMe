@@ -165,7 +165,7 @@ function DocumentBody() {
           <ul className="list-disc pl-5 space-y-2">
             <li>Access the personal data we hold about you.</li>
             <li>Ask us to correct inaccurate data.</li>
-            <li>Ask us to delete your data ("right to be forgotten"), subject to our legal obligations.</li>
+            <li>Ask us to delete your data (&quot;right to be forgotten&quot;), subject to our legal obligations.</li>
             <li>Ask us to restrict or object to certain processing.</li>
             <li>Receive your data in a portable format.</li>
             <li>Withdraw consent at any time, where we rely on consent.</li>

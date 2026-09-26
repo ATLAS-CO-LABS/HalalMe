@@ -24,8 +24,6 @@ const CREAM   = "var(--hm-text)";
 const GOLD    = "#C9973A";
 const VIOLET  = "var(--hm-magenta)";   // bright magenta
 const FUCHSIA = "var(--hm-magenta-deep)";   // deep magenta
-const FX      = FUCHSIA;
-const FX2     = VIOLET;
 
 // ── Types ─────────────────────────────────────────────────────────────
 type Role    = "user" | "assistant";

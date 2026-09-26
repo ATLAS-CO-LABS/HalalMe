@@ -1,7 +1,9 @@
 "use client";
-import { adminRequest, errorMessage } from "../_fetch";
+import { AdminFetchError, adminFetch, errorMessage } from "../_fetch";
+import { adminKeys } from "../_query";
 
 import { useEffect, useRef, useState } from "react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import {
   Search, RefreshCw, ScrollText, ShieldAlert,
 } from "lucide-react";
@@ -42,46 +44,45 @@ function actionTone(action: string): "red" | "amber" | "green" | "blue" {
   return "blue";
 }
 
+const NO_ENTRIES: Entry[] = [];
+
 export default function AuditPage() {
-  const [rows, setRows] = useState<Entry[]>([]);
-  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
+  // Requested size; the server's clamped value is read back for display only.
   const [pageSize, setPageSize] = useState(30);
-  const [loading, setLoading] = useState(true);
-  const [forbidden, setForbidden] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [moduleFilter, setModuleFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  async function fetchRows(p: number, mod: string, q: string) {
-    setLoading(true); setError(null);
-    try {
-      const params = new URLSearchParams({ page: String(p), pageSize: String(pageSize) });
-      if (mod !== "all") params.set("module", mod);
-      if (q) params.set("search", q);
-      const res = await adminRequest(`/api/admin/audit?${params}`);
-      if (res.status === 403) { setForbidden(true); return; }
-      if (!res.ok) throw new Error();
-      const json = await res.json();
-      setRows(json.entries); setTotal(json.total); setPageSize(json.pageSize);
-    } catch (err) {
-      setError(errorMessage(err, "Could not load the audit log. Try refreshing."));
-    } finally {
-      setLoading(false);
-    }
-  }
+  useEffect(() => () => { if (searchTimer.current) clearTimeout(searchTimer.current); }, []);
 
-  useEffect(() => {
-    fetchRows(page, moduleFilter, search);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize, moduleFilter]);
-  useEffect(() => { setPage(0); }, [moduleFilter]);
+  const query = useQuery({
+    queryKey: adminKeys.list("audit", { page, pageSize, module: moduleFilter, search: debouncedSearch }),
+    queryFn: () => {
+      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+      if (moduleFilter !== "all") params.set("module", moduleFilter);
+      if (debouncedSearch) params.set("search", debouncedSearch);
+      return adminFetch<{ entries: Entry[]; total: number; pageSize: number }>(`/api/admin/audit?${params}`);
+    },
+    placeholderData: keepPreviousData,
+  });
+
+  const rows = query.data?.entries ?? NO_ENTRIES;
+  const total = query.data?.total ?? 0;
+  const effectivePageSize = query.data?.pageSize ?? pageSize;
+  const loading = query.isLoading;
+  // A 403 is the super-admin gate, not a failure: render the gate, not an error.
+  // (The client's retry policy never retries a 4xx, so this shows immediately.)
+  const forbidden = query.error instanceof AdminFetchError && query.error.status === 403;
+  const error = query.isError && !forbidden ? errorMessage(query.error, "Could not load the audit log. Try refreshing.") : null;
+
+  const changeModule = (v: string) => { setModuleFilter(v); setPage(0); };
 
   function handleSearch(val: string) {
     setSearch(val);
     if (searchTimer.current) clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => { setPage(0); fetchRows(0, moduleFilter, val); }, 300);
+    searchTimer.current = setTimeout(() => { setPage(0); setDebouncedSearch(val); }, 300);
   }
 
   if (forbidden) {
@@ -110,9 +111,9 @@ export default function AuditPage() {
           <h1 className={`${display.className} text-xl sm:text-2xl font-extrabold uppercase tracking-tighter text-[#102C26] leading-none`}>Audit Log</h1>
           <p className="text-xs sm:text-sm text-gray-600 mt-1">Every admin action — who did what, and when</p>
         </div>
-        <button onClick={() => fetchRows(page, moduleFilter, search)}
+        <button onClick={() => void query.refetch()}
           className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#102C26]/80 bg-[#102C26]/5 border border-[#102C26]/15 rounded-none hover:bg-[#102C26]/10 transition-colors" title="Refresh">
-          <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
+          <RefreshCw size={13} className={query.isFetching ? "animate-spin" : ""} />
         </button>
       </div>
 
@@ -121,7 +122,7 @@ export default function AuditPage() {
         <div className="bg-white rounded-none border border-[#102C26]/12 overflow-hidden">
           {/* Filters */}
           <div className="px-4 sm:px-5 pt-3 pb-3 border-b border-[#102C26]/8 space-y-2.5">
-            <FilterPills options={MODULE_FILTERS} value={moduleFilter} onChange={setModuleFilter} />
+            <FilterPills options={MODULE_FILTERS} value={moduleFilter} onChange={changeModule} />
             <div className="relative">
               <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
               <input type="text" value={search} onChange={(e) => handleSearch(e.target.value)}
@@ -131,7 +132,7 @@ export default function AuditPage() {
           </div>
 
           {error ? (
-            <LoadError message={error} onRetry={() => fetchRows(page, moduleFilter, search)} compact />
+            <LoadError message={error} onRetry={() => void query.refetch()} compact />
           ) : loading ? <TableSkeleton /> : rows.length === 0 ? (
             <EmptyState icon={ScrollText} title="No activity yet" hint="Admin actions like deletes, status changes and approvals will be recorded here." />
           ) : (
@@ -158,7 +159,7 @@ export default function AuditPage() {
                   );
                 })}
               </div>
-              <Pagination page={page} pageSize={pageSize} total={total} noun="record" onPrev={() => setPage((p) => Math.max(0, p - 1))} onNext={() => setPage((p) => p + 1)} onPageSize={(s) => { setPageSize(s); setPage(0); }} pageSizeOptions={[30, 60, 120]} onJump={(p) => setPage(p)} />
+              <Pagination page={page} pageSize={effectivePageSize} total={total} noun="record" onPrev={() => setPage((p) => Math.max(0, p - 1))} onNext={() => setPage((p) => p + 1)} onPageSize={(s) => { setPageSize(s); setPage(0); }} pageSizeOptions={[30, 60, 120]} onJump={(p) => setPage(p)} />
             </>
           )}
         </div>

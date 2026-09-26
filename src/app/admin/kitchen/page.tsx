@@ -1,7 +1,9 @@
 "use client";
-import { adminRequest, errorMessage } from "../_fetch";
+import { adminFetch, adminRequest, errorMessage } from "../_fetch";
+import { adminKeys } from "../_query";
 
 import { useEffect, useRef, useState } from "react";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Search, RefreshCw, ChefHat, BadgeCheck, Sparkles, Star, EyeOff, Eye,
   MoreVertical, Trash2, Loader2, Bot, Users, TrendingUp, CheckSquare, X, FileText, Clock, Flag, RotateCcw,
@@ -72,26 +74,67 @@ const SOURCE_FILTERS = [
   { key: "user", label: "User" },
 ];
 
+interface RecipesPayload {
+  recipes: RecipeRow[];
+  stats: Stats;
+  total: number;
+  pageSize: number;
+  canManage: boolean;
+}
+const NO_RECIPES: RecipeRow[] = [];
+
 export default function KitchenPage() {
   const { toast, flash } = useToast();
   const [tab, setTab] = useState<"recipes" | "reported" | "deleted">("recipes");
   const deletedMode = tab === "deleted";
-  const [rows, setRows] = useState<RecipeRow[]>([]);
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [total, setTotal] = useState(0);
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(0);
+  // Requested size; the server's clamped value is read back for display only.
   const [pageSize, setPageSize] = useState(25);
-  const [canManage, setCanManage] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const [published, setPublished] = useState("all");
   const [halal, setHalal] = useState("all");
   const [source, setSource] = useState("all");
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [ai, setAi] = useState<AiUsage | null>(null);
+  useEffect(() => () => { if (searchTimer.current) clearTimeout(searchTimer.current); }, []);
+
+  // The Trash tab is the same endpoint with deleted=1, so it is simply part of
+  // the key. The Reported tab renders ReportsQueue and does not use this query.
+  const query = useQuery({
+    queryKey: adminKeys.list("kitchen", { deleted: deletedMode, page, pageSize, published, halal, source, search: debouncedSearch }),
+    queryFn: () => {
+      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+      if (deletedMode) params.set("deleted", "1");
+      if (published !== "all") params.set("published", published);
+      if (halal !== "all") params.set("halal", halal);
+      if (source !== "all") params.set("source", source);
+      if (debouncedSearch) params.set("search", debouncedSearch);
+      return adminFetch<RecipesPayload>(`/api/admin/recipes?${params}`);
+    },
+    placeholderData: keepPreviousData,
+    enabled: tab !== "reported",
+  });
+
+  const rows = query.data?.recipes ?? NO_RECIPES;
+  const stats = query.data?.stats ?? null;
+  const total = query.data?.total ?? 0;
+  const effectivePageSize = query.data?.pageSize ?? pageSize;
+  // Server-authoritative, read off the list response on purpose.
+  const canManage = !!query.data?.canManage;
+  const loading = query.isLoading;
+  const error = query.isError ? errorMessage(query.error, "Could not load recipes. Try refreshing.") : null;
+
+  // AI usage panel. Changes slowly and is not critical, so a failure just
+  // leaves the panel empty, as before.
+  const aiQuery = useQuery({
+    queryKey: [...adminKeys.module("kitchen"), "ai-usage"] as const,
+    queryFn: () => adminFetch<AiUsage>("/api/admin/kitchen/ai-usage"),
+    staleTime: 5 * 60_000,
+  });
+  const ai = aiQuery.data ?? null;
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState<string | null>(null);
@@ -101,60 +144,37 @@ export default function KitchenPage() {
   const [modal, setModal] = useState<RecipeRow | null>(null);
   const [modalBusy, setModalBusy] = useState(false);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [preview, setPreview] = useState<any | null>(null);
-  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewId, setPreviewId] = useState<string | null>(null);
+  // Detail-on-demand: only runs once a row has been clicked.
+  const previewQuery = useQuery({
+    queryKey: [...adminKeys.module("kitchen"), "recipe", previewId ?? ""] as const,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    queryFn: () => adminFetch<{ recipe: any }>(`/api/admin/recipes/${previewId}`),
+    enabled: !!previewId,
+  });
+  const preview = previewId ? previewQuery.data?.recipe ?? null : null;
+  const previewLoading = !!previewId && previewQuery.isLoading;
+  const previewError = !!previewId && previewQuery.isError;
 
-  async function openPreview(id: string) {
+  function openPreview(id: string) {
     setMenu(null);
-    setPreviewLoading(true);
-    try {
-      const res = await adminRequest(`/api/admin/recipes/${id}`);
-      if (!res.ok) throw new Error();
-      const json = await res.json();
-      setPreview(json.recipe);
-    } catch {
-      flash("err", "Could not load recipe.");
-    } finally {
-      setPreviewLoading(false);
-    }
+    setPreviewId(id);
   }
 
-  async function fetchRows(p: number, pub: string, hal: string, src: string, q: string) {
-    setLoading(true); setError(null);
-    try {
-      const params = new URLSearchParams({ page: String(p), pageSize: String(pageSize) });
-      if (tab === "deleted") params.set("deleted", "1");
-      if (pub !== "all") params.set("published", pub);
-      if (hal !== "all") params.set("halal", hal);
-      if (src !== "all") params.set("source", src);
-      if (q) params.set("search", q);
-      const res = await adminRequest(`/api/admin/recipes?${params}`);
-      if (!res.ok) throw new Error();
-      const json = await res.json();
-      setRows(json.recipes); setStats(json.stats); setTotal(json.total);
-      setPageSize(json.pageSize); setCanManage(!!json.canManage);
-    } catch (err) {
-      setError(errorMessage(err, "Could not load recipes. Try refreshing."));
-    } finally {
-      setLoading(false);
-    }
+  // Recipe writes change the list, the Trash, and the overview's recipe card.
+  function invalidateKitchen() {
+    void queryClient.invalidateQueries({ queryKey: adminKeys.module("kitchen") });
+    void queryClient.invalidateQueries({ queryKey: adminKeys.module("overview") });
   }
 
-  useEffect(() => {
-    fetchRows(page, published, halal, source, search);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize, published, halal, source, tab]);
-  useEffect(() => { setPage(0); setSelectedIds(new Set()); }, [published, halal, source, tab]);
-  useEffect(() => { setSelectedIds(new Set()); setBulkDelete(false); }, [page, published, halal, source, search]);
-
-  // AI usage panel — loaded once.
-  useEffect(() => {
-    adminRequest("/api/admin/kitchen/ai-usage")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => { if (d) setAi(d); })
-      .catch(() => {});
-  }, []);
+  // Page/filter/tab/search changes clear the selection. Done in the handlers
+  // rather than effects watching those values.
+  function resetSelection() { setSelectedIds(new Set()); setBulkDelete(false); }
+  function changePage(p: number) { setPage(p); resetSelection(); }
+  const changePublished = (v: string) => { setPublished(v); changePage(0); };
+  const changeHalal = (v: string) => { setHalal(v); changePage(0); };
+  const changeSource = (v: string) => { setSource(v); changePage(0); };
+  const changeTab = (t: "recipes" | "reported" | "deleted") => { setTab(t); changePage(0); };
 
   // Close the row menu on outside interaction.
   useEffect(() => {
@@ -173,7 +193,7 @@ export default function KitchenPage() {
   function handleSearch(val: string) {
     setSearch(val);
     if (searchTimer.current) clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => { setPage(0); fetchRows(0, published, halal, source, val); }, 300);
+    searchTimer.current = setTimeout(() => { changePage(0); setDebouncedSearch(val); }, 300);
   }
 
   async function patch(id: string, body: Record<string, boolean>): Promise<boolean> {
@@ -187,7 +207,7 @@ export default function KitchenPage() {
   async function toggle(r: RecipeRow, field: "is_published" | "is_halal_verified" | "is_featured", okMsg: string) {
     setMenu(null);
     const ok = await patch(r.id, { [field]: !r[field] });
-    if (ok) { flash("ok", okMsg); fetchRows(page, published, halal, source, search); }
+    if (ok) { flash("ok", okMsg); invalidateKitchen(); }
   }
 
   async function confirmDelete() {
@@ -196,7 +216,7 @@ export default function KitchenPage() {
     try {
       // In the Trash, deleting is permanent (?hard=1); elsewhere it soft-deletes.
       const res = await adminRequest(`/api/admin/recipes/${modal.id}${deletedMode ? "?hard=1" : ""}`, { method: "DELETE" });
-      if (res.ok) { flash("ok", deletedMode ? "Recipe permanently deleted." : "Recipe moved to Trash."); setModal(null); fetchRows(page, published, halal, source, search); }
+      if (res.ok) { flash("ok", deletedMode ? "Recipe permanently deleted." : "Recipe moved to Trash."); setModal(null); invalidateKitchen(); }
       else { const j = await res.json().catch(() => null); flash("err", j?.error ?? "Delete failed."); }
     } finally {
       setModalBusy(false);
@@ -233,9 +253,8 @@ export default function KitchenPage() {
       const json = await res.json() as { updated: number };
       const verb = action === "delete" ? "moved to Trash" : action === "restore" ? "restored" : action === "purge" ? "permanently deleted" : "updated";
       flash("ok", `${json.updated} recipe${json.updated !== 1 ? "s" : ""} ${verb}.`);
-      setSelectedIds(new Set());
-      setBulkDelete(false);
-      fetchRows(page, published, halal, source, search);
+      resetSelection();
+      invalidateKitchen();
     } catch {
       flash("err", "Bulk action failed.");
     } finally {
@@ -250,7 +269,7 @@ export default function KitchenPage() {
       method: "PATCH", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ restore: true }),
     });
-    if (res.ok) { flash("ok", "Recipe restored."); fetchRows(page, published, halal, source, search); }
+    if (res.ok) { flash("ok", "Recipe restored."); invalidateKitchen(); }
     else flash("err", "Restore failed.");
   }
 
@@ -268,9 +287,9 @@ export default function KitchenPage() {
           <h1 className={`${display.className} text-xl sm:text-2xl font-extrabold uppercase tracking-tighter text-[#102C26] leading-none`}>Kitchen</h1>
           <p className="text-xs sm:text-sm text-gray-600 mt-1">Moderate recipes, verify halal status and manage featured content</p>
         </div>
-        <button onClick={() => fetchRows(page, published, halal, source, search)}
+        <button onClick={() => void query.refetch()}
           className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#102C26]/80 bg-[#102C26]/5 border border-[#102C26]/15 rounded-none hover:bg-[#102C26]/10 transition-colors" title="Refresh">
-          <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
+          <RefreshCw size={13} className={query.isFetching ? "animate-spin" : ""} />
         </button>
       </div>
 
@@ -281,7 +300,7 @@ export default function KitchenPage() {
             const active = tab === key;
             const badge = key === "deleted" ? (stats?.deleted ?? 0) : 0;
             return (
-              <button key={key} onClick={() => setTab(key)}
+              <button key={key} onClick={() => changeTab(key)}
                 className={`flex items-center gap-2 px-3.5 py-2.5 text-sm font-semibold whitespace-nowrap border-b-2 transition-colors ${active ? "border-[#F59E0B] text-[#102C26]" : "border-transparent text-gray-500 hover:text-[#102C26]"}`}>
                 <Icon size={15} className={active ? "text-[#F59E0B]" : ""} /> {label}
                 {badge > 0 && <span className="text-[10px] font-bold bg-gray-200 text-gray-700 rounded-full px-1.5 py-0.5">{badge}</span>}
@@ -313,11 +332,11 @@ export default function KitchenPage() {
           {/* Filters */}
           <div className="px-4 sm:px-5 pt-3 pb-3 border-b border-[#102C26]/8 space-y-2.5">
             <div className="flex items-center gap-2 flex-wrap">
-              <FilterPills options={PUBLISHED_FILTERS} value={published} onChange={setPublished} />
+              <FilterPills options={PUBLISHED_FILTERS} value={published} onChange={changePublished} />
               <div className="w-px h-5 bg-gray-200 mx-1 hidden sm:block" />
-              <FilterPills options={HALAL_FILTERS} value={halal} onChange={setHalal} />
+              <FilterPills options={HALAL_FILTERS} value={halal} onChange={changeHalal} />
               <div className="w-px h-5 bg-gray-200 mx-1 hidden sm:block" />
-              <FilterPills options={SOURCE_FILTERS} value={source} onChange={setSource} />
+              <FilterPills options={SOURCE_FILTERS} value={source} onChange={changeSource} />
             </div>
             <div className="relative">
               <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
@@ -370,7 +389,7 @@ export default function KitchenPage() {
           )}
 
           {error ? (
-            <LoadError message={error} onRetry={() => fetchRows(page, published, halal, source, search)} compact />
+            <LoadError message={error} onRetry={() => void query.refetch()} compact />
           ) : loading ? <TableSkeleton /> : rows.length === 0 ? (
             <EmptyState icon={ChefHat} title="No recipes found" hint="Recipes created by users or the AI chat will appear here for moderation." />
           ) : (
@@ -483,7 +502,7 @@ export default function KitchenPage() {
                 </tbody>
               </table>
               </div>
-              <Pagination page={page} pageSize={pageSize} total={total} noun="recipe" onPrev={() => setPage((p) => Math.max(0, p - 1))} onNext={() => setPage((p) => p + 1)} onPageSize={(s) => { setPageSize(s); setPage(0); }} onJump={(p) => setPage(p)} />
+              <Pagination page={page} pageSize={effectivePageSize} total={total} noun="recipe" onPrev={() => changePage(Math.max(0, page - 1))} onNext={() => changePage(page + 1)} onPageSize={(s) => { setPageSize(s); changePage(0); }} onJump={changePage} />
             </>
           )}
         </div>
@@ -583,9 +602,11 @@ export default function KitchenPage() {
       )}
 
       {/* Recipe preview */}
-      {(preview || previewLoading) && (
-        <Modal open onClose={() => setPreview(null)} maxWidth="max-w-2xl" className="max-h-[90vh] overflow-y-auto">
-            {previewLoading || !preview ? (
+      {previewId && (
+        <Modal open onClose={() => setPreviewId(null)} maxWidth="max-w-2xl" className="max-h-[90vh] overflow-y-auto">
+            {previewError ? (
+              <LoadError message={errorMessage(previewQuery.error, "Could not load recipe.")} onRetry={() => void previewQuery.refetch()} compact />
+            ) : previewLoading || !preview ? (
               <div className="flex items-center justify-center py-24"><Loader2 size={26} className="animate-spin text-[#102C26]/40" /></div>
             ) : (() => {
               const a = oneAuthor(preview.author);
@@ -604,7 +625,7 @@ export default function KitchenPage() {
                       <h3 className={`${display.className} text-lg font-bold text-[#102C26]`}>{preview.title}</h3>
                       <p className="text-xs text-gray-600">by {a?.full_name ?? (a?.username ? `@${a.username}` : "Unknown")}</p>
                     </div>
-                    <button onClick={() => setPreview(null)} className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-none shrink-0"><X size={18} /></button>
+                    <button onClick={() => setPreviewId(null)} className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-none shrink-0"><X size={18} /></button>
                   </div>
 
                   <div className="px-6 py-5 space-y-5">

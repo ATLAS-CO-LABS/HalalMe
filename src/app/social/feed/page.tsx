@@ -71,16 +71,14 @@ export default function HubFeedPage() {
 function HubFeedPageInner() {
   const resumeKey = useResumeKey();
   const searchParams = useSearchParams();
-  const [resetKey, setResetKey] = useState(0);
   const initialTab = searchParams.get("tab") === "bookmarks" ? "bookmarks" : "latest";
 
-  useEffect(() => {
-    if (resumeKey === 0) return;
-    setResetKey((k) => k + 1);
-  }, [resumeKey]);
-
+  // resumeKey already starts at 0 and increments exactly once per resume, so it
+  // IS the reset key. Mirroring it into local state through an effect cost an
+  // extra render and bought nothing: only the key's identity matters to React,
+  // never its numeric value.
   return (
-    <HubFeedContent key={resetKey} isResumeTrigger={resetKey > 0} initialTab={initialTab} />
+    <HubFeedContent key={resumeKey} isResumeTrigger={resumeKey > 0} initialTab={initialTab} />
   );
 }
 
@@ -271,7 +269,6 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
     // user?.id (string) is sufficient - including the full `user` object would
     // recreate loadFeed on every token refresh (SIGNED_IN fires a new Profile
     // object reference with the same id), causing a spurious feed reload.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [user?.id]
   );
 
@@ -342,7 +339,6 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
       });
     });
     return unsubscribe;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, resumeKey]);
 
   // ---------------------------------------------------------------------------

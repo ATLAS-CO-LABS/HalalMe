@@ -794,7 +794,7 @@ function TestimonialsSection() {
                 className="text-6xl font-serif leading-none"
                 style={{ color: PURPLE }}
               >
-                "
+                &ldquo;
               </span>
               <p
                 className="text-lg md:text-xl italic leading-relaxed mt-2"

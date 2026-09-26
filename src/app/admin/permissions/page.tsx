@@ -1,7 +1,9 @@
 "use client";
-import { adminRequest, errorMessage } from "../_fetch";
+import { AdminFetchError, adminFetch, adminRequest, errorMessage } from "../_fetch";
+import { adminKeys } from "../_query";
 
 import { useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { display } from "../_fonts";
 import { useToast, ToastView, LoadError } from "../_ui";
@@ -41,31 +43,31 @@ function initials(name: string) {
   return name.split(" ").filter(Boolean).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 }
 
+const NO_MEMBERS: Member[] = [];
+const NO_MODULES: Module[] = [];
+
 export default function PermissionsPage() {
   const { toast, flash } = useToast();
-  const [team, setTeam] = useState<Member[]>([]);
-  const [modules, setModules] = useState<Module[]>([]);
-  const [viewerId, setViewerId] = useState<string>("");
-  const [loading, setLoading] = useState(true);
-  const [forbidden, setForbidden] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const query = useQuery({
+    queryKey: adminKeys.module("permissions"),
+    queryFn: () => adminFetch<{ team: Member[]; modules: Module[]; viewerId: string }>("/api/admin/permissions"),
+  });
+  const team = query.data?.team ?? NO_MEMBERS;
+  const modules = query.data?.modules ?? NO_MODULES;
+  const viewerId = query.data?.viewerId ?? "";
+  const loading = query.isLoading;
+  // 403 is the super-admin gate: render the gate, not an error.
+  const forbidden = query.error instanceof AdminFetchError && query.error.status === 403;
+  const error = query.isError && !forbidden ? errorMessage(query.error, "Could not load the team. Try refreshing.") : null;
 
-  async function load() {
-    setLoading(true); setError(null);
-    try {
-      const res = await adminRequest("/api/admin/permissions");
-      if (res.status === 403) { setForbidden(true); return; }
-      if (!res.ok) throw new Error();
-      const json = await res.json();
-      setTeam(json.team); setModules(json.modules); setViewerId(json.viewerId);
-    } catch (err) {
-      setError(errorMessage(err, "Could not load the team. Try refreshing."));
-    } finally {
-      setLoading(false);
-    }
+  // Grid edits and demotions go through PATCH /api/admin/users/[id], so the users
+  // list, the staff roster that feeds assignee pickers, and this page all change.
+  function onChanged() {
+    void queryClient.invalidateQueries({ queryKey: adminKeys.module("permissions") });
+    void queryClient.invalidateQueries({ queryKey: adminKeys.module("users") });
+    void queryClient.invalidateQueries({ queryKey: adminKeys.module("team") });
   }
-
-  useEffect(() => { load(); }, []);
 
   if (forbidden) {
     return (
@@ -101,9 +103,9 @@ export default function PermissionsPage() {
             className="hidden sm:flex items-center gap-2 px-3 py-2 text-xs font-bold uppercase tracking-wide text-[#102C26]/80 bg-[#102C26]/5 border border-[#102C26]/15 rounded-none hover:bg-[#102C26]/10 transition-colors">
             <Users size={14} /> Manage members
           </Link>
-          <button onClick={load} title="Refresh"
+          <button onClick={() => void query.refetch()} title="Refresh"
             className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#102C26]/80 bg-[#102C26]/5 border border-[#102C26]/15 rounded-none hover:bg-[#102C26]/10 transition-colors">
-            <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
+            <RefreshCw size={13} className={query.isFetching ? "animate-spin" : ""} />
           </button>
         </div>
       </div>
@@ -118,7 +120,7 @@ export default function PermissionsPage() {
         </div>
 
         {error ? (
-          <LoadError message={error} onRetry={() => load()} compact />
+          <LoadError message={error} onRetry={() => void query.refetch()} compact />
         ) : loading ? (
           <div className="animate-pulse space-y-4">
             {Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-44 bg-white border border-[#102C26]/10 rounded-none" />)}
@@ -135,7 +137,7 @@ export default function PermissionsPage() {
               ) : (
                 <div className="space-y-4">
                   {admins.map((m) => (
-                    <MemberCard key={m.id} member={m} modules={modules} isSelf={m.id === viewerId} flash={flash} onChanged={load} />
+                    <MemberCard key={m.id} member={m} modules={modules} isSelf={m.id === viewerId} flash={flash} onChanged={onChanged} />
                   ))}
                 </div>
               )}

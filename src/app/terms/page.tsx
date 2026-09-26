@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { LEGAL_ENTITY, LEGAL_ENTITY_STATEMENT } from "@/lib/legalEntity";
+import { LEGAL_ENTITY } from "@/lib/legalEntity";
 
 const CREAM = "#F7E7CE";
 const GOLD = "#F59E0B";
@@ -75,7 +75,7 @@ function DocumentBody() {
     <section className="bg-[#102C26] px-6 py-20 md:py-28">
       <div className="max-w-3xl mx-auto">
         <p className="text-sm md:text-base leading-relaxed mb-16" style={{ color: `${CREAM}70` }}>
-          These Terms of Service ("Terms") govern your access to and use of HalalMe, including our
+          These Terms of Service (&quot;Terms&quot;) govern your access to and use of HalalMe, including our
           website, mobile experience, and all related services: Delivery, Kitchen (AI recipes), Social
           (community), Charity donations, and Rewards. By creating an account or using any part of
           HalalMe, you agree to these Terms and to our{" "}
@@ -134,7 +134,7 @@ function DocumentBody() {
 
         <Section title="5. Kitchen and AI-generated content">
           <p>
-            HalalMe Kitchen includes an AI assistant ("AQI") that generates recipe suggestions based
+            HalalMe Kitchen includes an AI assistant (&quot;AQI&quot;) that generates recipe suggestions based
             on your prompts. AI-generated recipes are suggestions only, they are not reviewed by a
             human for nutritional accuracy, allergen safety, or halal compliance before being shown
             to you. Always check ingredients and preparation methods yourself, particularly if you

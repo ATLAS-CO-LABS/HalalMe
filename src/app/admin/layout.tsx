@@ -26,6 +26,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { isStaffRole } from "@/lib/adminRoles";
 import { AdminProvider, useAdmin } from "./AdminProvider";
+import { AdminQueryProvider } from "./_query";
 import CommandPalette from "./CommandPalette";
 
 type Module = "merchants" | "users" | "kitchen" | "hub" | "rewards" | "analytics" | "support";
@@ -292,6 +293,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
+    // Query client outermost: AdminProvider is a consumer of it now.
+    <AdminQueryProvider>
     <AdminProvider>
     <div className="min-h-dvh bg-[#F3E9D6]">
       <CommandPalette />
@@ -355,5 +358,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </div>
     </div>
     </AdminProvider>
+    </AdminQueryProvider>
   );
 }
