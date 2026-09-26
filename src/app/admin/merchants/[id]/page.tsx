@@ -1,10 +1,12 @@
 "use client";
-import { adminRequest } from "../../_fetch";
+import { AdminFetchError, adminFetch, adminRequest, errorMessage } from "../../_fetch";
+import { adminKeys } from "../../_query";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { display } from "../../_fonts";
-import { useToast, ToastView, Modal } from "../../_ui";
+import { useToast, ToastView, Modal, LoadError } from "../../_ui";
 import { useAdmin } from "../../AdminProvider";
 import RecordNav from "@/components/admin/RecordNav";
 import {
@@ -285,6 +287,8 @@ function Skeleton() {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
+const NO_DOCUMENTS: AdminDocument[] = [];
+
 export default function MerchantDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -293,9 +297,30 @@ export default function MerchantDetailPage() {
   const { can, team } = useAdmin();
   const canManage = can("merchants", "manage");
 
-  const [merchant, setMerchant] = useState<Merchant | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
+  const queryClient = useQueryClient();
+  const detailKey = adminKeys.detail("merchants", id);
+  const query = useQuery({
+    queryKey: detailKey,
+    queryFn: () => adminFetch<{ merchant: Merchant }>(`/api/admin/merchants/${id}`),
+  });
+  const merchant = query.data?.merchant ?? null;
+  const loading = query.isLoading;
+  // A deleted or mistyped id is a 404; anything else is a real failure and gets
+  // a Retry rather than being mislabelled "not found" as it used to be.
+  const notFound = query.error instanceof AdminFetchError && query.error.status === 404;
+  const loadError = query.isError && !notFound
+    ? errorMessage(query.error, "Could not load this merchant.")
+    : null;
+
+  // Every write on this page already returns the updated merchant. Writing it
+  // straight into the cache keeps those ten call sites unchanged, and the list,
+  // the stats rail and the overview are refreshed around it.
+  function setMerchant(m: Merchant) {
+    queryClient.setQueryData(detailKey, { merchant: m });
+    void queryClient.invalidateQueries({ queryKey: [...adminKeys.module("merchants"), "list"] });
+    void queryClient.invalidateQueries({ queryKey: [...adminKeys.module("merchants"), "stats"] });
+    void queryClient.invalidateQueries({ queryKey: adminKeys.module("overview") });
+  }
 
   // Details form (rep + commission)
   const [assignedRepId, setAssignedRepId] = useState("");
@@ -342,45 +367,47 @@ export default function MerchantDetailPage() {
   const [publishError, setPublishError] = useState<string | null>(null);
 
   // Documents
-  const [documents, setDocuments] = useState<AdminDocument[]>([]);
   const [reviewingId, setReviewingId] = useState<string | null>(null);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await adminRequest(`/api/admin/merchants/${id}`);
-      if (res.status === 404) { setNotFound(true); return; }
-      if (!res.ok) throw new Error();
-      const { merchant: m } = await res.json() as { merchant: Merchant };
-      setMerchant(m);
-      setAssignedRepId(m.assigned_rep_id ?? "");
-      setCommission(m.commission_percentage?.toString() ?? "");
-      setChecklist(m.readiness_checklist ?? DEFAULT_CHECKLIST);
-    } catch {
-      setNotFound(true);
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
+  // Documents are non-fatal: the rest of the page still works without them.
+  const docsQuery = useQuery({
+    queryKey: [...adminKeys.module("merchants"), "documents", id] as const,
+    queryFn: () => adminFetch<{ documents: AdminDocument[] }>(`/api/admin/merchants/${id}/documents`),
+  });
+  const documents = docsQuery.data?.documents ?? NO_DOCUMENTS;
 
-  useEffect(() => { load(); }, [load]);
+  // The rep / commission / checklist controls are editable drafts seeded from
+  // the server. They must not follow every background refetch (switching tabs
+  // and back would wipe what the admin was typing), so they are seeded once per
+  // merchant. Adjusting state during render is React's documented pattern for
+  // this and avoids a set-state-in-effect round trip.
+  const [seededFor, setSeededFor] = useState<string | null>(null);
+  if (merchant && seededFor !== id) {
+    setSeededFor(id);
+    setAssignedRepId(merchant.assigned_rep_id ?? "");
+    setCommission(merchant.commission_percentage?.toString() ?? "");
+    setChecklist(merchant.readiness_checklist ?? DEFAULT_CHECKLIST);
+  }
 
-  const loadDocuments = useCallback(async () => {
-    try {
-      const res = await adminRequest(`/api/admin/merchants/${id}/documents`);
-      if (!res.ok) return;
-      const { documents: docs } = await res.json() as { documents: AdminDocument[] };
-      setDocuments(docs);
-    } catch {
-      // non-fatal — the rest of the page still works
-    }
-  }, [id]);
+  // Full reload after a change made somewhere else on the page (the commission
+  // card), which can move the status and the agreed rate. Unlike a background
+  // refetch this SHOULD refresh the drafts, so wait for the fresh data and then
+  // clear the seed marker so the next render re-seeds from it.
+  async function load() {
+    await queryClient.invalidateQueries({ queryKey: detailKey });
+    setSeededFor(null);
+    void queryClient.invalidateQueries({ queryKey: [...adminKeys.module("merchants"), "list"] });
+    void queryClient.invalidateQueries({ queryKey: [...adminKeys.module("merchants"), "stats"] });
+    void queryClient.invalidateQueries({ queryKey: adminKeys.module("overview") });
+  }
 
-  useEffect(() => { loadDocuments(); }, [loadDocuments]);
-
-  // (Manage-access + team roster now come from the shared admin context — useAdmin().)
+  // A document decision can move the merchant's verification stage too.
+  async function loadDocuments() {
+    await queryClient.invalidateQueries({ queryKey: [...adminKeys.module("merchants"), "documents", id] });
+    void queryClient.invalidateQueries({ queryKey: detailKey });
+  }
 
   async function reviewDocument(docId: string, action: "approve" | "reject", reason?: string) {
     if (!canManage) return;
@@ -629,6 +656,10 @@ export default function MerchantDetailPage() {
   // ── Render: loading / not found ────────────────────────────────────────────
 
   if (loading) return <Skeleton />;
+
+  if (loadError) {
+    return <LoadError message={loadError} onRetry={() => void query.refetch()} />;
+  }
 
   if (notFound || !merchant) {
     return (

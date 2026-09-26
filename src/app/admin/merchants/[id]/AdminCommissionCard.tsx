@@ -1,7 +1,9 @@
 "use client";
-import { adminRequest, errorMessage } from "../../_fetch";
+import { adminFetch, adminRequest, errorMessage } from "../../_fetch";
+import { adminKeys } from "../../_query";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { display } from "../../_fonts";
 import {
   Coins,
@@ -63,25 +65,19 @@ export default function AdminCommissionCard({
   onDecision: () => void;
   canManage?: boolean;
 }) {
-  const [row, setRow] = useState<AdminCommission | null>(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const commissionKey = [...adminKeys.module("merchants"), "commission", merchantId] as const;
+  // Failure is non-fatal, as before: the card just shows its empty state.
+  const query = useQuery({
+    queryKey: commissionKey,
+    queryFn: () => adminFetch<{ commission: AdminCommission | null }>(`/api/admin/merchants/${merchantId}/commission`),
+  });
+  const row = query.data?.commission ?? null;
+  const loading = query.isLoading;
   const [busy, setBusy] = useState<string | null>(null);
   const [counter, setCounter] = useState("");
   const [showCounter, setShowCounter] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const load = useCallback(async () => {
-    try {
-      const res = await adminRequest(`/api/admin/merchants/${merchantId}/commission`);
-      if (!res.ok) return;
-      const { commission } = await res.json() as { commission: AdminCommission | null };
-      setRow(commission);
-    } finally {
-      setLoading(false);
-    }
-  }, [merchantId]);
-
-  useEffect(() => { load(); }, [load]);
 
   async function decide(action: "approve" | "reject" | "counter", commission?: number) {
     if (!canManage) return;
@@ -100,7 +96,7 @@ export default function AdminCommissionCard({
       }
       setShowCounter(false);
       setCounter("");
-      await load();
+      await queryClient.invalidateQueries({ queryKey: commissionKey });
       onDecision(); // refresh the merchant (status may have moved to "agreed")
     } catch (err) {
       setError(errorMessage(err, "Something went wrong. Please try again."));

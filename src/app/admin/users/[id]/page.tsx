@@ -1,7 +1,9 @@
 "use client";
-import { adminRequest, errorMessage } from "../../_fetch";
+import { adminFetch, adminRequest, errorMessage } from "../../_fetch";
+import { adminKeys } from "../../_query";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { display } from "../../_fonts";
@@ -93,9 +95,16 @@ export default function UserDetailPage() {
   const params = useParams<{ id: string }>();
   const id = params.id;
 
-  const [data, setData] = useState<DetailResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const query = useQuery({
+    queryKey: adminKeys.detail("users", id),
+    queryFn: () => adminFetch<DetailResponse>(`/api/admin/users/${id}`),
+  });
+  const data = query.data ?? null;
+  // isLoading is the first load only, so a save no longer blanks the whole page
+  // back to the skeleton the way the old load() did.
+  const loading = query.isLoading;
+  const error = query.isError ? errorMessage(query.error, "Could not load this user.") : null;
 
   // Profile edit
   const [editing, setEditing] = useState(false);
@@ -121,23 +130,30 @@ export default function UserDetailPage() {
   const [toast, setToast] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
   function flash(kind: "ok" | "err", msg: string) { setToast({ kind, msg }); setTimeout(() => setToast(null), 3500); }
 
-  const load = useCallback(async () => {
-    setLoading(true); setError(null);
-    try {
-      const res = await adminRequest(`/api/admin/users/${id}`);
-      if (!res.ok) throw new Error();
-      const json: DetailResponse = await res.json();
-      setData(json);
-      setRoleDraft(json.user.role === "admin" ? "admin" : "user");
-      setPermDraft(json.permissions);
-    } catch (err) {
-      setError(errorMessage(err, "Could not load this user."));
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
+  // The role and permission controls are editable drafts seeded from the server.
+  // They must NOT follow every refetch: refetchOnWindowFocus would otherwise
+  // wipe a half-edited permission grid the moment the admin switched tabs and
+  // came back. So seed once per user, and again only if the role itself changed
+  // on the server (demoting to user clears permissions server-side). A save
+  // leaves the drafts equal to what was saved, so no reseed is needed after one.
+  // Adjusting state during render is React's documented pattern for this; it
+  // avoids a set-state-in-effect round trip.
+  const [seededFor, setSeededFor] = useState<string | null>(null);
+  const seedKey = data ? `${id}:${data.user.role}` : null;
+  if (data && seedKey !== seededFor) {
+    setSeededFor(seedKey);
+    setRoleDraft(data.user.role === "admin" ? "admin" : "user");
+    setPermDraft(data.permissions);
+  }
 
-  useEffect(() => { load(); }, [load]);
+  // A user write can change this page, the users list, the Permissions page,
+  // the staff roster behind assignee pickers, and the overview's user card.
+  function load() {
+    void queryClient.invalidateQueries({ queryKey: adminKeys.module("users") });
+    void queryClient.invalidateQueries({ queryKey: adminKeys.module("permissions") });
+    void queryClient.invalidateQueries({ queryKey: adminKeys.module("team") });
+    void queryClient.invalidateQueries({ queryKey: adminKeys.module("overview") });
+  }
 
   async function patch(body: Record<string, unknown>): Promise<boolean> {
     const res = await adminRequest(`/api/admin/users/${id}`, {
@@ -195,7 +211,7 @@ export default function UserDetailPage() {
     setDeleting(true);
     const res = await adminRequest(`/api/admin/users/${id}`, { method: "DELETE" });
     setDeleting(false);
-    if (res.ok) { router.push("/admin/users"); }
+    if (res.ok) { load(); router.push("/admin/users"); }
     else { const j = await res.json().catch(() => null); flash("err", j?.error ?? "Delete failed."); setShowDelete(false); }
   }
 

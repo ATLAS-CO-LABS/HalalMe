@@ -1,7 +1,9 @@
 "use client";
-import { adminRequest, errorMessage } from "../_fetch";
+import { adminFetch, adminRequest, errorMessage } from "../_fetch";
+import { adminKeys } from "../_query";
 
 import { useEffect, useRef, useState } from "react";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { display } from "../_fonts";
 import { Modal, StatCard, Pagination, DateRange, LoadError } from "../_ui";
@@ -115,17 +117,20 @@ function TableSkeleton() {
   );
 }
 
+interface UsersPayload {
+  users: UserRow[];
+  stats: Stats;
+  total: number;
+  canManage: boolean;
+}
+const NO_USERS: UserRow[] = [];
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function UsersPage() {
   const router = useRouter();
-  const [users, setUsers] = useState<UserRow[]>([]);
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [total, setTotal] = useState(0);
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(25);
-  const [canManage, setCanManage] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   // Pre-filter to staff when arrived from the "Permissions" nav entry (?role=admin).
   const initialRole = useSearchParams().get("role");
   const [roleFilter, setRoleFilter] = useState(
@@ -135,6 +140,8 @@ export default function UsersPage() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [search, setSearch] = useState("");
+  // What the input shows vs. what the query key searches for.
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Selection / bulk
@@ -154,35 +161,55 @@ export default function UsersPage() {
   const [toast, setToast] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
   function flash(kind: "ok" | "err", msg: string) { setToast({ kind, msg }); setTimeout(() => setToast(null), 3500); }
 
-  async function fetchUsers(p: number, role: string, status: string, q: string) {
-    setLoading(true); setError(null);
-    try {
+  useEffect(() => () => { if (searchTimer.current) clearTimeout(searchTimer.current); }, []);
+
+  const query = useQuery({
+    queryKey: adminKeys.list("users", {
+      page, pageSize, role: roleFilter, status: statusFilter, dateFrom, dateTo, search: debouncedSearch,
+    }),
+    queryFn: () => {
       const params = new URLSearchParams();
-      params.set("page", String(p));
+      params.set("page", String(page));
       params.set("pageSize", String(pageSize));
-      if (role !== "all") params.set("role", role);
-      if (status !== "all") params.set("status", status);
-      if (q) params.set("search", q);
+      if (roleFilter !== "all") params.set("role", roleFilter);
+      if (statusFilter !== "all") params.set("status", statusFilter);
+      if (debouncedSearch) params.set("search", debouncedSearch);
       if (dateFrom) params.set("dateFrom", dateFrom);
       if (dateTo) params.set("dateTo", dateTo);
-      const res = await adminRequest(`/api/admin/users?${params}`);
-      if (!res.ok) throw new Error();
-      const json = await res.json();
-      setUsers(json.users); setStats(json.stats); setTotal(json.total); setCanManage(!!json.canManage);
-      rememberList("users", (json.users as UserRow[]).map((u) => u.id));
-    } catch (err) {
-      setError(errorMessage(err, "Could not load users. Try refreshing."));
-    } finally {
-      setLoading(false);
-    }
+      return adminFetch<UsersPayload>(`/api/admin/users?${params}`);
+    },
+    placeholderData: keepPreviousData,
+  });
+
+  const users = query.data?.users ?? NO_USERS;
+  const stats = query.data?.stats ?? null;
+  const total = query.data?.total ?? 0;
+  // Server-authoritative, read off the list response on purpose.
+  const canManage = !!query.data?.canManage;
+  const loading = query.isLoading;
+  const error = query.isError ? errorMessage(query.error, "Could not load users. Try refreshing.") : null;
+
+  // Feeds the prev/next stepper on the user detail page. v5 removed onSuccess
+  // from useQuery, so this side effect lives in an effect on the data.
+  useEffect(() => {
+    if (query.data?.users) rememberList("users", query.data.users.map((u) => u.id));
+  }, [query.data]);
+
+  // A user write can change this list, the Permissions page (role / access),
+  // the staff roster behind assignee pickers, and the overview's user card.
+  function invalidateUsers() {
+    void queryClient.invalidateQueries({ queryKey: adminKeys.module("users") });
+    void queryClient.invalidateQueries({ queryKey: adminKeys.module("permissions") });
+    void queryClient.invalidateQueries({ queryKey: adminKeys.module("team") });
+    void queryClient.invalidateQueries({ queryKey: adminKeys.module("overview") });
   }
 
-  useEffect(() => {
-    fetchUsers(page, roleFilter, statusFilter, search);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize, roleFilter, statusFilter, dateFrom, dateTo]);
-  useEffect(() => { setPage(0); }, [roleFilter, statusFilter, dateFrom, dateTo]);
-  useEffect(() => { setSelectedIds(new Set()); }, [page, roleFilter, statusFilter, search]);
+  // Page / filter / search changes clear the selection. Done in the handlers
+  // rather than effects watching those values.
+  function changePage(p: number) { setPage(p); setSelectedIds(new Set()); }
+  const changeRole = (v: string) => { setRoleFilter(v); changePage(0); };
+  const changeStatus = (v: string) => { setStatusFilter(v); changePage(0); };
+  const changeDates = (f: string, t: string) => { setDateFrom(f); setDateTo(t); changePage(0); };
 
   // Close the row menu on any outside click / scroll / resize.
   useEffect(() => {
@@ -201,7 +228,7 @@ export default function UsersPage() {
   function handleSearchChange(val: string) {
     setSearch(val);
     if (searchTimer.current) clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => { setPage(0); fetchUsers(0, roleFilter, statusFilter, val); }, 300);
+    searchTimer.current = setTimeout(() => { changePage(0); setDebouncedSearch(val); }, 300);
   }
 
   const navigate = (id: string) => router.push(`/admin/users/${id}`);
@@ -237,7 +264,7 @@ export default function UsersPage() {
       const json = await res.json();
       flash("ok", `${json.updated} user${json.updated !== 1 ? "s" : ""} updated.`);
       clearSelection();
-      fetchUsers(page, roleFilter, statusFilter, search);
+      invalidateUsers();
     } catch {
       flash("err", "Bulk action failed.");
     } finally {
@@ -249,7 +276,7 @@ export default function UsersPage() {
   async function toggleVerify(u: UserRow) {
     setMenu(null);
     const ok = await patch(u.id, { is_verified: !u.is_verified });
-    if (ok) { flash("ok", u.is_verified ? "Verification removed." : "User verified."); fetchUsers(page, roleFilter, statusFilter, search); }
+    if (ok) { flash("ok", u.is_verified ? "Verification removed." : "User verified."); invalidateUsers(); }
   }
 
   // Confirm modal submit (suspend or delete).
@@ -269,7 +296,7 @@ export default function UsersPage() {
       if (ok) {
         flash("ok", modal.kind === "delete" ? "User deleted." : "User suspended.");
         setModal(null); setModalReason("");
-        fetchUsers(page, roleFilter, statusFilter, search);
+        invalidateUsers();
       }
     } finally {
       setModalBusy(false);
@@ -344,9 +371,9 @@ export default function UsersPage() {
             {exporting ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
             <span className="hidden sm:inline">Export</span>
           </button>
-          <button onClick={() => fetchUsers(page, roleFilter, statusFilter, search)}
+          <button onClick={() => void query.refetch()}
             className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#102C26]/80 bg-[#102C26]/5 border border-[#102C26]/15 rounded-none hover:bg-[#102C26]/10 transition-colors" title="Refresh">
-            <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
+            <RefreshCw size={13} className={query.isFetching ? "animate-spin" : ""} />
           </button>
         </div>
       </div>
@@ -369,19 +396,19 @@ export default function UsersPage() {
             <div className="flex items-center gap-2 flex-wrap">
               <div className="flex items-center gap-0.5">
                 {ROLE_FILTERS.map(({ key, label }) => (
-                  <button key={key} onClick={() => setRoleFilter(key)}
+                  <button key={key} onClick={() => changeRole(key)}
                     className={`px-3 py-1.5 rounded-none text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${roleFilter === key ? "bg-[#102C26] text-[#F7E7CE]" : "text-gray-600 hover:text-[#102C26] hover:bg-[#102C26]/8"}`}>{label}</button>
                 ))}
               </div>
               <div className="w-px h-5 bg-gray-200 mx-1 hidden sm:block" />
               <div className="flex items-center gap-0.5">
                 {STATUS_FILTERS.map(({ key, label }) => (
-                  <button key={key} onClick={() => setStatusFilter(key)}
+                  <button key={key} onClick={() => changeStatus(key)}
                     className={`px-3 py-1.5 rounded-none text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${statusFilter === key ? "bg-[#102C26] text-[#F7E7CE]" : "text-gray-600 hover:text-[#102C26] hover:bg-[#102C26]/8"}`}>{label}</button>
                 ))}
               </div>
               <div className="sm:ml-auto">
-                <DateRange from={dateFrom} to={dateTo} onChange={(f, t) => { setDateFrom(f); setDateTo(t); }} label="Joined" />
+                <DateRange from={dateFrom} to={dateTo} onChange={changeDates} label="Joined" />
               </div>
             </div>
             <div className="relative">
@@ -427,7 +454,7 @@ export default function UsersPage() {
           {error ? (
             <LoadError
               message={error}
-              onRetry={() => fetchUsers(page, roleFilter, statusFilter, search)}
+              onRetry={() => void query.refetch()}
               compact
             />
           ) : loading ? (
@@ -545,10 +572,10 @@ export default function UsersPage() {
               {/* Pagination footer */}
               <Pagination
                 page={page} pageSize={pageSize} total={total} noun="user"
-                onPrev={() => setPage((p) => Math.max(0, p - 1))}
-                onNext={() => setPage((p) => p + 1)}
-                onPageSize={(s) => { setPageSize(s); setPage(0); }}
-                onJump={(p) => setPage(p)}
+                onPrev={() => changePage(Math.max(0, page - 1))}
+                onNext={() => changePage(page + 1)}
+                onPageSize={(s) => { setPageSize(s); changePage(0); }}
+                onJump={changePage}
               />
             </>
           )}

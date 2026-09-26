@@ -1,6 +1,8 @@
 # Admin Panel: TanStack Query Migration (Stage 2)
 
-**Status:** Day 1 (Slice A) done 2026-08-28. Day 2 (Slice B) done 2026-09-26. Day 3 (users + merchants) not started.
+**Status:** COMPLETE. Day 1 done 2026-08-28, Days 2 and 3 done 2026-09-26.
+
+Deliberately left on plain `adminRequest` (not cached): the charity edit drawer (editable draft), the users CSV export (an action, see item 5), and the Applications detail modal (that tab is not surfaced in the UI; convert it if it ever is).
 **Prerequisite:** Stage 1 shipped (commit `71c08e7`). Do not start before reading the Stage 1 section below.
 
 ---

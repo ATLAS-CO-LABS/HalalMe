@@ -1,7 +1,9 @@
 "use client";
-import { adminRequest, errorMessage } from "../_fetch";
+import { adminFetch, adminRequest, errorMessage } from "../_fetch";
+import { adminKeys } from "../_query";
 
 import { useEffect, useRef, useState } from "react";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { display } from "../_fonts";
 import AddMerchantModal from "@/components/admin/AddMerchantModal";
@@ -261,20 +263,22 @@ function MerchantCard({ m, onClick, selected, onSelect, canManage }: {
   );
 }
 
+const NO_MERCHANTS: Merchant[] = [];
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function MerchantPipelinePage() {
   const router = useRouter();
   const { toast, flash } = useToast();
-  const [merchants, setMerchants] = useState<Merchant[]>([]);
-  const [stats, setStats] = useState<PipelineStats | null>(null);
-  const [total, setTotal] = useState(0);
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(0);
+  // Requested size; the server's clamped value is read back for display only.
   const [pageSize, setPageSize] = useState(25);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState("all");
+  // `search` drives the input and the client-side filter in the id-set views;
+  // `debouncedSearch` drives the server-side query in the normal view.
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Selection
@@ -294,88 +298,96 @@ export default function MerchantPipelinePage() {
   const { can, team } = useAdmin();
   const canManage = can("merchants", "manage");
 
-  // Load the paginated table for the current view. The "needs attention" and
-  // "commission review" views fetch a specific id-set (computed by the stats
-  // endpoint); every other view is server-paginated by status/search.
-  async function fetchMerchants(
-    status: string, q: string, mine: boolean, pageNum: number,
-    attention: boolean, review: boolean, statsData: PipelineStats | null,
-  ) {
-    setLoading(true);
-    setError(null);
-    try {
+  useEffect(() => () => { if (searchTimer.current) clearTimeout(searchTimer.current); }, []);
+
+  // ── Aggregates (side rail + the id-sets behind two of the views) ──────────
+  // Non-fatal: the table still works in the normal view without them.
+  const statsQuery = useQuery({
+    queryKey: [...adminKeys.module("merchants"), "stats", { mine: mineOnly }] as const,
+    queryFn: () => adminFetch<PipelineStats>(`/api/admin/merchants/stats${mineOnly ? "?mine=1" : ""}`),
+  });
+  const stats = statsQuery.data ?? null;
+
+  // ── Table ────────────────────────────────────────────────────────────────
+  // The "needs attention" and "commission review" views are not server
+  // filters: the stats endpoint computes an id-set and the list is fetched by
+  // those ids. That makes the list a DEPENDENT query in those two views. The ids
+  // sit in the key, so a stats refetch that returns the same set does not
+  // refetch the table (TanStack compares keys structurally), and one that
+  // returns a different set does. That is what the old hand-built `viewIdsKey`
+  // string was doing.
+  const idsView = attentionOnly || reviewOnly;
+  const viewIds = attentionOnly
+    ? stats?.attention.ids
+    : reviewOnly
+    ? stats?.reviewPending.ids
+    : undefined;
+
+  const listQuery = useQuery({
+    queryKey: adminKeys.list(
+      "merchants",
+      idsView
+        ? { mine: mineOnly, view: attentionOnly ? "attention" : "review", ids: viewIds ?? [] }
+        : { mine: mineOnly, status: statusFilter, search: debouncedSearch, page, pageSize },
+    ),
+    queryFn: () => {
       const params = new URLSearchParams();
-      if (mine) params.set("mine", "1");
-      if (attention || review) {
-        const ids = attention ? statsData?.attention.ids : statsData?.reviewPending.ids;
-        params.set("ids", (ids ?? []).join(","));
+      if (mineOnly) params.set("mine", "1");
+      if (idsView) {
+        params.set("ids", (viewIds ?? []).join(","));
       } else {
-        if (status !== "all") params.set("status", status);
-        if (q) params.set("search", q);
-        params.set("page", String(pageNum));
+        if (statusFilter !== "all") params.set("status", statusFilter);
+        if (debouncedSearch) params.set("search", debouncedSearch);
+        params.set("page", String(page));
         params.set("pageSize", String(pageSize));
       }
-      const res = await adminRequest(`/api/admin/merchants?${params}`);
-      if (!res.ok) throw new Error();
-      const json = await res.json() as { merchants: Merchant[]; total: number; pageSize: number };
-      setMerchants(json.merchants);
-      setTotal(json.total);
-      setPageSize(json.pageSize);
-      rememberList("merchants", json.merchants.map((m) => m.id));
-    } catch (err) {
-      setError(errorMessage(err, "Could not load merchants. Try refreshing."));
-    } finally {
-      setLoading(false);
-    }
-  }
+      return adminFetch<{ merchants: Merchant[]; total: number; pageSize: number }>(`/api/admin/merchants?${params}`);
+    },
+    // Wait for the id-set before fetching an id-set view.
+    enabled: !idsView || !!stats,
+    placeholderData: keepPreviousData,
+  });
 
-  async function fetchStats(mine: boolean) {
-    try {
-      const res = await adminRequest(`/api/admin/merchants/stats${mine ? "?mine=1" : ""}`);
-      if (!res.ok) return;
-      setStats(await res.json() as PipelineStats);
-    } catch {
-      // Non-fatal — the table still works without the rail aggregates.
-    }
-  }
+  const merchants = listQuery.data?.merchants ?? NO_MERCHANTS;
+  const total = listQuery.data?.total ?? 0;
+  const effectivePageSize = listQuery.data?.pageSize ?? pageSize;
+  // In an id-set view the table cannot load until stats has, so a stats
+  // failure there is the table's failure too. In the normal view it is not.
+  const statsBlocksTable = idsView && statsQuery.isError;
+  const loading = listQuery.isLoading || (idsView && statsQuery.isLoading);
+  const error = listQuery.isError
+    ? errorMessage(listQuery.error, "Could not load merchants. Try refreshing.")
+    : statsBlocksTable
+    ? errorMessage(statsQuery.error, "Could not load this view. Try refreshing.")
+    : null;
 
-  // Re-load both the table and the aggregates (after a mutation / manual refresh).
+  // Feeds the prev/next stepper on the merchant detail page. v5 removed
+  // onSuccess from useQuery, so this side effect lives in an effect on the data.
+  useEffect(() => {
+    if (listQuery.data?.merchants) rememberList("merchants", listQuery.data.merchants.map((m) => m.id));
+  }, [listQuery.data]);
+
+  // Re-load both the table and the aggregates (after a mutation / manual refresh),
+  // plus the overview whose merchant card and "needs attention" feed read the same data.
   function reload() {
-    fetchMerchants(statusFilter, search, mineOnly, page, attentionOnly, reviewOnly, stats);
-    fetchStats(mineOnly);
+    void queryClient.invalidateQueries({ queryKey: adminKeys.module("merchants") });
+    void queryClient.invalidateQueries({ queryKey: adminKeys.module("overview") });
   }
 
-  // In the id-set views the table refetches when the computed ids change; in the
-  // normal view this key stays empty so stat refreshes don't retrigger the table.
-  const viewIdsKey = attentionOnly
-    ? (stats?.attention.ids.join(",") ?? "")
-    : reviewOnly
-    ? (stats?.reviewPending.ids.join(",") ?? "")
-    : "";
-
-  // Aggregates — on mount and when the scope (mine) changes.
-  useEffect(() => {
-    fetchStats(mineOnly);
-  }, [mineOnly]);
-
-  // Table — reacts to filters, page and the active id-set view.
-  useEffect(() => {
-    fetchMerchants(statusFilter, search, mineOnly, page, attentionOnly, reviewOnly, stats);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter, mineOnly, page, pageSize, attentionOnly, reviewOnly, viewIdsKey]);
-
-  // Reset to the first page whenever the filter context changes.
-  useEffect(() => { setPage(0); }, [statusFilter, mineOnly, attentionOnly, reviewOnly]);
-  useEffect(() => { setSelectedIds(new Set()); }, [statusFilter, search, page, attentionOnly, reviewOnly]);
+  // Filter-context changes reset to page 1 and clear the selection. Done in the
+  // handlers rather than effects watching the filters.
+  function changePage(p: number) { setPage(p); setSelectedIds(new Set()); }
 
   function handleSearchChange(val: string) {
     setSearch(val);
-    // In the id-set views search filters the loaded rows client-side (below).
+    setSelectedIds(new Set());
+    // In the id-set views search filters the loaded rows client-side (below),
+    // so only the normal view needs the debounced server query.
     if (attentionOnly || reviewOnly) return;
     if (searchTimer.current) clearTimeout(searchTimer.current);
     searchTimer.current = setTimeout(() => {
-      setPage(0);
-      fetchMerchants(statusFilter, val, mineOnly, 0, false, false, stats);
+      changePage(0);
+      setDebouncedSearch(val);
     }, 300);
   }
 
@@ -503,7 +515,7 @@ export default function MerchantPipelinePage() {
             className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#102C26]/70 bg-[#102C26]/5 border border-[#102C26]/15 rounded-none hover:bg-[#102C26]/10 transition-colors"
             title="Refresh"
           >
-            <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
+            <RefreshCw size={13} className={listQuery.isFetching || statsQuery.isFetching ? "animate-spin" : ""} />
           </button>
           {canManage && (
             <button
@@ -532,7 +544,7 @@ export default function MerchantPipelinePage() {
             sub={attentionOnly ? "Showing — click to clear" : urgentCount ? "Click to review" : "All caught up"}
             icon={AlertCircle} tone="warning"
             active={attentionOnly}
-            onClick={() => { setAttentionOnly((v) => !v); setReviewOnly(false); }} />
+            onClick={() => { setAttentionOnly((v) => !v); setReviewOnly(false); changePage(0); }} />
           <StatCard label="Active (Live)" value={liveCount}
             sub={statTotal ? `${Math.round((liveCount / statTotal) * 100)}% of total` : "—"} icon={Activity} tone="success" />
           <StatCard label="New This Week" value={newThisWeek} sub="Registered ≤ 7 days" icon={Sparkles} tone="accent" />
@@ -552,7 +564,7 @@ export default function MerchantPipelinePage() {
                 {STATUSES.map(({ key, label }) => {
                   const active = statusFilter === key;
                   return (
-                    <button key={key} onClick={() => { setStatusFilter(key); setAttentionOnly(false); setReviewOnly(false); }}
+                    <button key={key} onClick={() => { setStatusFilter(key); setAttentionOnly(false); setReviewOnly(false); changePage(0); }}
                       className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-none text-xs sm:text-sm font-medium whitespace-nowrap transition-colors ${
                         active ? "bg-[#102C26] text-[#F7E7CE]" : "text-gray-500 hover:text-[#102C26] hover:bg-[#102C26]/8"
                       }`}>
@@ -572,7 +584,7 @@ export default function MerchantPipelinePage() {
                 {/* My Merchants (server-side scope to assigned_rep_id = me) */}
                 {canManage && (
                   <button
-                    onClick={() => { setMineOnly((v) => !v); setAttentionOnly(false); setReviewOnly(false); }}
+                    onClick={() => { setMineOnly((v) => !v); setAttentionOnly(false); setReviewOnly(false); changePage(0); }}
                     className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-none text-xs sm:text-sm font-medium whitespace-nowrap transition-colors ${
                       mineOnly ? "bg-[#102C26] text-[#F7E7CE]" : "text-gray-500 hover:text-[#102C26] hover:bg-[#102C26]/8"
                     }`}
@@ -584,7 +596,7 @@ export default function MerchantPipelinePage() {
                 {/* Commission-review filter (client-side; spans all statuses) */}
                 {reviewPendingCount > 0 && (
                   <button
-                    onClick={() => { setReviewOnly((v) => !v); setAttentionOnly(false); }}
+                    onClick={() => { setReviewOnly((v) => !v); setAttentionOnly(false); changePage(0); }}
                     className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-none text-xs sm:text-sm font-medium whitespace-nowrap transition-colors ${
                       reviewOnly ? "bg-orange-600 text-white" : "text-orange-700 hover:bg-orange-50"
                     }`}
@@ -682,7 +694,7 @@ export default function MerchantPipelinePage() {
             {error ? (
               <LoadError
                 message={error}
-                onRetry={() => fetchMerchants(statusFilter, search, mineOnly, page, attentionOnly, reviewOnly, stats)}
+                onRetry={reload}
                 compact
               />
             ) : loading ? (
@@ -827,11 +839,11 @@ export default function MerchantPipelinePage() {
                   </div>
                 ) : (
                   <Pagination
-                    page={page} pageSize={pageSize} total={total} noun="merchant"
-                    onPrev={() => setPage((p) => Math.max(0, p - 1))}
-                    onNext={() => setPage((p) => p + 1)}
-                    onPageSize={(s) => { setPageSize(s); setPage(0); }}
-                    onJump={(p) => setPage(p)}
+                    page={page} pageSize={effectivePageSize} total={total} noun="merchant"
+                    onPrev={() => changePage(Math.max(0, page - 1))}
+                    onNext={() => changePage(page + 1)}
+                    onPageSize={(s) => { setPageSize(s); changePage(0); }}
+                    onJump={changePage}
                   />
                 )}
               </>
@@ -912,7 +924,7 @@ export default function MerchantPipelinePage() {
           <div className="bg-white rounded-none border border-[#102C26]/12 p-5">
             <h3 className={`${display.className} text-[13px] font-extrabold uppercase tracking-wide text-[#102C26] mb-3`}>Quick Actions</h3>
             <div className="space-y-2">
-              <button onClick={() => setStatusFilter("pending")}
+              <button onClick={() => { setStatusFilter("pending"); setAttentionOnly(false); setReviewOnly(false); changePage(0); }}
                 className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-none border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
                 <span className="flex items-center gap-2"><Mail size={14} className="text-gray-400" /> Review pending</span>
                 <ArrowRight size={14} className="text-gray-300" />
