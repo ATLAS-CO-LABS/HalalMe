@@ -339,8 +339,18 @@ async function main() {
     await dialog.getByRole("button", { name: "Post", exact: true }).click();
     await dialog.waitFor({ state: "hidden", timeout: 20000 });
     await page.waitForTimeout(14000);
-    check("post made while the feed loads isn't wiped when it lands",
-      (await page.locator("article").filter({ hasText: `${TAG} posted while the feed was loading` }).count()) > 0);
+    const survived = (await page.locator("article").filter({ hasText: `${TAG} posted while the feed was loading` }).count()) > 0;
+    if (!survived) {
+      await shot(page, "zz-race-failure");
+      const seen = await page.evaluate(() => ({
+        url: location.href,
+        articles: document.querySelectorAll("article").length,
+        heading: document.querySelector("main h3")?.textContent ?? null,
+        dialogs: document.querySelectorAll('[role="dialog"]').length,
+      }));
+      console.log("race step state:", JSON.stringify(seen));
+    }
+    check("post made while the feed loads isn't wiped when it lands", survived);
     await page.unroute("**/rest/v1/rpc/get_social_feed*");
 
     // Cleanup media through the app's own route (ownership-checked).
