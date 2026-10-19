@@ -154,6 +154,9 @@ function HubFeedContent({
   const loadFeedRequestIdRef = useRef(0);
   // IDs we created locally - realtime skips these.
   const ownPostIdsRef = useRef<Set<string>>(new Set());
+  // When each of those was added locally, so a page-one load that was already
+  // in flight doesn't wipe a post made while it was loading.
+  const ownPostedAtRef = useRef<Map<string, number>>(new Map());
   // See the auth-hydration effect below.
   const hadNullUserAtMount = useRef<boolean>(false);
   // The empty-result auth-race retry fires at most once per mount.
@@ -179,6 +182,7 @@ function HubFeedContent({
       feedAbortRef.current = controller;
       const { signal } = controller;
       const requestId = ++loadFeedRequestIdRef.current;
+      const startedAt = Date.now();
 
       if (append) { setIsLoadingMore(true); setLoadMoreError(false); }
       else { setIsLoading(true); setError(null); setIncoming([]); cursorRef.current = null; }
@@ -233,7 +237,14 @@ function HubFeedContent({
 
         if (requestId !== loadFeedRequestIdRef.current) return;
         cursorRef.current = result.nextCursor;
-        setPosts((prev) => (append ? mergeUniqueById(prev, result.data) : result.data));
+        setPosts((prev) => {
+          if (append) return mergeUniqueById(prev, result.data);
+          // Posts created after this request left can't be in its answer.
+          // Without this, posting while the feed was loading (e.g. right after
+          // navigating back) made the new post vanish when the page landed.
+          const postedSince = prev.filter((p) => (ownPostedAtRef.current.get(p.id) ?? 0) >= startedAt);
+          return prependUniqueById(result.data, postedSince);
+        });
         setHasMore(result.hasMore);
       } catch {
         if (requestId === loadFeedRequestIdRef.current) {
@@ -379,6 +390,7 @@ function HubFeedContent({
 
   const handlePosted = useCallback((post: Post, meta: PostedMeta) => {
     ownPostIdsRef.current.add(post.id);
+    ownPostedAtRef.current.set(post.id, Date.now());
     const tab = activeTabRef.current;
     const filter = typeFilterRef.current;
     const visibleHere = (tab === "for_you" || tab === "latest") && (filter === "all" || filter === post.post_type) && !searchQuery;

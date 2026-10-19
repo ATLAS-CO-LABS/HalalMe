@@ -3,11 +3,12 @@
  *
  *   npm run build && npx next start -p 3100     (in another terminal)
  *   npm run test:social:live                     (BASE=http://localhost:3100 by default)
+ *   $env:BASE = "https://halalme.co.uk"; npm run test:social:live   (against a deployment)
  *
  * Drives the real UI against the real Supabase project: the four post types,
  * recipe sharing + points, pasted-link navigation, photo upload, accepted
  * answers, editing, filters, end of feed, mobile layout and signed-out views.
- * 45 checks.
+ * 46 checks.
  *
  * Mints a throwaway user with the service role and deletes it in `finally`
  * (cascading its posts, recipes and ledger rows); uploaded test photos are
@@ -52,6 +53,16 @@ let userId = null;
 const consoleErrors = [];
 
 async function main() {
+  // Fail fast, before minting a user, if nothing is listening at BASE.
+  try {
+    await fetch(BASE, { method: "HEAD", signal: AbortSignal.timeout(10_000) });
+  } catch {
+    throw new Error(
+      `Nothing is reachable at ${BASE}. Start a build with \`npm run build && npx next start -p 3100\`, ` +
+      `or point the suite at a deployment, e.g. PowerShell: $env:BASE = "https://halalme.co.uk"`,
+    );
+  }
+
   // ---- Fixtures ------------------------------------------------------------
   const { data: created, error: cErr } = await admin.auth.admin.createUser({
     email, password, email_confirm: true, user_metadata: { full_name: "Social Verify" },
@@ -310,6 +321,27 @@ async function main() {
     await ap.locator("article").first().waitFor({ timeout: 15000 });
     check("signed-out feed renders", true);
     await anon.close();
+
+    // N. Posting while the feed's first page is still loading. The feed request
+    // reaches the database at once (so its answer predates the post) but its
+    // response is held 8s, so it lands after the post. The post must survive.
+    // This failed on the live site before the fix (slower network than local).
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.route("**/rest/v1/rpc/get_social_feed*", async (route) => {
+      const response = await route.fetch();
+      await new Promise((r) => setTimeout(r, 8000));
+      await route.fulfill({ response });
+    });
+    await page.goto(`${BASE}/social/feed`);
+    await page.getByRole("button", { name: "Notifications" }).first().waitFor({ timeout: 15000 }).catch(() => page.waitForTimeout(2500));
+    await page.getByRole("button", { name: "Post", exact: true }).first().click();
+    await dialog.getByPlaceholder("What's on your mind?").fill(`${TAG} posted while the feed was loading`);
+    await dialog.getByRole("button", { name: "Post", exact: true }).click();
+    await dialog.waitFor({ state: "hidden", timeout: 20000 });
+    await page.waitForTimeout(14000);
+    check("post made while the feed loads isn't wiped when it lands",
+      (await page.locator("article").filter({ hasText: `${TAG} posted while the feed was loading` }).count()) > 0);
+    await page.unroute("**/rest/v1/rpc/get_social_feed*");
 
     // Cleanup media through the app's own route (ownership-checked).
     const { data: mine } = await admin.from("posts").select("media_urls, media_public_ids").eq("user_id", userId);
