@@ -14,6 +14,7 @@ import {
   Star,
   MessageCircle,
   Share2,
+  MessagesSquare,
   Bookmark,
   Check,
   Loader2,
@@ -767,8 +768,28 @@ export default function RecipeDetailClient({ id, initialRecipe, initialReviews }
             <Printer className="w-5 h-5 md:w-6 md:h-6" />
           </motion.button>
 
+          {/* Post this recipe to HalalMe Social: opens the composer with the
+              recipe attached. Owners can share their own drafts (which stay out
+              of Explore); anyone can share a published recipe. */}
+          {(recipe?.is_published || isOwner) && (
+            <motion.button
+              onClick={() => requireAuth(() => router.push(`/social/feed?compose=recipe&recipe=${id}`), "Sign in to share on Social")}
+              title="Share on HalalMe Social"
+              aria-label="Share on HalalMe Social"
+              className="backdrop-blur-sm text-white p-2 md:p-3 border transition-colors"
+              style={{ backgroundColor: "rgba(0,0,0,0.6)", borderColor: "rgba(255,255,255,0.2)" }}
+              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = `color-mix(in oklab, var(--hm-magenta) 80%, transparent)`; e.currentTarget.style.borderColor = MAGENTA; }}
+              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "rgba(0,0,0,0.6)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <MessagesSquare className="w-5 h-5 md:w-6 md:h-6" />
+            </motion.button>
+          )}
+
           <motion.button
             onClick={handleShare}
+            aria-label={copied ? "Link copied" : "Copy link"}
             title={copied ? "Copied!" : "Copy link"}
             className="backdrop-blur-sm text-white p-2 md:p-3 border transition-colors"
             style={

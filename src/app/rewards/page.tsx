@@ -34,7 +34,7 @@ const TIERS = [
 const EARN_WAYS = [
   { icon: HandHeart, title: "Donate to Charity", desc: "10 points per £1 donated through HalalMe Charity", href: "/charity" },
   { icon: ChefHat, title: "Upload a Recipe", desc: "+50 points the first time, plus review bonuses", href: "/kitchen" },
-  { icon: Megaphone, title: "Post on Social", desc: "+50 for your first post, +20 for every post after", href: "/social" },
+  { icon: Megaphone, title: "Post on Social", desc: "+50 for your first post, +20 for posting each day, and +25 when you share one of your recipes", href: "/social" },
   { icon: Star, title: "Refer a Friend", desc: "A one-off bonus when someone you invite joins HalalMe, plus a small top-up for staying active", href: "/dashboard?tab=rewards" },
 ];
 

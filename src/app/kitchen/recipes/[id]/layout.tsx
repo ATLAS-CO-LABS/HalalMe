@@ -24,7 +24,7 @@ export async function generateMetadata({
 
   try {
     const res = await fetch(
-      `${base}/rest/v1/recipes?id=eq.${id}&select=title,description,image_url&limit=1`,
+      `${base}/rest/v1/recipes?id=eq.${id}&select=title,description,image_url,is_published&limit=1`,
       {
         headers: { apikey: key, Authorization: `Bearer ${key}` },
         next: { revalidate: 300 },
@@ -36,9 +36,13 @@ export async function generateMetadata({
       title?: string;
       description?: string | null;
       image_url?: string | null;
+      is_published?: boolean;
     }>;
     const recipe = rows?.[0];
     if (!recipe?.title) return fallback;
+    // A draft that's readable only because it was shared on Social is
+    // unlisted: reachable from the post, but kept out of search results.
+    const unlisted = recipe.is_published === false;
 
     const title = `${recipe.title} · HalalMe`;
     const description =
@@ -49,6 +53,7 @@ export async function generateMetadata({
       title,
       description,
       alternates: { canonical: `/kitchen/recipes/${id}` },
+      ...(unlisted ? { robots: { index: false, follow: false } } : {}),
       openGraph: {
         title,
         description,

@@ -5,11 +5,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  ArrowLeft, MapPin, Calendar, BadgeCheck, Loader2, Heart, Gift, Trophy,
-  UserX, Pencil, Search,
+  ArrowLeft, Calendar, BadgeCheck, Loader2, Heart, Gift, Trophy,
+  UserX, Pencil, MessagesSquare, RotateCcw, Plus,
 } from "lucide-react";
 import type { Post } from "@/types/app";
 import { hubService } from "@/services/hubService";
+import { mergeUniqueById, type FeedCursor } from "@/lib/socialFeed";
 import { withTimeout } from "@/lib/withTimeout";
 import { useResumeKey } from "@/context/AppResumeContext";
 import { useAuth } from "@/hooks/useAuth";
@@ -50,6 +51,8 @@ const BADGES = [
   { slug: "champion", icon: Trophy, label: "Charity Champion", color: "#F59E0B" },
 ] as const;
 
+const PAGE_SIZE = 10;
+
 const JOINED_FMT = new Intl.DateTimeFormat("en-GB", { month: "long", year: "numeric" });
 
 export default function ProfileClient({ handle, initialProfile, initialPosts }: ProfileClientProps) {
@@ -61,6 +64,11 @@ export default function ProfileClient({ handle, initialProfile, initialPosts }: 
   const [profile] = useState(initialProfile);
   const [posts, setPosts] = useState<Post[]>(initialPosts);
   const [isPostsLoading, setIsPostsLoading] = useState(false);
+  const [postCount, setPostCount] = useState<number | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [loadMoreError, setLoadMoreError] = useState(false);
+  const cursorRef = useRef<FeedCursor | null>(null);
 
   const [followerCount, setFollowerCount] = useState<number | null>(null);
   const [followingCount, setFollowingCount] = useState<number | null>(null);
@@ -70,6 +78,8 @@ export default function ProfileClient({ handle, initialProfile, initialPosts }: 
   const [isBadgesLoading, setIsBadgesLoading] = useState(true);
 
   const loadRequestIdRef = useRef(0);
+  const postsLengthRef = useRef(initialPosts.length);
+  useEffect(() => { postsLengthRef.current = posts.length; }, [posts.length]);
 
   const loadSecondary = useCallback((withPosts: boolean) => {
     if (!profile) return;
@@ -103,10 +113,21 @@ export default function ProfileClient({ handle, initialProfile, initialPosts }: 
       .catch(() => {})
       .finally(() => { if (requestId === loadRequestIdRef.current) setIsBadgesLoading(false); });
 
+    withTimeout(hubService.getUserPostCount(profile.id), 10_000)
+      .then((n) => { if (requestId === loadRequestIdRef.current) setPostCount(n); })
+      .catch(() => {});
+
     if (withPosts) {
-      setIsPostsLoading(true);
-      withTimeout(hubService.getUserPosts(profile.id, currentUser?.id), 10_000)
-        .then((fetched) => { if (requestId === loadRequestIdRef.current) setPosts(fetched); })
+      // Re-fetched even when server-rendered: the server fetch was anonymous and
+      // can't know this viewer's like/bookmark state. Skeleton only if empty.
+      if (postsLengthRef.current === 0) setIsPostsLoading(true);
+      withTimeout(hubService.getFeedPage({ mode: "user", authorId: profile.id, limit: PAGE_SIZE }), 10_000)
+        .then((page) => {
+          if (requestId !== loadRequestIdRef.current) return;
+          setPosts(page.data);
+          setHasMore(page.hasMore);
+          cursorRef.current = page.nextCursor;
+        })
         .catch(() => {})
         .finally(() => { if (requestId === loadRequestIdRef.current) setIsPostsLoading(false); });
     }
@@ -175,8 +196,28 @@ export default function ProfileClient({ handle, initialProfile, initialPosts }: 
 
   const handleDelete = useCallback(async (postId: string) => {
     setPosts((prev) => prev.filter((p) => p.id !== postId));
+    setPostCount((n) => (n === null ? n : Math.max(0, n - 1)));
     try { await hubService.deletePost(postId); } catch { loadSecondary(true); }
   }, [loadSecondary]);
+
+  const loadMore = useCallback(async () => {
+    if (!profile || isLoadingMore || !cursorRef.current) return;
+    setIsLoadingMore(true);
+    setLoadMoreError(false);
+    try {
+      const page = await withTimeout(
+        hubService.getFeedPage({ mode: "user", authorId: profile.id, limit: PAGE_SIZE, cursor: cursorRef.current }),
+        10_000,
+      );
+      setPosts((prev) => mergeUniqueById(prev, page.data));
+      setHasMore(page.hasMore);
+      cursorRef.current = page.nextCursor;
+    } catch {
+      setLoadMoreError(true);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [profile, isLoadingMore]);
 
   // ---------------------------------------------------------------------------
   // Not found
@@ -192,14 +233,8 @@ export default function ProfileClient({ handle, initialProfile, initialPosts }: 
           <p className="text-sm" style={{ color: MUTED }}>
             @{handle} doesn&apos;t exist, or the account has been removed.
           </p>
-          <Link href="/social/feed">
-            <motion.button
-              className="text-xs font-bold uppercase tracking-[0.2em] transition-colors"
-              style={{ color: AMBER }}
-              whileHover={{ scale: 1.05 }}
-            >
-              ← Back to Feed
-            </motion.button>
+          <Link href="/social/feed" className="inline-block text-xs font-bold uppercase tracking-[0.2em] hover:underline focus-visible:outline-2 focus-visible:outline-(--hm-amber)" style={{ color: AMBER }}>
+            Back to the feed
           </Link>
         </div>
       </div>
@@ -221,7 +256,8 @@ export default function ProfileClient({ handle, initialProfile, initialPosts }: 
         <div className="mx-auto max-w-4xl px-4 md:px-6 py-4 md:py-5">
           <div className="flex items-center gap-3 md:gap-4">
             <motion.button
-              onClick={() => router.back()}
+              onClick={() => (window.history.length > 1 ? router.back() : router.push("/social/feed"))}
+              aria-label="Back"
               className="transition-colors"
               style={{ color: SUBTLE }}
               onMouseEnter={(e) => (e.currentTarget.style.color = CREAM)}
@@ -270,20 +306,18 @@ export default function ProfileClient({ handle, initialProfile, initialPosts }: 
               <Avatar src={profile.avatar_url ?? undefined} alt={displayName} size="xl" flair={profile.profile_flair} className="border-4 border-(--hub-bg2) w-24 h-24 md:w-28 md:h-28" />
 
               {isOwnProfile ? (
-                <Link href="/profile">
-                  <motion.button
-                    className="mb-1 flex items-center gap-2 px-4 py-2.5 text-xs font-extrabold uppercase tracking-tighter border transition-colors"
-                    style={{ color: CREAM, borderColor: `color-mix(in oklab, var(--hm-text) 13%, transparent)` }}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Pencil className="w-3.5 h-3.5" /> Edit Profile
-                  </motion.button>
+                <Link
+                  href="/profile"
+                  className="mb-1 inline-flex items-center gap-2 px-4 py-2.5 text-xs font-extrabold uppercase tracking-tighter border border-[color-mix(in_oklab,var(--hm-text)_13%,transparent)] transition-colors hover:border-(--hm-amber) focus-visible:outline-2 focus-visible:outline-(--hm-amber)"
+                  style={{ color: CREAM }}
+                >
+                  <Pencil className="w-3.5 h-3.5" aria-hidden /> Edit Profile
                 </Link>
               ) : currentUser && (
                 <motion.button
                   onClick={handleFollowToggle}
                   disabled={isFollowLoading}
+                  aria-pressed={isFollowing}
                   className="mb-1 flex items-center gap-2 px-6 py-2.5 font-extrabold uppercase tracking-tighter text-xs transition-all disabled:opacity-70 border"
                   style={isFollowing
                     ? { backgroundColor: "transparent", color: CREAM, borderColor: `color-mix(in oklab, var(--hm-text) 13%, transparent)` }
@@ -317,10 +351,6 @@ export default function ProfileClient({ handle, initialProfile, initialPosts }: 
 
             <div className="flex items-center gap-4 mt-3 text-sm flex-wrap" style={{ color: SUBTLE }}>
               <div className="flex items-center gap-1">
-                <MapPin className="w-4 h-4" />
-                <span>Global</span>
-              </div>
-              <div className="flex items-center gap-1">
                 <Calendar className="w-4 h-4" />
                 <span>Joined {joined}</span>
               </div>
@@ -343,7 +373,7 @@ export default function ProfileClient({ handle, initialProfile, initialPosts }: 
 
             <div className="flex items-center gap-6 mt-4">
               <div>
-                <span className="font-bold text-lg" style={{ color: CREAM }}>{posts.length}</span>
+                <span className="font-bold text-lg tabular-nums" style={{ color: CREAM }}>{postCount ?? posts.length}</span>
                 <span className="text-sm ml-1" style={{ color: SUBTLE }}>Posts</span>
               </div>
               <div>
@@ -371,9 +401,23 @@ export default function ProfileClient({ handle, initialProfile, initialPosts }: 
             {[0, 1].map((i) => <PostCardSkeleton key={i} />)}
           </div>
         ) : posts.length === 0 ? (
-          <div className="text-center py-16 border" style={{ backgroundColor: BG2, borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)` }}>
-            <Search className="w-10 h-10 mx-auto mb-3" style={{ color: SUBTLE }} />
-            <p className="font-normal" style={{ color: MUTED, fontFamily: "var(--font-body)" }}>No posts yet</p>
+          <div className="text-center py-14 px-4 border" style={{ backgroundColor: BG2, borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)` }}>
+            <MessagesSquare className="w-10 h-10 mx-auto mb-3" style={{ color: SUBTLE }} aria-hidden />
+            <p className="font-semibold" style={{ color: CREAM, fontFamily: "var(--font-body)" }}>
+              {isOwnProfile ? "You haven't posted yet" : "No posts yet"}
+            </p>
+            {isOwnProfile && (
+              <>
+                <p className="mt-1 text-sm" style={{ color: MUTED }}>Share a recipe, ask a question or review somewhere you ate.</p>
+                <Link
+                  href="/social/feed?compose=general"
+                  className="mt-5 inline-flex items-center gap-2 px-5 py-2.5 text-sm font-extrabold uppercase tracking-tight focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--hm-amber)"
+                  style={{ backgroundColor: AMBER, color: BG }}
+                >
+                  <Plus className="w-4 h-4" aria-hidden /> Create a post
+                </Link>
+              </>
+            )}
           </div>
         ) : (
           <AnimatePresence>
@@ -391,6 +435,22 @@ export default function ProfileClient({ handle, initialProfile, initialPosts }: 
               ))}
             </div>
           </AnimatePresence>
+        )}
+
+        {posts.length > 0 && !isPostsLoading && (hasMore || loadMoreError) && (
+          <div className="mt-6 flex flex-col items-center gap-2" aria-live="polite">
+            {loadMoreError && <p className="text-sm" style={{ color: MUTED }}>Couldn&apos;t load more posts.</p>}
+            <button
+              type="button"
+              onClick={loadMore}
+              disabled={isLoadingMore}
+              className="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-bold uppercase tracking-tight border border-[color-mix(in_oklab,var(--hm-text)_8%,transparent)] transition-colors hover:border-(--hm-amber) disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-(--hm-amber)"
+              style={{ color: CREAM, backgroundColor: BG2 }}
+            >
+              {isLoadingMore ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden /> : loadMoreError ? <RotateCcw className="w-4 h-4" aria-hidden /> : null}
+              {isLoadingMore ? "Loading" : loadMoreError ? "Retry" : "Load more posts"}
+            </button>
+          </div>
         )}
       </div>
     </div>

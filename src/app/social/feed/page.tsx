@@ -5,27 +5,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
-  ArrowLeft,
-  Plus,
-  TrendingUp,
-  Clock,
-  Users,
-  MessagesSquare,
-  MessageCircle,
-  ChefHat,
-  HelpCircle,
-  Star,
-  Sparkles,
-  Search,
-  Bookmark,
-  X,
-  Menu,
-  Home,
-  Loader2,
-  AlertCircle,
+  ArrowLeft, ArrowUp, Plus, Sparkles, Clock, Users, MessagesSquare, MessageCircle, ChefHat,
+  HelpCircle, Star, Search, Bookmark, X, Menu, Home, Loader2, AlertCircle, RotateCcw, Gift, Check,
 } from "lucide-react";
-import type { Post, PostType, UserSearchResult } from "@/types";
+import type { Post, PostType, RecipeSummary, UserSearchResult } from "@/types";
 import { hubService, type FeedMode } from "@/services/hubService";
+import { mergeUniqueById, prependUniqueById, type FeedCursor } from "@/lib/socialFeed";
 import { withTimeout, TimeoutError } from "@/lib/withTimeout";
 import { useResumeKey } from "@/context/AppResumeContext";
 import { useAuth } from "@/hooks/useAuth";
@@ -33,7 +18,7 @@ import { useAuthGate } from "@/hooks/useAuthGate";
 import { profileHref } from "@/lib/profileHref";
 import Avatar from "@/components/hub/Avatar";
 import PostCard from "@/components/hub/PostCard";
-import CreatePostModal from "@/components/hub/CreatePostModal";
+import CreatePostModal, { type PostedMeta } from "@/components/hub/CreatePostModal";
 import EditPostModal from "@/components/hub/EditPostModal";
 import NotificationPanel from "@/components/hub/NotificationPanel";
 import { PostCardSkeletonList } from "@/components/hub/PostCardSkeleton";
@@ -43,16 +28,41 @@ const BG = "var(--hub-bg)";
 const BG2 = "var(--hub-bg2)";
 const AMBER = "var(--hm-amber)";
 const CREAM = "var(--hm-text)";
+const MUTED = "var(--hm-text-muted)";
+const SUBTLE = "var(--hm-text-subtle)";
+const DIVIDER = "color-mix(in oklab, var(--hm-text) 6%, transparent)";
 
-type TabType = FeedMode | "bookmarks";
+const PAGE_SIZE = 15;
+const COMPOSE_TYPES: PostType[] = ["general", "recipe", "question", "review"];
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+type TabType = FeedMode;
+
+const TABS: { id: TabType; label: string; icon: typeof Clock }[] = [
+  { id: "for_you",   label: "For You",   icon: Sparkles },
+  { id: "latest",    label: "Latest",    icon: Clock },
+  { id: "following", label: "Following", icon: Users },
+  { id: "saved",     label: "Saved",     icon: Bookmark },
+];
+
+const TYPE_FILTERS = [
+  { value: "all",      label: "All",       Icon: Sparkles      },
+  { value: "general",  label: "Posts",     Icon: MessageCircle },
+  { value: "recipe",   label: "Recipes",   Icon: ChefHat       },
+  { value: "question", label: "Questions", Icon: HelpCircle    },
+  { value: "review",   label: "Reviews",   Icon: Star          },
+] as const;
+
+/** Old links used ?tab=bookmarks; ?tab=trending maps onto the ranked feed. */
+function tabFromParam(v: string | null): TabType {
+  if (v === "bookmarks" || v === "saved") return "saved";
+  if (v === "latest" || v === "following") return v;
+  return "for_you";
+}
 
 // ---------------------------------------------------------------------------
-// useSearchParams() requires a Suspense boundary — without it Next.js can't
-// statically prerender the route (it needs a fallback for the case where no
-// search params are available yet). This was previously masked by AuthGuard
-// bailing the whole tree out of static generation; removing it to make the
-// feed public surfaced the missing boundary, so page.tsx now only owns the
-// Suspense wrapper and the actual content lives in HubFeedPageInner.
+// useSearchParams() requires a Suspense boundary, so page.tsx only owns the
+// Suspense wrapper and the content lives in HubFeedPageInner.
 export default function HubFeedPage() {
   return (
     <Suspense fallback={<div className="min-h-screen pt-16" style={{ backgroundColor: BG }} />}>
@@ -62,39 +72,50 @@ export default function HubFeedPage() {
 }
 
 // ---------------------------------------------------------------------------
-// Wrapper - owns the resetKey that forces a full remount of HubFeedContent
-// on every tab-resume reconnect.  Keying a React component (not Next.js
-// routing children) guarantees React discards all state and refs cleanly.
-// isResumeTrigger tells the content component whether this mount was caused
-// by a resume reconnect (resetKey > 0) or normal page navigation.
+// Wrapper - resumeKey forces a full remount of HubFeedContent on every
+// tab-resume reconnect, so React discards all state and refs cleanly.
 // ---------------------------------------------------------------------------
 function HubFeedPageInner() {
   const resumeKey = useResumeKey();
   const searchParams = useSearchParams();
-  const initialTab = searchParams.get("tab") === "bookmarks" ? "bookmarks" : "latest";
+  const initialTab = tabFromParam(searchParams.get("tab"));
+  const composeParam = searchParams.get("compose");
+  const recipeParam = searchParams.get("recipe");
+  const compose = composeParam && (COMPOSE_TYPES as string[]).includes(composeParam)
+    ? { type: composeParam as PostType, recipeId: recipeParam && UUID_RE.test(recipeParam) ? recipeParam : null }
+    : null;
 
-  // resumeKey already starts at 0 and increments exactly once per resume, so it
-  // IS the reset key. Mirroring it into local state through an effect cost an
-  // extra render and bought nothing: only the key's identity matters to React,
-  // never its numeric value.
   return (
-    <HubFeedContent key={resumeKey} isResumeTrigger={resumeKey > 0} initialTab={initialTab} />
+    <HubFeedContent key={resumeKey} initialTab={initialTab} compose={compose} />
   );
 }
 
-function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { isResumeTrigger?: boolean; initialTab?: TabType }) {
-  const { user } = useAuth();
+interface Toast { id: number; text: string; href?: string; hrefLabel?: string; tone?: "points" | "plain" }
+
+function HubFeedContent({
+  initialTab = "for_you",
+  compose,
+}: {
+  initialTab?: TabType;
+  compose: { type: PostType; recipeId: string | null } | null;
+}) {
+  const { user, isLoading: authLoading } = useAuth();
   const { requireAuth } = useAuthGate();
   const resumeKey = useResumeKey();
   const router = useRouter();
 
   // Feed state
-  const [posts, setPosts]               = useState<Post[]>([]);
-  const [isLoading, setIsLoading]       = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [error, setError]               = useState<string | null>(null);
-  const [page, setPage]                 = useState(1);
-  const [hasMore, setHasMore]           = useState(false);
+  const [posts, setPosts]                     = useState<Post[]>([]);
+  const [isLoading, setIsLoading]             = useState(true);
+  const [isLoadingMore, setIsLoadingMore]     = useState(false);
+  const [error, setError]                     = useState<string | null>(null);
+  const [loadMoreError, setLoadMoreError]     = useState(false);
+  const [hasMore, setHasMore]                 = useState(false);
+  const cursorRef                             = useRef<FeedCursor | null>(null);
+
+  // New posts that arrived over realtime while reading. Shown as a pill rather
+  // than shoved in at the top, which used to jump the page under the reader.
+  const [incoming, setIncoming] = useState<string[]>([]);
 
   // Deleting a post removes it from view immediately but holds the actual
   // API call for a few seconds so it can be undone.
@@ -103,246 +124,195 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
   useEffect(() => () => { pendingTimersRef.current.forEach(clearTimeout); }, []);
 
   // Search state (server-side)
-  const [searchQuery, setSearchQuery]       = useState("");
-  const [searchResults, setSearchResults]   = useState<Post[]>([]);
-  const [userResults, setUserResults]       = useState<UserSearchResult[]>([]);
-  const [isSearching, setIsSearching]       = useState(false);
-  const searchDebounceRef                   = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [searchQuery, setSearchQuery]     = useState("");
+  const [searchResults, setSearchResults] = useState<Post[]>([]);
+  const [userResults, setUserResults]     = useState<UserSearchResult[]>([]);
+  const [isSearching, setIsSearching]     = useState(false);
+  const [searchError, setSearchError]     = useState(false);
+  const searchDebounceRef                 = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // UI state
   const [activeTab, setActiveTab]           = useState<TabType>(initialTab);
+  const activeTabRef                        = useRef<TabType>(initialTab);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [typeFilter, setTypeFilter]         = useState<string>("all");
-  const typeFilterRef                        = useRef<string>("all");
+  const typeFilterRef                       = useRef<string>("all");
+  const [toast, setToast]                   = useState<Toast | null>(null);
 
   // Modal state
-  const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
-  const [editingPost, setEditingPost]           = useState<Post | null>(null);
+  const [composer, setComposer] = useState<{ open: boolean; type: PostType; recipe: RecipeSummary | null }>({ open: false, type: "general", recipe: null });
+  const [editingPost, setEditingPost] = useState<Post | null>(null);
 
   // Stable ref to current user id - used inside realtime callback to avoid stale closure
   const userIdRef = useRef<string | undefined>(user?.id);
   useEffect(() => { userIdRef.current = user?.id; }, [user?.id]);
 
-  // Tracks the AbortController for the currently in-flight loadFeed request.
-  // Aborting it cancels the network request so isLoading is never left stuck.
+  // Tracks the AbortController for the in-flight request so a superseded one
+  // is cancelled rather than left throttled in the background.
   const feedAbortRef = useRef<AbortController | null>(null);
-
-  // Monotonically-incrementing request counter.  Used only to guard setError
-  // and stale data writes - NOT to gate setIsLoading, which is decoupled.
+  // Monotonic request counter: guards data/error writes from stale responses.
   const loadFeedRequestIdRef = useRef(0);
-
-  // IDs of posts we created locally - realtime should skip these since
-  // handleCreatePost is already the source of truth for own new posts.
+  // IDs we created locally - realtime skips these.
   const ownPostIdsRef = useRef<Set<string>>(new Set());
-
-  // Tracks whether the very first loadFeed call (on mount) ran without a
-  // signed-in user.  This happens when SIGNED_IN fires during a reconnect,
-  // causing AuthContext to momentarily set user=null before re-hydrating the
-  // session.  If the initial fetch ran without auth, we need to re-run it
-  // exactly once as soon as the user becomes available.
+  // See the auth-hydration effect below.
   const hadNullUserAtMount = useRef<boolean>(false);
-
-  // Guards the empty-result retry so it fires at most once per component
-  // lifetime.  Reset on every full remount (new component instance).
+  // The empty-result auth-race retry fires at most once per mount.
   const retriedEmptyRef = useRef(false);
-
-  // Safety-net timeout handle - clears loading after 15 s if nothing else does.
-  // 15 s is intentionally longer than withTimeout(10 s) + 1 s retry delay so that
-  // the normal retry path (TimeoutError → 1 s wait → second attempt) has a full
-  // chance to succeed before the safety net fires.
+  // Safety net: clears loading if nothing else does (longer than timeout+retry).
   const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  const showToast = useCallback((t: Omit<Toast, "id">) => setToast({ ...t, id: Date.now() }), []);
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), toast.tone === "points" ? 6000 : 4000);
+    return () => clearTimeout(timer);
+  }, [toast]);
 
   // ---------------------------------------------------------------------------
-  // Feed / bookmarks loading
+  // Feed loading: page one (append=false) or the next page after cursorRef.
   // ---------------------------------------------------------------------------
   const loadFeed = useCallback(
-    async (tab: TabType, pageNum: number, append: boolean, isResume = false) => {
-      // Cancel the previous in-flight network request immediately so Chrome
-      // releases the connection rather than leaving it throttled in the background.
+    async (tab: TabType, append: boolean) => {
       feedAbortRef.current?.abort();
       const controller = new AbortController();
       feedAbortRef.current = controller;
       const { signal } = controller;
-
       const requestId = ++loadFeedRequestIdRef.current;
-      console.log("[Feed] loadFeed called", { tab, pageNum, append, isResume, requestId });
 
-      if (pageNum === 1) setIsLoading(true);
-      else setIsLoadingMore(true);
-      setError(null);
+      if (append) { setIsLoadingMore(true); setLoadMoreError(false); }
+      else { setIsLoading(true); setError(null); setIncoming([]); cursorRef.current = null; }
 
-      // Safety net - if the request somehow never settles (e.g. a bug in
-      // withTimeout or a completely stalled socket), force-clear loading after
-      // 15 s so the UI can never get permanently stuck.  15 s is chosen to be
-      // longer than withTimeout(10 s) + 1 s retry delay so the normal retry path
-      // finishes before the safety fires.
       if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
       loadingTimeoutRef.current = setTimeout(() => {
-        console.warn("[Feed] safety timeout fired - forcing isLoading=false");
         setIsLoading(false);
         setIsLoadingMore(false);
       }, 15_000);
 
-      // Single-attempt factory - called up to twice (first attempt + one retry).
-      // Bookmarks needs a signed-in user (getBookmarks takes a required userId) —
-      // the Saved tab click is gated with requireAuth, but this guards every
-      // other entry path too (a ?tab=bookmarks URL, the resume-reconnect
-      // re-fetch, a stale initialTab) so a logged-out visitor can never reach
-      // the non-null assertion this used to have here.
+      // Following / Saved need a signed-in user. The tab clicks are gated with
+      // requireAuth; this guards every other entry path (a ?tab=saved URL, a
+      // resume re-fetch) so a logged-out visitor just gets an empty list.
+      const needsUser = tab === "following" || tab === "saved";
       const attempt = () => withTimeout(
-        tab === "bookmarks"
-          ? (user?.id
-              ? hubService.getBookmarks(user.id, pageNum, 20, signal)
-              : Promise.resolve({ data: [], count: 0, page: pageNum, pageSize: 20, hasMore: false }))
-          : hubService.getFeed(user?.id, pageNum, 20, tab, signal, typeFilterRef.current !== "all" ? typeFilterRef.current : undefined),
+        needsUser && !user?.id
+          ? Promise.resolve({ data: [] as Post[], nextCursor: null, hasMore: false })
+          : hubService.getFeedPage({
+              mode: tab,
+              cursor: append ? cursorRef.current : null,
+              limit: PAGE_SIZE,
+              postType: typeFilterRef.current !== "all" ? typeFilterRef.current : null,
+              signal,
+            }),
         10_000,
       );
 
-      // Set to true when the empty-result resume-retry path fires so that
-      // `finally` knows to keep the loading spinner alive during the 800ms wait.
       let retryScheduled = false;
-
       try {
         let result;
         try {
           result = await attempt();
         } catch (err) {
-          // On timeout, the network may just need a moment to stabilise after
-          // returning from a background tab.  Wait 1 s then retry once.
-          // Non-timeout errors (auth, network reset) skip straight to outer catch.
+          // After a background tab the network can need a moment; retry once.
           if (!(err instanceof TimeoutError)) throw err;
           await new Promise<void>((r) => setTimeout(r, 1_000));
-          // Bail if a newer loadFeed call started during the delay.
           if (requestId !== loadFeedRequestIdRef.current) return;
-          result = await attempt(); // second attempt - any failure goes to outer catch
+          result = await attempt();
         }
 
-        console.log("[Feed] data received", { count: result.data.length, isResume });
-
-        // After any resume (or SIGNED_IN-triggered remount), Supabase PostgREST
-        // can return [] before the auth token refresh completes - the RLS policy
-        // silently filters everything.  Guard: only retry if:
-        //   • first-page, non-append load (not "load more")
-        //   • user is authenticated (so empty is unexpected, not a legitimate empty feed)
-        //   • we haven't already retried this component instance (prevents loops)
-        // The retry is always called with isResume=false so it never triggers
-        // this branch again, letting a second empty result commit [] normally.
-        if (!append && pageNum === 1 && result.data.length === 0 && user?.id && !retriedEmptyRef.current) {
-          console.log("[Feed] authenticated but empty - retrying once (possible auth race)");
+        // After a resume, PostgREST can answer before the token refresh lands
+        // and RLS returns []. Retry page one once if a signed-in user got
+        // nothing, then accept a second empty answer as real.
+        if (!append && result.data.length === 0 && user?.id && !retriedEmptyRef.current) {
           retriedEmptyRef.current = true;
           retryScheduled = true;
           setTimeout(() => {
-            if (requestId === loadFeedRequestIdRef.current) {
-              loadFeed(tab, 1, false, /* isResume= */ false); // no further retry
-            }
+            if (requestId === loadFeedRequestIdRef.current) loadFeed(tab, false);
           }, 800);
-          return; // ← do not commit empty data yet
+          return;
         }
 
-        // requestId guard on data/pagination writes: prevent a very-late stale
-        // response from overwriting data that a newer request already committed.
         if (requestId !== loadFeedRequestIdRef.current) return;
-        setPosts((prev) => (append ? [...prev, ...result.data] : result.data));
+        cursorRef.current = result.nextCursor;
+        setPosts((prev) => (append ? mergeUniqueById(prev, result.data) : result.data));
         setHasMore(result.hasMore);
-        setPage(pageNum);
       } catch {
-        // Only show an error banner for the most recent request - a superseded
-        // request failing silently is expected (AbortError, etc.).
         if (requestId === loadFeedRequestIdRef.current) {
-          setError("Failed to load. Please try again.");
+          if (append) setLoadMoreError(true);
+          else setError("We couldn't load the feed. Check your connection and try again.");
         }
       } finally {
-        // Always cancel the safety-net timeout now that the request has settled.
         if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
-
-        // Decouple loading-state teardown from requestId.
-        // signal.aborted is true only when a newer call aborted THIS request -
-        // in that case the newer call already set isLoading=true, so we must not
-        // clear it here.  For every other outcome (success, error, timeout) the
-        // loading state belongs to this request and we clear it unconditionally.
+        // signal.aborted means a newer call owns the loading state now.
         if (!signal.aborted && !retryScheduled) {
           setIsLoading(false);
           setIsLoadingMore(false);
         }
       }
     },
-    // user?.id (string) is sufficient - including the full `user` object would
-    // recreate loadFeed on every token refresh (SIGNED_IN fires a new Profile
-    // object reference with the same id), causing a spurious feed reload.
+    // user?.id, not user: a token refresh hands back a new Profile object with
+    // the same id, which must not reload the feed.
     [user?.id]
   );
 
-  // Cleanup safety-net timeout on unmount so a stale timer cannot call setState
-  // on an already-unmounted component.
-  useEffect(() => {
-    return () => {
-      if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
-    };
-  }, []);
+  useEffect(() => () => { if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current); }, []);
 
-  // Single controlled fetch on mount - [] guarantees exactly one call per
-  // component lifetime.  Tab switches are handled in the click handler below
-  // so there is no competing effect that can race and override this fetch.
-  // isResumeTrigger is only true when HubFeedPage remounted due to a resume
-  // reconnect (resetKey > 0); normal page navigation passes false so an
-  // empty result is treated as a legitimate empty feed rather than a retry.
+  // One controlled fetch on mount. Tab switches load from their click handler.
   useEffect(() => {
-    console.log("[Feed] mounted, calling loadFeed", { isResumeTrigger });
-    // Record whether auth was available at mount time.  If not, the fetch below
-    // will run as unauthenticated; the [user?.id] effect below re-fires once auth arrives.
     hadNullUserAtMount.current = !user?.id;
-    loadFeed(activeTab, 1, false, isResumeTrigger);
+    loadFeed(activeTab, false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Auth hydration recovery - fires once when user becomes available after
-  // a null-user mount.  This handles the SIGNED_IN reconnect race:
-  //   1. Tab resumes → supabase.realtime reconnects → SIGNED_IN fires
-  //   2. AuthContext calls setUser(null) during re-hydration → HubFeedContent remounts
-  //   3. Mount runs with user=null → unauthenticated fetch → no data
-  //   4. Auth hydration completes → user becomes defined → this effect fires once
+  // Auth hydration recovery: if the mount ran before the session was ready,
+  // re-fetch exactly once when the user arrives (personalised ranking, likes).
   useEffect(() => {
-    if (!hadNullUserAtMount.current) return;    // initial mount had auth - nothing to recover
-    if (!user?.id) return;                      // auth still not ready
-    hadNullUserAtMount.current = false;          // one-shot: never fire again for this mount
-    console.log("[Feed] auth arrived after null-user mount → re-fetching");
-    loadFeed(activeTab, 1, false, isResumeTrigger);
+    if (!hadNullUserAtMount.current || !user?.id) return;
+    hadNullUserAtMount.current = false;
+    loadFeed(activeTabRef.current, false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
-  // ---------------------------------------------------------------------------
-  // Realtime - prepend new posts (enriched with profiles + like/bookmark state)
-  // ---------------------------------------------------------------------------
-  // resumeKey is included so the channel is torn down and re-created after
-  // every app-resume reconnect.  Phoenix only auto-rejoins channels after an
-  // *unexpected* socket close (network drop / BFCache unfreeze); after our
-  // programmatic disconnect() + connect() cycle the channel is permanently
-  // dead unless we explicitly re-subscribe.  The cleanup function returned
-  // here calls supabase.removeChannel(), so React's effect teardown handles
-  // the old channel before the new subscription is registered.
+  // Infinite scroll. The sentinel sits under the last post; it triggers a
+  // little early (600px) so the next page is usually there before it's needed.
+  // A failed page stops auto-loading until Retry is pressed, so a dead
+  // connection can't spin requests in a loop.
   useEffect(() => {
-    const unsubscribe = hubService.subscribeToFeed(async (rawPost) => {
-      // Skip posts we created ourselves - handleCreatePost already prepended them
-      if (ownPostIdsRef.current.has(rawPost.id)) return;
+    const el = sentinelRef.current;
+    if (!el || !hasMore || isLoading || isLoadingMore || loadMoreError || searchQuery) return;
+    const io = new IntersectionObserver(
+      (entries) => { if (entries[0]?.isIntersecting) loadFeed(activeTabRef.current, true); },
+      { rootMargin: "600px 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [hasMore, isLoading, isLoadingMore, loadMoreError, searchQuery, loadFeed, posts.length]);
 
-      // Enrich the raw realtime payload (no profiles join, no is_liked) before
-      // prepending - fall back to the raw post if the fetch fails.
-      let enriched = rawPost;
-      try {
-        enriched = await hubService.getPostById(rawPost.id, userIdRef.current);
-      } catch {
-        // keep raw
-      }
-      setPosts((prev) => {
-        if (prev.some((p) => p.id === enriched.id)) return prev;
-        return [enriched, ...prev];
-      });
+  // ---------------------------------------------------------------------------
+  // Realtime: count new posts for the "new posts" pill. resumeKey re-creates
+  // the channel after an app-resume reconnect (a programmatic disconnect leaves
+  // the old channel permanently dead).
+  // ---------------------------------------------------------------------------
+  useEffect(() => {
+    const unsubscribe = hubService.subscribeToFeed((raw) => {
+      // Own posts are added by handlePosted. Checked by author too, because the
+      // realtime event can arrive before the composer reports back.
+      if (ownPostIdsRef.current.has(raw.id) || raw.user_id === userIdRef.current) return;
+      if ((raw as Post & { is_published?: boolean }).is_published === false) return;
+      const tab = activeTabRef.current;
+      if (tab !== "for_you" && tab !== "latest") return;
+      if (typeFilterRef.current !== "all" && raw.post_type !== typeFilterRef.current) return;
+      setIncoming((prev) => (prev.includes(raw.id) ? prev : [...prev, raw.id]));
     });
     return unsubscribe;
   }, [user?.id, resumeKey]);
 
+  const showIncoming = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    loadFeed(activeTabRef.current, false);
+  };
+
   // ---------------------------------------------------------------------------
-  // Server-side search (debounced 500ms)
+  // Server-side search (debounced)
   // ---------------------------------------------------------------------------
   useEffect(() => {
     if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
@@ -351,6 +321,7 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
       setSearchResults([]);
       setUserResults([]);
       setIsSearching(false);
+      setSearchError(false);
       return;
     }
 
@@ -363,13 +334,15 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
         ]);
         setSearchResults(postResult.data);
         setUserResults(users);
+        setSearchError(false);
       } catch {
         setSearchResults([]);
         setUserResults([]);
+        setSearchError(true);
       } finally {
         setIsSearching(false);
       }
-    }, 500);
+    }, 400);
 
     return () => {
       if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
@@ -377,131 +350,118 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
   }, [searchQuery, user?.id]);
 
   // ---------------------------------------------------------------------------
+  // Compose: header button, empty states, and deep links from Kitchen /
+  // the Assistant (?compose=recipe&recipe=<id>).
+  // ---------------------------------------------------------------------------
+  const openComposer = useCallback((type: PostType = "general", recipe: RecipeSummary | null = null) => {
+    requireAuth(() => setComposer({ open: true, type, recipe }), "Sign in to post");
+  }, [requireAuth]);
+
+  // Waits for auth to settle: on a fresh page load the session is still
+  // hydrating at mount, and requireAuth would show "sign in" to someone who is
+  // signed in. The ref keeps the call on the latest requireAuth after the
+  // recipe fetch, not the one captured before the user arrived.
+  const composeHandledRef = useRef(false);
+  const openComposerRef = useRef(openComposer);
+  useEffect(() => { openComposerRef.current = openComposer; }, [openComposer]);
+  useEffect(() => {
+    if (!compose || composeHandledRef.current || authLoading) return;
+    composeHandledRef.current = true;
+    // Drop the params so a refresh or back navigation doesn't reopen it.
+    router.replace(initialTab === "for_you" ? "/social/feed" : `/social/feed?tab=${initialTab}`, { scroll: false });
+    (async () => {
+      const recipe = compose.recipeId ? await hubService.getRecipeSummary(compose.recipeId).catch(() => null) : null;
+      if (compose.recipeId && !recipe) showToast({ text: "That recipe couldn't be found. Choose one to share instead." });
+      openComposerRef.current(compose.type, recipe);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading]);
+
+  const handlePosted = useCallback((post: Post, meta: PostedMeta) => {
+    ownPostIdsRef.current.add(post.id);
+    const tab = activeTabRef.current;
+    const filter = typeFilterRef.current;
+    const visibleHere = (tab === "for_you" || tab === "latest") && (filter === "all" || filter === post.post_type) && !searchQuery;
+    if (visibleHere) {
+      setPosts((prev) => prependUniqueById(prev, [post]));
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    if (meta.pointsAwarded > 0) {
+      showToast({ text: `Recipe shared. You earned ${meta.pointsAwarded} points.`, href: "/dashboard?tab=rewards", hrefLabel: "View points", tone: "points" });
+    } else {
+      showToast({ text: "Posted.", ...(visibleHere ? {} : { href: `/social/post/${post.id}`, hrefLabel: "View post" }) });
+    }
+  }, [searchQuery, showToast]);
+
+  // ---------------------------------------------------------------------------
   // Post actions
   // ---------------------------------------------------------------------------
+  const patchEverywhere = useCallback((fn: (list: Post[]) => Post[]) => {
+    setPosts(fn);
+    setSearchResults(fn);
+  }, []);
+
   const handleLike = useCallback(
     async (postId: string, currentIsLiked: boolean) => {
       if (!user) return;
+      const flip = (liked: boolean) => (list: Post[]) =>
+        list.map((p) => p.id === postId ? { ...p, is_liked: liked, like_count: Math.max(0, p.like_count + (liked ? 1 : -1)) } : p);
 
-      const patch = (list: Post[]) =>
-        list.map((p) =>
-          p.id === postId
-            ? { ...p, is_liked: !currentIsLiked, like_count: currentIsLiked ? p.like_count - 1 : p.like_count + 1 }
-            : p
-        );
-
-      setPosts(patch);
-      if (searchQuery) setSearchResults(patch);
-
+      patchEverywhere(flip(!currentIsLiked));
       try {
         if (currentIsLiked) await hubService.unlikePost(postId, user.id);
-        else                 await hubService.likePost(postId, user.id);
+        else                await hubService.likePost(postId, user.id);
       } catch {
-        const revert = (list: Post[]) =>
-          list.map((p) =>
-            p.id === postId
-              ? { ...p, is_liked: currentIsLiked, like_count: currentIsLiked ? p.like_count + 1 : p.like_count - 1 }
-              : p
-          );
-        setPosts(revert);
-        if (searchQuery) setSearchResults(revert);
+        patchEverywhere(flip(currentIsLiked));
+        showToast({ text: "Couldn't update that like. Please try again." });
       }
     },
-    [user, searchQuery]
+    [user, patchEverywhere, showToast]
   );
 
   const handleBookmark = useCallback(
     async (postId: string, currentIsBookmarked: boolean) => {
       if (!user) return;
+      const set = (saved: boolean) => (list: Post[]) => list.map((p) => (p.id === postId ? { ...p, is_bookmarked: saved } : p));
 
-      const patch = (list: Post[]) =>
-        list.map((p) =>
-          p.id === postId ? { ...p, is_bookmarked: !currentIsBookmarked } : p
-        );
-
-      setPosts(patch);
-      if (searchQuery) setSearchResults(patch);
-
-      // If we're in bookmarks tab and unbookmarking, remove the card
-      if (activeTab === "bookmarks" && currentIsBookmarked) {
-        setPosts((prev) => prev.filter((p) => p.id !== postId));
-      }
+      patchEverywhere(set(!currentIsBookmarked));
+      const removedFromSaved = activeTabRef.current === "saved" && currentIsBookmarked;
+      const snapshot = posts;
+      if (removedFromSaved) setPosts((prev) => prev.filter((p) => p.id !== postId));
 
       try {
         if (currentIsBookmarked) await hubService.unbookmarkPost(postId, user.id);
         else                     await hubService.bookmarkPost(postId, user.id);
+        if (!currentIsBookmarked) showToast({ text: "Saved.", href: "/social/feed?tab=saved", hrefLabel: "View saved" });
       } catch {
-        const revert = (list: Post[]) =>
-          list.map((p) =>
-            p.id === postId ? { ...p, is_bookmarked: currentIsBookmarked } : p
-          );
-        setPosts(revert);
-        if (searchQuery) setSearchResults(revert);
+        if (removedFromSaved) setPosts(snapshot);
+        patchEverywhere(set(currentIsBookmarked));
+        showToast({ text: "Couldn't update your saved posts. Please try again." });
       }
     },
-    [user, activeTab, searchQuery]
+    [user, posts, patchEverywhere, showToast]
   );
 
-  const handleCreatePost = async (
-    content: string,
-    mediaFile?: File,
-    postType: PostType = "general",
-    onProgress?: (percent: number) => void
-  ) => {
-    if (!user) return;
-
-    const newPost = await hubService.createPost(user.id, content, { post_type: postType });
-    // Register immediately so the realtime handler skips this ID
-    ownPostIdsRef.current.add(newPost.id);
-
-    const ownProfiles = { username: user.username, full_name: user.full_name, avatar_url: user.avatar_url, is_verified: user.is_verified };
-
-    if (mediaFile) {
-      const { url, public_id } = await hubService.uploadPostMedia(user.id, newPost.id, mediaFile, onProgress);
-      const updatedPost = await hubService.updatePost(newPost.id, content, [url], [public_id]);
-      const enriched    = { ...updatedPost, profiles: ownProfiles, is_liked: false, is_bookmarked: false };
-      setPosts((prev) => {
-        // Realtime may have already prepended this post - update in place instead of duplicating
-        if (prev.some((p) => p.id === enriched.id)) {
-          return prev.map((p) => p.id === enriched.id ? enriched : p);
-        }
-        return [enriched, ...prev];
-      });
-    } else {
-      const enriched = { ...newPost, profiles: ownProfiles, is_liked: false, is_bookmarked: false };
-      setPosts((prev) => {
-        // Realtime may have already prepended this post - update in place instead of duplicating
-        if (prev.some((p) => p.id === enriched.id)) {
-          return prev.map((p) => p.id === enriched.id ? enriched : p);
-        }
-        return [enriched, ...prev];
-      });
-    }
-  };
-
-  const handleEditPost = async (content: string) => {
+  const handleEditPost = async (changes: { content: string; title?: string | null }) => {
     if (!editingPost) return;
-    const updated = await hubService.updatePost(editingPost.id, content);
-    setPosts((prev) =>
-      prev.map((p) =>
-        p.id === updated.id ? { ...updated, profiles: p.profiles, is_liked: p.is_liked, is_bookmarked: p.is_bookmarked } : p
-      )
+    const updated = await hubService.updatePost(editingPost.id, changes);
+    patchEverywhere((list) =>
+      list.map((p) => (p.id === updated.id ? { ...p, content: updated.content, title: updated.title, updated_at: updated.updated_at } : p))
     );
     setEditingPost(null);
   };
 
   const UNDO_WINDOW_MS = 5000;
 
-  // Side effects (setPendingDelete, the timer, the ref mutation) must stay
-  // outside the setPosts updater — React's Strict Mode double-invokes
-  // updater functions to verify they're pure, which was silently duplicating
-  // the timer and the restored post when nested inside one.
+  // Side effects stay outside the setPosts updater: Strict Mode double-invokes
+  // updaters, which used to duplicate the timer and the restored post.
   const handleDeletePost = useCallback(
     (postId: string) => {
       const index = posts.findIndex((p) => p.id === postId);
       if (index === -1) return;
       const post = posts[index];
       setPosts((prev) => prev.filter((p) => p.id !== postId));
+      setSearchResults((prev) => prev.filter((p) => p.id !== postId));
       setPendingDelete({ post, index });
       const timer = setTimeout(async () => {
         pendingTimersRef.current.delete(postId);
@@ -509,12 +469,13 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
         try {
           await hubService.deletePost(postId);
         } catch {
-          loadFeed(activeTab, 1, false);
+          showToast({ text: "That post couldn't be deleted. It's back in your feed." });
+          loadFeed(activeTabRef.current, false);
         }
       }, UNDO_WINDOW_MS);
       pendingTimersRef.current.set(postId, timer);
     },
-    [posts, activeTab, loadFeed]
+    [posts, loadFeed, showToast]
   );
 
   const undoDeletePost = useCallback(() => {
@@ -531,400 +492,386 @@ function HubFeedContent({ isResumeTrigger = false, initialTab = "latest" }: { is
     });
   }, [pendingDelete]);
 
-
-  // Following/Saved need an account (you can't follow people or save posts
-  // without one) — prompt sign-in instead of switching to a tab that can
-  // only ever be empty for a logged-out visitor.
-  const AUTH_ONLY_TABS: TabType[] = ["following", "bookmarks"];
+  // Following/Saved need an account: prompt sign-in instead of switching to a
+  // tab that can only ever be empty for a logged-out visitor.
   const switchTab = (tabId: TabType) => {
     const doSwitch = () => {
       setActiveTab(tabId);
-      loadFeed(tabId, 1, false);
+      activeTabRef.current = tabId;
       setTypeFilter("all");
       typeFilterRef.current = "all";
       setSearchQuery("");
       setSearchResults([]);
+      setPosts([]);
+      loadFeed(tabId, false);
     };
-    if (AUTH_ONLY_TABS.includes(tabId)) {
-      requireAuth(doSwitch, tabId === "bookmarks" ? "Sign in to see your saved posts" : "Sign in to see posts from people you follow");
+    if (tabId === "following" || tabId === "saved") {
+      requireAuth(doSwitch, tabId === "saved" ? "Sign in to see your saved posts" : "Sign in to see posts from people you follow");
     } else {
       doSwitch();
     }
+  };
+
+  const applyTypeFilter = (value: string) => {
+    if (value === typeFilterRef.current) return;
+    typeFilterRef.current = value;
+    setTypeFilter(value);
+    setPosts([]);
+    loadFeed(activeTabRef.current, false);
   };
 
   // ---------------------------------------------------------------------------
   // Derived state
   // ---------------------------------------------------------------------------
   const displayPosts = searchQuery ? searchResults : posts;
-
-  const tabs = [
-    { id: "latest"    as TabType, label: "Latest",   icon: Clock      },
-    { id: "trending"  as TabType, label: "Trending",  icon: TrendingUp },
-    { id: "following" as TabType, label: "Following", icon: Users      },
-    { id: "bookmarks" as TabType, label: "Saved",     icon: Bookmark   },
-  ];
+  const filterLabel = TYPE_FILTERS.find((f) => f.value === typeFilter)?.label.toLowerCase() ?? "posts";
+  const showEmpty = !isLoading && !error && !searchQuery && displayPosts.length === 0;
 
   return (
     <div className="min-h-screen pt-16" style={{ backgroundColor: BG }}>
 
       {/* Sticky header - solid bg (no blur) avoids scroll-repaint tearing under the fixed app header */}
-      <div className="border-b sticky top-16 z-40" style={{ backgroundColor: BG2, borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)` }}>
-        <div className="mx-auto max-w-4xl px-4 md:px-6 py-3 md:py-4">
+      <div className="border-b sticky top-16 z-40" style={{ backgroundColor: BG2, borderColor: DIVIDER }}>
+        <div className="mx-auto max-w-3xl px-4 md:px-6 py-3 md:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {/* Desktop back */}
-              <Link href="/social" className="hidden md:block">
-                <motion.button
-                  className="transition-colors"
-                  style={{ color: `color-mix(in oklab, var(--hm-text) 31%, var(--hm-lm-anchor))` }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = CREAM)}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = `color-mix(in oklab, var(--hm-text) 31%, transparent)`)}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <ArrowLeft className="w-5 h-5" />
-                </motion.button>
+              <Link
+                href="/social"
+                aria-label="Back to Social"
+                className="hidden md:inline-flex p-1 -ml-1 transition-colors hover:text-(--hm-text) focus-visible:outline-2 focus-visible:outline-(--hm-amber)"
+                style={{ color: SUBTLE }}
+              >
+                <ArrowLeft className="w-5 h-5" />
               </Link>
 
-              {/* Mobile menu toggle */}
-              <motion.button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden transition-colors"
-                style={{ color: `color-mix(in oklab, var(--hm-text) 31%, var(--hm-lm-anchor))` }}
-                whileTap={{ scale: 0.95 }}
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen((v) => !v)}
+                aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+                aria-expanded={mobileMenuOpen}
+                className="md:hidden p-1 -ml-1 transition-colors focus-visible:outline-2 focus-visible:outline-(--hm-amber)"
+                style={{ color: SUBTLE }}
               >
                 {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-              </motion.button>
+              </button>
 
-              <h1
-                className="text-lg md:text-xl font-extrabold uppercase tracking-tighter"
-                style={{ color: CREAM, fontFamily: "var(--font-headline)" }}
-              >
+              <h1 className="text-lg md:text-xl font-extrabold uppercase tracking-tighter" style={{ color: CREAM, fontFamily: "var(--font-headline)" }}>
                 HalalMe <span style={{ color: AMBER }}>Social</span>
               </h1>
             </div>
 
             <div className="flex items-center gap-2">
-              {/* Notification bell */}
               {user && <NotificationPanel userId={user.id} />}
-
-              {/* Create post */}
-              <motion.button
-                onClick={() => requireAuth(() => setIsCreatePostOpen(true), "Sign in to post")}
-                className="flex items-center gap-1.5 px-3 md:px-4 py-2 font-extrabold uppercase tracking-tighter text-sm"
+              <button
+                type="button"
+                onClick={() => openComposer()}
+                className="inline-flex items-center gap-1.5 px-3 md:px-4 py-2 font-extrabold uppercase tracking-tighter text-sm transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--hm-amber)"
                 style={{ backgroundColor: AMBER, color: BG }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-4 h-4" aria-hidden />
                 <span>Post</span>
-              </motion.button>
+              </button>
             </div>
           </div>
 
-          {/* Mobile menu */}
           <AnimatePresence>
             {mobileMenuOpen && (
-              <motion.div
+              <motion.nav
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                className="md:hidden border-t mt-3"
-                style={{ borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)` }}
+                className="md:hidden border-t mt-3 overflow-hidden"
+                style={{ borderColor: DIVIDER }}
+                aria-label="Social"
               >
                 <div className="py-3 space-y-1">
-                  <Link href="/social" onClick={() => setMobileMenuOpen(false)}>
-                    <div
-                      className="flex items-center gap-3 px-3 py-2.5 transition-colors"
-                      style={{ color: CREAM }}
-                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `color-mix(in oklab, var(--hm-text) 3%, transparent)`)}
-                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
-                    >
-                      <Home className="w-5 h-5" />
-                      <span className="font-semibold">Social Home</span>
-                    </div>
+                  <Link href="/social" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-3 py-2.5 font-semibold hover:bg-[color-mix(in_oklab,var(--hm-text)_4%,transparent)]" style={{ color: CREAM }}>
+                    <Home className="w-5 h-5" aria-hidden /> Social Home
                   </Link>
-                  <Link href="/kitchen" onClick={() => setMobileMenuOpen(false)}>
-                    <div
-                      className="flex items-center gap-3 px-3 py-2.5 transition-colors"
-                      style={{ color: CREAM }}
-                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `color-mix(in oklab, var(--hm-text) 3%, transparent)`)}
-                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
-                    >
-                      <ArrowLeft className="w-5 h-5" />
-                      <span className="font-semibold">Back to Kitchen</span>
-                    </div>
+                  <Link href="/kitchen" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-3 py-2.5 font-semibold hover:bg-[color-mix(in_oklab,var(--hm-text)_4%,transparent)]" style={{ color: CREAM }}>
+                    <ChefHat className="w-5 h-5" aria-hidden /> Kitchen
                   </Link>
                 </div>
-              </motion.div>
+              </motion.nav>
             )}
           </AnimatePresence>
         </div>
 
-        {/* Tabs - underline style, matches Kitchen recipes tabs */}
-        <div className="mx-auto max-w-4xl px-4 md:px-6 pt-1 flex border-b" style={{ borderColor: `color-mix(in oklab, var(--hm-text) 3%, transparent)` }}>
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
+        {/* Tabs */}
+        <div className="mx-auto max-w-3xl px-4 md:px-6 flex overflow-x-auto scrollbar-hide" role="tablist" aria-label="Feed">
+          {TABS.map((tab) => {
             const active = activeTab === tab.id;
             return (
-              <motion.button
+              <button
                 key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={active}
                 onClick={() => switchTab(tab.id)}
-                className="relative flex items-center gap-1.5 px-3 md:px-4 py-2.5 font-extrabold uppercase tracking-widest transition-colors whitespace-nowrap text-xs"
-                style={{ color: active ? AMBER : `color-mix(in oklab, var(--hm-text) 25%, transparent)` }}
-                whileTap={{ scale: 0.97 }}
+                className="relative inline-flex items-center gap-1.5 px-3 md:px-4 py-2.5 font-extrabold uppercase tracking-widest transition-colors whitespace-nowrap text-xs focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-(--hm-amber)"
+                style={{ color: active ? AMBER : SUBTLE }}
               >
-                <Icon className="w-3.5 h-3.5" />
+                <tab.icon className="w-3.5 h-3.5" aria-hidden />
                 {tab.label}
                 {active && (
-                  <motion.div
-                    layoutId="hub-tab-underline"
-                    className="absolute bottom-0 left-0 right-0 h-0.5"
-                    style={{ backgroundColor: AMBER }}
-                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                  />
+                  <motion.div layoutId="hub-tab-underline" className="absolute bottom-0 left-0 right-0 h-0.5" style={{ backgroundColor: AMBER }} transition={{ type: "spring", stiffness: 400, damping: 30 }} />
                 )}
-              </motion.button>
+              </button>
             );
           })}
         </div>
 
-        {/* Type filter pills - square tags */}
-        <div className="mx-auto max-w-4xl px-4 md:px-6 pb-3 pt-3 flex gap-1.5 overflow-x-auto scrollbar-hide">
-          {[
-            { value: "all",      label: "All",       Icon: Sparkles      },
-            { value: "general",  label: "Posts",     Icon: MessageCircle },
-            { value: "recipe",   label: "Recipes",   Icon: ChefHat       },
-            { value: "question", label: "Questions", Icon: HelpCircle    },
-            { value: "review",   label: "Reviews",   Icon: Star          },
-          ].map((f) => (
-            <button
-              key={f.value}
-              onClick={() => {
-                typeFilterRef.current = f.value;
-                setTypeFilter(f.value);
-                loadFeed(activeTab, 1, false);
-              }}
-              className="flex items-center gap-1.5 px-3 py-1 text-xs font-bold uppercase tracking-tight whitespace-nowrap transition-all border"
-              style={
-                typeFilter === f.value
+        {/* Type filter */}
+        <div className="mx-auto max-w-3xl px-4 md:px-6 pb-3 pt-3 flex gap-1.5 overflow-x-auto scrollbar-hide" role="group" aria-label="Filter by post type">
+          {TYPE_FILTERS.map((f) => {
+            const active = typeFilter === f.value;
+            return (
+              <button
+                key={f.value}
+                type="button"
+                onClick={() => applyTypeFilter(f.value)}
+                aria-pressed={active}
+                className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold uppercase tracking-tight whitespace-nowrap transition-colors border focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-(--hm-amber)"
+                style={active
                   ? { backgroundColor: AMBER, color: BG, borderColor: AMBER }
-                  : { backgroundColor: "transparent", color: `color-mix(in oklab, var(--hm-text) 25%, var(--hm-lm-anchor))`, borderColor: `color-mix(in oklab, var(--hm-text) 7%, transparent)` }
-              }
-            >
-              <f.Icon className="w-3 h-3" />
-              {f.label}
-            </button>
-          ))}
+                  : { backgroundColor: "transparent", color: MUTED, borderColor: "color-mix(in oklab, var(--hm-text) 9%, transparent)" }}
+              >
+                <f.Icon className="w-3 h-3" aria-hidden />
+                {f.label}
+              </button>
+            );
+          })}
         </div>
 
         {/* Search */}
-        <div className="mx-auto max-w-4xl px-4 md:px-6 pb-3">
+        <div className="mx-auto max-w-3xl px-4 md:px-6 pb-3">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: `color-mix(in oklab, var(--hm-text) 21%, var(--hm-lm-anchor))` }} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: SUBTLE }} aria-hidden />
             <input
-              type="text"
+              type="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search posts, users..."
-              className="w-full text-base pl-10 pr-10 py-2.5 border focus:outline-none font-normal transition-colors"
-              style={{ backgroundColor: BG, borderColor: `color-mix(in oklab, var(--hm-text) 7%, transparent)`, color: CREAM, caretColor: AMBER }}
-              onFocus={(e) => (e.target.style.borderColor = AMBER)}
-              onBlur={(e) => (e.target.style.borderColor = `color-mix(in oklab, var(--hm-text) 7%, transparent)`)}
+              placeholder="Search posts, questions, reviews or people"
+              aria-label="Search Social"
+              className="w-full text-base pl-10 pr-10 py-2.5 border border-[color-mix(in_oklab,var(--hm-text)_9%,transparent)] focus:outline-none focus:border-(--hm-amber) transition-colors"
+              style={{ backgroundColor: BG, color: CREAM, caretColor: AMBER }}
             />
             {searchQuery && (
-              <motion.button
+              <button
+                type="button"
                 onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
-                style={{ color: `color-mix(in oklab, var(--hm-text) 21%, var(--hm-lm-anchor))` }}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+                aria-label="Clear search"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 transition-colors hover:text-(--hm-text) focus-visible:outline-2 focus-visible:outline-(--hm-amber)"
+                style={{ color: SUBTLE }}
               >
                 <X className="w-4 h-4" />
-              </motion.button>
+              </button>
             )}
           </div>
         </div>
+
+        {/* New posts pill: anchored under the sticky header so it follows it. */}
+        <AnimatePresence>
+          {incoming.length > 0 && !searchQuery && (
+            <motion.div
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              className="absolute left-1/2 -translate-x-1/2 top-full mt-3"
+            >
+              <button
+                type="button"
+                onClick={showIncoming}
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-bold shadow-lg whitespace-nowrap focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--hm-amber)"
+                style={{ backgroundColor: AMBER, color: BG }}
+              >
+                <ArrowUp className="w-4 h-4" aria-hidden />
+                {incoming.length === 1 ? "1 new post" : `${incoming.length} new posts`}
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Feed */}
-      <div className="mx-auto max-w-4xl px-4 md:px-6 py-6 md:py-8">
-
-        {/* Search status */}
+      <main className="mx-auto max-w-3xl px-4 md:px-6 py-6 md:py-8" aria-busy={isLoading}>
         {searchQuery && (
-          <div className="mb-4 flex items-center gap-2">
+          <div className="mb-4 flex items-center gap-2" aria-live="polite">
             {isSearching
-              ? <Loader2 className="w-4 h-4 animate-spin" style={{ color: AMBER }} />
-              : <Search className="w-4 h-4" style={{ color: `color-mix(in oklab, var(--hm-text) 19%, var(--hm-lm-anchor))` }} />
-            }
-            <span className="text-sm font-normal" style={{ color: `color-mix(in oklab, var(--hm-text) 27%, var(--hm-lm-anchor))`, fontFamily: "var(--font-body)" }}>
-              {isSearching ? "Searching..." : `${userResults.length + searchResults.length} result${userResults.length + searchResults.length !== 1 ? "s" : ""} for "${searchQuery}"`}
+              ? <Loader2 className="w-4 h-4 animate-spin" style={{ color: AMBER }} aria-hidden />
+              : <Search className="w-4 h-4" style={{ color: SUBTLE }} aria-hidden />}
+            <span className="text-sm" style={{ color: MUTED }}>
+              {isSearching
+                ? "Searching"
+                : searchError
+                  ? "Search isn't working right now. Please try again."
+                  : `${userResults.length + searchResults.length} result${userResults.length + searchResults.length !== 1 ? "s" : ""} for "${searchQuery}"`}
             </span>
           </div>
         )}
 
-        {/* User results */}
         {searchQuery && !isSearching && userResults.length > 0 && (
-          <div className="mb-6">
-            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: `color-mix(in oklab, var(--hm-text) 19%, var(--hm-lm-anchor))` }}>People</p>
+          <section className="mb-6" aria-label="People">
+            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: SUBTLE }}>People</p>
             <div className="space-y-2">
               {userResults.map((u) => (
-                <motion.button
+                <button
                   key={u.id}
+                  type="button"
                   onClick={() => requireAuth(() => router.push(profileHref(u.id, u.username)), "Sign in to view profiles")}
-                  className="w-full flex items-center gap-3 border px-4 py-3 text-left transition-colors"
-                  style={{ backgroundColor: BG2, borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)` }}
-                  onMouseEnter={(e) => (e.currentTarget.style.borderColor = `color-mix(in oklab, var(--hm-amber) 25%, transparent)`)}
-                  onMouseLeave={(e) => (e.currentTarget.style.borderColor = `color-mix(in oklab, var(--hm-text) 6%, transparent)`)}
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
+                  className="w-full flex items-center gap-3 border border-[color-mix(in_oklab,var(--hm-text)_6%,transparent)] px-4 py-3 text-left transition-colors hover:border-[color-mix(in_oklab,var(--hm-amber)_25%,transparent)] focus-visible:outline-2 focus-visible:outline-(--hm-amber)"
+                  style={{ backgroundColor: BG2 }}
                 >
-                  <Avatar src={u.avatar_url ?? undefined} alt={u.full_name ?? ""} size="md" />
+                  <Avatar src={u.avatar_url ?? undefined} alt="" size="md" flair={u.profile_flair} />
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-semibold text-sm truncate" style={{ color: CREAM }}>{u.full_name}</span>
-                      {u.is_verified && (
-                        <svg className="w-3.5 h-3.5 shrink-0" style={{ color: AMBER }} viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                      )}
-                    </div>
-                    {u.username && <p className="text-xs truncate" style={{ color: `color-mix(in oklab, var(--hm-text) 19%, var(--hm-lm-anchor))` }}>@{u.username}</p>}
+                    <span className="block font-semibold text-sm truncate" style={{ color: CREAM }}>{u.full_name ?? u.username}</span>
+                    {u.username && <span className="block text-xs truncate" style={{ color: SUBTLE }}>@{u.username}</span>}
                   </div>
-                </motion.button>
+                </button>
               ))}
             </div>
-          </div>
+          </section>
         )}
 
         {searchQuery && !isSearching && searchResults.length > 0 && (
-          <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: `color-mix(in oklab, var(--hm-text) 19%, var(--hm-lm-anchor))` }}>Posts</p>
+          <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: SUBTLE }}>Posts</p>
         )}
 
         {isLoading ? (
-          <PostCardSkeletonList count={4} />
+          <PostCardSkeletonList count={3} />
         ) : error ? (
-          <EmptyState
-            icon={AlertCircle}
-            title="Something went wrong"
-            description={error}
-            action={{ label: "Try Again", onClick: () => loadFeed(activeTab, 1, false) }}
-          />
-        ) : searchQuery && !isSearching && displayPosts.length === 0 && userResults.length === 0 ? (
-          <EmptyState
-            icon={Search}
-            title="No results found"
-            description={`Nothing matches "${searchQuery}".`}
-            action={{ label: "Clear Search", onClick: () => setSearchQuery("") }}
-          />
-        ) : !searchQuery && displayPosts.length === 0 && activeTab === "following" ? (
-          <EmptyState
-            icon={Users}
-            title="Nothing here yet"
-            description="Follow some people to see their posts in this feed."
-            action={{ label: "Browse Latest", onClick: () => { setActiveTab("latest"); loadFeed("latest", 1, false); } }}
-          />
-        ) : !searchQuery && displayPosts.length === 0 && activeTab === "bookmarks" ? (
-          <EmptyState
-            icon={Bookmark}
-            title="No saved posts"
-            description="Tap the bookmark icon on any post to save it here."
-            action={{ label: "Browse Feed", onClick: () => { setActiveTab("latest"); loadFeed("latest", 1, false); } }}
-          />
-        ) : !searchQuery && displayPosts.length === 0 ? (
-          <EmptyState
-            icon={MessagesSquare}
-            title="No posts yet"
-            description="Be the first to share something with the community!"
-            action={{ label: "Create Post", onClick: () => setIsCreatePostOpen(true) }}
-          />
+          <EmptyState icon={AlertCircle} title="Something went wrong" description={error} action={{ label: "Try Again", onClick: () => loadFeed(activeTab, false) }} />
+        ) : searchQuery && !isSearching && displayPosts.length === 0 && userResults.length === 0 && !searchError ? (
+          <EmptyState icon={Search} title="No results" description={`Nothing matches "${searchQuery}". Try a dish, a place or a name.`} action={{ label: "Clear Search", onClick: () => setSearchQuery("") }} />
+        ) : showEmpty && typeFilter !== "all" ? (
+          <EmptyState icon={MessagesSquare} title={`No ${filterLabel} yet`} description="Try another filter, or be the first to post one." action={{ label: "Show everything", onClick: () => applyTypeFilter("all") }} />
+        ) : showEmpty && activeTab === "following" ? (
+          <EmptyState icon={Users} title="Nothing here yet" description="Follow people to see their posts here. For You is a good place to find them." action={{ label: "Browse For You", onClick: () => switchTab("for_you") }} />
+        ) : showEmpty && activeTab === "saved" ? (
+          <EmptyState icon={Bookmark} title="No saved posts" description="Tap the bookmark on any post to keep it here for later." action={{ label: "Browse the feed", onClick: () => switchTab("for_you") }} />
+        ) : showEmpty && activeTab === "for_you" ? (
+          <EmptyState icon={Sparkles} title="Quiet this month" description="Nothing new in the last 30 days. Older posts are in Latest, or start something yourself." action={{ label: "See Latest", onClick: () => switchTab("latest") }} />
+        ) : showEmpty ? (
+          <EmptyState icon={MessagesSquare} title="No posts yet" description="Be the first to share something with the community." action={{ label: "Create Post", onClick: () => openComposer() }} />
         ) : (
-          <div className="space-y-6">
-            {displayPosts.map((post, index) => (
-              <motion.div
+          <div className="space-y-5">
+            {displayPosts.map((post) => (
+              <PostCard
                 key={post.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: Math.min(index * 0.04, 0.3) }}
-              >
-                <PostCard
-                  post={post}
-                  currentUserId={user?.id}
-                  onLike={handleLike}
-                  onBookmark={handleBookmark}
-                  onEdit={(p) => setEditingPost(p)}
-                  onDelete={handleDeletePost}
-                />
-              </motion.div>
+                post={post}
+                currentUserId={user?.id}
+                onLike={handleLike}
+                onBookmark={handleBookmark}
+                onEdit={(p) => setEditingPost(p)}
+                onDelete={handleDeletePost}
+              />
             ))}
           </div>
         )}
 
-        {/* Load More - only for feed, not search or bookmarks single-page */}
-        {!isLoading && !searchQuery && hasMore && (
-          <motion.div
-            className="mt-8 flex justify-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-          >
-            <motion.button
-              onClick={() => loadFeed(activeTab, page + 1, true)}
-              disabled={isLoadingMore}
-              className="flex items-center gap-2 px-8 py-3 font-extrabold uppercase tracking-tighter text-sm border transition-all disabled:opacity-60"
-              style={{ backgroundColor: BG2, borderColor: `color-mix(in oklab, var(--hm-text) 6%, transparent)`, color: CREAM }}
-              onMouseEnter={(e) => !isLoadingMore && (e.currentTarget.style.borderColor = AMBER)}
-              onMouseLeave={(e) => (e.currentTarget.style.borderColor = `color-mix(in oklab, var(--hm-text) 6%, transparent)`)}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-            >
-              {isLoadingMore && <Loader2 className="w-4 h-4 animate-spin" />}
-              {isLoadingMore ? "Loading..." : "Load More Posts"}
-            </motion.button>
-          </motion.div>
+        {/* Pagination: sentinel, loading, retry, end of feed */}
+        {!isLoading && !error && !searchQuery && displayPosts.length > 0 && (
+          <div className="mt-8 flex flex-col items-center" aria-live="polite">
+            <div ref={sentinelRef} aria-hidden className="h-px w-full" />
+            {isLoadingMore ? (
+              <div className="w-full"><PostCardSkeletonList count={1} /></div>
+            ) : loadMoreError ? (
+              <div className="flex flex-col items-center gap-3 py-4">
+                <p className="text-sm" style={{ color: MUTED }}>Couldn&apos;t load more posts.</p>
+                <button
+                  type="button"
+                  onClick={() => loadFeed(activeTab, true)}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-bold uppercase tracking-tight border border-[color-mix(in_oklab,var(--hm-text)_6%,transparent)] transition-colors hover:border-(--hm-amber) focus-visible:outline-2 focus-visible:outline-(--hm-amber)"
+                  style={{ color: CREAM, backgroundColor: BG2 }}
+                >
+                  <RotateCcw className="w-4 h-4" aria-hidden /> Retry
+                </button>
+              </div>
+            ) : hasMore ? (
+              // Keyboard and screen-reader path; the sentinel handles scrolling.
+              <button
+                type="button"
+                onClick={() => loadFeed(activeTab, true)}
+                className="sr-only focus:not-sr-only focus:px-5 focus:py-2.5 focus:text-sm focus:font-bold focus:border"
+                style={{ color: CREAM, borderColor: DIVIDER }}
+              >
+                Load more posts
+              </button>
+            ) : (
+              <div className="flex flex-col items-center gap-2 py-6 text-center">
+                <Check className="w-5 h-5" style={{ color: AMBER }} aria-hidden />
+                <p className="text-sm font-semibold" style={{ color: CREAM }}>You&apos;re all caught up</p>
+                {activeTab === "for_you" ? (
+                  <button type="button" onClick={() => switchTab("latest")} className="text-sm hover:underline focus-visible:outline-2 focus-visible:outline-(--hm-amber)" style={{ color: AMBER }}>
+                    See older posts in Latest
+                  </button>
+                ) : (
+                  <p className="text-xs" style={{ color: SUBTLE }}>That&apos;s everything here for now.</p>
+                )}
+              </div>
+            )}
+          </div>
         )}
-      </div>
+      </main>
 
-      {/* Modals */}
       <CreatePostModal
-        isOpen={isCreatePostOpen}
-        onClose={() => setIsCreatePostOpen(false)}
-        onSubmit={handleCreatePost}
+        isOpen={composer.open}
+        onClose={() => setComposer((c) => ({ ...c, open: false }))}
+        onPosted={handlePosted}
         currentUser={user}
+        initialType={composer.type}
+        initialRecipe={composer.recipe}
       />
 
       {editingPost && (
-        <EditPostModal
-          isOpen={!!editingPost}
-          onClose={() => setEditingPost(null)}
-          onSubmit={handleEditPost}
-          initialContent={editingPost.content}
-          currentUser={user}
-        />
+        <EditPostModal isOpen={!!editingPost} onClose={() => setEditingPost(null)} onSubmit={handleEditPost} post={editingPost} />
       )}
 
-      {/* Undo-delete toast */}
-      <AnimatePresence>
-        {pendingDelete && (
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 16 }}
-            transition={{ duration: 0.2 }}
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 px-5 py-3 shadow-xl"
-            style={{ backgroundColor: BG2, border: `1px solid color-mix(in oklab, var(--hm-text) 10%, transparent)` }}
-          >
-            <span className="text-sm font-medium" style={{ color: CREAM }}>Post deleted</span>
-            <button
-              onClick={undoDeletePost}
-              className="text-sm font-extrabold uppercase tracking-wide transition-opacity hover:opacity-75"
-              style={{ color: AMBER }}
+      {/* Toasts: undo-delete takes priority over general feedback */}
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-md" aria-live="polite">
+        <AnimatePresence mode="wait">
+          {pendingDelete ? (
+            <motion.div
+              key="undo"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 12 }}
+              transition={{ duration: 0.18 }}
+              className="flex items-center justify-between gap-4 px-5 py-3 shadow-xl border"
+              style={{ backgroundColor: BG2, borderColor: "color-mix(in oklab, var(--hm-text) 10%, transparent)" }}
             >
-              Undo
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              <span className="text-sm font-medium" style={{ color: CREAM }}>Post deleted</span>
+              <button type="button" onClick={undoDeletePost} className="text-sm font-extrabold uppercase tracking-wide hover:opacity-75 focus-visible:outline-2 focus-visible:outline-(--hm-amber)" style={{ color: AMBER }}>
+                Undo
+              </button>
+            </motion.div>
+          ) : toast ? (
+            <motion.div
+              key={toast.id}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 12 }}
+              transition={{ duration: 0.18 }}
+              className="flex items-center justify-between gap-4 px-5 py-3 shadow-xl border"
+              style={{
+                backgroundColor: BG2,
+                borderColor: toast.tone === "points" ? "color-mix(in oklab, var(--hm-amber) 45%, transparent)" : "color-mix(in oklab, var(--hm-text) 10%, transparent)",
+              }}
+              role="status"
+            >
+              <span className="flex items-center gap-2 text-sm font-medium" style={{ color: CREAM }}>
+                {toast.tone === "points" && <Gift className="w-4 h-4 shrink-0" style={{ color: AMBER }} aria-hidden />}
+                {toast.text}
+              </span>
+              {toast.href && (
+                <Link href={toast.href} className="shrink-0 text-sm font-extrabold uppercase tracking-wide hover:opacity-75 focus-visible:outline-2 focus-visible:outline-(--hm-amber)" style={{ color: AMBER }}>
+                  {toast.hrefLabel ?? "View"}
+                </Link>
+              )}
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

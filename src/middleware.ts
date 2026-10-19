@@ -30,8 +30,13 @@ export function middleware(request: NextRequest) {
     return NextResponse.rewrite(url);
   }
 
-  // Block Phase 2 routes on main domain
-  const blockedPaths = ['/fresh', '/travel', '/marketplace'];
+  // Block Phase 2 routes on main domain. Marketplace is under construction, so
+  // the storefront, the vendor signup and the vendor portal stay reachable in
+  // local dev only - production still redirects all three.
+  const blockedPaths =
+    process.env.NODE_ENV === 'production'
+      ? ['/fresh', '/travel', '/marketplace', '/vendor', '/partner/vendor']
+      : ['/fresh', '/travel'];
   if (blockedPaths.some((p) => pathname.startsWith(p))) {
     return NextResponse.redirect(new URL('/', request.url));
   }

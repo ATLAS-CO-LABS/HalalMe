@@ -18,6 +18,14 @@ export function cldUrl(
 export const CLD_AVATAR   = "f_auto,q_auto,c_fill,w_150,h_150";
 export const CLD_RECIPE   = "f_auto,q_auto,c_fill,ar_16:9";
 export const CLD_POST_IMG = "f_auto,q_auto";
+/** Single photo in a feed card: capped width, natural aspect. */
+export const CLD_POST_FEED = "f_auto,q_auto,c_limit,w_1200";
+/** Square tile in a multi-photo grid; g_auto keeps the subject (the plate) in frame. */
+export const CLD_POST_TILE = "f_auto,q_auto,c_fill,g_auto,w_700,h_700";
+/** Post detail page, where photos are shown large. */
+export const CLD_POST_FULL = "f_auto,q_auto,c_limit,w_1800";
+/** Recipe card thumbnail on Social. */
+export const CLD_RECIPE_CARD = "f_auto,q_auto,c_fill,g_auto,w_640,h_480";
 
 /** True if the URL is a video (Cloudinary /video/upload/ or a video extension). */
 export function isVideoUrl(url: string | null | undefined): boolean {

@@ -28,7 +28,7 @@ const CSP_REPORT_ONLY = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://va.vercel-scripts.com",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com https://www.themealdb.com https://*.supabase.co",
+  "img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com https://www.themealdb.com https://*.supabase.co https://cdn.shopify.com",
   "font-src 'self' data:",
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://*.ingest.de.sentry.io https://vitals.vercel-insights.com",
   "frame-src https://js.stripe.com",
@@ -111,6 +111,12 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'res.cloudinary.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.shopify.com',
         port: '',
         pathname: '/**',
       },

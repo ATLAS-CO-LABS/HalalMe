@@ -22,6 +22,7 @@ import {
   Settings,
   Search,
   Lock,
+  ShoppingBag,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { isStaffRole } from "@/lib/adminRoles";
@@ -53,6 +54,12 @@ const NAV_GROUPS: { heading?: string; items: NavItem[] }[] = [
     heading: "Domains",
     items: [
       { label: "Merchants",         href: "/admin/merchants", icon: Store,         module: "merchants" },
+      // Marketplace still runs on sample data, so it is listed in development
+      // only. It has no `module` because there is no admin_permissions key for
+      // it yet: add one, and drop this condition, when the backend lands.
+      ...(process.env.NODE_ENV !== "production"
+        ? [{ label: "Marketplace", href: "/admin/marketplace", icon: ShoppingBag }]
+        : []),
       { label: "Users",             href: "/admin/users",     icon: Users,         module: "users" },
       { label: "Rewards & Charity", href: "/admin/rewards",   icon: Gift,          module: "rewards" },
       { label: "Kitchen",           href: "/admin/kitchen",   icon: ChefHat,       module: "kitchen" },

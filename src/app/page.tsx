@@ -1,9 +1,8 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useState } from "react";
 import {
   motion,
-  useInView,
   AnimatePresence,
   useScroll,
   useTransform,
@@ -14,17 +13,6 @@ import Link from "next/link";
 import HorizontalServices from "@/components/navigation/HorizontalServices";
 import LoadingScreen from "@/components/loading/LoadingScreen";
 import { useAuth } from "@/hooks/useAuth";
-import {
-  ShieldCheck,
-  BookOpen,
-  UserCircle,
-  LayoutGrid,
-  Zap,
-  ArrowRight,
-  ChevronDown,
-  Fingerprint,
-  Gift,
-} from "lucide-react";
 
 declare global {
   interface Window {
@@ -32,7 +20,12 @@ declare global {
   }
 }
 
-const CYCLE_WORDS = ["Perfected.", "Simplified.", "Connected.", "Elevated."];
+/* Display type is set at medium weight - size and spacing carry the hierarchy */
+const DISPLAY = "font-medium tracking-[-0.045em] leading-[0.98]";
+const EYEBROW =
+  "text-[10px] md:text-xs uppercase tracking-[0.3em] font-medium";
+const TEXT_LINK =
+  "underline underline-offset-[6px] decoration-1 transition-colors duration-200";
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(() => {
@@ -62,37 +55,33 @@ export default function Home() {
         <HeroSection />
 
         <div className="relative z-10 mt-[100vh]">
-          {/* Champagne ticker - forest + champagne, no amber dominance */}
-          <ServiceTicker />
+          <RestaurantsBand />
 
-          {/* Stats on dark contrast bg */}
-          <StatsStrip />
+          <AccountSection />
 
-          {/* Features */}
-          <FeaturesSection />
-
-          {/* Seven Services - header (outside pinned section so overflow-hidden doesn't break GSAP pin) */}
-          <div className="bg-[#102C26] pt-24 md:pt-32 pb-12 md:pb-16">
-            <div className="max-w-[95vw] mx-auto px-6 md:px-10">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-8 h-px bg-[#F59E0B]" />
-                <span className="text-[#F59E0B] text-[10px] md:text-xs uppercase tracking-[0.3em] font-bold">
-                  Our Platform
-                </span>
-              </div>
-              <h2 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-extrabold uppercase tracking-tighter leading-[0.88] text-[#F7E7CE]">
-                Five Services.
-                <br />
-                <span className="text-[#F7E7CE]/72">One Unified Account.</span>
+          {/* Five services - header (outside pinned section so overflow-hidden doesn't break GSAP pin) */}
+          <div
+            id="services"
+            className="bg-[#102C26] pt-24 md:pt-32 pb-12 md:pb-16 border-t border-[#F7E7CE]/10"
+          >
+            <div className="max-w-[95vw] mx-auto px-6 md:px-10 grid md:grid-cols-12 gap-y-6 md:gap-x-12 items-end">
+              <h2
+                className={`${DISPLAY} md:col-span-8 text-3xl sm:text-5xl md:text-6xl lg:text-7xl text-[#F7E7CE]`}
+              >
+                Delivery, Kitchen, Social, Charity, Rewards.
               </h2>
+              <p className="md:col-span-4 text-[#F7E7CE]/70 text-sm md:text-base leading-relaxed max-w-sm">
+                Each one works on its own. Scroll through to see what is
+                inside before you sign up.
+              </p>
             </div>
           </div>
 
           {/* Horizontal scroll - pinned by GSAP, must not be inside overflow-hidden */}
           <HorizontalServices />
 
-          <HowItWorksSection />
-          <TestimonialsSection />
+          <WeekSection />
+          <ReviewsSection />
           <FinalCTA />
         </div>
       </div>
@@ -103,7 +92,6 @@ export default function Home() {
 /* ─── Hero ─────────────────────────────────────────────────────────── */
 
 function HeroSection() {
-  const [wordIndex, setWordIndex] = useState(0);
   const { user } = useAuth();
   const reduceMotion = useReducedMotion();
 
@@ -112,17 +100,8 @@ function HeroSection() {
   const contentOpacity = useTransform(scrollY, [0, 560], [1, 0]);
   const contentY = useTransform(scrollY, [0, 560], [0, -70]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setWordIndex((prev) => (prev + 1) % CYCLE_WORDS.length);
-    }, 2600);
-    return () => clearInterval(interval);
-  }, []);
-
-  const word = CYCLE_WORDS[wordIndex];
-
   return (
-    <section className="fixed top-0 left-0 w-full h-screen z-0 flex items-center justify-center overflow-hidden bg-[#102C26]">
+    <section className="fixed top-0 left-0 w-full h-screen z-0 flex items-end overflow-hidden bg-[#102C26]">
       <div className="absolute inset-0 z-0">
         {/* Slow Ken Burns drift on the backdrop */}
         <motion.div
@@ -141,572 +120,352 @@ function HeroSection() {
         >
           <Image
             src="/images/hero/halal5.webp"
-            alt="Halal Lifestyle"
+            alt=""
             fill
             className="object-cover"
             priority
             sizes="100vw"
           />
         </motion.div>
+        {/* Weighted to the bottom left, where the copy sits */}
         <div
           className="absolute inset-0"
           style={{
-            background: `radial-gradient(ellipse at center, #102C2640 0%, #102C26B0 55%, #102C26F0 100%)`,
+            background: `linear-gradient(to top right, #102C26F5 0%, #102C26C8 42%, #102C2655 100%)`,
           }}
         />
       </div>
 
       <motion.div
-        style={{
-          opacity: contentOpacity,
-          y: contentY,
-          containerType: "inline-size",
-        }}
-        className="relative z-10 flex flex-col items-center text-center px-6 pt-20 w-full"
+        style={{ opacity: contentOpacity, y: contentY }}
+        className="relative z-10 w-full max-w-[95vw] mx-auto px-6 md:px-10 pt-24 pb-14 md:pb-20"
       >
-        {/* Eyebrow - lines draw outward from the label */}
-        <div className="flex items-center gap-3 mb-6 md:mb-8">
-          <motion.div
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ delay: 0.3, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="w-8 h-px bg-[#F59E0B] origin-right"
-          />
-          <motion.span
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.12 }}
-            className="text-[#F59E0B] text-[10px] md:text-xs font-bold uppercase tracking-[0.3em]"
-          >
-            The All-in-One Halal Platform
-          </motion.span>
-          <motion.div
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ delay: 0.3, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="w-8 h-px bg-[#F59E0B] origin-left"
-          />
-        </div>
+        <p className={`${EYEBROW} text-[#F59E0B] mb-5 md:mb-7`}>
+          Halal delivery, recipes and giving in the UK
+        </p>
 
-        {/* Heading */}
-        <h1 className="font-extrabold uppercase tracking-tighter leading-[0.88]">
-          <motion.span
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.22, duration: 0.7 }}
-            className="block text-[clamp(2rem,10cqw,8rem)] text-[#F7E7CE]"
-          >
-            Halal Living
-          </motion.span>
-          <span className="block text-[clamp(2rem,10cqw,8rem)] min-h-[1em]">
-            <AnimatePresence mode="wait">
-              <motion.span
-                key={wordIndex}
-                className="relative inline-block text-[#F7E7CE]/70 pb-1"
-                initial={reduceMotion ? { opacity: 0 } : "hidden"}
-                animate={reduceMotion ? { opacity: 1 } : "show"}
-                exit={reduceMotion ? { opacity: 0 } : "exit"}
-                variants={{
-                  show: { transition: { staggerChildren: 0.038 } },
-                  exit: {
-                    transition: {
-                      staggerChildren: 0.016,
-                      staggerDirection: -1,
-                    },
-                  },
-                }}
-              >
-                {word.split("").map((ch, i) => (
-                  <motion.span
-                    key={`${wordIndex}-${i}`}
-                    className="inline-block"
-                    variants={{
-                      hidden: { opacity: 0, y: 30, filter: "blur(7px)" },
-                      show: {
-                        opacity: 1,
-                        y: 0,
-                        filter: "blur(0px)",
-                        transition: {
-                          duration: 0.42,
-                          ease: [0.22, 1, 0.36, 1],
-                        },
-                      },
-                      exit: {
-                        opacity: 0,
-                        y: -24,
-                        filter: "blur(5px)",
-                        transition: { duration: 0.2, ease: "easeIn" },
-                      },
-                    }}
-                  >
-                    {ch}
-                  </motion.span>
-                ))}
-                {/* Amber baseline redraws under each word */}
-                <motion.span
-                  aria-hidden="true"
-                  className="absolute bottom-0 left-0 h-[3px] bg-[#F59E0B]"
-                  initial={{ width: "0%" }}
-                  animate={{ width: "100%" }}
-                  exit={{ width: "0%", transition: { duration: 0.18 } }}
-                  transition={{
-                    duration: 0.55,
-                    delay: 0.3,
-                    ease: [0.22, 1, 0.36, 1],
-                  }}
-                />
-              </motion.span>
-            </AnimatePresence>
-          </span>
+        <h1
+          className={`${DISPLAY} text-[clamp(2.25rem,7vw,7rem)] text-[#F7E7CE] max-w-[16ch]`}
+        >
+          Everything halal, on one account.
         </h1>
 
-        {/* Subtitle */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.62 }}
-          className="mt-7 text-base md:text-lg text-[#F7E7CE] max-w-sm leading-relaxed"
-        >
-          A whole halal world, connected through HalalMe.
-        </motion.p>
+        <div className="mt-8 md:mt-12 flex flex-col md:flex-row md:items-end md:justify-between gap-8">
+          <p className="text-base md:text-lg text-[#F7E7CE]/80 max-w-md leading-relaxed">
+            Order from local halal restaurants, cook from the recipe library,
+            post to Social, give to registered UK charities, and earn points
+            as you go.
+          </p>
 
-        {/* Buttons */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.74 }}
-          className="mt-8 flex flex-wrap gap-4 justify-center"
-        >
-          {!user && (
-            <Link href="/select-role">
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                className="flex items-center gap-3 px-7 sm:px-8 py-3.5 sm:py-4 bg-[#F7E7CE] text-[#102C26] font-extrabold uppercase tracking-tighter text-sm sm:text-base"
-              >
-                Create Free Account
-                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
-              </motion.button>
-            </Link>
-          )}
-          <a href="#how-it-works">
-            <motion.button
-              whileHover={{
-                scale: 1.03,
-                backgroundColor: "rgba(247,231,206,0.08)",
-              }}
-              whileTap={{ scale: 0.97 }}
-              className="flex items-center gap-3 px-7 sm:px-8 py-3.5 sm:py-4 border-2 border-[#F7E7CE]/25 text-[#F7E7CE] font-extrabold uppercase tracking-tighter text-sm sm:text-base transition-all"
+          <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
+            <Link
+              href={user ? "/dashboard" : "/select-role"}
+              className="px-7 sm:px-8 py-3.5 sm:py-4 bg-[#F7E7CE] text-[#102C26] font-semibold uppercase tracking-tight text-sm sm:text-base hover:bg-white active:translate-y-px transition-colors"
             >
-              See How It Works
-              <ChevronDown className="w-4 h-4 opacity-60" />
-            </motion.button>
-          </a>
-        </motion.div>
+              {user ? "Open your dashboard" : "Create free account"}
+            </Link>
+            <a
+              href="#services"
+              className={`${TEXT_LINK} text-sm sm:text-base text-[#F7E7CE] decoration-[#F7E7CE]/40 hover:decoration-[#F59E0B]`}
+            >
+              See the five services
+            </a>
+          </div>
+        </div>
       </motion.div>
     </section>
   );
 }
 
-/* ─── Service Ticker - champagne bg, forest text ───────────────────── */
+/* ─── Restaurants band - champagne bg, the partners live on Delivery ─── */
 
-function ServiceTicker() {
-  const services = [
-    { label: "HalalMe Delivery", href: "/delivery" },
-    { label: "HalalMe Kitchen", href: "/kitchen" },
-    { label: "HalalMe Social", href: "/social" },
-    { label: "HalalMe Charity", href: "/charity" },
-    { label: "HalalMe Rewards", href: "/rewards" },
-  ];
+// Mirrors the restaurant list on /delivery. Update both when a partner joins or leaves.
+const LIVE_RESTAURANTS = [
+  { name: "Dippers", cuisine: "Fast food" },
+  { name: "Kake Temptations", cuisine: "Ice cream and dessert" },
+  { name: "Uncle J's", cuisine: "Asian and Chinese" },
+  { name: "Tegtat", cuisine: "Breakfast and bakery" },
+  { name: "Amigos", cuisine: "Pizza, burgers, kebab" },
+  { name: "Pizza Plaza", cuisine: "Pizza and burgers" },
+];
 
+function RestaurantsBand() {
   return (
-    <div className="overflow-hidden bg-[#F7E7CE] py-4">
-      <style>{`
-        @keyframes hm-ticker {
-          from { transform: translateX(0); }
-          to   { transform: translateX(-50%); }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .hm-ticker-track { animation: none !important; }
-        }
-      `}</style>
-      <div
-        className="hm-ticker-track flex whitespace-nowrap"
-        style={{
-          animation: "hm-ticker 28s linear infinite",
-          width: "max-content",
-        }}
-      >
-        {[...services, ...services].map((s, i) => (
+    <section className="bg-[#F7E7CE] text-[#102C26]">
+      <div className="max-w-[95vw] mx-auto px-6 md:px-10 py-10 md:py-12 grid lg:grid-cols-12 gap-y-8 lg:gap-x-12">
+        <div className="lg:col-span-3 flex lg:flex-col justify-between lg:justify-start gap-4">
+          <h2 className={`${EYEBROW} text-[#102C26]/60`}>
+            Delivering now from
+          </h2>
           <Link
-            key={i}
-            href={s.href}
-            className="inline-flex items-center gap-8 md:gap-12 px-8 md:px-12 text-[#102C26] font-extrabold uppercase tracking-tighter text-base md:text-xl hover:text-[#102C26]/60 transition-colors"
+            href="/delivery"
+            className={`${TEXT_LINK} text-sm decoration-[#102C26]/30 hover:decoration-[#102C26] w-fit`}
           >
-            {s.label}
-            <span className="text-[#102C26]/25 text-sm" aria-hidden="true">
-              ✦
-            </span>
+            Order on Delivery
           </Link>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* ─── Stats Strip - dark contrast, champagne numbers ──────────────── */
-
-function StatsStrip() {
-  const stats = [
-    { value: "New", label: "Restaurant Network" },
-    { value: "UK", label: "Expanding Coverage" },
-    { value: "5", label: "Services" },
-    { value: "100%", label: "Halal Verified" },
-  ];
-
-  return (
-    <div
-      className="grid grid-cols-2 md:grid-cols-4 gap-px bg-[#F7E7CE]/8"
-      style={{
-        borderTop: "1px solid #F59E0B40",
-        borderBottom: "1px solid #F59E0B40",
-      }}
-    >
-      {stats.map((s, i) => (
-        <div
-          key={i}
-          className="bg-[#0A1C19] py-10 md:py-14 px-8 md:px-12 text-center md:text-left"
-        >
-          <div className="text-[3rem] md:text-[4.5rem] lg:text-[5.5rem] font-extrabold tracking-tighter leading-none text-[#F7E7CE]">
-            {s.value}
-          </div>
-          <div className="text-[#F7E7CE]/60 text-[10px] md:text-xs uppercase tracking-[0.25em] mt-2 font-medium">
-            {s.label}
-          </div>
         </div>
-      ))}
-    </div>
+
+        <ul className="lg:col-span-9 grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-6">
+          {LIVE_RESTAURANTS.map((r) => (
+            <li key={r.name} className="border-l border-[#102C26]/20 pl-4">
+              <p className="text-base md:text-lg font-medium tracking-tight leading-tight">
+                {r.name}
+              </p>
+              <p className="mt-1 text-xs md:text-sm text-[#102C26]/60">
+                {r.cuisine}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
   );
 }
 
-/* ─── What is HalalMe - editorial split, sticky intro + accent rows ─── */
+/* ─── What an account gets you - editorial split, sticky intro + accent rows ─── */
 
-function FeaturesSection() {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true });
-
-  const features = [
+function AccountSection() {
+  const points = [
     {
       num: "01",
-      title: "One Identity",
-      desc: "Single sign-on for all 5 services. Your profile, preferences, and rewards sync seamlessly across the entire HalalMe ecosystem.",
-      Icon: Fingerprint,
+      title: "One sign-in for all five",
+      desc: "The same account works on Delivery, Kitchen, Social, Charity and Rewards. Your profile and your points balance come with you.",
     },
     {
       num: "02",
-      title: "AI-Powered Kitchen",
-      desc: "Get personalised Halal recipes and meal ideas, generated instantly for your taste and dietary needs.",
-      Icon: BookOpen,
+      title: "AQI, the cooking assistant",
+      desc: "Tell AQI what is in your fridge, or send it a photo, and it suggests a halal recipe you can cook tonight.",
     },
     {
       num: "03",
-      title: "Earn & Give Back",
-      desc: "Collect rewards on every order and turn your points into real charity donations, all from one place.",
-      Icon: Gift,
+      title: "Points for taking part",
+      desc: "10 points for every £1 you donate. 50 for your first recipe and your first post, then 20 for each post after that.",
     },
   ];
 
   return (
-    <section
-      ref={ref}
-      className="bg-[#102C26] py-24 md:py-32 relative overflow-hidden"
-      style={{
-        borderTop: "1px solid #F59E0B50",
-        borderBottom: "1px solid #F59E0B50",
-      }}
-    >
-      {/* Oversized ghost mark - texture unique to this section */}
-      <div
-        aria-hidden="true"
-        className="absolute -right-16 -top-10 md:-right-24 md:-top-20 text-[16rem] md:text-[26rem] font-extrabold text-[#F7E7CE]/[0.025] leading-none select-none pointer-events-none tracking-tighter"
-      >
-        H
-      </div>
-
-      <div className="max-w-[95vw] mx-auto px-6 md:px-10 relative z-10 grid md:grid-cols-12 gap-y-14 md:gap-x-12 lg:gap-x-20">
+    <section className="bg-[#102C26] py-24 md:py-32">
+      <div className="max-w-[95vw] mx-auto px-6 md:px-10 grid md:grid-cols-12 gap-y-14 md:gap-x-12 lg:gap-x-20">
         {/* Left - sticky intro column */}
         <div className="md:col-span-5">
           <div className="md:sticky md:top-32">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={isInView ? { opacity: 1, x: 0 } : {}}
-              className="flex items-center gap-3 mb-6"
+            <p className={`${EYEBROW} text-[#F59E0B] mb-6`}>One account</p>
+            <h2
+              className={`${DISPLAY} text-3xl sm:text-4xl md:text-5xl text-[#F7E7CE]`}
             >
-              <div className="w-8 h-px bg-[#F59E0B]" />
-              <span className="text-[#F59E0B] text-[10px] md:text-xs uppercase tracking-[0.3em] font-bold">
-                What is HalalMe
-              </span>
-            </motion.div>
-            <motion.h2
-              initial={{ opacity: 0, y: 30 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.6 }}
-              className="text-4xl sm:text-5xl md:text-6xl font-extrabold uppercase tracking-tighter leading-[0.9] text-[#F7E7CE]"
-            >
-              Redefining the
-              <br />
-              <span className="text-[#bf9518]">Halal</span> Experience
-            </motion.h2>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: 0.15, duration: 0.5 }}
-              className="mt-6 text-[#F7E7CE]/72 text-base md:text-lg leading-relaxed max-w-md"
-            >
-              One ecosystem built from the ground up around Halal life:
-              identity, food, and trust, unified under a single platform.
-            </motion.p>
+              What a HalalMe account gets you.
+            </h2>
+            <p className="mt-6 text-[#F7E7CE]/72 text-base md:text-lg leading-relaxed max-w-md">
+              It is free to create. Here is what comes with it.
+            </p>
           </div>
         </div>
 
         {/* Right - stacked rows, accent bar reveal on hover (no color inversion) */}
         <div className="md:col-span-7 flex flex-col">
-          {features.map((f, i) => {
-            const Icon = f.Icon;
-            return (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 24 }}
-                animate={isInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ delay: 0.2 + i * 0.12, duration: 0.5 }}
-                className={`group relative pl-6 md:pl-8 py-8 md:py-10 flex gap-5 md:gap-8 items-start ${
-                  i !== 0 ? "border-t border-[#F7E7CE]/10" : ""
-                }`}
-              >
-                <div className="absolute left-0 top-8 md:top-10 bottom-8 md:bottom-10 w-[2px] bg-[#F7E7CE]/10 overflow-hidden">
-                  <div className="absolute inset-x-0 top-0 h-0 group-hover:h-full bg-[#F59E0B] transition-[height] duration-500 ease-out" />
-                </div>
+          {points.map((p, i) => (
+            <div
+              key={p.num}
+              className={`group relative pl-6 md:pl-8 py-8 md:py-10 flex gap-5 md:gap-8 items-start ${
+                i !== 0 ? "border-t border-[#F7E7CE]/10" : ""
+              }`}
+            >
+              <div className="absolute left-0 top-8 md:top-10 bottom-8 md:bottom-10 w-0.5bg-[#F7E7CE]/10 overflow-hidden">
+                <div className="absolute inset-x-0 top-0 h-full origin-top scale-y-0 group-hover:scale-y-100 bg-[#F59E0B] transition-transform duration-500 ease-out" />
+              </div>
 
-                <span className="text-xs font-bold text-[#F7E7CE]/60 mt-1.5 shrink-0">
-                  {f.num}
-                </span>
-                <Icon className="w-6 h-6 md:w-7 md:h-7 text-[#F59E0B] shrink-0 mt-0.5 transition-transform duration-300 group-hover:scale-110" />
-                <div>
-                  <h3 className="text-xl md:text-2xl font-extrabold uppercase tracking-tighter text-[#F7E7CE] mb-2.5">
-                    {f.title}
-                  </h3>
-                  <p className="text-[#F7E7CE]/72 leading-relaxed text-sm md:text-base max-w-lg">
-                    {f.desc}
-                  </p>
-                </div>
-              </motion.div>
-            );
-          })}
+              <span className="text-xs text-[#F7E7CE]/50 mt-1.5 shrink-0 tabular-nums">
+                {p.num}
+              </span>
+              <div>
+                <h3 className="text-xl md:text-2xl font-medium tracking-tight text-[#F7E7CE] mb-2.5">
+                  {p.title}
+                </h3>
+                <p className="text-[#F7E7CE]/72 leading-relaxed text-sm md:text-base max-w-lg">
+                  {p.desc}
+                </p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>
   );
 }
 
-/* ─── How It Works - champagne hover inversion ─────────────────────── */
+/* ─── One week on one account - a worked example, set as a ledger ───── */
 
-function HowItWorksSection() {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
+// Point values match the earn rules and catalog costs on /rewards. Keep them in sync.
+const WEEK = [
+  {
+    service: "Delivery",
+    accent: "#B96AF0",
+    action: "Order dinner from a halal restaurant nearby and follow it to your door.",
+    result: "Dinner",
+  },
+  {
+    service: "Kitchen",
+    accent: "#F03E9E",
+    action: "Upload your first recipe, with photos and steps.",
+    result: "+50 pts",
+  },
+  {
+    service: "Social",
+    accent: "#F59E0B",
+    action: "Share it as your first post.",
+    result: "+50 pts",
+  },
+  {
+    service: "Charity",
+    accent: "#14B8A6",
+    action: "Give £10 to a registered UK charity.",
+    result: "+100 pts",
+  },
+  {
+    service: "Rewards",
+    accent: "#FB7185",
+    action: "Spend 150 points on a frame for your profile photo.",
+    result: "-150 pts",
+  },
+];
 
-  const steps = [
-    {
-      num: "01",
-      title: "Unified Profile",
-      desc: "Create one account that follows you everywhere. Your preferences, history, and rewards all in one place.",
-      Icon: UserCircle,
-    },
-    {
-      num: "02",
-      title: "Select Service",
-      desc: "Choose from Delivery, Kitchen, Social, and Rewards. All connected, all halal-focused.",
-      Icon: LayoutGrid,
-    },
-    {
-      num: "03",
-      title: "Live Seamlessly",
-      desc: "Earn rewards, track orders, and explore Halal options across the globe. One ecosystem, endless possibilities.",
-      Icon: Zap,
-    },
-  ];
-
+function WeekSection() {
   return (
     <section
       id="how-it-works"
-      ref={ref}
-      className="bg-[#0A1C19] py-24 md:py-32"
-      style={{
-        borderTop: "1px solid #F59E0B50",
-        borderBottom: "1px solid #F59E0B50",
-      }}
+      className="bg-[#0A1C19] py-24 md:py-32 border-t border-[#F7E7CE]/10"
     >
-      <div className="max-w-[95vw] mx-auto px-6 md:px-10 mb-14 md:mb-20">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={isInView ? { opacity: 1, x: 0 } : {}}
-          className="flex items-center gap-3 mb-6"
-        >
-          <div className="w-8 h-px bg-[#F59E0B]" />
-          <span className="text-[#F59E0B] text-[10px] md:text-xs uppercase tracking-[0.3em] font-bold">
-            How It Works
-          </span>
-        </motion.div>
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-          className="text-4xl sm:text-5xl md:text-7xl font-extrabold uppercase tracking-tighter leading-[0.88] text-[#F7E7CE]"
-        >
-          Simple.
-          <br />
-          <span className="text-[#F7E7CE]/72">Unified.</span>
-          <br />
-          Elegant.
-        </motion.h2>
-      </div>
-
-      <div
-        className="max-w-[95vw] mx-auto px-6 md:px-10 grid md:grid-cols-3"
-        style={{
-          gap: "1px",
-          backgroundColor: "#F7E7CE",
-          borderLeft: "2px solid #F7E7CE",
-          borderRight: "2px solid #F7E7CE",
-        }}
-      >
-        {steps.map((step, i) => {
-          const Icon = step.Icon;
-          return (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 40 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: 0.2 + i * 0.15, duration: 0.5 }}
-              className="group relative bg-[#0A1C19] border border-[#F7E7CE]/8 p-8 md:p-10 overflow-hidden hover:bg-[#F7E7CE] transition-colors duration-300 cursor-default"
+      <div className="max-w-[95vw] mx-auto px-6 md:px-10 grid md:grid-cols-12 gap-y-12 md:gap-x-12 lg:gap-x-20">
+        <div className="md:col-span-4">
+          <p className={`${EYEBROW} text-[#F59E0B] mb-6`}>
+            How the points add up
+          </p>
+          <h2
+            className={`${DISPLAY} text-3xl sm:text-4xl md:text-5xl text-[#F7E7CE]`}
+          >
+            One account, one week.
+          </h2>
+          <p className="mt-6 text-[#F7E7CE]/72 text-sm md:text-base leading-relaxed max-w-sm">
+            A typical first week, using the real numbers.{" "}
+            <Link
+              href="/rewards"
+              className={`${TEXT_LINK} text-[#F7E7CE] decoration-[#F7E7CE]/30 hover:decoration-[#F59E0B]`}
             >
-              <div
-                aria-hidden="true"
-                className="text-[6rem] md:text-[8rem] lg:text-[9rem] font-extrabold leading-none tracking-tighter text-[#F7E7CE]/10 group-hover:text-[#102C26]/20 transition-colors duration-300 select-none mb-2"
+              See every way to earn
+            </Link>
+            .
+          </p>
+        </div>
+
+        <div className="md:col-span-8">
+          <ol className="border-t border-[#F7E7CE]/15">
+            {WEEK.map((row, i) => (
+              <li
+                key={row.service}
+                className="grid grid-cols-[2rem_1fr_auto] md:grid-cols-[2.5rem_9rem_1fr_auto] items-baseline gap-x-4 md:gap-x-6 gap-y-1 py-5 md:py-6 border-b border-[#F7E7CE]/15"
               >
-                {step.num}
-              </div>
-              <Icon className="w-6 h-6 text-[#F7E7CE]/72 group-hover:text-[#102C26] mb-4 transition-colors duration-300" />
-              <h3 className="text-xl md:text-2xl font-extrabold uppercase tracking-tighter text-[#F7E7CE] group-hover:text-[#102C26] mb-3 transition-colors duration-300">
-                {step.title}
-              </h3>
-              <p className="text-[#F7E7CE]/72 group-hover:text-[#102C26]/65 leading-relaxed text-sm md:text-base transition-colors duration-300">
-                {step.desc}
-              </p>
-            </motion.div>
-          );
-        })}
+                <span className="text-xs text-[#F7E7CE]/40 tabular-nums">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <span
+                  className="text-sm md:text-base font-medium tracking-tight"
+                  style={{ color: row.accent }}
+                >
+                  {row.service}
+                </span>
+                <span className="order-last md:order-0 col-start-2 col-span-2 md:col-auto text-sm md:text-base text-[#F7E7CE]/80 leading-relaxed">
+                  {row.action}
+                </span>
+                <span className="text-sm md:text-base text-[#F7E7CE] tabular-nums text-right whitespace-nowrap">
+                  {row.result}
+                </span>
+              </li>
+            ))}
+          </ol>
+          <div className="flex items-baseline justify-between pt-5 md:pt-6">
+            <span className="text-sm md:text-base text-[#F7E7CE]/60">
+              Balance on day seven
+            </span>
+            <span className="text-2xl md:text-4xl font-medium tracking-tight text-[#F7E7CE] tabular-nums">
+              50 pts
+            </span>
+          </div>
+        </div>
       </div>
     </section>
   );
 }
 
-/* ─── Testimonials ─────────────────────────────────────────────────── */
+/* ─── Customer reviews - one lead quote, two supporting ─────────────── */
 
-function TestimonialsSection() {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-80px" });
+// Quotes are verbatim and tracked in SOCIAL_PROOF_REGISTER.md (SP-04 to SP-06). Do not edit the wording.
+const REVIEWS = [
+  {
+    quote:
+      "The AI recipe feature is honestly incredible. I told it what I had in the fridge and it gave me a full halal meal plan in seconds. I've discovered dishes I never would've tried otherwise. Cooking halal at home has never been this easy.",
+    name: "Jani Fernandez",
+    feature: "Kitchen",
+  },
+  {
+    quote:
+      "The community on here is unlike anything else. I've connected with people who actually understand the halal lifestyle - sharing recipes, restaurant finds, everything. It feels like a space that was built for us.",
+    name: "Maryam",
+    feature: "Social",
+  },
+  {
+    quote:
+      "The rewards are really good - you can donate to so many different charities. Love that every time I order I'm also giving back. Never seen anything like this on any other food app.",
+    name: "Arbab",
+    feature: "Charity",
+  },
+];
 
-  const testimonials = [
-    {
-      quote:
-        "The AI recipe feature is honestly incredible. I told it what I had in the fridge and it gave me a full halal meal plan in seconds. I've discovered dishes I never would've tried otherwise. Cooking halal at home has never been this easy.",
-      name: "Jani Fernandez",
-      feature: "Kitchen Recipes",
-    },
-    {
-      quote:
-        "The community on here is unlike anything else. I've connected with people who actually understand the halal lifestyle - sharing recipes, restaurant finds, everything. It feels like a space that was built for us.",
-      name: "Maryam",
-      feature: "Social Community",
-    },
-    {
-      quote:
-        "The rewards are really good - you can donate to so many different charities. Love that every time I order I'm also giving back. Never seen anything like this on any other food app.",
-      name: "Arbab",
-      feature: "Charity Donations",
-    },
-  ];
+function ReviewAttribution({ name, feature }: { name: string; feature: string }) {
+  return (
+    <figcaption className="mt-6 text-xs md:text-sm text-[#F7E7CE]/55">
+      <span className="text-[#F7E7CE]">{name}</span>
+      <span className="mx-2 text-[#F7E7CE]/25">/</span>
+      Customer review, {feature}
+    </figcaption>
+  );
+}
+
+function ReviewsSection() {
+  const [lead, ...rest] = REVIEWS;
 
   return (
-    <section
-      ref={ref}
-      className="bg-[#0A1C19] py-24 md:py-32"
-      style={{
-        borderTop: "1px solid #F59E0B50",
-        borderBottom: "1px solid #F59E0B50",
-      }}
-    >
-      <div className="max-w-[95vw] mx-auto px-6 md:px-10 mb-14 md:mb-20">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={isInView ? { opacity: 1, x: 0 } : {}}
-          className="flex items-center gap-3 mb-6"
-        >
-          <div className="w-8 h-px bg-[#F59E0B]" />
-          <span className="text-[#F59E0B] text-[10px] md:text-xs uppercase tracking-[0.3em] font-bold">
-            What People Are Saying
-          </span>
-        </motion.div>
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-          className="text-4xl sm:text-5xl md:text-7xl font-extrabold uppercase tracking-tighter leading-[0.88] text-[#F7E7CE]"
-        >
-          Real People.
-          <br />
-          <span className="text-[#F7E7CE]/72">Real Stories.</span>
-        </motion.h2>
-      </div>
+    <section className="bg-[#102C26] py-24 md:py-32 border-t border-[#F7E7CE]/10">
+      <div className="max-w-[95vw] mx-auto px-6 md:px-10">
+        <h2 className={`${EYEBROW} text-[#F59E0B] mb-10 md:mb-14`}>
+          What customers have told us
+        </h2>
 
-      <div
-        className="max-w-[95vw] mx-auto px-6 md:px-10 grid md:grid-cols-3"
-        style={{
-          gap: "1px",
-          backgroundColor: "#F7E7CE",
-          borderLeft: "2px solid #F7E7CE",
-          borderRight: "2px solid #F7E7CE",
-        }}
-      >
-        {testimonials.map((t, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, y: 30 }}
-            animate={isInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ delay: i * 0.1, duration: 0.5 }}
-            className="bg-[#0A1C19] border border-[#F7E7CE]/8 p-8 md:p-10 flex flex-col justify-between gap-6"
-          >
-            <p className="text-[#F7E7CE]/70 text-base md:text-lg leading-relaxed italic">
-              &ldquo;{t.quote}&rdquo;
-            </p>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-px bg-[#F59E0B]" />
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="block text-[#F7E7CE]/80 text-xs uppercase tracking-[0.2em] font-bold">
-                    {t.name}
-                  </span>
-                  <span className="text-[9px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded-sm bg-[#F59E0B]/10 text-[#F59E0B]">
-                    Customer review
-                  </span>
-                </div>
-                <span className="text-[#F59E0B]/60 text-[10px] uppercase tracking-widest">
-                  {t.feature}
-                </span>
-              </div>
-            </div>
-          </motion.div>
-        ))}
+        <div className="grid md:grid-cols-12 gap-y-12 md:gap-x-12 lg:gap-x-20">
+          <figure className="md:col-span-7">
+            <blockquote className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-normal tracking-tight leading-[1.3] text-[#F7E7CE] text-pretty">
+              &ldquo;{lead.quote}&rdquo;
+            </blockquote>
+            <ReviewAttribution name={lead.name} feature={lead.feature} />
+          </figure>
+
+          <div className="md:col-span-5 flex flex-col">
+            {rest.map((r, i) => (
+              <figure
+                key={r.name}
+                className={
+                  i === 0
+                    ? "pb-10"
+                    : "pt-10 border-t border-[#F7E7CE]/10"
+                }
+              >
+                <blockquote className="text-sm md:text-base leading-relaxed text-[#F7E7CE]/80">
+                  &ldquo;{r.quote}&rdquo;
+                </blockquote>
+                <ReviewAttribution name={r.name} feature={r.feature} />
+              </figure>
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -715,97 +474,36 @@ function TestimonialsSection() {
 /* ─── Final CTA - champagne bg, forest text ────────────────────────── */
 
 function FinalCTA() {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-50px" });
   const { user } = useAuth();
 
   return (
-    <section
-      ref={ref}
-      className="relative overflow-hidden bg-[#F7E7CE] py-28 md:py-36"
-      style={{ borderTop: "1px solid #F59E0B80" }}
-    >
-      <div className="relative z-10 max-w-[95vw] mx-auto px-6 md:px-10">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={isInView ? { opacity: 1 } : {}}
-          className="flex items-center gap-3 mb-8"
+    <section className="bg-[#F7E7CE] text-[#102C26] pt-24 pb-28 md:pt-32 md:pb-40">
+      <div className="max-w-[95vw] mx-auto px-6 md:px-10 grid md:grid-cols-12 gap-y-10 md:gap-x-12 items-end">
+        <h2
+          className={`${DISPLAY} md:col-span-8 text-4xl sm:text-6xl md:text-7xl lg:text-[clamp(3rem,6.5vw,6.5rem)]`}
         >
-          <div className="w-8 h-px bg-[#102C26]/30" />
-          <span className="text-[#102C26]/45 text-[10px] md:text-xs uppercase tracking-[0.3em] font-bold">
-            Join HalalMe Today
-          </span>
-        </motion.div>
+          {user ? "Pick up where you left off." : "One sign-up. All five services."}
+        </h2>
 
-        <motion.h2
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ delay: 0.1, duration: 0.6 }}
-          className="text-4xl sm:text-6xl md:text-7xl lg:text-[clamp(3rem,7vw,7rem)] font-extrabold uppercase tracking-tighter leading-[0.88] text-[#102C26] mb-10 max-w-5xl"
-        >
-          Ready to start your
-          <br />
-          HalalMe journey?
-        </motion.h2>
-
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={isInView ? { opacity: 1 } : {}}
-          transition={{ delay: 0.2 }}
-          className="text-[#102C26]/55 text-base md:text-lg max-w-xl mb-12 leading-relaxed"
-        >
-          Join a global community that values quality, faith, and seamless
-          technology. Your complete Halal lifestyle starts here.
-        </motion.p>
-
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ delay: 0.3 }}
-          className="flex flex-col sm:flex-row gap-4 mb-16"
-        >
-          {!user && (
-            <Link href="/select-role">
-              <button className="flex items-center gap-3 px-8 py-4 bg-[#102C26] text-[#F7E7CE] font-extrabold uppercase tracking-tighter text-base hover:bg-[#0A1C19] transition-colors">
-                Create Free Account
-                <ArrowRight className="w-5 h-5" />
-              </button>
-            </Link>
-          )}
-          <Link href="/select-role">
-            <button className="flex items-center gap-3 px-8 py-4 border-2 border-[#102C26] text-[#102C26] font-extrabold uppercase tracking-tighter text-base hover:bg-[#102C26] hover:text-[#F7E7CE] transition-colors">
-              Start Your Journey
-              <ArrowRight className="w-5 h-5" />
-            </button>
+        <div className="md:col-span-4 flex flex-col items-start gap-6">
+          <p className="text-[#102C26]/70 text-base md:text-lg leading-relaxed max-w-sm">
+            {user
+              ? "Your orders, recipes, posts and points are in your dashboard."
+              : "Creating an account is free. Your profile and points work everywhere from day one."}
+          </p>
+          <Link
+            href={user ? "/dashboard" : "/select-role"}
+            className="px-8 py-4 bg-[#102C26] text-[#F7E7CE] font-semibold uppercase tracking-tight text-base hover:bg-[#0A1C19] active:translate-y-px transition-colors"
+          >
+            {user ? "Open your dashboard" : "Create free account"}
           </Link>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={isInView ? { opacity: 1 } : {}}
-          transition={{ delay: 0.4 }}
-          className="flex flex-wrap gap-6 md:gap-10"
-        >
-          {[{ Icon: ShieldCheck, text: "Halal-Focused Platform" }].map(
-            (item, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-2 text-[#102C26]/50 text-xs md:text-sm font-semibold uppercase tracking-wide"
-              >
-                <item.Icon className="w-4 h-4" />
-                {item.text}
-              </div>
-            ),
-          )}
-        </motion.div>
-      </div>
-
-      {/* Decorative oversized background word */}
-      <div
-        aria-hidden="true"
-        className="absolute bottom-0 right-0 text-[8rem] md:text-[14rem] font-extrabold uppercase tracking-tighter leading-none text-[#102C26]/8 select-none pointer-events-none translate-x-6 translate-y-6"
-      >
-        Halal
+          <Link
+            href="/for-restaurants"
+            className={`${TEXT_LINK} text-sm decoration-[#102C26]/30 hover:decoration-[#102C26]`}
+          >
+            Run a halal restaurant? List it on HalalMe
+          </Link>
+        </div>
       </div>
     </section>
   );

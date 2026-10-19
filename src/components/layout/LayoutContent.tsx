@@ -31,8 +31,10 @@ const hideFooterPaths = [
   "/travel",
   "/rewards",
   "/charity",
+  "/marketplace",
   "/admin",
   "/merchant",
+  "/vendor",
 ];
 
 const hideHeaderPaths = [
@@ -50,6 +52,7 @@ const hideHeaderPaths = [
   "/partner",
   "/admin",
   "/merchant",
+  "/vendor",
 ];
 
 export default function LayoutContent({ children }: { children: React.ReactNode }) {

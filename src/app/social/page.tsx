@@ -233,7 +233,7 @@ export default function HubLandingPage() {
       Icon: ChefHat,
       num: "02",
       title: "Share Your Story",
-      desc: "Post updates, photos and experiences — for recipes themselves, HalalMe Kitchen is home.",
+      desc: "Post photos and updates, share your Kitchen recipes, ask questions and review the places you eat.",
     },
     {
       Icon: TrendingUp,

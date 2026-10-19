@@ -7,22 +7,12 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ArrowRight,
-  Bike,
   CheckCircle2,
-  ChefHat,
-  Clock,
   CloudUpload,
-  Droplets,
-  Flame,
   Heart,
-  Lock,
-  MapPin,
   MessageCircle,
   Plus,
   ShoppingBag,
-  Star,
-  TrendingUp,
 } from "lucide-react";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -198,7 +188,7 @@ function DeliveryPreview({ accent }: { accent: string }) {
                   className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-2 py-1 shrink-0"
                   style={{ color: accent, border: `1px solid ${accent}40` }}
                 >
-                  <MapPin className="w-2.5 h-2.5" /> 18 min
+                  18 min
                 </span>
               </div>
               <div className="space-y-2">
@@ -227,11 +217,10 @@ function DeliveryPreview({ accent }: { accent: string }) {
                         )}
                       </span>
                       <span
-                        className="text-[10px] font-semibold uppercase tracking-wider transition-colors duration-500 flex items-center gap-1.5"
+                        className="text-[10px] font-semibold uppercase tracking-wider transition-colors duration-500"
                         style={{ color: done || active ? `${CREAM}90` : `${CREAM}30` }}
                       >
                         {label}
-                        {active && i === 2 && <Bike className="w-3 h-3" style={{ color: accent }} />}
                       </span>
                     </div>
                   );
@@ -248,14 +237,14 @@ function DeliveryPreview({ accent }: { accent: string }) {
 /* ── 02 Kitchen: browse recipes, then upload your own ── */
 const DEMO_RECIPES = [
   {
-    title: "Grandma's Chicken Curry",
-    meta: "45 min · 4.8",
-    img: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=160&h=160&fit=crop&q=80",
+    title: "Butter Chicken",
+    meta: "45 min · serves 4",
+    img: "/images/Recipes/butter-chicken.jpg",
   },
   {
-    title: "Lamb Shawarma Platter",
-    meta: "30 min · 4.6",
-    img: "https://images.unsplash.com/photo-1561651823-34feb02250e4?w=160&h=160&fit=crop&q=80",
+    title: "Chicken Shawarma",
+    meta: "30 min · serves 2",
+    img: "/images/Recipes/chicken-shawarma.jpg",
   },
 ];
 
@@ -320,12 +309,10 @@ function KitchenPreview({ accent }: { accent: string }) {
                       <p className="text-[10px] font-extrabold uppercase tracking-tighter truncate" style={{ color: CREAM }}>
                         {r.title}
                       </p>
-                      <p className="text-[9px] flex items-center gap-1" style={{ color: `${CREAM}40` }}>
-                        <Clock className="w-2.5 h-2.5" /> {r.meta}
-                        <Star className="w-2.5 h-2.5" style={{ color: accent }} fill="currentColor" />
+                      <p className="text-[9px]" style={{ color: `${CREAM}40` }}>
+                        {r.meta}
                       </p>
                     </div>
-                    <ArrowRight className="w-3 h-3 shrink-0" style={{ color: spotlight ? accent : `${CREAM}25` }} />
                   </motion.div>
                 );
               })}
@@ -421,14 +408,14 @@ function SocialPreview({ accent }: { accent: string }) {
       </div>
 
       <p className="text-[10px] leading-relaxed mb-2.5" style={{ color: `${CREAM}75` }}>
-        Lamb biryani from scratch - slow-cook the whole spices first 🍚✨
+        Chicken biryani from scratch. Slow-cook the whole spices first.
       </p>
 
       {/* Post image */}
       <div className="relative w-full h-24 mb-2.5 overflow-hidden">
         <Image
-          src="https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=600&h=300&fit=crop&q=80"
-          alt="Lamb biryani"
+          src="/images/Recipes/chicken-biryani.jpg"
+          alt="Chicken biryani"
           fill
           className="object-cover"
           sizes="340px"
@@ -463,9 +450,8 @@ function SocialPreview({ accent }: { accent: string }) {
         <span className="flex items-center gap-1.5">
           <MessageCircle className="w-3.5 h-3.5" /> {phase === 2 ? 39 : 38}
         </span>
-        <span className="flex items-center gap-1.5 ml-auto">
-          <Flame className="w-3.5 h-3.5" style={{ color: accent }} />
-          <span style={{ color: `${CREAM}55` }}>Trending</span>
+        <span className="ml-auto" style={{ color: accent }}>
+          Trending
         </span>
       </div>
 
@@ -487,7 +473,7 @@ function SocialPreview({ accent }: { accent: string }) {
                 IS
               </span>
               <span className="text-[9px] truncate" style={{ color: `${CREAM}60` }}>
-                Please share the full recipe! 🙏
+                Please share the full recipe
               </span>
             </motion.div>
           )}
@@ -502,10 +488,7 @@ function CharityPreview({ accent }: { accent: string }) {
   return (
     <PreviewShell accent={accent} title="Verified Cause" sub="Clean Water">
       <div className="flex items-center gap-2.5 mb-3">
-        <div className="w-8 h-8 flex items-center justify-center shrink-0" style={{ backgroundColor: `${accent}18` }}>
-          <Droplets className="w-4 h-4" style={{ color: accent }} />
-        </div>
-        <div className="min-w-0">
+        <div className="min-w-0 pl-3" style={{ borderLeft: `2px solid ${accent}` }}>
           <p className="text-[11px] font-extrabold uppercase tracking-tighter truncate" style={{ color: CREAM }}>
             Water Wells for Villages
           </p>
@@ -544,10 +527,10 @@ function CharityPreview({ accent }: { accent: string }) {
         ))}
       </div>
       <div
-        className="flex items-center justify-center gap-1.5 py-2 text-[9px] font-extrabold uppercase tracking-tighter text-white"
+        className="py-2 text-center text-[9px] font-extrabold uppercase tracking-tighter text-white"
         style={{ backgroundColor: accent }}
       >
-        <Lock className="w-2.5 h-2.5" /> Donate securely
+        Donate £20
       </div>
     </PreviewShell>
   );
@@ -573,10 +556,10 @@ function RewardsPreview({ accent }: { accent: string }) {
           </p>
         </div>
         <span
-          className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-2 py-1"
+          className="text-[9px] font-bold uppercase tracking-wider px-2 py-1"
           style={{ color: accent, border: `1px solid ${accent}40` }}
         >
-          <Star className="w-2.5 h-2.5" fill="currentColor" /> Silver
+          Silver
         </span>
       </div>
       <div className="flex justify-between text-[9px] mb-1.5" style={{ color: `${CREAM}35` }}>
@@ -601,7 +584,6 @@ function RewardsPreview({ accent }: { accent: string }) {
               className="absolute inset-x-0 flex items-center gap-2 px-3 py-2"
               style={{ backgroundColor: `${accent}14`, border: `1px solid ${accent}35` }}
             >
-              <TrendingUp className="w-3 h-3" style={{ color: accent }} />
               <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: CREAM }}>
                 +20 pts · Posted on Social
               </span>
@@ -616,7 +598,6 @@ function RewardsPreview({ accent }: { accent: string }) {
               className="absolute inset-x-0 flex items-center gap-2 px-3 py-2"
               style={{ backgroundColor: "rgba(247,231,206,0.03)", border: "1px solid rgba(247,231,206,0.08)" }}
             >
-              <ChefHat className="w-3 h-3" style={{ color: `${CREAM}40` }} />
               <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: `${CREAM}45` }}>
                 Upload a recipe · +50 pts
               </span>
@@ -637,8 +618,8 @@ const SERVICES = [
     num: "01",
     name: "Delivery",
     tagline: "Halal food at your door",
-    desc: "Order from the best halal restaurants near you, delivered in minutes.",
-    features: ["Halal-focused restaurants only", "Live order & rider tracking", "Delivery in minutes, not hours"],
+    desc: "Order from local halal restaurants like Amigos, Dippers and Pizza Plaza, and follow your order to the door.",
+    features: ["Halal-focused restaurants only", "Live order and rider tracking", "Pizza, kebab, dessert and breakfast"],
     link: "/delivery",
     image: "/images/services/halal01.webp",
     accent: "#B96AF0",
@@ -648,9 +629,9 @@ const SERVICES = [
   {
     num: "02",
     name: "Kitchen",
-    tagline: "AI-powered recipes",
-    desc: "Discover thousands of halal recipes and get AI-generated meal plans tailored to you.",
-    features: ["Browse community recipes", "Upload & share your own dishes", "AQI - your AI cooking assistant"],
+    tagline: "Recipes and a cooking assistant",
+    desc: "Browse halal recipes, upload your own, and ask AQI what to cook with what is already in your fridge.",
+    features: ["Browse community recipes", "Upload and share your own dishes", "Ask AQI by text or photo"],
     link: "/kitchen",
     image: "/images/services/halal02.webp",
     accent: "#F03E9E",
@@ -660,8 +641,8 @@ const SERVICES = [
     num: "03",
     name: "Social",
     tagline: "The halal social network",
-    desc: "Connect with the global Muslim community. Share experiences, reviews, and halal finds.",
-    features: ["Share stories, reviews & finds", "Follow people you connect with", "Boost your best posts"],
+    desc: "Share recipes, restaurant reviews and halal finds with people who are looking for the same things.",
+    features: ["Post stories, reviews and finds", "Follow people you connect with", "Boost your best posts"],
     link: "/social",
     image: "/images/services/halal03.webp",
     accent: "#F59E0B",
@@ -670,9 +651,9 @@ const SERVICES = [
   {
     num: "04",
     name: "Charity",
-    tagline: "Give back, transparently tracked",
-    desc: "Donate to registered Islamic charities and see the real-world impact of every contribution.",
-    features: ["Registered UK charities", "Payments go direct to charity", "Receipts for zakat & Gift Aid"],
+    tagline: "Give to registered charities",
+    desc: "Donate to registered UK charities. Your payment goes straight to the charity, and you get a receipt.",
+    features: ["Registered UK charities", "Payments go direct to charity", "Receipts for zakat and Gift Aid"],
     link: "/charity",
     image: "/images/page sections/rewards6.webp",
     accent: "#14B8A6",
@@ -682,8 +663,8 @@ const SERVICES = [
     num: "05",
     name: "Rewards",
     tagline: "Earn points, redeem perks",
-    desc: "Every recipe, post, and donation earns points you can redeem across HalalMe.",
-    features: ["Earn from every service", "Bronze to Diamond tiers", "Boosts, flair & AI power-ups"],
+    desc: "Recipes, posts and donations all earn points. Spend them on profile flair, post boosts and extra AQI requests.",
+    features: ["10 points per £1 donated", "Bronze to Diamond tiers", "Rewards from 150 points"],
     link: "/rewards",
     image: "/images/services/rewards.webp",
     accent: "#FB7185",
@@ -748,8 +729,6 @@ export default function HorizontalServices() {
       panels.forEach((panel, i) => {
         const bg = panel.querySelector(".hs-bg");
         const num = panel.querySelector(".hs-num");
-        const reveals = panel.querySelectorAll(".hs-reveal");
-        const preview = panel.querySelector(".hs-preview");
 
         // Depth: background pans slower, oversized number drifts faster
         if (bg) {
@@ -785,44 +764,6 @@ export default function HorizontalServices() {
               },
             }
           );
-        }
-
-        // Content cascades in as the panel arrives (panel 0 enters with the section itself)
-        if (reveals.length) {
-          gsap.from(reveals, {
-            opacity: 0,
-            y: 44,
-            stagger: 0.07,
-            duration: 0.7,
-            ease: "power3.out",
-            scrollTrigger:
-              i === 0
-                ? { trigger: section, start: "top 70%", once: true }
-                : {
-                    containerAnimation: scrollTween,
-                    trigger: panel,
-                    start: "left 62%",
-                    toggleActions: "play none none reverse",
-                  },
-          });
-        }
-        if (preview) {
-          gsap.from(preview, {
-            opacity: 0,
-            x: 90,
-            rotate: 2.5,
-            duration: 0.8,
-            ease: "power3.out",
-            scrollTrigger:
-              i === 0
-                ? { trigger: section, start: "top 65%", once: true }
-                : {
-                    containerAnimation: scrollTween,
-                    trigger: panel,
-                    start: "left 55%",
-                    toggleActions: "play none none reverse",
-                  },
-          });
         }
 
         // Track which panel is centred, for the bottom nav
@@ -897,7 +838,7 @@ export default function HorizontalServices() {
             {/* Panel content */}
             <div className="relative md:absolute md:inset-0 flex flex-col justify-center px-8 md:px-20 lg:px-28 max-w-[92vw] md:max-w-[52vw] py-16 md:py-0">
               {/* Counter */}
-              <div className="hs-reveal flex items-center gap-3 mb-6 md:mb-8">
+              <div className="flex items-center gap-3 mb-6 md:mb-8">
                 <div className="w-6 md:w-8 h-px bg-[#F59E0B]" />
                 <span className="text-[#F59E0B] text-[9px] md:text-[10px] uppercase tracking-[0.3em] font-bold">
                   {s.num} / {String(SERVICES.length).padStart(2, "0")}
@@ -905,7 +846,7 @@ export default function HorizontalServices() {
               </div>
 
               {/* Heading */}
-              <h2 className="hs-reveal font-extrabold uppercase tracking-tighter leading-[0.88] mb-4 md:mb-5">
+              <h2 className="font-medium tracking-[-0.045em] leading-[0.95] mb-4 md:mb-5">
                 <span className="flex items-center gap-2 mb-2 normal-case">
                   <span
                     style={{
@@ -962,27 +903,25 @@ export default function HorizontalServices() {
               </h2>
 
               {/* Tagline */}
-              <p className="hs-reveal text-[#F7E7CE]/70 text-[9px] md:text-[10px] uppercase tracking-[0.25em] mb-3 md:mb-4">
+              <p className="text-[#F7E7CE]/70 text-[9px] md:text-[10px] uppercase tracking-[0.25em] mb-3 md:mb-4">
                 {s.tagline}
               </p>
 
               {/* Description */}
-              <p className="hs-reveal text-[#F7E7CE]/60 text-sm md:text-base lg:text-lg max-w-xs md:max-w-sm leading-relaxed mb-6">
+              <p className="text-[#F7E7CE]/60 text-sm md:text-base lg:text-lg max-w-xs md:max-w-sm leading-relaxed mb-6">
                 {s.desc}
               </p>
 
               {/* Feature bullets - what's actually inside */}
-              <div className="hs-reveal flex flex-col gap-2 mb-8 md:mb-10">
+              <div className="flex flex-col gap-2 mb-8 md:mb-10">
                 {s.features.map((f, fi) => (
                   <div
                     key={fi}
                     className="flex items-center gap-3 text-[10px] md:text-[11px] font-semibold uppercase tracking-wider text-[#F7E7CE]/55"
                   >
-                    <motion.span
+                    <span
                       className="w-1.5 h-1.5 shrink-0"
                       style={{ backgroundColor: s.accent }}
-                      animate={{ scale: [1, 1.4, 1], opacity: [0.6, 1, 0.6] }}
-                      transition={{ duration: 2, repeat: Infinity, delay: fi * 0.4 }}
                     />
                     {f}
                   </div>
@@ -990,17 +929,13 @@ export default function HorizontalServices() {
               </div>
 
               {/* CTA */}
-              <div className="hs-reveal">
-                <Link href={s.link}>
-                  <button
-                    className="group/btn self-start flex items-center gap-3 px-6 md:px-8 py-3 md:py-4 font-extrabold uppercase tracking-tighter text-xs md:text-sm transition-all duration-300 border-2 hover:gap-5"
-                    style={{ borderColor: s.accent, color: s.accent }}
-                  >
-                    Explore {s.name}
-                    <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover/btn:translate-x-1" />
-                  </button>
-                </Link>
-              </div>
+              <Link
+                href={s.link}
+                className="self-start px-6 md:px-8 py-3 md:py-4 font-semibold uppercase tracking-tight text-xs md:text-sm border-2 transition-colors duration-300 hover:bg-[#F7E7CE]/8 active:translate-y-px"
+                style={{ borderColor: s.accent, color: s.accent }}
+              >
+                Open {s.name}
+              </Link>
 
               {/* Mobile-only compact preview below content */}
               <div className="md:hidden mt-8 max-w-sm">

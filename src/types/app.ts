@@ -1869,6 +1869,24 @@ export interface PaginatedResult<T> {
   hasMore:  boolean;
 }
 
+/** The slice of a recipe a Social post needs to render its recipe card. */
+export interface RecipeSummary {
+  id:                 string;
+  user_id:            string;
+  title:              string;
+  description:        string | null;
+  image_url:          string | null;
+  cuisine:            string | null;
+  difficulty:         string | null;
+  prep_time_mins:     number | null;
+  cook_time_mins:     number | null;
+  servings:           number | null;
+  is_ai_generated:    boolean;
+  is_published:       boolean;
+  ingredient_names:   string[];
+  ingredient_count:   number;
+}
+
 export interface Post {
   id:            string;
   user_id:       string;
@@ -1877,6 +1895,17 @@ export interface Post {
   media_urls:        string[] | null;
   media_public_ids:  string[] | null;
   recipe_id:         string | null;
+  /** Question posts: the question itself. */
+  title?:               string | null;
+  /** Review posts: 1-5 stars and what was reviewed. */
+  rating?:              number | null;
+  review_subject?:      string | null;
+  /** Question posts: the answer the author marked as accepted. */
+  accepted_comment_id?: string | null;
+  /** Attached recipe (recipe posts), resolved client-side. */
+  recipe?:              RecipeSummary | null;
+  /** First HalalMe recipe linked in the text, for a link preview. */
+  linked_recipe?:       RecipeSummary | null;
   like_count:    number;
   comment_count: number;
   view_count:    number;

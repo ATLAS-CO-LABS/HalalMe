@@ -7,4 +7,5 @@ export { freshService } from "./freshService";
 export { rewardsService } from "./rewardsService";
 export { travelService } from "./travelService";
 export { blogService } from "./blogService";
+export { marketplaceService } from "./marketplaceService";
 export { supabase } from "./supabase";

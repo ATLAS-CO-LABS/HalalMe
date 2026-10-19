@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "@/app/globals.css";
 
 import { Analytics } from "@vercel/analytics/next";
@@ -28,16 +27,6 @@ const THEME_INIT_SCRIPT = `
   } catch (e) {}
 })();
 `;
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 const BASE_URL = "https://halalme.co.uk";
 const DEFAULT_OG_IMAGE = `${BASE_URL}/images/og-share.jpg`;
@@ -94,7 +83,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className="antialiased">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(ORG_JSON_LD) }}

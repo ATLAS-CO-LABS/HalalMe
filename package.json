@@ -11,7 +11,9 @@
     "test:halal": "tsc scripts/aqi-regression/halal.cases.ts --module commonjs --target es2020 --lib es2020 --skipLibCheck --outDir node_modules/.cache/aqi-regression && node node_modules/.cache/aqi-regression/scripts/aqi-regression/halal.cases.js",
     "test:aqi": "node scripts/aqi-regression/run-live.mjs",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "test:social": "tsc scripts/social-tests/social.test.ts --module commonjs --target es2020 --lib es2020,dom --types node --esModuleInterop --skipLibCheck --outDir node_modules/.cache/social-tests && node node_modules/.cache/social-tests/scripts/social-tests/social.test.js",
+    "test:social:live": "node scripts/social-tests/run-live.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",

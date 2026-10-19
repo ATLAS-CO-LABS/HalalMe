@@ -29,16 +29,6 @@ const legalLinks = [
   { label: "Cookie Policy", href: "/cookies" },
 ];
 
-/* Column entrance - shared variants for the staggered grid reveal */
-const colVariants = {
-  hidden: { opacity: 0, y: 28 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] as const },
-  },
-};
-
 /* Crescent-and-star mark for the trust badge — rendered as a proper vector
    icon (matching the lucide stroke style used elsewhere) instead of a
    Unicode glyph, which varies wildly across platform emoji fonts. */
@@ -121,18 +111,9 @@ export default function Footer() {
 
       {/* ── Main Footer Grid ──────────────────────────────────── */}
       <div className="relative mx-auto max-w-[95vw] px-6 pt-14 pb-8">
-        <motion.div
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, amount: 0.15 }}
-          variants={{ show: { transition: { staggerChildren: 0.1 } } }}
-          className="grid gap-10 lg:grid-cols-12"
-        >
+        <div className="grid gap-10 lg:grid-cols-12">
           {/* Brand Column */}
-          <motion.div
-            variants={colVariants}
-            className="lg:col-span-6 flex flex-col gap-5"
-          >
+          <div className="lg:col-span-6 flex flex-col gap-5">
             <Link href="/" className="inline-flex items-center gap-3 w-fit">
               <span
                 style={{
@@ -167,7 +148,7 @@ export default function Footer() {
               </span>
             </Link>
             <p className="text-[#F7E7CE]/45 text-sm leading-relaxed max-w-xs">
-              The complete Halal ecosystem - food, community, giving, and more.
+              Halal food delivery, recipes, community and giving in the UK.
               Built around halal values. Open to everyone.
             </p>
             {/* Trust badge */}
@@ -237,12 +218,12 @@ export default function Footer() {
                 </motion.a>
               ))}
             </div>
-          </motion.div>
+          </div>
 
           {/* Services - each link lights up in its own service accent */}
-          <motion.div variants={colVariants} className="lg:col-span-3">
-            <h3 className="text-[10px] font-bold text-[#F7E7CE]/30 uppercase tracking-[0.25em] mb-5">
-              Our Services
+          <div className="lg:col-span-3">
+            <h3 className="text-[10px] font-medium text-[#F7E7CE]/30 uppercase tracking-[0.25em] mb-5">
+              The five services
             </h3>
             <ul className="space-y-1">
               {services.map((s) => (
@@ -270,11 +251,11 @@ export default function Footer() {
                 </li>
               ))}
             </ul>
-          </motion.div>
+          </div>
 
           {/* Company links */}
-          <motion.div variants={colVariants} className="lg:col-span-3">
-            <h3 className="text-[10px] font-bold text-[#F7E7CE]/30 uppercase tracking-[0.25em] mb-5">
+          <div className="lg:col-span-3">
+            <h3 className="text-[10px] font-medium text-[#F7E7CE]/30 uppercase tracking-[0.25em] mb-5">
               Company
             </h3>
             <ul className="space-y-1">
@@ -292,8 +273,8 @@ export default function Footer() {
                 </li>
               ))}
             </ul>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
 
         {/* ── Halal caveat ─────────────────────────────────────────
             Trimmed from the old eleven-line block. Every other clause it
@@ -342,10 +323,6 @@ export default function Footer() {
             ))}
           </div>
           <div className="flex items-center gap-5">
-            <div className="flex items-center gap-2 text-[#F7E7CE]/25 text-xs">
-              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-              All systems operational
-            </div>
             <motion.button
               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
               whileHover={{ y: -2 }}

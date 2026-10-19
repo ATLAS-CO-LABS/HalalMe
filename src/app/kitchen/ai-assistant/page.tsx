@@ -6,7 +6,7 @@ import {
   Send, Plus, MessageSquare,
   Menu, X, RotateCcw, Sparkles, Loader2,
   BookmarkPlus, Check, Copy, Trash2, Clock, Users, Flame,
-  Drumstick, Salad, EggFried, PartyPopper, ShoppingCart, Zap, ImagePlus,
+  Drumstick, Salad, EggFried, PartyPopper, ShoppingCart, Zap, ImagePlus, Share2,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -431,6 +431,7 @@ export default function AIAssistantPage() {
   const [requestsLimit, setRequestsLimit] = useState<number>(10);
   const [savingId, setSavingId]         = useState<string | null>(null);
   const [saveFailedId, setSaveFailedId] = useState<string | null>(null);
+  const [sharingId, setSharingId]       = useState<string | null>(null);
   const [sessionId, setSessionId]       = useState<string | null>(null);
   const [copiedId, setCopiedId]         = useState<string | null>(null);
   const [inputFocused, setInputFocused] = useState(false);
@@ -565,9 +566,9 @@ export default function AIAssistantPage() {
    * ever be a link to something already saved. Now generating and keeping are
    * separate: first press saves, and the button becomes the link afterwards.
    */
-  const handleSaveRecipe = async (msg: Message) => {
-    if (msg.recipeId) { router.push(`/kitchen/recipes/${msg.recipeId}`); return; }
-    if (!msg.recipe || !user || savingId) return;
+  const saveRecipe = async (msg: Message): Promise<string | null> => {
+    if (msg.recipeId) return msg.recipeId;
+    if (!msg.recipe || !user) return null;
 
     setSavingId(msg.id);
     setSaveFailedId(null);
@@ -576,10 +577,35 @@ export default function AIAssistantPage() {
       // Written back onto the message so it survives the sessionStorage
       // round-trip and the button stays a link after a reload.
       setMessages((p) => p.map((m) => (m.id === msg.id ? { ...m, recipeId: saved.id } : m)));
+      return saved.id;
     } catch {
       setSaveFailedId(msg.id);
+      return null;
     } finally {
       setSavingId(null);
+    }
+  };
+
+  const handleSaveRecipe = async (msg: Message) => {
+    if (msg.recipeId) { router.push(`/kitchen/recipes/${msg.recipeId}`); return; }
+    if (savingId) return;
+    await saveRecipe(msg);
+  };
+
+  /**
+   * Share to Social. A post has to point at a saved recipe, so this saves it
+   * first if needed (as a private draft), then opens the Social composer with
+   * the recipe attached. Sharing a draft lets people open it from the post
+   * without listing it in Explore.
+   */
+  const handleShareRecipe = async (msg: Message) => {
+    if (savingId || sharingId) return;
+    setSharingId(msg.id);
+    try {
+      const id = await saveRecipe(msg);
+      if (id) router.push(`/social/feed?compose=recipe&recipe=${id}`);
+    } finally {
+      setSharingId(null);
     }
   };
 
@@ -1088,6 +1114,26 @@ export default function AIAssistantPage() {
                                       : saveFailedId === msg.id
                                         ? <><BookmarkPlus className="w-2.5 h-2.5" strokeWidth={2} /> Retry Save</>
                                         : <><BookmarkPlus className="w-2.5 h-2.5" strokeWidth={2} /> Save Recipe</>}
+                                </motion.button>
+                              )}
+
+                              {msg.responseType === "recipe" && msg.recipe && (
+                                <motion.button
+                                  onClick={() => handleShareRecipe(msg)}
+                                  disabled={sharingId === msg.id || savingId === msg.id}
+                                  title="Share this recipe on HalalMe Social"
+                                  className="flex items-center gap-1 px-2 py-1 text-[9px] font-bold uppercase transition-all disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-(--hm-magenta)"
+                                  style={{
+                                    color: `color-mix(in oklab, var(--hm-text) 16%, transparent)`,
+                                    border: "1px solid color-mix(in oklab, var(--hm-text) 8%, transparent)",
+                                    letterSpacing: "0.12em",
+                                  }}
+                                  whileHover={{ color: CREAM, borderColor: "color-mix(in oklab, var(--hm-text) 20%, transparent)" } as never}
+                                  whileTap={{ scale: 0.97 }}
+                                >
+                                  {sharingId === msg.id
+                                    ? <><Loader2 className="w-2.5 h-2.5 animate-spin" strokeWidth={2} /> Opening</>
+                                    : <><Share2 className="w-2.5 h-2.5" strokeWidth={2} /> Share</>}
                                 </motion.button>
                               )}
                             </div>

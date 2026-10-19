@@ -24,6 +24,8 @@ export default function robots(): MetadataRoute.Robots {
         "/fresh",
         "/travel",
         "/marketplace",
+        "/vendor",
+        "/partner/vendor",
       ],
     },
     sitemap: `${BASE_URL}/sitemap.xml`,
