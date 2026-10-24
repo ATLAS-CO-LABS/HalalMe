@@ -1,69 +1,55 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import gsap from 'gsap';
+import { useEffect, useRef, type CSSProperties } from 'react';
 import Image from 'next/image';
 
 const WORDMARK = ['H', 'a', 'l', 'a', 'l', 'M', 'e'];
 
+// The whole intro is CSS (see "LOADING SCREEN ANIMATION" in globals.css), so it
+// starts on first paint instead of after hydration and can never restart when
+// this component re-renders. JS only waits for the closing animation to end.
+const CLOSE_ANIMATIONS = ['hm-loader-close', 'hm-loader-close-fade'];
+const INTRO_MS = 3440; // fallback only, for browsers without getAnimations()
+
 export default function LoadingScreen({ onLoadingComplete }: { onLoadingComplete?: () => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const onCompleteRef = useRef(onLoadingComplete);
+
+  useEffect(() => {
+    onCompleteRef.current = onLoadingComplete;
+  }, [onLoadingComplete]);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    const letters   = container.querySelectorAll('.loading-letter');
-    const tagline   = container.querySelector('.loading-tagline');
-    const mainLogo  = container.querySelector('.loading-main-logo');
+    let cancelled = false;
+    const finish = () => {
+      if (!cancelled) onCompleteRef.current?.();
+    };
 
-    gsap.set(mainLogo, { opacity: 0, scale: 0.5, y: 20 });
-    gsap.set(tagline,  { opacity: 0, y: 10 });
-    gsap.set(container, { clipPath: 'circle(150% at 50% 50%)' });
+    // On a slow phone the animation may already be over by the time React
+    // hydrates. A finished animation's promise resolves straight away.
+    const close = container
+      .getAnimations?.({ subtree: true })
+      .find((a) => CLOSE_ANIMATIONS.includes((a as CSSAnimation).animationName));
 
-    const tl = gsap.timeline({
-      defaults: { ease: 'expo.inOut' },
-      onComplete: () => onLoadingComplete?.(),
-    });
-
-    // Phase 1 - logo springs in
-    tl.to(mainLogo, {
-      opacity: 1, scale: 1, y: 0,
-      duration: 0.75,
-      ease: 'back.out(1.6)',
-    }, 0.05);
-
-    // Phase 2 - wordmark letters rise in
-    tl.from(letters, {
-      yPercent: 100,
-      stagger: 0.03,
-      duration: 1.1,
-    }, 0.4);
-
-    // Tagline fades in
-    tl.to(tagline, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' }, 1.6);
-
-    // Hold
-    tl.to({}, { duration: 0.55 }, 2.1);
-
-    // Phase 3 - exit
-    tl.to(letters,  { yPercent: -100, stagger: 0.02, duration: 0.4, ease: 'expo.in' }, 2.65);
-    if (tagline)  tl.to(tagline,  { opacity: 0, y: -12, duration: 0.3 }, 2.65);
-    if (mainLogo) tl.to(mainLogo, { opacity: 0, scale: 1.15, y: -16, duration: 0.4 }, 2.65);
-
-    tl.to(container, {
-      clipPath: 'circle(0% at 50% 50%)',
-      duration: 0.72,
-      ease: 'power2.inOut',
-    }, 2.72);
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    if (close) {
+      close.finished.then(finish, finish);
+    } else {
+      timer = setTimeout(finish, INTRO_MS);
+    }
 
     return () => {
-      tl.kill();
+      cancelled = true;
+      if (timer) clearTimeout(timer);
     };
-  }, [onLoadingComplete]);
+  }, []);
 
   return (
     <div ref={containerRef} className="loading-header">
+      <div className="loading-bg" />
       <div className="loading-loader">
 
         {/* Logo */}
@@ -77,7 +63,7 @@ export default function LoadingScreen({ onLoadingComplete }: { onLoadingComplete
         <div className="loading-h1">
           {WORDMARK.map((char, i) => (
             <span key={i} className="loading-letter-wrap">
-              <span className="loading-letter">{char}</span>
+              <span className="loading-letter" style={{ '--i': i } as CSSProperties}>{char}</span>
             </span>
           ))}
         </div>

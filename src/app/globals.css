@@ -2,12 +2,24 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Custom Font Faces */
+/* Custom Font Faces
+   Each family is declared twice per weight: a full WOFF2 (TTF fallback) first,
+   then a Latin-only WOFF2 with a unicode-range. Faces declared later win, so
+   English text only downloads the small Latin file (~25KB instead of ~365KB TTF).
+   The full file is fetched only if a page shows a character outside Latin. */
 @font-face {
   font-family: "Poppins";
-  src: url("/fonts/Poppins/Poppins-Black.ttf") format("truetype");
+  src: url("/fonts/woff2/Poppins-Black.woff2") format("woff2"), url("/fonts/Poppins/Poppins-Black.ttf") format("truetype");
   font-weight: 600 900;
   font-style: normal;
+}
+
+@font-face {
+  font-family: "Poppins";
+  src: url("/fonts/woff2/Poppins-Black-latin.woff2") format("woff2");
+  font-weight: 600 900;
+  font-style: normal;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
 @font-face {
@@ -61,7 +73,7 @@
 
 @font-face {
   font-family: "Unbounded";
-  src: url("/fonts/Unbounded/static/Unbounded-Regular.ttf") format("truetype");
+  src: url("/fonts/woff2/Unbounded-Regular.woff2") format("woff2"), url("/fonts/Unbounded/static/Unbounded-Regular.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
   size-adjust: 88%;
@@ -69,7 +81,16 @@
 
 @font-face {
   font-family: "Unbounded";
-  src: url("/fonts/Unbounded/static/Unbounded-Medium.ttf") format("truetype");
+  src: url("/fonts/woff2/Unbounded-Regular-latin.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  size-adjust: 88%;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Unbounded";
+  src: url("/fonts/woff2/Unbounded-Medium.woff2") format("woff2"), url("/fonts/Unbounded/static/Unbounded-Medium.ttf") format("truetype");
   font-weight: 500;
   font-style: normal;
   size-adjust: 88%;
@@ -77,7 +98,16 @@
 
 @font-face {
   font-family: "Unbounded";
-  src: url("/fonts/Unbounded/static/Unbounded-SemiBold.ttf") format("truetype");
+  src: url("/fonts/woff2/Unbounded-Medium-latin.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  size-adjust: 88%;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Unbounded";
+  src: url("/fonts/woff2/Unbounded-SemiBold.woff2") format("woff2"), url("/fonts/Unbounded/static/Unbounded-SemiBold.ttf") format("truetype");
   font-weight: 600;
   font-style: normal;
   size-adjust: 88%;
@@ -85,9 +115,47 @@
 
 @font-face {
   font-family: "Unbounded";
-  src: url("/fonts/Unbounded/static/Unbounded-Bold.ttf") format("truetype");
+  src: url("/fonts/woff2/Unbounded-SemiBold-latin.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  size-adjust: 88%;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Unbounded";
+  src: url("/fonts/woff2/Unbounded-Bold.woff2") format("woff2"), url("/fonts/Unbounded/static/Unbounded-Bold.ttf") format("truetype");
   font-weight: 700;
   font-style: normal;
+  size-adjust: 88%;
+}
+
+@font-face {
+  font-family: "Unbounded";
+  src: url("/fonts/woff2/Unbounded-Bold-latin.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  size-adjust: 88%;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Intro loader fonts: only the glyphs the loader shows, inlined so they are
+   ready on first paint and the wordmark never swaps font mid-animation.
+   Wordmark = Poppins Black "HalalMe". Tagline = Unbounded Medium. */
+@font-face {
+  font-family: "HM Loader Wordmark";
+  src: url("data:font/woff2;base64,d09GMgABAAAAAANgAAwAAAAABhwAAAMSAAQBBgAAAAAAAAAAAAAAAAAAAAAAAAAAGyAcVAZgAFQKgzSCawE2AiQDHAsQAAQgBYMqByAb8gQgHoVxw11iiSWWOL0pplbi4Xm9/n/tk1xl5gGoiJJmJX+7o3qR//+67873Ipoc8M23Qt8IhrZNbExS3LP9D5Bbe/6vqXcWwvfpRA4PMVNjEYFno73hkDL9gFZgo0jRAU032XkQp1xJNmcPKrhAoaU42NDhPSOgksP/AiQEndSQFkOW4oYiQIuS/NSB2LKloAhUKgVECLlAqBYqZULI5Nn2zKeCdCzNBMZgasxXFEOAglPDnxo1ta0fjozE5VH/3WRpjpIWCEh90jXakiEhQ0NSgYZkBgJl1ZLcSL0W4bj/hbiuu99NrndlwbEq+62NGhzC3YAcEEKShFSu1aAcUSlrWTLmgVmRioqSUuwxZ2Yx1XeuNWvO0+uvl46/2jWC8iLueaU49tpr8fEzUewpB59O1TwbPzctP+6pNqW1V9LaoYrcq6YfemTYbdfUoRUfs6lYqXTovjN9R9NiU1WbinjtyYit90MO3ll66tnn3mv4csP3gt7/v8yAyWfPvbto7cLBkBfZXetefcflOzTYXONZNbSpvD+nrfelz7vjhsex8ia6Bf5ZR7u82LHjbdeux86Gq1KWyToGpPx//ejY+bqythHPsJGemTNXGvLU28sfOtI5/t6nZU109ao6H3/y3icWdFjMq+xZGe3pt8+4FnX4atnkd+EH341fbCzvGHFUt3DtPS9jezT9tSnXtY4MDfU3AhDIo/LGi0OeWFCn5tfqLPsC3rjlzufh7cb9rv499e/Jmq05AqokEPwXdg0jQP74qCvsC+4av5B+1ivb1yvtaZgoIdFkgbxngKHKGWXrKYSkNQWWApmEastJRV6Dm2ggNLcBktoeA5kBbtpzGahQRMIrNY/ggBFaR5pmiMhMg0ai6CQoUnBxEoyQMK4NCJtFNIHW/BoIA7dcNKyRng4F0Ui0jIct0xFpVcmXj0RjuN6SPMsQXj79LQKiJ1ihYZY/XefM6Zc34SxaxhqCI+mp+9XoNKJNv2oJZe9VS1AiT4ECJZZUWCuQc70W6OV/EAeXS0sH0cCZJVgkBf5fvTgA") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "HM Loader Tagline";
+  src: url("data:font/woff2;base64,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") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: block;
   size-adjust: 88%;
 }
 
@@ -664,6 +732,15 @@ a[target="_blank"]:not(:has(img, svg))::after {
 
 /* =============================================
    LOADING SCREEN ANIMATION
+   Pure CSS so it starts on first paint (before React hydrates) and runs on
+   the compositor, unaffected by the main thread being busy at startup.
+   Timeline (s):
+     0.05  logo springs in (0.75)
+     0.40  letters rise in, 0.03 stagger (1.1)
+     1.60  tagline fades in (0.5)
+     2.65  letters / logo / tagline exit
+     2.72  green circle closes (0.72)
+     3.44  done: LoadingScreen.tsx waits for hm-loader-close to finish
    ============================================= */
 
 main:has(.loading-header) {
@@ -679,6 +756,22 @@ main:has(.loading-header) {
   height: 100dvh;
   z-index: 9999;
   overflow: hidden;
+  /* Stops blocking taps the moment the circle has closed, even before React removes it */
+  animation: hm-loader-hide 0s linear 3.44s forwards;
+}
+
+/* The closing circle. Scaled with transform (GPU) rather than animating clip-path (repaints every frame). */
+.loading-bg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 250vmax;
+  height: 250vmax;
+  margin: -125vmax 0 0 -125vmax;
+  border-radius: 50%;
+  background: #102C26;
+  will-change: transform;
+  animation: hm-loader-close 0.72s cubic-bezier(0.45, 0, 0.55, 1) 2.72s forwards;
 }
 
 .loading-loader {
@@ -693,8 +786,8 @@ main:has(.loading-header) {
   position: absolute;
   top: 0;
   left: 0;
+  z-index: 1;
   overflow: hidden;
-  background: #102C26;
 }
 
 .loading-main-logo {
@@ -702,6 +795,7 @@ main:has(.loading-header) {
   align-items: center;
   justify-content: center;
   will-change: transform, opacity;
+  animation: hm-logo 3s linear 0.05s both;
 }
 
 .loading-logo-circle {
@@ -725,7 +819,7 @@ main:has(.loading-header) {
   line-height: 0.85;
   display: flex;
   position: relative;
-  font-family: var(--font-headline);
+  font-family: "HM Loader Wordmark", var(--font-headline);
   color: #F7E7CE;
 }
 
@@ -735,12 +829,15 @@ main:has(.loading-header) {
   line-height: 0.85;
 }
 
+/* --i is the letter index, set inline by LoadingScreen.tsx */
 .loading-letter {
   display: block;
+  animation: hm-letter 2.65s linear calc(0.4s + var(--i, 0) * 0.03s) both;
 }
 
 /* -- Tagline -- */
 .loading-tagline {
+  font-family: "HM Loader Tagline", var(--font-body);
   font-size: 0.62rem;
   font-weight: 500;
   letter-spacing: 0.32em;
@@ -749,6 +846,57 @@ main:has(.loading-header) {
   white-space: nowrap;
   pointer-events: none;
   margin-top: 6px;
+  animation: hm-tagline 1.35s linear 1.6s both;
+}
+
+/* One animation per element holding both the entrance and the exit, with the
+   easing set per segment. Two animations on the same property stop Chrome from
+   running them on the GPU, which is what made the intro stutter. */
+@keyframes hm-logo { /* in 0.05-0.8s, out 2.65-3.05s */
+  0%     { opacity: 0; transform: translateY(20px) scale(0.5); animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1); }
+  25%    { opacity: 1; transform: translateY(0) scale(1); }
+  86.67% { opacity: 1; transform: translateY(0) scale(1); animation-timing-function: cubic-bezier(0.87, 0, 0.13, 1); }
+  100%   { opacity: 0; transform: translateY(-16px) scale(1.15); }
+}
+@keyframes hm-letter { /* in over 1.1s, out at 2.65s + stagger over 0.4s */
+  0%     { transform: translateY(100%); animation-timing-function: cubic-bezier(0.87, 0, 0.13, 1); }
+  41.51% { transform: translateY(0); }
+  84.91% { transform: translateY(0); animation-timing-function: cubic-bezier(0.7, 0, 0.84, 0); }
+  100%   { transform: translateY(-100%); }
+}
+@keyframes hm-tagline { /* in 1.6-2.1s, out 2.65-2.95s */
+  0%     { opacity: 0; transform: translateY(10px); animation-timing-function: cubic-bezier(0.5, 1, 0.89, 1); }
+  37.04% { opacity: 1; transform: translateY(0); }
+  77.78% { opacity: 1; transform: translateY(0); animation-timing-function: cubic-bezier(0.87, 0, 0.13, 1); }
+  100%   { opacity: 0; transform: translateY(-12px); }
+}
+@keyframes hm-loader-close {
+  from { transform: scale(1); }
+  to   { transform: scale(0); }
+}
+@keyframes hm-loader-hide {
+  to { visibility: hidden; }
+}
+
+/* Reduced motion: no movement, just show the mark briefly and fade out */
+@media (prefers-reduced-motion: reduce) {
+  .loading-main-logo,
+  .loading-letter,
+  .loading-tagline {
+    animation: none;
+  }
+  .loading-bg {
+    animation: none;
+  }
+  .loading-loader {
+    background: #102C26;
+  }
+  .loading-header {
+    animation: hm-loader-close-fade 0.4s ease 1.2s forwards;
+  }
+}
+@keyframes hm-loader-close-fade {
+  to { opacity: 0; visibility: hidden; }
 }
 
 @media screen and (max-width: 991px) {

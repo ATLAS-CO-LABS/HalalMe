@@ -4,6 +4,7 @@ import "@/app/globals.css";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import Script from "next/script";
+import { preload } from "react-dom";
 
 import LayoutContent from "@/components/layout/LayoutContent";
 import { AuthProvider } from "@/context/AuthContext";
@@ -81,6 +82,11 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Body font (Unbounded) Latin files, fetched in parallel with the CSS instead
+  // of after it. Regular + Medium cover nearly all text on every page.
+  preload("/fonts/woff2/Unbounded-Regular-latin.woff2", { as: "font", type: "font/woff2", crossOrigin: "anonymous" });
+  preload("/fonts/woff2/Unbounded-Medium-latin.woff2", { as: "font", type: "font/woff2", crossOrigin: "anonymous" });
+
   return (
     <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className="antialiased">
