@@ -54,7 +54,8 @@ export default function Home() {
       >
         <HeroSection />
 
-        <div className="relative z-10 mt-[100vh]">
+        {/* Clears the fixed hero on md+. Below md the hero is in flow, so no spacer. */}
+        <div className="relative z-10 md:mt-[100vh]">
           <RestaurantsBand />
 
           <AccountSection />
@@ -101,8 +102,12 @@ function HeroSection() {
   const contentY = useTransform(scrollY, [0, 560], [0, -70]);
 
   return (
-    <section className="fixed top-0 left-0 w-full h-screen z-0 flex items-end overflow-hidden bg-[#102C26]">
-      <div className="absolute inset-0 z-0">
+    // Below md the copy is taller than wide and a full-height, bottom-anchored hero
+    // leaves a big empty band under the header. So on phones the section sizes to
+    // its copy and only the backdrop stays fixed (lvh, so it never resizes when the
+    // browser toolbar collapses). From md up it is the original full-screen fixed hero.
+    <section className="relative md:fixed md:top-0 md:left-0 w-full md:h-screen z-0 flex items-end overflow-hidden bg-[#102C26]">
+      <div className="fixed top-0 left-0 w-full h-lvh md:absolute md:inset-0 md:h-auto z-0">
         {/* Slow Ken Burns drift on the backdrop */}
         <motion.div
           className="absolute inset-0"
@@ -122,7 +127,8 @@ function HeroSection() {
             src="/images/hero/halal5.webp"
             alt=""
             fill
-            className="object-cover"
+            // Portrait crop shows ~30% of the width; 60% keeps the centre pair and the right figure whole
+            className="object-cover object-[60%_50%] md:object-center"
             priority
             sizes="100vw"
           />
